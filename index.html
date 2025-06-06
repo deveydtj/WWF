@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Wordle Game (Hard Mode, Shared)</title>
+
+  <style>
+    /* ─────────────────────────────────────────────
+       A) Base styles
+       ───────────────────────────────────────────── */
+    :root {
+      --bg-color: #e0e5ec;
+      --text-color: #3d4a5a;
+      --text-color-light: #5a677a;
+      --shadow-color-dark: #bec3c9;
+      --shadow-color-light: #ffffff;
+      --inset-shadow-dark: #bec3c9;
+      --inset-shadow-light: #ffffff;
+      --tile-bg: #e0e5ec;
+      --key-bg: #e0e5ec;
+      --key-text: #5a677a;
+      --correct-bg: #6aaa64;
+      --present-bg: #c9b458;
+      --absent-bg: #787c7e;
+      --correct-shadow-dark: #5a9354;
+      --correct-shadow-light: #7ccc74;
+      --present-shadow-dark: #b09d4d;
+      --present-shadow-light: #e2cb63;
+      --absent-shadow-dark: #666a6c;
+      --absent-shadow-light: #8a8e90;
+      --border-color: transparent;
+    }
+
+    body.dark-mode {
+      --bg-color: #2c303a;
+      --text-color: #d1d1d1;
+      --text-color-light: #b0b8c4;
+      --shadow-color-dark: #1f2229;
+      --shadow-color-light: #393e4b;
+      --inset-shadow-dark: #1f2229;
+      --inset-shadow-light: #393e4b;
+      --tile-bg: #2c303a;
+      --key-bg: #4f5564;
+      --absent-bg: #3a3a3c;
+      --key-text: #e1e1e1;
+      --correct-bg: #538d4e;
+      --present-bg: #b59f3b;
+      --correct-shadow-dark: #416d3e;
+      --correct-shadow-light: #65ab5e;
+      --present-shadow-dark: #8f7c2d;
+      --present-shadow-light: #dbc249;
+      --absent-shadow-dark: #2e2e30;
+      --absent-shadow-light: #464648;
+      --border-color: #4a4a4f;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      height: calc(var(--vh, 1vh) * 100);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      position: relative;
+    }
+
+    #appContainer {
+      box-sizing: border-box;
+      padding: 20px;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    #darkModeToggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      color: var(--text-color-light);
+      line-height: 1;
+    }
+
+    #historyToggle {
+      display: none;
+      position: absolute;
+      top: 15px;
+      right: 60px;
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      color: var(--text-color-light);
+      line-height: 1;
+    }
+
+    h1 {
+      color: var(--text-color-light);
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    /* ─── History Panel ─── */
+    #historyBox {
+      position: absolute;
+      top: 100px;
+      left: 20px;
+      width: 260px;
+      max-height: 70vh;
+      overflow-y: auto;
+      background: var(--bg-color);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow:
+        inset 2px 2px 5px var(--shadow-color-dark),
+        inset -2px -2px 5px var(--shadow-color-light);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    #historyList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .history-emoji {
+      margin-right: 6px;
+    }
+
+    .history-guess {
+      flex-grow: 1;
+      font-family: monospace;
+      text-transform: uppercase;
+    }
+
+    .history-points {
+      margin-left: 6px;
+      font-weight: bold;
+    }
+
+    .history-item .history-guess-tiles {
+      display: flex;
+      gap: 4px;
+    }
+
+    .history-item .history-guess-tiles .tile {
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      margin: 0;
+      line-height: 24px;
+      text-align: center;
+    }
+
+    /* ─── Board and Tiles ─── */
+    #board {
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-gap: 10px;
+      max-width: 340px;
+    }
+
+    .tile {
+      width: 60px;
+      height: 60px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      text-transform: uppercase;
+      background-color: var(--tile-bg);
+      border-radius: 8px;
+      box-shadow: 5px 5px 10px var(--shadow-color-dark),
+                  -5px -5px 10px var(--shadow-color-light);
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s,
+                  transform 0.1s, opacity 0.1s;
+      color: var(--text-color);
+    }
+
+    .tile.backspace-effect {
+      transform: scale(0.85);
+      opacity: 0.6;
+    }
+
+    .tile.correct,
+    .tile.present,
+    .tile.absent {
+      color: white;
+      border-color: transparent;
+      transform: rotateX(360deg);
+      transition: background-color 0.3s, color 0.3s, box-shadow 0.3s,
+                  transform 0.6s, border-color 0.3s;
+    }
+
+    .tile.correct {
+      background-color: var(--correct-bg);
+      box-shadow: inset 3px 3px 6px var(--correct-shadow-dark),
+                  inset -3px -3px 6px var(--correct-shadow-light);
+    }
+
+    .tile.present {
+      background-color: var(--present-bg);
+      box-shadow: inset 3px 3px 6px var(--present-shadow-dark),
+                  inset -3px -3px 6px var(--present-shadow-light);
+    }
+
+    .tile.absent {
+      background-color: var(--absent-bg);
+      box-shadow: inset 3px 3px 6px var(--absent-shadow-dark),
+                  inset -3px -3px 6px var(--absent-shadow-light);
+    }
+
+    /* ─── Input & Buttons ─── */
+    #guessInput,
+    #submitGuess {
+      border: none;
+      padding: 12px 15px;
+      font-size: 18px;
+      border-radius: 10px;
+      background-color: var(--bg-color);
+      box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+                  inset -3px -3px 6px var(--inset-shadow-light);
+      color: var(--text-color);
+      outline: none;
+      transition: box-shadow 0.2s, background-color 0.3s, color 0.3s;
+    }
+
+    #guessInput {
+      width: 180px;
+      margin-right: 10px;
+      text-transform: uppercase;
+    }
+
+    #submitGuess {
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 5px 5px 10px var(--shadow-color-dark),
+                  -5px -5px 10px var(--shadow-color-light);
+    }
+
+    #submitGuess:active {
+      box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+                  inset -3px -3px 6px var(--inset-shadow-light);
+      color: var(--text-color-light);
+    }
+
+    #submitGuess:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+                  inset -3px -3px 6px var(--inset-shadow-light);
+    }
+
+    /* ─── Message Area ─── */
+    #message {
+      font-size: 18px;
+      margin-top: 20px;
+      min-height: 25px;
+      color: var(--text-color);
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    /* ─── Keyboard ─── */
+    #keyboard {
+      display: inline-block;
+      margin-top: 30px;
+    }
+
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .key {
+      min-width: 35px;
+      height: 50px;
+      margin: 3px;
+      border: none;
+      background-color: var(--key-bg);
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--key-text);
+      box-shadow: 4px 4px 8px var(--shadow-color-dark),
+                  -4px -4px 8px var(--shadow-color-light);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    .key:active,
+    .key.active-key-press {
+      box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+                  inset -2px -2px 5px var(--inset-shadow-light);
+      font-size: 15px;
+      transform: scale(0.95);
+    }
+
+    .key.correct,
+    .key.present,
+    .key.absent {
+      color: white;
+      transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+    }
+
+    .key.correct {
+      background-color: var(--correct-bg);
+      box-shadow: 3px 3px 6px var(--correct-shadow-dark),
+                  -3px -3px 6px var(--correct-shadow-light);
+    }
+
+    .key.present {
+      background-color: var(--present-bg);
+      box-shadow: 3px 3px 6px var(--present-shadow-dark),
+                  -3px -3px 6px var(--present-shadow-light);
+    }
+
+    .key.absent {
+      background-color: var(--absent-bg);
+      box-shadow: 3px 3px 6px var(--absent-shadow-dark),
+                  -3px -3px 6px var(--absent-shadow-light);
+    }
+
+    /* ─── Shake Animation ─── */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%, 75% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+    }
+
+    /* ─── Hold-to-Reset Neumorphic ─── */
+    #resetWrapper {
+      display: inline-block;
+      position: relative;
+    }
+
+    #holdReset {
+      width: 100px;
+      height: 45px;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 500;
+      background: var(--bg-color);
+      color: var(--text-color);
+      box-shadow: 5px 5px 14px var(--shadow-color-dark),
+                  -5px -5px 14px var(--shadow-color-light);
+      transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+      cursor: pointer;
+      outline: none;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      user-select: none;
+    }
+
+    #holdReset:active {
+      box-shadow: inset 3px 3px 7px var(--inset-shadow-dark),
+                  inset -3px -3px 7px var(--inset-shadow-light);
+      color: var(--text-color-light);
+    }
+
+    #holdResetProgress {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--absent-shadow-light);
+      opacity: 0.9;
+      border-radius: 12px;
+      pointer-events: none;
+      z-index: 0;
+      transition: width 0.1s linear;
+    }
+
+    #holdResetText {
+      position: relative;
+      z-index: 2;
+    }
+
+    #leaderboard {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      margin-bottom: 18px;
+      gap: 18px;
+      padding: 0 0 8px 0;
+    }
+
+    .leaderboard-entry {
+      display: flex;
+      align-items: center;
+      background: var(--bg-color);
+      box-shadow: 2px 2px 8px var(--shadow-color-dark),
+                  -2px -2px 8px var(--shadow-color-light);
+      border-radius: 10px;
+      padding: 7px 15px;
+      margin: 0 5px;
+      font-size: 1.25em;
+      min-width: 50px;
+    }
+
+    .leaderboard-entry.me {
+      border: 2px solid var(--correct-bg);
+      box-shadow: 0 0 0 2px var(--correct-shadow-light);
+    }
+
+    .leaderboard-entry.inactive {
+      opacity: 0.45;
+      filter: grayscale(0.8);
+      transition: opacity 0.4s, filter 0.4s;
+    }
+
+    #emojiModal {
+      background: rgba(0, 0, 0, 0.33);
+      position: fixed;
+      z-index: 99;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #emojiModalBox {
+      background: var(--bg-color);
+      box-shadow: 0 8px 32px var(--shadow-color-dark),
+                  0 0 0 3px var(--shadow-color-light);
+      border-radius: 18px;
+      padding: 28px 22px;
+      text-align: center;
+    }
+
+    .emoji-choice {
+      font-size: 2.1em;
+      margin: 12px;
+      cursor: pointer;
+      filter: drop-shadow(1px 2px 1px var(--shadow-color-dark));
+      border: 2px solid transparent;
+      border-radius: 50%;
+      transition: border 0.2s;
+    }
+
+    .emoji-choice:hover {
+      border: 2px solid var(--correct-bg);
+    }
+
+    #pointsDelta {
+      margin-top: 6px;
+      min-height: 26px;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: var(--present-bg);
+      background: var(--bg-color);
+      box-shadow: 2px 2px 7px var(--shadow-color-dark),
+                  -2px -2px 7px var(--shadow-color-light);
+      border-radius: 10px;
+      display: inline-block;
+      padding: 3px 14px;
+      opacity: 0;
+      transition: opacity 0.4s, color 0.3s;
+    }
+
+    #pointsDelta.positive {
+      color: var(--correct-bg);
+    }
+
+    #pointsDelta.negative {
+      color: #ba1c1c;
+    }
+
+    #pointsDelta.visible {
+      opacity: 1;
+    }
+
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    #guessInput {
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+    }
+
+    /* ─────────────────────────────────────────────
+       B) Updated mobile tweaks
+       ───────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      #appContainer {
+        padding: 10px;
+      }
+
+      #historyToggle {
+        display: block;
+      }
+
+      #historyBox {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-height: 0;
+        overflow-y: hidden;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        background: var(--bg-color);
+        opacity: 0;
+        transform: translateY(100%);
+        z-index: 50;
+      }
+
+      body.history-open #historyBox {
+        max-height: 50vh;
+        max-width: calc(98% - 20px);
+        padding: 8px;
+        overflow-y: auto;
+        border-radius: 0;
+        box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                    inset -2px -2px 4px var(--shadow-color-light);
+        opacity: 1;
+        transform: translateY(0);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+
+      #historyBox h3 {
+        display: none;
+      }
+
+      .history-item .history-guess-tiles .tile {
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+      }
+
+      #board {
+        grid-template-columns: repeat(5, 40px);
+        grid-gap: 4px;
+        max-width: 220px;
+        margin: 20px auto;
+      }
+
+      .tile {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        border-radius: 4px;
+        box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                    -3px -3px 6px var(--shadow-color-light);
+      }
+
+      #guessInput {
+        width: 120px;
+        font-size: 16px;
+        margin-right: 6px;
+        padding: 8px 10px;
+      }
+      #submitGuess {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+
+      .key {
+        min-width: 24px;
+        height: 36px;
+        margin: 1px;
+        font-size: 12px;
+        padding: 0 3px;
+        box-shadow: 2px 2px 5px var(--shadow-color-dark),
+                    -2px -2px 5px var(--shadow-color-light);
+        border-radius: 4px;
+      }
+
+      #holdReset {
+        width: 70px;
+        height: 32px;
+        font-size: 14px;
+        border-radius: 8px;
+        box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                    -3px -3px 6px var(--shadow-color-light);
+      }
+      #holdResetProgress {
+        border-radius: 8px;
+      }
+
+      .leaderboard-entry {
+        font-size: 1em;
+        padding: 5px 10px;
+        margin: 0 3px;
+        min-width: 40px;
+      }
+
+      h1 {
+        font-size: 1.5em;
+        margin-bottom: 2px;
+      }
+      #message {
+        font-size: 16px;
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="appContainer">
+    <!-- Emoji Picker Modal -->
+    <div id="emojiModal" style="display:none;">
+      <div id="emojiModalBox">
+        <div style="margin-bottom:12px; font-size:1.2em;">
+          Pick your emoji for this game:
+        </div>
+        <div id="emojiChoices"></div>
+        <div id="emojiModalError" style="color: #ba1c1c; font-size:1em; margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- Dark Mode & History Toggle Buttons -->
+    <button id="historyToggle" title="Show/Hide History">📜</button>
+    <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
+
+    <!-- Game History Panel -->
+    <div id="historyBox">
+      <h3>History</h3>
+      <ul id="historyList"></ul>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard"></div>
+
+    <h1>WordleWithFriends</h1>
+
+    <!-- Board -->
+    <div id="board"></div>
+
+    <!-- Guess Input & Reset -->
+    <div>
+      <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
+      <button id="submitGuess">Guess</button>
+      <div id="resetWrapper">
+        <button id="holdReset">
+          <span id="holdResetText">Reset</span>
+          <span id="holdResetProgress"></span>
+        </button>
+      </div>
+    </div>
+
+    <div id="pointsDelta"></div>
+    <p id="message"></p>
+
+    <!-- Keyboard -->
+    <div id="keyboard">
+      <div class="keyboard-row">
+        <button class="key" data-key="q">Q</button>
+        <button class="key" data-key="w">W</button>
+        <button class="key" data-key="e">E</button>
+        <button class="key" data-key="r">R</button>
+        <button class="key" data-key="t">T</button>
+        <button class="key" data-key="y">Y</button>
+        <button class="key" data-key="u">U</button>
+        <button class="key" data-key="i">I</button>
+        <button class="key" data-key="o">O</button>
+        <button class="key" data-key="p">P</button>
+      </div>
+      <div class="keyboard-row">
+        <button class="key" data-key="a">A</button>
+        <button class="key" data-key="s">S</button>
+        <button class="key" data-key="d">D</button>
+        <button class="key" data-key="f">F</button>
+        <button class="key" data-key="g">G</button>
+        <button class="key" data-key="h">H</button>
+        <button class="key" data-key="j">J</button>
+        <button class="key" data-key="k">K</button>
+        <button class="key" data-key="l">L</button>
+      </div>
+      <div class="keyboard-row">
+        <button class="key" data-key="Enter" style="min-width: 60px;">Enter</button>
+        <button class="key" data-key="z">Z</button>
+        <button class="key" data-key="x">X</button>
+        <button class="key" data-key="c">C</button>
+        <button class="key" data-key="v">V</button>
+        <button class="key" data-key="b">B</button>
+        <button class="key" data-key="n">N</button>
+        <button class="key" data-key="m">M</button>
+        <button class="key" data-key="Backspace" style="min-width: 60px;">Bksp</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---- Picked Emoji Storage ---- */
+    function getMyEmoji() {
+      return localStorage.getItem('myEmoji') || null;
+    }
+    function setMyEmoji(e) {
+      localStorage.setItem('myEmoji', e);
+    }
+
+    let activeEmojis = [];
+    let allEmojis = ["🐶", "🦊", "🐼", "🐸", "🐵", "🐧", "🐙", "🦉", "🦄", "🦁", "🐯", "🐨", "🐻", "🦖", "🦕", "🐝", "🐳", "🦋", "🐢", "🐬"];
+    let leaderboard = [];
+    let skipAutoClose = false;
+    let myEmoji = getMyEmoji();
+    let showEmojiModalOnNextFetch = false;
+
+    function showEmojiModal(takenEmojis) {
+      const modal = document.getElementById('emojiModal');
+      const choices = document.getElementById('emojiChoices');
+      const errorEl = document.getElementById('emojiModalError');
+      choices.innerHTML = '';
+
+      allEmojis.forEach(e => {
+        const btn = document.createElement('span');
+        btn.className = 'emoji-choice';
+        btn.innerText = e;
+        btn.style.opacity = takenEmojis.includes(e) ? 0.3 : 1;
+        btn.style.pointerEvents = takenEmojis.includes(e) ? 'none' : 'auto';
+
+        btn.onclick = async () => {
+          const res = await fetch('/emoji', {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emoji: e })
+          });
+          const data = await res.json();
+          if (data.status === "ok") {
+            skipAutoClose = false;
+            setMyEmoji(e);
+            myEmoji = e;
+            modal.style.display = 'none';
+            fetchState();
+          } else {
+            errorEl.textContent = data.msg || "That emoji is taken.";
+          }
+        };
+
+        choices.appendChild(btn);
+      });
+
+      errorEl.textContent = '';
+      modal.style.display = '';
+    }
+
+    /* ---- History Rendering ---- */
+    function renderHistory(guesses) {
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+
+      for (let i = guesses.length - 1; i >= 0; i--) {
+        const g = guesses[i];
+        const li = document.createElement('li');
+        li.className = 'history-item';
+
+        const spanEmoji = document.createElement('span');
+        spanEmoji.className = 'history-emoji';
+        spanEmoji.textContent = g.emoji;
+
+        const tilesContainer = document.createElement('div');
+        tilesContainer.className = 'history-guess-tiles';
+        for (let j = 0; j < 5; j++) {
+          const tile = document.createElement('div');
+          tile.className = 'tile ' + g.result[j];
+          tile.textContent = g.guess[j].toUpperCase();
+          tilesContainer.appendChild(tile);
+        }
+
+        const spanPoints = document.createElement('span');
+        spanPoints.className = 'history-points';
+        spanPoints.textContent = (g.points >= 0 ? '+' : '') + g.points;
+
+        li.append(spanEmoji, tilesContainer, spanPoints);
+        list.appendChild(li);
+      }
+    }
+
+    /* ---- Leaderboard Rendering ---- */
+    function renderLeaderboard() {
+      const lb = document.getElementById('leaderboard');
+      lb.innerHTML = "";
+      const now = Date.now() / 1000;
+
+      leaderboard.forEach(entry => {
+        const node = document.createElement('span');
+        node.className = 'leaderboard-entry' + (myEmoji === entry.emoji ? " me" : "");
+        if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
+          node.classList.add('inactive');
+        }
+        node.innerText = `${entry.emoji} ${entry.score}`;
+
+        if (entry.emoji === myEmoji) {
+          node.style.cursor = 'pointer';
+          node.title = 'Click to change your emoji';
+          node.addEventListener('click', () => {
+            skipAutoClose = true;
+            const taken = activeEmojis.filter(e => e !== myEmoji);
+            showEmojiModal(taken);
+          });
+        }
+
+        lb.appendChild(node);
+      });
+    }
+
+    /* ---- Points Delta Feedback ---- */
+    let lastDeltaTimeout = null;
+    function showPointsDelta(delta) {
+      let el = document.getElementById('pointsDelta');
+      if (lastDeltaTimeout) clearTimeout(lastDeltaTimeout);
+      el.className = '';
+      if (delta > 0) el.classList.add('positive');
+      if (delta < 0) el.classList.add('negative');
+      el.textContent = (delta > 0 ? "+" : "") + delta + " point" + (Math.abs(delta) !== 1 ? "s" : "");
+      el.classList.add('visible');
+      lastDeltaTimeout = setTimeout(() => {
+        el.classList.remove('visible');
+      }, 2200);
+    }
+
+    let maxRows = 6,
+        requiredLetters = new Set(),
+        greenPositions = {},
+        isAnimating = false,
+        gameOver = false;
+
+    const board = document.getElementById('board');
+    const guessInput = document.getElementById('guessInput');
+    const submitButton = document.getElementById('submitGuess');
+    const messageEl = document.getElementById('message');
+    const keyboard = document.getElementById('keyboard');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const historyToggle = document.getElementById('historyToggle');
+    const holdReset = document.getElementById('holdReset');
+    const holdResetProgress = document.getElementById('holdResetProgress');
+    const holdResetText = document.getElementById('holdResetText');
+
+    // --- Dark Mode Toggle ---
+    function applyDarkModePreference() {
+      const prefersDark = localStorage.getItem('darkMode') === 'true';
+      document.body.classList.toggle('dark-mode', prefersDark);
+      darkModeToggle.textContent = prefersDark ? '☀️' : '🌙';
+      darkModeToggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    }
+    darkModeToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', isDark);
+      applyDarkModePreference();
+    });
+
+    // --- History Toggle (mobile only) ---
+    historyToggle.addEventListener('click', () => {
+      document.body.classList.toggle('history-open');
+    });
+
+    // --- Create Board ---
+    function createBoard() {
+      board.innerHTML = '';
+      for (let i = 0; i < maxRows * 5; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        board.appendChild(tile);
+      }
+    }
+
+    // --- Update Board (on state refresh) ---
+    function updateBoard(state) {
+      const guesses = state.guesses;
+      const tiles = board.children;
+      for (let i = 0; i < maxRows * 5; i++) {
+        tiles[i].textContent = '';
+        tiles[i].className = 'tile';
+      }
+      guesses.forEach((g, row) => {
+        for (let i = 0; i < 5; i++) {
+          let tile = tiles[row * 5 + i];
+          tile.textContent = g.guess[i].toUpperCase();
+          tile.classList.add(g.result[i]);
+        }
+      });
+      if (!gameOver && guessInput.value && guesses.length < maxRows) {
+        for (let i = 0; i < guessInput.value.length; i++) {
+          const tile = tiles[guesses.length * 5 + i];
+          tile.textContent = guessInput.value[i].toUpperCase();
+        }
+      }
+    }
+
+    // --- Keyboard State from Guesses ---
+    function resetKeyboard() {
+      Array.from(keyboard.querySelectorAll('.key')).forEach(key => {
+        key.classList.remove('correct', 'present', 'absent');
+      });
+    }
+    function updateKeyboardFromGuesses(guesses) {
+      resetKeyboard();
+      const statusOrder = { absent: 1, present: 2, correct: 3 };
+      const keyStatus = {};
+      guesses.forEach(g => {
+        for (let i = 0; i < 5; i++) {
+          const letter = g.guess[i].toLowerCase();
+          const status = g.result[i];
+          if (!keyStatus[letter] || statusOrder[status] > statusOrder[keyStatus[letter]]) {
+            keyStatus[letter] = status;
+          }
+        }
+      });
+      for (const letter in keyStatus) {
+        const keyEl = keyboard.querySelector(`.key[data-key="${letter}"]`);
+        if (keyEl) keyEl.classList.add(keyStatus[letter]);
+      }
+    }
+
+    // --- Hard Mode Constraints ---
+    function updateHardModeConstraints(guesses) {
+      requiredLetters = new Set();
+      greenPositions = {};
+      guesses.forEach(g => {
+        for (let i = 0; i < 5; i++) {
+          if (g.result[i] === 'correct') {
+            requiredLetters.add(g.guess[i]);
+            greenPositions[i] = g.guess[i];
+          } else if (g.result[i] === 'present') {
+            requiredLetters.add(g.guess[i]);
+          }
+        }
+      });
+    }
+    function isValidHardModeGuess(guess) {
+      for (const index in greenPositions) {
+        if (guess[index] !== greenPositions[index]) {
+          messageEl.textContent = `Letter ${greenPositions[index].toUpperCase()} must be in position ${Number(index) + 1}.`;
+          return false;
+        }
+      }
+      const guessLetters = new Set(guess.split(''));
+      for (const required of requiredLetters) {
+        if (!guessLetters.has(required)) {
+          messageEl.textContent = `Guess must contain letter ${required.toUpperCase()}.`;
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // --- Hold-to-Reset / Instant Reset if gameOver ---
+    let holdProgress = null;
+    function updateResetButton() {
+      if (gameOver) {
+        holdResetText.textContent = "Reset";
+        holdResetProgress.style.width = "0%";
+        holdResetProgress.style.opacity = "0";
+        holdReset.onmousedown = null;
+        holdReset.ontouchstart = null;
+        holdReset.onclick = () => {
+          fetch("/reset", { method: "POST" })
+            .then(r => r.json())
+            .then(() => {
+              fetchState();
+              messageEl.textContent = "Game reset!";
+            });
+        };
+      } else {
+        holdResetText.textContent = "Reset";
+        holdResetProgress.style.opacity = "0.9";
+        holdReset.onclick = null;
+        holdReset.onmousedown = startHoldReset;
+        holdReset.ontouchstart = (e) => {
+          e.preventDefault();
+          startHoldReset();
+        };
+      }
+    }
+    function startHoldReset() {
+      let heldTime = 0,
+          holdDuration = 2000;
+      holdResetProgress.style.width = "0%";
+      holdResetProgress.style.transition = "none";
+      holdResetProgress.style.opacity = "0.9";
+      holdResetProgress.style.background = "var(--absent-shadow-light)";
+      holdProgress = setInterval(() => {
+        heldTime += 20;
+        let percent = Math.min(heldTime / holdDuration, 1) * 100;
+        holdResetProgress.style.width = percent + "%";
+        if (heldTime >= holdDuration) {
+          clearInterval(holdProgress);
+          holdResetProgress.style.width = "100%";
+          holdResetProgress.style.opacity = "0.95";
+          holdResetProgress.style.background = "var(--correct-shadow-light)";
+          setTimeout(() => {
+            holdResetProgress.style.width = "0%";
+          }, 350);
+          fetch("/reset", { method: "POST" })
+            .then(r => r.json())
+            .then(() => {
+              fetchState();
+              messageEl.textContent = "Game reset!";
+            });
+        }
+      }, 20);
+    }
+    function stopHoldReset() {
+      clearInterval(holdProgress);
+      holdResetProgress.style.transition = "width 0.15s";
+      holdResetProgress.style.width = "0%";
+      holdResetProgress.style.opacity = "0.9";
+    }
+    ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(ev =>
+      holdReset.addEventListener(ev, stopHoldReset)
+    );
+
+    // --- Fetch State (with leaderboard & emoji support) ---
+    function fetchState() {
+      fetch("/state")
+        .then(r => {
+          if (!r.ok) throw new Error("Network response was not OK");
+          return r.json();
+        })
+        .then(state => {
+          activeEmojis = state.active_emojis || [];
+          leaderboard = state.leaderboard || [];
+          renderLeaderboard();
+
+          const historyEntries = [];
+          if (state.past_games) {
+            state.past_games.forEach(game =>
+              game.forEach(e => historyEntries.push(e))
+            );
+          }
+          historyEntries.push(...state.guesses);
+          renderHistory(historyEntries);
+
+          maxRows = state.max_rows || 6;
+          updateBoard(state);
+          updateKeyboardFromGuesses(state.guesses);
+          updateHardModeConstraints(state.guesses);
+
+          gameOver = state.is_over;
+          guessInput.disabled   = gameOver;
+          submitButton.disabled = gameOver;
+
+          updateResetButton();
+
+          const haveMy = activeEmojis.includes(myEmoji);
+          if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
+            showEmojiModal(activeEmojis);
+            showEmojiModalOnNextFetch = false;
+          } else if (!skipAutoClose) {
+            document.getElementById("emojiModal").style.display = "none";
+          }
+        })
+        .catch(err => console.error("fetchState error:", err));
+    }
+
+    // --- Submit Guess (with point delta feedback) ---
+    function submitGuessHandler() {
+      if (gameOver) {
+        return;
+      }
+      if (isAnimating) return;
+      const guess = guessInput.value.trim().toLowerCase();
+      if (guess.length !== 5) {
+        messageEl.textContent = "Please enter a 5-letter word.";
+        shakeInput();
+        return;
+      }
+      if (!isValidHardModeGuess(guess)) {
+        shakeInput();
+        return;
+      }
+      fetch("/guess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guess, emoji: myEmoji })
+      }).then(async r => {
+        const resp = await r.json();
+        if (resp.status === "ok") {
+          fetchState();
+          guessInput.value = "";
+          if (typeof resp.pointsDelta === "number") showPointsDelta(resp.pointsDelta);
+
+          if (resp.won) {
+            messageEl.textContent = "You got it! The word was " + resp.state.target_word.toUpperCase();
+          }
+          if (resp.over && !resp.won) {
+            messageEl.textContent = "Game Over! The word was " + resp.state.target_word.toUpperCase();
+          }
+        } else {
+          messageEl.textContent = resp.msg;
+          shakeInput();
+        }
+      });
+    }
+
+    // 2) Heartbeat POST (on real user activity)
+    function sendHeartbeat() {
+      fetch("/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji: myEmoji })
+      }).catch(err => console.error("heartbeat error:", err));
+    }
+
+    // 3) Combined handler for keypress/click
+    function onActivity() {
+      sendHeartbeat();
+      fetchState();
+    }
+
+    // --- UI Feedback (Shake) ---
+    function shakeInput() {
+      guessInput.style.animation = 'shake 0.4s';
+      guessInput.addEventListener('animationend', () => {
+        guessInput.style.animation = '';
+      }, { once: true });
+    }
+
+    // --- Keyboard Input (Physical & On-screen) ---
+    keyboard.addEventListener('click', function (event) {
+      if (event.target.classList.contains('key') && !guessInput.disabled && !isAnimating) {
+        const key = event.target.dataset.key;
+        const currentValue = guessInput.value;
+        if (key === 'Enter') {
+          submitGuessHandler();
+        } else if (key === 'Backspace') {
+          guessInput.value = currentValue.slice(0, -1);
+        } else if (currentValue.length < 5 && /^[a-z]$/i.test(key)) {
+          guessInput.value += key.toUpperCase();
+        }
+        guessInput.focus();
+        updateBoardFromTyping();
+      }
+    });
+    submitButton.addEventListener('click', submitGuessHandler);
+    guessInput.addEventListener('input', function () {
+      this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 5);
+      updateBoardFromTyping();
+    });
+    function updateBoardFromTyping() {
+      fetch("/state").then(r => r.json()).then(state => {
+        updateBoard(state);
+      });
+    }
+    guessInput.addEventListener('keyup', function (event) {
+      if (event.key === 'Enter') submitGuessHandler();
+    });
+    document.addEventListener('keydown', function (event) {
+      if (isAnimating) {
+        event.preventDefault();
+        return;
+      }
+      if (guessInput.disabled || document.activeElement === guessInput) return;
+      const key = event.key.toLowerCase();
+      const currentValue = guessInput.value;
+      if (key === 'enter') {
+        event.preventDefault();
+        submitGuessHandler();
+      } else if (key === 'backspace') {
+        event.preventDefault();
+        guessInput.value = currentValue.slice(0, -1);
+        updateBoardFromTyping();
+      } else if (currentValue.length < 5 && /^[a-z]$/.test(key)) {
+        event.preventDefault();
+        guessInput.value += key.toUpperCase();
+        updateBoardFromTyping();
+      }
+      const keyElement = keyboard.querySelector(`.key[data-key="${key}"]`);
+      if (keyElement) {
+        keyElement.classList.add('active-key-press');
+        setTimeout(() => keyElement.classList.remove('active-key-press'), 150);
+      }
+    });
+
+    // --- On initial load ---
+    applyDarkModePreference();
+    createBoard();
+    fetchState();
+    setInterval(fetchState, 2000);
+    document.addEventListener("keydown", onActivity);
+    document.addEventListener("click", onActivity);
+
+    // --- updateVH() to keep body height locked under the keyboard ---
+    function updateVH() {
+      let vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    updateVH();
+    window.addEventListener('resize', updateVH);
+  </script>
+</body>
+</html>
