@@ -4,6 +4,7 @@ import random
 import json
 import os
 import time
+import urllib.request
 
 app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
@@ -25,6 +26,7 @@ ip_to_emoji = {}      # ip: emoji
 found_greens = set()  # all letters found as green by anyone this game
 found_yellows = set() # all letters found as yellow by anyone this game
 past_games = []       # list of finished games’ guess lists
+definition = None     # definition for the last solved word
 
 
 def save_data():
@@ -37,7 +39,8 @@ def save_data():
         "is_over": is_over,
         "found_greens": list(found_greens),
         "found_yellows": list(found_yellows),
-        "past_games": past_games
+        "past_games": past_games,
+        "definition": definition
     }
     with open(GAME_FILE, "w") as f:
         json.dump(data, f)
@@ -45,7 +48,7 @@ def save_data():
 
 def load_data():
     global WORDS, leaderboard, ip_to_emoji, winner_emoji
-    global target_word, guesses, is_over, found_greens, found_yellows, past_games
+    global target_word, guesses, is_over, found_greens, found_yellows, past_games, definition
 
     # Load word list
     with open(WORDS_FILE) as f:
@@ -64,6 +67,7 @@ def load_data():
                 found_greens  = set(data.get("found_greens", []))
                 found_yellows = set(data.get("found_yellows", []))
                 past_games[:] = data.get("past_games", [])
+                definition    = data.get("definition")
             except Exception:
                 leaderboard.clear()
                 ip_to_emoji.clear()
@@ -74,6 +78,7 @@ def load_data():
                 found_greens.clear()
                 found_yellows.clear()
                 past_games.clear()
+                definition = None
     else:
         leaderboard.clear()
         ip_to_emoji.clear()
@@ -84,16 +89,33 @@ def load_data():
         found_greens.clear()
         found_yellows.clear()
         past_games.clear()
+        definition = None
 
 # ---- Game Logic ----
 def pick_new_word():
-    global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows
+    global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows, definition
     target_word = random.choice(WORDS)
     guesses.clear()
     is_over = False
     winner_emoji = None
     found_greens = set()
     found_yellows = set()
+    definition = None
+
+def fetch_definition(word):
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+    try:
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if isinstance(data, list) and data:
+                meanings = data[0].get("meanings")
+                if meanings:
+                    defs = meanings[0].get("definitions")
+                    if defs:
+                        return defs[0].get("definition")
+    except Exception:
+        pass
+    return None
 
 def get_client_ip():
     if request.headers.getlist("X-Forwarded-For"):
@@ -170,7 +192,8 @@ def state():
         "active_emojis": list(leaderboard.keys()),
         "winner_emoji":  winner_emoji,
         "max_rows":      MAX_ROWS,
-        "past_games":    past_games
+        "past_games":    past_games,
+        "definition":    definition if is_over else None
     })
 
 @app.route("/emoji", methods=["POST"])
@@ -205,7 +228,7 @@ def set_emoji():
 
 @app.route("/guess", methods=["POST"])
 def guess_word():
-    global is_over, winner_emoji, found_greens, found_yellows
+    global is_over, winner_emoji, found_greens, found_yellows, definition
     data = request.json or {}
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
@@ -273,6 +296,9 @@ def guess_word():
         if not won:
             points_delta -= 3  # Last guess, failed
 
+    if over:
+        definition = fetch_definition(target_word)
+
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
         points_delta -= 1
@@ -295,7 +321,8 @@ def guess_word():
         ], key=lambda x: x["score"], reverse=True),
         "active_emojis": list(leaderboard.keys()),
         "winner_emoji": winner_emoji,
-        "max_rows": MAX_ROWS
+        "max_rows": MAX_ROWS,
+        "definition": definition if is_over else None
     }
 
     return jsonify({
