@@ -1,0 +1,2 @@
+# WWF
+WordleWithFriends
