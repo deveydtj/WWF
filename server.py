@@ -159,6 +159,7 @@ def state():
         }
         for emoji in leaderboard
     ]
+    lb.sort(key=lambda e: e["score"], reverse=True)
 
     # ——— Return full game state exactly as before ———
     return jsonify({
@@ -285,13 +286,13 @@ def guess_word():
         "guesses": guesses,
         "target_word": target_word if is_over else None,
         "is_over": is_over,
-        "leaderboard": [
+        "leaderboard": sorted([
             {
                 "emoji": e,
                 "score": leaderboard[e]["score"],
                 "last_active": leaderboard[e].get("last_active", 0)
             } for e in leaderboard
-        ],
+        ], key=lambda x: x["score"], reverse=True),
         "active_emojis": list(leaderboard.keys()),
         "winner_emoji": winner_emoji,
         "max_rows": MAX_ROWS
