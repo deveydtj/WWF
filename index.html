@@ -312,6 +312,20 @@
       font-weight: 500;
       transition: color 0.3s;
     }
+    #messagePopup {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 4px 4px 8px var(--shadow-color-dark),
+                  -4px -4px 8px var(--shadow-color-light);
+      z-index: 100;
+    }
 
     /* ─── Keyboard ─── */
     #keyboard {
@@ -651,27 +665,27 @@
                     -3px -3px 6px var(--shadow-color-light);
       }
 
-      #guessInput {
-        width: 120px;
-        font-size: 16px;
-        margin-right: 6px;
-        padding: 8px 10px;
+      #guessInput,
+      #submitGuess,
+      #message {
+        display: none;
       }
-      #submitGuess {
-        padding: 8px 10px;
-        font-size: 14px;
+
+      #messagePopup {
+        font-size: 16px;
       }
 
       .key {
-        min-width: 24px;
-        height: 36px;
-        margin: 1px;
-        font-size: 12px;
-        padding: 0 3px;
-        box-shadow: 2px 2px 5px var(--shadow-color-dark),
-                    -2px -2px 5px var(--shadow-color-light);
-        border-radius: 4px;
+        min-width: 32px;
+        height: 48px;
+        margin: 2px;
+        font-size: 16px;
+        padding: 0 5px;
+        box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                    -3px -3px 6px var(--shadow-color-light);
+        border-radius: 6px;
       }
+
 
       #holdReset {
         width: 70px;
@@ -751,6 +765,7 @@
 
     <div id="pointsDelta"></div>
     <p id="message"></p>
+    <div id="messagePopup"></div>
 
     <!-- Keyboard -->
     <div id="keyboard">
@@ -930,6 +945,8 @@
     const guessInput = document.getElementById('guessInput');
     const submitButton = document.getElementById('submitGuess');
     const messageEl = document.getElementById('message');
+    const messagePopup = document.getElementById('messagePopup');
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     const keyboard = document.getElementById('keyboard');
     const darkModeToggle = document.getElementById('darkModeToggle');
     const historyToggle = document.getElementById('historyToggle');
@@ -938,6 +955,24 @@
     const holdReset = document.getElementById('holdReset');
     const holdResetProgress = document.getElementById('holdResetProgress');
     const holdResetText = document.getElementById('holdResetText');
+
+    if (isMobile) {
+      guessInput.readOnly = true;
+      guessInput.setAttribute('inputmode', 'none');
+      guessInput.style.display = 'none';
+      submitButton.style.display = 'none';
+      messageEl.style.display = 'none';
+    }
+
+    function showMessage(msg) {
+      if (isMobile) {
+        messagePopup.textContent = msg;
+        messagePopup.style.display = 'block';
+        setTimeout(() => { messagePopup.style.display = 'none'; }, 2000);
+      } else {
+        messageEl.textContent = msg;
+      }
+    }
 
     // --- Dark Mode Toggle ---
     function applyDarkModePreference() {
@@ -1038,14 +1073,14 @@
     function isValidHardModeGuess(guess) {
       for (const index in greenPositions) {
         if (guess[index] !== greenPositions[index]) {
-          messageEl.textContent = `Letter ${greenPositions[index].toUpperCase()} must be in position ${Number(index) + 1}.`;
+          showMessage(`Letter ${greenPositions[index].toUpperCase()} must be in position ${Number(index) + 1}.`);
           return false;
         }
       }
       const guessLetters = new Set(guess.split(''));
       for (const required of requiredLetters) {
         if (!guessLetters.has(required)) {
-          messageEl.textContent = `Guess must contain letter ${required.toUpperCase()}.`;
+          showMessage(`Guess must contain letter ${required.toUpperCase()}.`);
           return false;
         }
       }
@@ -1066,7 +1101,7 @@
             .then(r => r.json())
             .then(() => {
               fetchState();
-              messageEl.textContent = "Game reset!";
+              showMessage("Game reset!");
             });
         };
       } else {
@@ -1103,7 +1138,7 @@
             .then(r => r.json())
             .then(() => {
               fetchState();
-              messageEl.textContent = "Game reset!";
+              showMessage("Game reset!");
             });
         }
       }, 20);
@@ -1176,7 +1211,7 @@
       if (isAnimating) return;
       const guess = guessInput.value.trim().toLowerCase();
       if (guess.length !== 5) {
-        messageEl.textContent = "Please enter a 5-letter word.";
+        showMessage("Please enter a 5-letter word.");
         shakeInput();
         return;
       }
@@ -1196,16 +1231,16 @@
           if (typeof resp.pointsDelta === "number") showPointsDelta(resp.pointsDelta);
 
           if (resp.won) {
-            messageEl.textContent = "You got it! The word was " + resp.state.target_word.toUpperCase();
+            showMessage("You got it! The word was " + resp.state.target_word.toUpperCase());
           }
           if (resp.over && !resp.won) {
-            messageEl.textContent = "Game Over! The word was " + resp.state.target_word.toUpperCase();
+            showMessage("Game Over! The word was " + resp.state.target_word.toUpperCase());
           }
           if (resp.over && resp.state.definition) {
             definitionBox.textContent = `${resp.state.target_word.toUpperCase()} \u2013 ${resp.state.definition}`;
           }
         } else {
-          messageEl.textContent = resp.msg;
+          showMessage(resp.msg);
           shakeInput();
         }
       });
