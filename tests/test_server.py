@@ -249,3 +249,67 @@ def test_state_post_updates_last_active_and_persists(tmp_path, server_env):
         data = json.load(f)
 
     assert data['leaderboard']['😀']['last_active'] == server.leaderboard['😀']['last_active']
+
+
+def test_guess_word_correct_word_wins_game(server_env, monkeypatch):
+    server, request = server_env
+
+    monkeypatch.setattr(server, 'fetch_definition', lambda w: 'def')
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+
+    assert resp['won'] is True
+    assert resp['over'] is True
+    assert server.is_over
+    assert server.winner_emoji == '😀'
+    assert resp['pointsDelta'] == 11
+    assert server.leaderboard['😀']['score'] == 11
+
+
+@pytest.mark.parametrize('word', ['appl', 'zzzzz'])
+def test_guess_word_invalid_word_returns_400(server_env, word):
+    server, request = server_env
+
+    request.json = {'guess': word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 400
+    assert data['status'] == 'error'
+
+
+def test_guess_word_after_game_over_returns_403(server_env):
+    server, request = server_env
+
+    server.is_over = True
+    request.json = {'guess': 'crate', 'emoji': '😀'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 403
+    assert 'over' in data['msg'].lower()
+
+
+def test_guess_word_points_for_new_letters_and_penalties(server_env):
+    server, request = server_env
+
+    request.json = {'guess': 'crane', 'emoji': '😀'}
+    request.remote_addr = '1'
+    first = server.guess_word()
+
+    assert first['pointsDelta'] == 3
+    assert server.leaderboard['😀']['score'] == 3
+    assert server.found_greens == {'e'}
+    assert server.found_yellows == {'a'}
+
+    request.json = {'guess': 'trace', 'emoji': '😀'}
+    second = server.guess_word()
+
+    assert second['pointsDelta'] == -1
+    assert server.leaderboard['😀']['score'] == 2
