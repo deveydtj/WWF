@@ -394,6 +394,27 @@ def test_fetch_definition_exception(monkeypatch, server_env):
     assert definition is None
 
 
+def test_definition_available_after_game_over(monkeypatch, server_env):
+    server, request = server_env
+
+    monkeypatch.setattr(server, 'fetch_definition', lambda w: 'a fruit')
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+
+    assert resp['over'] is True
+    assert resp['state']['definition'] == 'a fruit'
+    assert server.definition == 'a fruit'
+    assert server.last_word == server.target_word
+    assert server.last_definition == 'a fruit'
+
+    request.method = 'GET'
+    request.json = None
+    state = server.state()
+    assert state['definition'] == 'a fruit'
+
+
 def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
     server, _ = server_env
     game_file = tmp_path / 'game.json'
