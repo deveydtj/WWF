@@ -534,6 +534,10 @@
       margin-bottom: 18px;
       gap: 18px;
       padding: 0 0 8px 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      width: 100%;
     }
 
     .leaderboard-entry {
@@ -923,6 +927,8 @@
     let skipAutoClose = false;
     let myEmoji = getMyEmoji();
     let showEmojiModalOnNextFetch = false;
+    let leaderboardScrolling = false;
+    let leaderboardScrollTimeout = null;
 
     function showEmojiModal(takenEmojis) {
       const modal = document.getElementById('emojiModal');
@@ -995,6 +1001,20 @@
     }
 
     /* ---- Leaderboard Rendering ---- */
+    function centerLeaderboardOnMe() {
+      const lb = document.getElementById('leaderboard');
+      if (leaderboardScrolling) return;
+      if (lb.scrollWidth > lb.clientWidth) {
+        const mine = lb.querySelector('.leaderboard-entry.me');
+        if (mine) {
+          const offset = mine.offsetLeft + mine.offsetWidth / 2 - lb.clientWidth / 2;
+          lb.scrollLeft = offset;
+        }
+      } else {
+        lb.scrollLeft = 0;
+      }
+    }
+
     function renderLeaderboard() {
       const lb = document.getElementById('leaderboard');
       lb.innerHTML = "";
@@ -1020,6 +1040,17 @@
 
         lb.appendChild(node);
       });
+
+      centerLeaderboardOnMe();
+
+      lb.onscroll = () => {
+        leaderboardScrolling = true;
+        clearTimeout(leaderboardScrollTimeout);
+        leaderboardScrollTimeout = setTimeout(() => {
+          leaderboardScrolling = false;
+          centerLeaderboardOnMe();
+        }, 1000);
+      };
     }
 
     /* ---- Points Delta Feedback ---- */
