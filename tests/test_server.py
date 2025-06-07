@@ -155,3 +155,16 @@ def test_validate_hard_mode_valid_guess(server_env):
     ok, msg = server.validate_hard_mode('trace')
     assert ok
     assert msg == ''
+
+
+def test_get_client_ip_remote_addr(server_env):
+    server, request = server_env
+    request.remote_addr = '10.1.1.1'
+    assert server.get_client_ip() == '10.1.1.1'
+
+
+def test_get_client_ip_x_forwarded_for(server_env):
+    server, request = server_env
+    request.remote_addr = '10.1.1.1'
+    request.headers['X-Forwarded-For'] = '1.2.3.4, 5.6.7.8'
+    assert server.get_client_ip() == '1.2.3.4'
