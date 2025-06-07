@@ -267,6 +267,19 @@ def test_guess_word_correct_word_wins_game(server_env, monkeypatch):
     assert resp['pointsDelta'] == 11
     assert server.leaderboard['😀']['score'] == 11
 
+    # After game over, resetting should archive game and start fresh
+    prev_guesses = list(server.guesses)
+    prev_word = server.target_word
+    monkeypatch.setattr(server.random, 'choice', lambda words: 'enter')
+    reset = server.reset_game()
+
+    assert reset['status'] == 'ok'
+    assert server.past_games[-1] == prev_guesses
+    assert server.target_word == 'enter'
+    assert server.target_word != prev_word
+    assert server.guesses == []
+    assert not server.is_over
+
 
 @pytest.mark.parametrize('word', ['appl', 'zzzzz'])
 def test_guess_word_invalid_word_returns_400(server_env, word):
