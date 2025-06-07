@@ -251,11 +251,19 @@
 
     /* ─── Board and Tiles ─── */
     #board {
-      margin: 20px auto;
+      margin: 0;
       display: grid;
       grid-template-columns: repeat(5, 60px);
       grid-gap: 10px;
       max-width: 340px;
+    }
+
+    #boardArea {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      margin: 20px auto;
+      width: max-content;
     }
 
     .tile {
@@ -452,6 +460,7 @@
     #resetWrapper {
       display: inline-block;
       position: relative;
+      margin-right: 15px;
     }
 
     #holdReset {
@@ -613,10 +622,14 @@
     /* ─────────────────────────────────────────────
        B) Updated mobile tweaks
        ───────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      #appContainer {
-        padding: 10px;
-      }
+      @media (max-width: 600px) {
+        #appContainer {
+          padding: 10px;
+        }
+
+        #darkModeToggle {
+          display: none;
+        }
 
       #historyToggle {
         display: none;
@@ -705,7 +718,7 @@
         grid-template-columns: repeat(5, 50px);
         grid-gap: 5px;
         max-width: 260px;
-        margin: 20px auto;
+        margin: 0;
       }
 
       .tile {
@@ -811,19 +824,21 @@
 
     <h1>WordleWithFriends</h1>
 
-    <!-- Board -->
-    <div id="board"></div>
-
-    <!-- Guess Input & Reset -->
-    <div>
-      <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
-      <button id="submitGuess">Guess</button>
+    <!-- Board and Reset -->
+    <div id="boardArea">
       <div id="resetWrapper">
         <button id="holdReset">
           <span id="holdResetText">Reset</span>
           <span id="holdResetProgress"></span>
         </button>
       </div>
+      <div id="board"></div>
+    </div>
+
+    <!-- Guess Input -->
+    <div>
+      <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
+      <button id="submitGuess">Guess</button>
     </div>
 
     <div id="pointsDelta"></div>
