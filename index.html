@@ -329,6 +329,13 @@
     }
 
     /* ─── Input & Buttons ─── */
+    #inputArea {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
     #guessInput,
     #submitGuess {
       border: none;
@@ -471,7 +478,7 @@
     #resetWrapper {
       display: inline-block;
       position: relative;
-      margin-right: 0;
+      margin-left: 10px;
     }
 
     #holdReset {
@@ -763,6 +770,12 @@
       }
 
 
+      #resetWrapper {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        margin-left: 0;
+      }
       #holdReset {
         width: 70px;
         height: 32px;
@@ -833,12 +846,6 @@
     </div>
 
     <div id="titleBar">
-      <div id="resetWrapper">
-        <button id="holdReset">
-          <span id="holdResetText">Reset</span>
-          <span id="holdResetProgress"></span>
-        </button>
-      </div>
       <h1>WordleWithFriends</h1>
       <button id="optionsToggle" title="More Options">⚙️</button>
     </div>
@@ -849,9 +856,15 @@
     </div>
 
     <!-- Guess Input -->
-    <div>
+    <div id="inputArea">
       <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
       <button id="submitGuess">Guess</button>
+      <div id="resetWrapper">
+        <button id="holdReset">
+          <span id="holdResetText">Reset</span>
+          <span id="holdResetProgress"></span>
+        </button>
+      </div>
     </div>
 
     <div id="pointsDelta"></div>
