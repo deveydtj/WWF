@@ -168,3 +168,50 @@ def test_get_client_ip_x_forwarded_for(server_env):
     request.remote_addr = '10.1.1.1'
     request.headers['X-Forwarded-For'] = '1.2.3.4, 5.6.7.8'
     assert server.get_client_ip() == '1.2.3.4'
+
+
+def test_set_emoji_registers_and_maps(server_env):
+    server, request = server_env
+
+    request.json = {'emoji': '🤖'}
+    request.remote_addr = '3'
+    resp = server.set_emoji()
+
+    assert resp['status'] == 'ok'
+    assert server.leaderboard['🤖']['ip'] == '3'
+    assert server.ip_to_emoji['3'] == '🤖'
+
+
+def test_set_emoji_duplicate_different_ip(server_env):
+    server, request = server_env
+
+    request.json = {'emoji': '😀'}
+    request.remote_addr = '3'
+    resp = server.set_emoji()
+
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 409
+    assert data['status'] == 'error'
+    assert 'taken' in data['msg']
+    assert '3' not in server.ip_to_emoji
+
+
+def test_set_emoji_changes_remove_previous(server_env):
+    server, request = server_env
+
+    # establish initial mapping for ip '1'
+    request.json = {'emoji': '😀'}
+    request.remote_addr = '1'
+    resp1 = server.set_emoji()
+    assert resp1['status'] == 'ok'
+    assert server.ip_to_emoji['1'] == '😀'
+
+    # change to a new emoji
+    request.json = {'emoji': '🥳'}
+    resp2 = server.set_emoji()
+
+    assert resp2['status'] == 'ok'
+    assert server.ip_to_emoji['1'] == '🥳'
+    assert '🥳' in server.leaderboard
+    assert '😀' not in server.leaderboard
