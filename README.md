@@ -29,10 +29,11 @@ The server loads its words from `sgb-words.txt` and stores state in
 
 ## Testing
 
-Run the unit tests with:
+Run the unit tests from the repository root. Make sure Pytest is installed
+(``pip install pytest`` if needed) and then run:
 
 ```bash
-pytest
+python -m pytest -v
 ```
 
 ## Repository layout
