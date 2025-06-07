@@ -27,6 +27,8 @@ found_greens = set()  # all letters found as green by anyone this game
 found_yellows = set() # all letters found as yellow by anyone this game
 past_games = []       # list of finished games’ guess lists
 definition = None     # definition for the last solved word
+last_word = None      # last completed word
+last_definition = None  # definition of last completed word
 
 
 def save_data():
@@ -40,7 +42,9 @@ def save_data():
         "found_greens": list(found_greens),
         "found_yellows": list(found_yellows),
         "past_games": past_games,
-        "definition": definition
+        "definition": definition,
+        "last_word": last_word,
+        "last_definition": last_definition
     }
     with open(GAME_FILE, "w") as f:
         json.dump(data, f)
@@ -49,6 +53,7 @@ def save_data():
 def load_data():
     global WORDS, leaderboard, ip_to_emoji, winner_emoji
     global target_word, guesses, is_over, found_greens, found_yellows, past_games, definition
+    global last_word, last_definition
 
     # Load word list
     with open(WORDS_FILE) as f:
@@ -68,6 +73,8 @@ def load_data():
                 found_yellows = set(data.get("found_yellows", []))
                 past_games[:] = data.get("past_games", [])
                 definition    = data.get("definition")
+                last_word     = data.get("last_word")
+                last_definition = data.get("last_definition")
             except Exception:
                 leaderboard.clear()
                 ip_to_emoji.clear()
@@ -79,6 +86,8 @@ def load_data():
                 found_yellows.clear()
                 past_games.clear()
                 definition = None
+                last_word = None
+                last_definition = None
     else:
         leaderboard.clear()
         ip_to_emoji.clear()
@@ -90,6 +99,8 @@ def load_data():
         found_yellows.clear()
         past_games.clear()
         definition = None
+        last_word = None
+        last_definition = None
 
 # ---- Game Logic ----
 def pick_new_word():
@@ -193,7 +204,9 @@ def state():
         "winner_emoji":  winner_emoji,
         "max_rows":      MAX_ROWS,
         "past_games":    past_games,
-        "definition":    definition if is_over else None
+        "definition":    definition if is_over else None,
+        "last_word":     last_word,
+        "last_definition": last_definition
     })
 
 @app.route("/emoji", methods=["POST"])
@@ -229,6 +242,7 @@ def set_emoji():
 @app.route("/guess", methods=["POST"])
 def guess_word():
     global is_over, winner_emoji, found_greens, found_yellows, definition
+    global last_word, last_definition
     data = request.json or {}
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
@@ -298,6 +312,8 @@ def guess_word():
 
     if over:
         definition = fetch_definition(target_word)
+        last_word = target_word
+        last_definition = definition
 
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
@@ -322,7 +338,9 @@ def guess_word():
         "active_emojis": list(leaderboard.keys()),
         "winner_emoji": winner_emoji,
         "max_rows": MAX_ROWS,
-        "definition": definition if is_over else None
+        "definition": definition if is_over else None,
+        "last_word": last_word,
+        "last_definition": last_definition
     }
 
     return jsonify({
