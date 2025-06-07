@@ -182,6 +182,7 @@
     #titleBar h1 {
       flex: 1;
       margin: 0 10px;
+      text-align: center;
     }
 
     /* ─── History Panel ─── */
@@ -771,9 +772,6 @@
 
 
       #resetWrapper {
-        position: absolute;
-        top: 15px;
-        left: 15px;
         margin-left: 0;
       }
       #holdReset {
@@ -846,6 +844,12 @@
     </div>
 
     <div id="titleBar">
+      <div id="resetWrapper">
+        <button id="holdReset">
+          <span id="holdResetText">Reset</span>
+          <span id="holdResetProgress"></span>
+        </button>
+      </div>
       <h1>WordleWithFriends</h1>
       <button id="optionsToggle" title="More Options">⚙️</button>
     </div>
@@ -859,12 +863,6 @@
     <div id="inputArea">
       <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
       <button id="submitGuess">Guess</button>
-      <div id="resetWrapper">
-        <button id="holdReset">
-          <span id="holdResetText">Reset</span>
-          <span id="holdResetProgress"></span>
-        </button>
-      </div>
     </div>
 
     <div id="pointsDelta"></div>
@@ -1415,8 +1413,9 @@
     }
 
     // --- Keyboard Input (Physical & On-screen) ---
-    keyboard.addEventListener('click', function (event) {
+    function handleVirtualKey(event) {
       if (event.target.classList.contains('key') && !guessInput.disabled && !isAnimating) {
+        event.preventDefault();
         const key = event.target.dataset.key;
         const currentValue = guessInput.value;
         if (key === 'Enter') {
@@ -1429,7 +1428,9 @@
         guessInput.focus();
         updateBoardFromTyping();
       }
-    });
+    }
+    keyboard.addEventListener('click', handleVirtualKey);
+    keyboard.addEventListener('touchstart', handleVirtualKey);
     submitButton.addEventListener('click', submitGuessHandler);
     guessInput.addEventListener('input', function () {
       this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 5);
