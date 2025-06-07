@@ -349,3 +349,46 @@ def test_pick_new_word_resets_state(server_env, monkeypatch):
     assert server.found_greens == set()
     assert server.found_yellows == set()
     assert server.definition is None
+
+
+def test_fetch_definition_success(monkeypatch, server_env):
+    server, _ = server_env
+
+    payload = json.dumps([
+        {
+            'meanings': [
+                {
+                    'definitions': [
+                        {'definition': 'a fruit'}
+                    ]
+                }
+            ]
+        }
+    ]).encode('utf-8')
+
+    class DummyResp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            pass
+
+        def read(self):
+            return payload
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', lambda *a, **k: DummyResp())
+
+    definition = server.fetch_definition('apple')
+    assert definition == 'a fruit'
+
+
+def test_fetch_definition_exception(monkeypatch, server_env):
+    server, _ = server_env
+
+    def raise_err(*a, **k):
+        raise ValueError('fail')
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', raise_err)
+
+    definition = server.fetch_definition('apple')
+    assert definition is None
