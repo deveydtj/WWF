@@ -1471,13 +1471,28 @@
       }
     });
 
-    // --- On initial load ---
-    applyDarkModePreference();
-    createBoard();
-    fetchState();
-    setInterval(fetchState, 2000);
-    document.addEventListener("keydown", onActivity);
-    document.addEventListener("click", onActivity);
+      function repositionResetButton() {
+        const resetWrapper = document.getElementById('resetWrapper');
+        const titleBar = document.getElementById('titleBar');
+        const inputArea = document.getElementById('inputArea');
+        if (window.innerWidth <= 600) {
+          if (!titleBar.contains(resetWrapper)) {
+            titleBar.insertBefore(resetWrapper, titleBar.firstChild);
+          }
+        } else if (!inputArea.contains(resetWrapper)) {
+          inputArea.appendChild(resetWrapper);
+        }
+      }
+
+      // --- On initial load ---
+      applyDarkModePreference();
+      createBoard();
+      repositionResetButton();
+      fetchState();
+      setInterval(fetchState, 2000);
+      document.addEventListener("keydown", onActivity);
+      document.addEventListener("click", onActivity);
+      window.addEventListener('resize', repositionResetButton);
 
     // --- updateVH() to keep body height locked under the keyboard ---
     function updateVH() {
