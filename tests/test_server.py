@@ -1,6 +1,7 @@
 import sys
 import types
 import importlib
+import json
 import pytest
 
 
@@ -215,3 +216,36 @@ def test_set_emoji_changes_remove_previous(server_env):
     assert server.ip_to_emoji['1'] == '🥳'
     assert '🥳' in server.leaderboard
     assert '😀' not in server.leaderboard
+
+
+def test_state_get_returns_sorted_leaderboard(server_env):
+    server, request = server_env
+
+    request.method = 'GET'
+    request.json = None
+    state = server.state()
+
+    lb_scores = [entry['score'] for entry in state['leaderboard']]
+    assert lb_scores == sorted(lb_scores, reverse=True)
+    assert state['guesses'] == []
+    assert not state['is_over']
+    assert state['target_word'] is None
+
+
+def test_state_post_updates_last_active_and_persists(tmp_path, server_env):
+    server, request = server_env
+
+    game_file = tmp_path / 'game.json'
+    server.GAME_FILE = str(game_file)
+
+    before = server.leaderboard['😀']['last_active']
+    request.method = 'POST'
+    request.json = {'emoji': '😀'}
+    server.state()
+
+    assert server.leaderboard['😀']['last_active'] > before
+
+    with open(game_file) as f:
+        data = json.load(f)
+
+    assert data['leaderboard']['😀']['last_active'] == server.leaderboard['😀']['last_active']
