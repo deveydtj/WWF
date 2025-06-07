@@ -392,3 +392,76 @@ def test_fetch_definition_exception(monkeypatch, server_env):
 
     definition = server.fetch_definition('apple')
     assert definition is None
+
+
+def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
+    server, _ = server_env
+    game_file = tmp_path / 'game.json'
+    monkeypatch.setattr(server, 'GAME_FILE', str(game_file))
+
+    server.leaderboard = {
+        '🤖': {
+            'ip': '1',
+            'score': 99,
+            'used_yellow': ['y'],
+            'used_green': ['g'],
+            'last_active': 42,
+        }
+    }
+    server.ip_to_emoji = {'1': '🤖'}
+    server.winner_emoji = '🤖'
+    server.target_word = 'enter'
+    server.guesses = [{'guess': 'enter', 'result': ['correct'] * 5, 'emoji': '🤖'}]
+    server.is_over = True
+    server.found_greens = {'e'}
+    server.found_yellows = {'n', 't'}
+    server.past_games = [[{'guess': 'apple', 'result': [], 'emoji': '😀'}]]
+    server.definition = 'def'
+    server.last_word = 'apple'
+    server.last_definition = 'fruit'
+
+    expected = {
+        'leaderboard': dict(server.leaderboard),
+        'ip_to_emoji': dict(server.ip_to_emoji),
+        'winner_emoji': server.winner_emoji,
+        'target_word': server.target_word,
+        'guesses': list(server.guesses),
+        'is_over': server.is_over,
+        'found_greens': set(server.found_greens),
+        'found_yellows': set(server.found_yellows),
+        'past_games': list(server.past_games),
+        'definition': server.definition,
+        'last_word': server.last_word,
+        'last_definition': server.last_definition,
+    }
+
+    server.save_data()
+
+    server.leaderboard = {}
+    server.ip_to_emoji = {}
+    server.winner_emoji = None
+    server.target_word = ''
+    server.guesses = []
+    server.is_over = False
+    server.found_greens = set()
+    server.found_yellows = set()
+    server.past_games = []
+    server.definition = None
+    server.last_word = None
+    server.last_definition = None
+
+    server.load_data()
+
+    assert server.leaderboard == expected['leaderboard']
+    assert server.ip_to_emoji == expected['ip_to_emoji']
+    assert server.winner_emoji == expected['winner_emoji']
+    assert server.target_word == expected['target_word']
+    assert server.guesses == expected['guesses']
+    assert server.is_over == expected['is_over']
+    assert server.found_greens == expected['found_greens']
+    assert server.found_yellows == expected['found_yellows']
+    assert server.past_games == expected['past_games']
+    assert server.definition == expected['definition']
+    assert server.last_word == expected['last_word']
+    assert server.last_definition == expected['last_definition']
+
