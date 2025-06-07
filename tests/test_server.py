@@ -117,3 +117,41 @@ def test_duplicate_guess_and_sorted_leaderboard(server_env):
     duplicate = server.guess_word()
     assert duplicate['status'] == 'error'
     assert 'already guessed' in duplicate['msg']
+
+
+def test_validate_hard_mode_missing_letter(server_env):
+    server, _ = server_env
+
+    # Prior guess finds a yellow 'E'
+    result = server.result_for_guess('enter', server.target_word)
+    server.guesses.append({'guess': 'enter', 'result': result, 'emoji': '😀'})
+
+    ok, msg = server.validate_hard_mode('crank')
+    assert not ok
+    assert 'E' in msg
+
+
+def test_validate_hard_mode_wrong_green_position(server_env):
+    server, _ = server_env
+
+    # Prior guess reveals 'E' is green in position 5
+    result = server.result_for_guess('crane', server.target_word)
+    server.guesses.append({'guess': 'crane', 'result': result, 'emoji': '😀'})
+
+    ok, msg = server.validate_hard_mode('enter')
+    assert not ok
+    assert 'position 5' in msg
+
+
+def test_validate_hard_mode_valid_guess(server_env):
+    server, _ = server_env
+
+    # Multiple prior guesses accumulating constraints
+    r1 = server.result_for_guess('enter', server.target_word)
+    server.guesses.append({'guess': 'enter', 'result': r1, 'emoji': '😀'})
+    r2 = server.result_for_guess('crane', server.target_word)
+    server.guesses.append({'guess': 'crane', 'result': r2, 'emoji': '😀'})
+
+    ok, msg = server.validate_hard_mode('trace')
+    assert ok
+    assert msg == ''
