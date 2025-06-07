@@ -326,3 +326,26 @@ def test_guess_word_points_for_new_letters_and_penalties(server_env):
 
     assert second['pointsDelta'] == -1
     assert server.leaderboard['😀']['score'] == 2
+
+def test_pick_new_word_resets_state(server_env, monkeypatch):
+    server, _ = server_env
+    # Set up some non-empty state that should be cleared
+    server.guesses.append({'guess': 'apple', 'result': [], 'emoji': '😀'})
+    server.is_over = True
+    server.winner_emoji = '😎'
+    server.found_greens = {'a'}
+    server.found_yellows = {'b'}
+    server.definition = 'some definition'
+
+    # Deterministic word selection
+    monkeypatch.setattr(server.random, 'choice', lambda words: 'crane')
+
+    server.pick_new_word()
+
+    assert server.target_word == 'crane'
+    assert server.guesses == []
+    assert not server.is_over
+    assert server.winner_emoji is None
+    assert server.found_greens == set()
+    assert server.found_yellows == set()
+    assert server.definition is None
