@@ -122,9 +122,6 @@
 
     #optionsToggle {
       display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
       font-size: 28px;
       background: none;
       border: none;
@@ -132,7 +129,7 @@
       padding: 5px;
       color: var(--text-color-light);
       line-height: 1;
-      z-index: 60;
+      margin-left: 10px;
     }
 
     #optionsMenu {
@@ -172,6 +169,18 @@
       color: var(--text-color-light);
       margin-bottom: 5px;
       font-weight: 600;
+    }
+
+    #titleBar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    #titleBar h1 {
+      flex: 1;
+      margin: 0 10px;
     }
 
     /* ─── History Panel ─── */
@@ -386,7 +395,7 @@
     /* ─── Keyboard ─── */
     #keyboard {
       display: inline-block;
-      margin-top: 30px;
+      margin-top: 15px;
     }
 
     .keyboard-row {
@@ -460,7 +469,7 @@
     #resetWrapper {
       display: inline-block;
       position: relative;
-      margin-right: 15px;
+      margin-right: 0;
     }
 
     #holdReset {
@@ -800,7 +809,6 @@
     <button id="historyToggle" title="Show/Hide History">📜</button>
     <button id="definitionToggle" title="Show/Hide Definition">📖</button>
     <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
-    <button id="optionsToggle" title="More Options">⚙️</button>
     <div id="optionsMenu" style="display:none;">
       <button id="optionsClose" class="popup-close">✖</button>
       <button id="menuHistory">📜 History</button>
@@ -822,16 +830,19 @@
       <div id="definitionText"></div>
     </div>
 
-    <h1>WordleWithFriends</h1>
-
-    <!-- Board and Reset -->
-    <div id="boardArea">
+    <div id="titleBar">
       <div id="resetWrapper">
         <button id="holdReset">
           <span id="holdResetText">Reset</span>
           <span id="holdResetProgress"></span>
         </button>
       </div>
+      <h1>WordleWithFriends</h1>
+      <button id="optionsToggle" title="More Options">⚙️</button>
+    </div>
+
+    <!-- Board -->
+    <div id="boardArea">
       <div id="board"></div>
     </div>
 
