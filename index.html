@@ -120,6 +120,54 @@
       line-height: 1;
     }
 
+    #optionsToggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 28px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      color: var(--text-color-light);
+      line-height: 1;
+      z-index: 60;
+    }
+
+    #optionsMenu {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      background: var(--bg-color);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 8px var(--shadow-color-dark),
+                  -2px -2px 8px var(--shadow-color-light);
+      z-index: 70;
+    }
+
+    #optionsMenu button {
+      display: block;
+      margin: 6px 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-color-light);
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--text-color-light);
+    }
+
     h1 {
       color: var(--text-color-light);
       margin-bottom: 5px;
@@ -571,10 +619,14 @@
       }
 
       #historyToggle {
-        display: block;
+        display: none;
       }
 
       #definitionToggle {
+        display: none;
+      }
+
+      #optionsToggle {
         display: block;
       }
 
@@ -650,16 +702,16 @@
       }
 
       #board {
-        grid-template-columns: repeat(5, 40px);
-        grid-gap: 4px;
-        max-width: 220px;
+        grid-template-columns: repeat(5, 50px);
+        grid-gap: 5px;
+        max-width: 260px;
         margin: 20px auto;
       }
 
       .tile {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
         border-radius: 4px;
         box-shadow: 3px 3px 6px var(--shadow-color-dark),
                     -3px -3px 6px var(--shadow-color-light);
@@ -731,20 +783,31 @@
       </div>
     </div>
 
-    <!-- Dark Mode & History Toggle Buttons -->
+    <!-- Option Buttons -->
     <button id="historyToggle" title="Show/Hide History">📜</button>
     <button id="definitionToggle" title="Show/Hide Definition">📖</button>
     <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
+    <button id="optionsToggle" title="More Options">⚙️</button>
+    <div id="optionsMenu" style="display:none;">
+      <button id="optionsClose" class="popup-close">✖</button>
+      <button id="menuHistory">📜 History</button>
+      <button id="menuDefinition">📖 Definition</button>
+      <button id="menuDarkMode">🌙/☀️</button>
+    </div>
 
     <!-- Game History Panel -->
     <div id="historyBox">
+      <button id="historyClose" class="popup-close">✖</button>
       <h3>History</h3>
       <ul id="historyList"></ul>
     </div>
 
     <!-- Leaderboard -->
     <div id="leaderboard"></div>
-    <div id="definitionBox"></div>
+    <div id="definitionBox">
+      <button id="definitionClose" class="popup-close">✖</button>
+      <div id="definitionText"></div>
+    </div>
 
     <h1>WordleWithFriends</h1>
 
@@ -951,7 +1014,16 @@
     const darkModeToggle = document.getElementById('darkModeToggle');
     const historyToggle = document.getElementById('historyToggle');
     const definitionToggle = document.getElementById('definitionToggle');
+    const definitionText = document.getElementById('definitionText');
     const definitionBox = document.getElementById('definitionBox');
+    const historyClose = document.getElementById('historyClose');
+    const definitionClose = document.getElementById('definitionClose');
+    const optionsToggle = document.getElementById('optionsToggle');
+    const optionsMenu = document.getElementById('optionsMenu');
+    const optionsClose = document.getElementById('optionsClose');
+    const menuHistory = document.getElementById('menuHistory');
+    const menuDefinition = document.getElementById('menuDefinition');
+    const menuDarkMode = document.getElementById('menuDarkMode');
     const holdReset = document.getElementById('holdReset');
     const holdResetProgress = document.getElementById('holdResetProgress');
     const holdResetText = document.getElementById('holdResetText');
@@ -992,9 +1064,36 @@
       document.body.classList.toggle('history-open');
     });
 
+    historyClose.addEventListener('click', () => {
+      document.body.classList.remove('history-open');
+    });
+
     // --- Definition Toggle (mobile only) ---
     definitionToggle.addEventListener('click', () => {
       document.body.classList.toggle('definition-open');
+    });
+
+    definitionClose.addEventListener('click', () => {
+      document.body.classList.remove('definition-open');
+    });
+
+    // --- Options Menu ---
+    optionsToggle.addEventListener('click', () => {
+      optionsMenu.style.display = 'block';
+    });
+    optionsClose.addEventListener('click', () => {
+      optionsMenu.style.display = 'none';
+    });
+    menuHistory.addEventListener('click', () => {
+      historyToggle.click();
+      optionsMenu.style.display = 'none';
+    });
+    menuDefinition.addEventListener('click', () => {
+      definitionToggle.click();
+      optionsMenu.style.display = 'none';
+    });
+    menuDarkMode.addEventListener('click', () => {
+      darkModeToggle.click();
     });
 
     // --- Create Board ---
@@ -1186,9 +1285,11 @@
           updateResetButton();
 
           if (state.is_over && state.definition) {
-            definitionBox.textContent = `${state.target_word.toUpperCase()} \u2013 ${state.definition}`;
+            definitionText.textContent = `${state.target_word.toUpperCase()} \u2013 ${state.definition}`;
+          } else if (state.last_word && state.last_definition) {
+            definitionText.textContent = `${state.last_word.toUpperCase()} \u2013 ${state.last_definition}`;
           } else {
-            definitionBox.textContent = '';
+            definitionText.textContent = '';
             document.body.classList.remove('definition-open');
           }
 
@@ -1237,7 +1338,7 @@
             showMessage("Game Over! The word was " + resp.state.target_word.toUpperCase());
           }
           if (resp.over && resp.state.definition) {
-            definitionBox.textContent = `${resp.state.target_word.toUpperCase()} \u2013 ${resp.state.definition}`;
+            definitionText.textContent = `${resp.state.target_word.toUpperCase()} \u2013 ${resp.state.definition}`;
           }
         } else {
           showMessage(resp.msg);
