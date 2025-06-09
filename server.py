@@ -5,6 +5,7 @@ import json
 import os
 import time
 import urllib.request
+import urllib.error
 
 app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
@@ -124,6 +125,13 @@ def fetch_definition(word):
                     defs = meanings[0].get("definitions")
                     if defs:
                         return defs[0].get("definition")
+    except urllib.error.URLError:
+        try:
+            with open("offline_definitions.json") as f:
+                offline = json.load(f)
+            return offline.get(word)
+        except Exception:
+            pass
     except Exception:
         pass
     return None
