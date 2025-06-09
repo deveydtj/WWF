@@ -6,10 +6,13 @@ import os
 import time
 import urllib.request
 import urllib.error
+import logging
 
 app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
 CORS(app)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
 
 WORDS_FILE = "sgb-words.txt"
 GAME_FILE = "game_persist.json"
@@ -116,7 +119,9 @@ def pick_new_word():
 
 def fetch_definition(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+    logging.info(f"Fetching definition for '{word}'")
     try:
+        logging.info(f"Trying online dictionary API for '{word}'")
         with urllib.request.urlopen(url, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             if isinstance(data, list) and data:
@@ -124,16 +129,25 @@ def fetch_definition(word):
                 if meanings:
                     defs = meanings[0].get("definitions")
                     if defs:
-                        return defs[0].get("definition")
-    except urllib.error.URLError:
+                        definition = defs[0].get("definition")
+                        logging.info(f"Online definition for '{word}': {definition}")
+                        return definition
+    except urllib.error.URLError as e:
+        logging.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
         try:
             with open("offline_definitions.json") as f:
                 offline = json.load(f)
-            return offline.get(word)
-        except Exception:
-            pass
-    except Exception:
-        pass
+            definition = offline.get(word)
+            if definition:
+                logging.info(f"Offline definition for '{word}': {definition}")
+            else:
+                logging.info(f"No offline definition found for '{word}'")
+            return definition
+        except Exception as e2:
+            logging.info(f"Offline lookup failed for '{word}': {e2}")
+    except Exception as e:
+        logging.info(f"Unexpected error fetching definition for '{word}': {e}")
+    logging.info(f"No definition found for '{word}'")
     return None
 
 def get_client_ip():
@@ -320,6 +334,9 @@ def guess_word():
 
     if over:
         definition = fetch_definition(target_word)
+        logging.info(
+            f"Definition lookup complete for '{target_word}': {definition or 'None'}"
+        )
         last_word = target_word
         last_definition = definition
 
