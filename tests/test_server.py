@@ -394,6 +394,33 @@ def test_fetch_definition_exception(monkeypatch, server_env):
     assert definition is None
 
 
+def test_fetch_definition_sets_user_agent(monkeypatch, server_env):
+    server, _ = server_env
+
+    captured = {}
+
+    class DummyResp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            pass
+
+        def read(self):
+            return b"[]"
+
+    def fake_urlopen(req, *a, **k):
+        ua = req.get_header('User-Agent') or req.get_header('User-agent')
+        captured['ua'] = ua
+        return DummyResp()
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+
+    server.fetch_definition('apple')
+
+    assert captured['ua'] and 'Mozilla' in captured['ua']
+
+
 def test_definition_available_after_game_over(monkeypatch, server_env):
     server, request = server_env
 
