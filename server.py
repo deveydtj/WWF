@@ -122,7 +122,16 @@ def fetch_definition(word):
     logging.info(f"Fetching definition for '{word}'")
     try:
         logging.info(f"Trying online dictionary API for '{word}'")
-        with urllib.request.urlopen(url, timeout=5) as resp:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) "
+                    "Gecko/20100101 Firefox/109.0"
+                )
+            },
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             if isinstance(data, list) and data:
                 meanings = data[0].get("meanings")
