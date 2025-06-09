@@ -171,6 +171,34 @@
       #definitionClose {
         display: none;
       }
+      #historyToggle,
+      #definitionToggle {
+        display: none;
+      }
+      #optionsToggle {
+        display: block;
+      }
+      #boardArea {
+        position: relative;
+      }
+      #historyBox {
+        top: 0;
+        left: auto;
+        right: calc(100% + 20px);
+      }
+      #definitionBox {
+        top: 0;
+        right: auto;
+        left: calc(100% + 20px);
+      }
+      body:not(.history-open) #historyBox {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      body:not(.definition-open) #definitionBox {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
     }
 
     h1 {
@@ -200,6 +228,8 @@
       width: 260px;
       max-height: 70vh;
       overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       background: var(--bg-color);
       padding: 10px;
       border-radius: 8px;
@@ -207,6 +237,9 @@
         inset 2px 2px 5px var(--shadow-color-dark),
         inset -2px -2px 5px var(--shadow-color-light);
       transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    #historyBox::-webkit-scrollbar {
+      display: none;
     }
 
     #definitionBox {
@@ -216,6 +249,8 @@
       width: 260px;
       max-height: 70vh;
       overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       background: var(--bg-color);
       padding: 10px;
       border-radius: 8px;
@@ -223,6 +258,9 @@
         inset 2px 2px 5px var(--shadow-color-dark),
         inset -2px -2px 5px var(--shadow-color-light);
       transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    #definitionBox::-webkit-scrollbar {
+      display: none;
     }
 
     #historyList {
@@ -282,6 +320,7 @@
       align-items: flex-end;
       margin: 20px auto;
       width: max-content;
+      position: relative;
     }
 
     .tile {
@@ -338,10 +377,11 @@
 
     /* ─── Input & Buttons ─── */
     #inputArea {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 10px;
+      margin: 0 auto 10px auto;
+      width: max-content;
     }
 
     #guessInput,
@@ -1526,6 +1566,10 @@
       applyDarkModePreference();
       createBoard();
       repositionResetButton();
+      if (window.innerWidth > 600) {
+        document.body.classList.add('history-open');
+        document.body.classList.add('definition-open');
+      }
       fetchState();
       setInterval(fetchState, 2000);
       document.addEventListener("keydown", onActivity);
