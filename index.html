@@ -136,9 +136,7 @@
     }
 
     #optionsMenu {
-      position: fixed;
-      top: 60px;
-      right: 20px;
+      position: absolute;
       background: var(--bg-color);
       padding: 10px;
       border-radius: 8px;
@@ -1207,7 +1205,10 @@
 
     // --- Options Menu ---
     optionsToggle.addEventListener('click', () => {
+      const rect = optionsToggle.getBoundingClientRect();
       optionsMenu.style.display = 'block';
+      optionsMenu.style.top = `${rect.bottom + window.scrollY}px`;
+      optionsMenu.style.left = `${rect.left + window.scrollX}px`;
     });
     optionsClose.addEventListener('click', () => {
       optionsMenu.style.display = 'none';
@@ -1418,7 +1419,6 @@
             definitionText.textContent = `${state.last_word.toUpperCase()} \u2013 ${state.last_definition}`;
           } else {
             definitionText.textContent = '';
-            document.body.classList.remove('definition-open');
           }
 
           const haveMy = activeEmojis.includes(myEmoji);
@@ -1570,10 +1570,35 @@
         }
       }
 
+      function positionSidePanels() {
+        if (window.innerWidth > 600) {
+          const boardRect = boardArea.getBoundingClientRect();
+          const top = boardRect.top + window.scrollY;
+          const left = boardRect.left + window.scrollX;
+          const right = boardRect.right + window.scrollX;
+
+          historyBox.style.position = 'absolute';
+          historyBox.style.top = `${top}px`;
+          historyBox.style.left = `${left - historyBox.offsetWidth - 20}px`;
+
+          definitionBox.style.position = 'absolute';
+          definitionBox.style.top = `${top}px`;
+          definitionBox.style.left = `${right + 20}px`;
+        } else {
+          historyBox.style.position = '';
+          historyBox.style.top = '';
+          historyBox.style.left = '';
+          definitionBox.style.position = '';
+          definitionBox.style.top = '';
+          definitionBox.style.left = '';
+        }
+      }
+
       // --- On initial load ---
       applyDarkModePreference();
       createBoard();
       repositionResetButton();
+      positionSidePanels();
       if (window.innerWidth > 600) {
         document.body.classList.add('history-open');
         document.body.classList.add('definition-open');
@@ -1583,6 +1608,7 @@
       document.addEventListener("keydown", onActivity);
       document.addEventListener("click", onActivity);
       window.addEventListener('resize', repositionResetButton);
+      window.addEventListener('resize', positionSidePanels);
 
     // --- updateVH() to keep body height locked under the keyboard ---
     function updateVH() {
