@@ -14,7 +14,7 @@ as they are completed.
 
 - [ ] Sanitize definition text received from the backend before display.
 - [ ] Handle race conditions when two players attempt to select the same emoji.
-- [ ] Allow polling interval to decrease when no users are active.
+ - [x] Allow polling interval to decrease when no users are active.
 
 ## UI Enhancements
 

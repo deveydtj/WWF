@@ -1151,6 +1151,14 @@
     const holdResetProgress = document.getElementById('holdResetProgress');
     const holdResetText = document.getElementById('holdResetText');
 
+    // --- Polling/Activity Tracking ---
+    const FAST_INTERVAL = 2000;
+    const SLOW_INTERVAL = 15000;
+    const INACTIVE_DELAY = 60000; // 1 minute
+    let lastActivity = Date.now();
+    let pollTimer;
+    let currentInterval = FAST_INTERVAL;
+
     if (isMobile) {
       guessInput.readOnly = true;
       guessInput.setAttribute('inputmode', 'none');
@@ -1486,8 +1494,24 @@
 
     // 3) Combined handler for keypress/click
     function onActivity() {
+      lastActivity = Date.now();
+      if (currentInterval !== FAST_INTERVAL) startPolling(FAST_INTERVAL);
       sendHeartbeat();
       fetchState();
+    }
+
+    // --- Polling Helpers ---
+    function startPolling(interval) {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(fetchState, interval);
+      currentInterval = interval;
+    }
+
+    function checkInactivity() {
+      if (Date.now() - lastActivity > INACTIVE_DELAY &&
+          currentInterval !== SLOW_INTERVAL) {
+        startPolling(SLOW_INTERVAL);
+      }
     }
 
     // --- UI Feedback (Shake) ---
@@ -1604,7 +1628,8 @@
         document.body.classList.add('definition-open');
       }
       fetchState();
-      setInterval(fetchState, 2000);
+      startPolling(FAST_INTERVAL);
+      setInterval(checkInactivity, 5000);
       document.addEventListener("keydown", onActivity);
       document.addEventListener("click", onActivity);
       window.addEventListener('resize', repositionResetButton);
