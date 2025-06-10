@@ -397,6 +397,11 @@ def reset_game():
 def index():
     return send_from_directory(".", "index.html")
 
+# Serve JavaScript modules from the src directory
+@app.route('/src/<path:filename>')
+def src_files(filename):
+    return send_from_directory('src', filename)
+
 if __name__ == "__main__":
     load_data()
     if not target_word:
