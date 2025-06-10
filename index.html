@@ -130,7 +130,9 @@
       padding: 5px;
       color: var(--text-color-light);
       line-height: 1;
-      margin-left: 10px;
+      position: absolute;
+      top: 0;
+      left: calc(100% + 10px);
     }
 
     #optionsMenu {
@@ -191,12 +193,18 @@
         right: auto;
         left: calc(100% + 20px);
       }
+      #historyBox {
+        transform-origin: right center;
+      }
+      #definitionBox {
+        transform-origin: left center;
+      }
       body:not(.history-open) #historyBox {
-        transform: translateX(100%);
+        transform: scale(0);
         opacity: 0;
       }
       body:not(.definition-open) #definitionBox {
-        transform: translateX(-100%);
+        transform: scale(0);
         opacity: 0;
       }
     }
@@ -902,12 +910,12 @@
         </button>
       </div>
       <h1>WordleWithFriends</h1>
-      <button id="optionsToggle" title="More Options">⚙️</button>
     </div>
 
     <!-- Board -->
     <div id="boardArea">
       <div id="board"></div>
+      <button id="optionsToggle" title="More Options">⚙️</button>
     </div>
 
     <!-- Guess Input -->
