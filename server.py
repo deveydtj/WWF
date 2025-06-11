@@ -35,6 +35,7 @@ past_games = []       # list of finished games’ guess lists
 definition = None     # definition for the last solved word
 last_word = None      # last completed word
 last_definition = None  # definition of last completed word
+win_timestamp = None   # timestamp when the winning guess was submitted
 
 
 def sanitize_definition(text: str) -> str:
@@ -57,7 +58,8 @@ def save_data():
         "past_games": past_games,
         "definition": definition,
         "last_word": last_word,
-        "last_definition": last_definition
+        "last_definition": last_definition,
+        "win_timestamp": win_timestamp
     }
     with open(GAME_FILE, "w") as f:
         json.dump(data, f)
@@ -66,7 +68,7 @@ def save_data():
 def load_data():
     global WORDS, leaderboard, ip_to_emoji, winner_emoji
     global target_word, guesses, is_over, found_greens, found_yellows, past_games, definition
-    global last_word, last_definition
+    global last_word, last_definition, win_timestamp
 
     # Load word list
     with open(WORDS_FILE) as f:
@@ -88,6 +90,7 @@ def load_data():
                 definition    = data.get("definition")
                 last_word     = data.get("last_word")
                 last_definition = data.get("last_definition")
+                win_timestamp = data.get("win_timestamp")
             except Exception:
                 leaderboard.clear()
                 ip_to_emoji.clear()
@@ -101,6 +104,7 @@ def load_data():
                 definition = None
                 last_word = None
                 last_definition = None
+                win_timestamp = None
     else:
         leaderboard.clear()
         ip_to_emoji.clear()
@@ -114,10 +118,11 @@ def load_data():
         definition = None
         last_word = None
         last_definition = None
+        win_timestamp = None
 
 # ---- Game Logic ----
 def pick_new_word():
-    global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows, definition
+    global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows, definition, win_timestamp
     target_word = random.choice(WORDS)
     guesses.clear()
     is_over = False
@@ -125,6 +130,7 @@ def pick_new_word():
     found_greens = set()
     found_yellows = set()
     definition = None
+    win_timestamp = None
 
 def fetch_definition(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
@@ -285,21 +291,28 @@ def set_emoji():
 @app.route("/guess", methods=["POST"])
 def guess_word():
     global is_over, winner_emoji, found_greens, found_yellows, definition
-    global last_word, last_definition
+    global last_word, last_definition, win_timestamp
     data = request.json or {}
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
-    existing = [g["guess"] for g in guesses]
-    if guess in existing:
-        return jsonify(status="error", msg="You’ve already guessed that word.")
- 
     emoji = data.get("emoji")
     ip = get_client_ip()
     points_delta = 0
     now = time.time()
 
     if is_over:
-        return jsonify({"status": "error", "msg": "Game is over. Please reset."}), 403
+        close_call = None
+        if guess == target_word and win_timestamp and emoji != winner_emoji:
+            diff = now - win_timestamp
+            if diff <= 1:
+                close_call = {"delta_ms": int(diff * 1000), "winner": winner_emoji}
+        resp = {"status": "error", "msg": "Game is over. Please reset."}
+        if close_call:
+            resp["close_call"] = close_call
+        return jsonify(resp), 403
+    existing = [g["guess"] for g in guesses]
+    if guess in existing:
+        return jsonify(status="error", msg="You’ve already guessed that word.")
     if not guess or len(guess) != 5 or guess not in WORDS:
         return jsonify({"status": "error", "msg": "Not a valid 5-letter word."}), 400
     if emoji not in leaderboard or leaderboard[emoji]["ip"] != ip:
@@ -312,7 +325,7 @@ def guess_word():
         return jsonify({"status": "error", "msg": msg}), 400
 
     result = result_for_guess(guess, target_word)
-    new_entry = {"guess": guess, "result": result, "emoji": emoji}
+    new_entry = {"guess": guess, "result": result, "emoji": emoji, "ts": now}
     already_guessed = any(g["guess"] == guess for g in guesses)
     guesses.append(new_entry)
 
@@ -347,6 +360,7 @@ def guess_word():
         winner_emoji = emoji
         is_over = True
         over = True
+        win_timestamp = now
     elif len(guesses) == MAX_ROWS:
         is_over = True
         over = True

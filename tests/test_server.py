@@ -568,3 +568,43 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
     assert server.last_word == expected['last_word']
     assert server.last_definition == expected['last_definition']
 
+
+def test_close_call_trigger(monkeypatch, server_env):
+    server, request = server_env
+
+    monkeypatch.setattr(server.time, 'time', lambda: 1.0)
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    win = server.guess_word()
+    assert win['won'] is True
+
+    monkeypatch.setattr(server.time, 'time', lambda: 1.5)
+    request.json = {'guess': server.target_word, 'emoji': '😎'}
+    request.remote_addr = '2'
+    resp = server.guess_word()
+
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 403
+    assert data['close_call']['delta_ms'] == 500
+    assert data['close_call']['winner'] == '😀'
+
+
+def test_close_call_not_triggered(monkeypatch, server_env):
+    server, request = server_env
+
+    monkeypatch.setattr(server.time, 'time', lambda: 1.0)
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    monkeypatch.setattr(server.time, 'time', lambda: 2.5)
+    request.json = {'guess': server.target_word, 'emoji': '😎'}
+    request.remote_addr = '2'
+    resp = server.guess_word()
+
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 403
+    assert 'close_call' not in data
+
