@@ -273,7 +273,14 @@ async function submitGuessHandler() {
       definitionText.textContent = `${resp.state.target_word.toUpperCase()} – ${resp.state.definition}`;
     }
   } else {
-    showMessage(resp.msg, { messageEl, messagePopup });
+    if (resp.close_call) {
+      showMessage(
+        `Close call! ${resp.close_call.winner} beat you by ${resp.close_call.delta_ms}ms.`,
+        { messageEl, messagePopup }
+      );
+    } else {
+      showMessage(resp.msg, { messageEl, messagePopup });
+    }
     shakeInput(guessInput);
   }
 }
