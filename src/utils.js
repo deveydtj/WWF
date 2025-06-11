@@ -76,6 +76,7 @@ export function positionSidePanels(boardArea, historyBox, definitionBox) {
 }
 
 export function updatePopupMode(boardArea, historyBox, definitionBox) {
+  const wasPopup = document.body.classList.contains('popup-mode');
   if (window.innerWidth > 600) {
     const total =
       historyBox.offsetWidth +
@@ -91,6 +92,11 @@ export function updatePopupMode(boardArea, historyBox, definitionBox) {
     }
   } else {
     document.body.classList.remove('popup-mode');
+  }
+  const isPopup = document.body.classList.contains('popup-mode');
+  if (wasPopup && !isPopup && window.innerWidth > 600) {
+    document.body.classList.add('history-open');
+    document.body.classList.add('definition-open');
   }
 }
 
