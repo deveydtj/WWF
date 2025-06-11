@@ -13,13 +13,13 @@ class ClassList {
 global.document = {body:{classList:new ClassList()}, documentElement:{style:{setProperty(){}}}};
 global.window = {innerWidth:800, scrollX:0, scrollY:0};
 
-import('./src/utils.js').then(({positionSidePanels, updatePopupMode}) => {
+import('./src/utils.js').then(({positionSidePanels, updateOverlayMode}) => {
   const boardArea = {offsetWidth:300, getBoundingClientRect(){return {top:100, left:200, right:500}}};
   const historyBox = {offsetWidth:100, style:{}};
   const definitionBox = {offsetWidth:100, style:{}};
   positionSidePanels(boardArea, historyBox, definitionBox);
   window.innerWidth = 500;
-  updatePopupMode(boardArea, historyBox, definitionBox);
+  updateOverlayMode(boardArea, historyBox, definitionBox);
   console.log(JSON.stringify({
     historyTop: historyBox.style.top,
     historyLeft: historyBox.style.left,
@@ -40,13 +40,13 @@ class ClassList {
 global.document = {body:{classList:new ClassList()}, documentElement:{style:{setProperty(){}}}};
 global.window = {innerWidth:800, scrollX:0, scrollY:0};
 
-import('./src/utils.js').then(({positionSidePanels, updatePopupMode}) => {
+import('./src/utils.js').then(({positionSidePanels, updateOverlayMode}) => {
   const boardArea = {offsetWidth:300, getBoundingClientRect(){return {top:100, left:200, right:500}}};
   const historyBox = {offsetWidth:100, style:{}};
   const definitionBox = {offsetWidth:100, style:{}};
   positionSidePanels(boardArea, historyBox, definitionBox);
   window.innerWidth = 610;
-  updatePopupMode(boardArea, historyBox, definitionBox);
+  updateOverlayMode(boardArea, historyBox, definitionBox);
   console.log(JSON.stringify({
     historyTop: historyBox.style.top,
     historyLeft: historyBox.style.left,
@@ -56,7 +56,7 @@ import('./src/utils.js').then(({positionSidePanels, updatePopupMode}) => {
 });
 """)
 
-def test_popup_mode_resets_inline_styles():
+def test_overlay_mode_resets_inline_styles():
     result = subprocess.run(['node', '-e', NODE_SCRIPT], capture_output=True, text=True, check=True)
     data = json.loads(result.stdout.strip())
     assert data['historyTop'] == ''
@@ -64,7 +64,7 @@ def test_popup_mode_resets_inline_styles():
     assert data['defTop'] == ''
     assert data['defLeft'] == ''
 
-def test_popup_mode_resets_styles_when_wide():
+def test_overlay_mode_resets_styles_when_wide():
     result = subprocess.run(['node', '-e', NODE_SCRIPT_WIDE], capture_output=True, text=True, check=True)
     data = json.loads(result.stdout.strip())
     assert data['historyTop'] == ''

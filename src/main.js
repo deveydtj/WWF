@@ -3,7 +3,7 @@ import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat } from './api.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updatePopupMode, updateVH, isMobile } from './utils.js';
+import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateOverlayMode, updateVH, isMobile } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -49,6 +49,9 @@ const historyBox = document.getElementById('historyBox');
 const historyList = document.getElementById('historyList');
 const definitionBoxEl = document.getElementById('definitionBox');
 const stampContainer = document.getElementById('stampContainer');
+const closeCallPopup = document.getElementById('closeCallPopup');
+const closeCallText = document.getElementById('closeCallText');
+const closeCallOk = document.getElementById('closeCallOk');
 
 const FAST_INTERVAL = 2000;
 const SLOW_INTERVAL = 15000;
@@ -134,7 +137,7 @@ function renderLeaderboard() {
 
 function renderEmojiStamps(guesses) {
   stampContainer.innerHTML = '';
-  if (!document.body.classList.contains('popup-mode')) return;
+  if (!document.body.classList.contains('overlay-mode')) return;
   const boardRect = board.getBoundingClientRect();
   guesses.forEach((g, idx) => {
     const tile = board.children[idx * 5];
@@ -250,7 +253,7 @@ async function fetchState() {
     }
 
     const justEnded = !prevGameOver && state.is_over;
-    if (justEnded && document.body.classList.contains('popup-mode')) {
+    if (justEnded && document.body.classList.contains('overlay-mode')) {
       document.body.classList.add('definition-open');
       clearTimeout(autoDefTimeout);
       autoDefTimeout = setTimeout(() => {
@@ -305,10 +308,8 @@ async function submitGuessHandler() {
     }
   } else {
     if (resp.close_call) {
-      showMessage(
-        `Close call! ${resp.close_call.winner} beat you by ${resp.close_call.delta_ms}ms.`,
-        { messageEl, messagePopup }
-      );
+      closeCallText.textContent = `Close call! ${resp.close_call.winner} beat you by ${resp.close_call.delta_ms}ms.`;
+      closeCallPopup.style.display = 'flex';
     } else {
       showMessage(resp.msg, { messageEl, messagePopup });
     }
@@ -356,31 +357,34 @@ definitionToggle.addEventListener('click', () => { document.body.classList.toggl
 definitionClose.addEventListener('click', () => { document.body.classList.remove('definition-open'); });
 optionsToggle.addEventListener('click', () => {
   optionsMenu.style.display = 'block';
-  if (document.body.classList.contains('popup-mode')) {
-    optionsMenu.style.position = 'fixed';
-    optionsMenu.style.top = '50%';
-    optionsMenu.style.left = '50%';
-    optionsMenu.style.transform = 'translate(-50%, -50%)';
+  const rect = optionsToggle.getBoundingClientRect();
+  optionsMenu.style.position = 'absolute';
+  const menuWidth = optionsMenu.offsetWidth;
+  let left;
+  if (window.innerWidth - rect.right >= menuWidth + 10) {
+    left = rect.right + 10 + window.scrollX;
+  } else if (rect.left >= menuWidth + 10) {
+    left = rect.left - menuWidth - 10 + window.scrollX;
   } else {
-    const rect = optionsToggle.getBoundingClientRect();
-    optionsMenu.style.position = 'absolute';
-    optionsMenu.style.top = `${rect.bottom + window.scrollY}px`;
-    optionsMenu.style.left = `${rect.left + window.scrollX}px`;
-    optionsMenu.style.transform = '';
+    left = Math.max(10 + window.scrollX, window.innerWidth - menuWidth - 10);
   }
+  optionsMenu.style.left = `${left}px`;
+  optionsMenu.style.top = `${rect.top + window.scrollY}px`;
+  optionsMenu.style.transform = '';
 });
 optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
 menuHistory.addEventListener('click', () => { historyToggle.click(); optionsMenu.style.display = 'none'; });
 menuDefinition.addEventListener('click', () => { definitionToggle.click(); optionsMenu.style.display = 'none'; });
 menuDarkMode.addEventListener('click', () => { darkModeToggle.click(); });
+closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 
 applyDarkModePreference(darkModeToggle);
 createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl);
-updatePopupMode(boardArea, historyBox, definitionBoxEl);
+updateOverlayMode(boardArea, historyBox, definitionBoxEl);
 renderEmojiStamps([]);
-if (window.innerWidth > 600 && !document.body.classList.contains('popup-mode')) {
+if (window.innerWidth > 600 && !document.body.classList.contains('overlay-mode')) {
   document.body.classList.add('history-open');
   document.body.classList.add('definition-open');
 }
@@ -392,7 +396,7 @@ document.addEventListener('click', onActivity);
 window.addEventListener('resize', repositionResetButton);
 window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl);
-  updatePopupMode(boardArea, historyBox, definitionBoxEl);
+  updateOverlayMode(boardArea, historyBox, definitionBoxEl);
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 updateVH();
