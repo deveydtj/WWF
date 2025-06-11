@@ -105,27 +105,31 @@ export function positionSidePanels(boardArea, historyBox, definitionBox) {
 
 export function updateOverlayMode(boardArea, historyBox, definitionBox) {
   const wasPopup = document.body.classList.contains('overlay-mode');
+  let willBePopup = false;
   if (window.innerWidth > 600) {
     const total =
       historyBox.offsetWidth +
       boardArea.offsetWidth +
       definitionBox.offsetWidth +
       120; // margins used in positioning
-    if (total > window.innerWidth) {
-      document.body.classList.add('overlay-mode');
-      document.body.classList.remove('history-open');
-      document.body.classList.remove('definition-open');
-    } else {
-      document.body.classList.remove('overlay-mode');
-    }
-  } else {
-    document.body.classList.remove('overlay-mode');
+    willBePopup = total > window.innerWidth;
   }
-  const isPopup = document.body.classList.contains('overlay-mode');
-  if (!wasPopup && isPopup) {
+
+  if (!wasPopup && willBePopup) {
     animatePanelToCenter(historyBox);
     animatePanelToCenter(definitionBox);
   }
+
+  if (willBePopup) {
+    document.body.classList.add('overlay-mode');
+    document.body.classList.remove('history-open');
+    document.body.classList.remove('definition-open');
+  } else {
+    document.body.classList.remove('overlay-mode');
+  }
+
+  const isPopup = document.body.classList.contains('overlay-mode');
+
   if (wasPopup && !isPopup && window.innerWidth > 600) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
