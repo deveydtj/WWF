@@ -413,6 +413,13 @@ def test_fetch_definition_strips_html(monkeypatch, server_env):
     assert definition == 'a fruit'
 
 
+def test_sanitize_definition_cleans_text(server_env):
+    server, _ = server_env
+    raw = '  <b>Fruit&nbsp;</b>   of <i>the</i>  tree  '
+    cleaned = server.sanitize_definition(raw)
+    assert cleaned == 'Fruit of the tree'
+
+
 def test_fetch_definition_exception(monkeypatch, server_env):
     server, _ = server_env
 
