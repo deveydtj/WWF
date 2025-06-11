@@ -206,12 +206,12 @@
         opacity: 0;
       }
 
-      body.popup-mode #historyClose,
-      body.popup-mode #definitionClose {
+      body.overlay-mode #historyClose,
+      body.overlay-mode #definitionClose {
         display: block;
       }
-      body.popup-mode #historyBox,
-      body.popup-mode #definitionBox {
+      body.overlay-mode #historyBox,
+      body.overlay-mode #definitionBox {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -220,19 +220,15 @@
         max-width: 90%;
         z-index: 80;
       }
-      body.popup-mode.history-open #historyBox {
+      body.overlay-mode.history-open #historyBox {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
       }
-      body.popup-mode.definition-open #definitionBox {
+      body.overlay-mode.definition-open #definitionBox {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
       }
-      body.popup-mode #optionsMenu {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+      body.overlay-mode #optionsMenu {
         max-width: 90%;
       }
     }
@@ -376,7 +372,7 @@
       line-height: 1;
     }
 
-    body.popup-mode #stampContainer {
+    body.overlay-mode #stampContainer {
       display: block;
     }
 
@@ -700,6 +696,33 @@
       text-align: center;
     }
 
+    #closeCallPopup {
+      background: rgba(0, 0, 0, 0.33);
+      position: fixed;
+      z-index: 101;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #closeCallBox {
+      background: var(--bg-color);
+      box-shadow: 0 8px 32px var(--shadow-color-dark),
+                  0 0 0 3px var(--shadow-color-light);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #closeCallBox button {
+      margin-top: 12px;
+      font-size: 16px;
+    }
+
     .emoji-choice {
       font-size: 2.1em;
       margin: 12px;
@@ -933,6 +956,14 @@
         </div>
         <div id="emojiChoices"></div>
         <div id="emojiModalError" style="color: #ba1c1c; font-size:1em; margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- Close Call Popup -->
+    <div id="closeCallPopup" style="display:none;">
+      <div id="closeCallBox">
+        <div id="closeCallText"></div>
+        <button id="closeCallOk">OK</button>
       </div>
     </div>
 

@@ -75,8 +75,8 @@ export function positionSidePanels(boardArea, historyBox, definitionBox) {
   }
 }
 
-export function updatePopupMode(boardArea, historyBox, definitionBox) {
-  const wasPopup = document.body.classList.contains('popup-mode');
+export function updateOverlayMode(boardArea, historyBox, definitionBox) {
+  const wasPopup = document.body.classList.contains('overlay-mode');
   if (window.innerWidth > 600) {
     const total =
       historyBox.offsetWidth +
@@ -84,21 +84,21 @@ export function updatePopupMode(boardArea, historyBox, definitionBox) {
       definitionBox.offsetWidth +
       120; // margins used in positioning
     if (total > window.innerWidth) {
-      document.body.classList.add('popup-mode');
+      document.body.classList.add('overlay-mode');
       document.body.classList.remove('history-open');
       document.body.classList.remove('definition-open');
     } else {
-      document.body.classList.remove('popup-mode');
+      document.body.classList.remove('overlay-mode');
     }
   } else {
-    document.body.classList.remove('popup-mode');
+    document.body.classList.remove('overlay-mode');
   }
-  const isPopup = document.body.classList.contains('popup-mode');
+  const isPopup = document.body.classList.contains('overlay-mode');
   if (wasPopup && !isPopup && window.innerWidth > 600) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
   }
-  // When switching to narrow screens or into popup mode, reset inline styles
+  // When switching to narrow screens or into overlay mode, reset inline styles
   // so panels are positioned by CSS rules instead of leftover absolute values.
   if (window.innerWidth <= 600 || isPopup) {
     historyBox.style.position = '';
