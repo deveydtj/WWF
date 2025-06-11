@@ -7,6 +7,8 @@ import time
 import urllib.request
 import urllib.error
 import logging
+import re
+import html
 
 app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
@@ -33,6 +35,13 @@ past_games = []       # list of finished games’ guess lists
 definition = None     # definition for the last solved word
 last_word = None      # last completed word
 last_definition = None  # definition of last completed word
+
+
+def sanitize_definition(text: str) -> str:
+    """Remove HTML tags and extra whitespace from a definition."""
+    text = re.sub(r"<[^>]*>", "", text)
+    text = html.unescape(text)
+    return " ".join(text.split())
 
 
 def save_data():
@@ -139,6 +148,8 @@ def fetch_definition(word):
                     defs = meanings[0].get("definitions")
                     if defs:
                         definition = defs[0].get("definition")
+                        if definition:
+                            definition = sanitize_definition(definition)
                         logging.info(f"Online definition for '{word}': {definition}")
                         return definition
     except urllib.error.URLError as e:
@@ -148,6 +159,7 @@ def fetch_definition(word):
                 offline = json.load(f)
             definition = offline.get(word)
             if definition:
+                definition = sanitize_definition(definition)
                 logging.info(f"Offline definition for '{word}': {definition}")
             else:
                 logging.info(f"No offline definition found for '{word}'")

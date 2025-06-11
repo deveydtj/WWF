@@ -13,6 +13,7 @@ let showEmojiModalOnNextFetch = false;
 let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
 let lastDeltaTimeout = null;
+let hadNetworkError = false;
 
 let maxRows = 6;
 let requiredLetters = new Set();
@@ -191,6 +192,10 @@ function stopHoldReset() {
 async function fetchState() {
   try {
     const state = await getState();
+    if (hadNetworkError) {
+      showMessage('Reconnected to server.', { messageEl, messagePopup });
+    }
+    hadNetworkError = false;
     activeEmojis = state.active_emojis || [];
     leaderboard = state.leaderboard || [];
     renderLeaderboard();
@@ -234,6 +239,10 @@ async function fetchState() {
     }
   } catch (err) {
     console.error('fetchState error:', err);
+    if (!hadNetworkError) {
+      showMessage('Connection lost. Retrying...', { messageEl, messagePopup });
+      hadNetworkError = true;
+    }
   }
 }
 
