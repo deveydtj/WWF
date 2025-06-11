@@ -3,7 +3,7 @@ import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat } from './api.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateVH, isMobile } from './utils.js';
+import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updatePopupMode, updateVH, isMobile } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -19,6 +19,7 @@ let maxRows = 6;
 let requiredLetters = new Set();
 let greenPositions = {};
 let gameOver = false;
+let latestState = null;
 
 const board = document.getElementById('board');
 const guessInput = document.getElementById('guessInput');
@@ -46,6 +47,7 @@ const boardArea = document.getElementById('boardArea');
 const historyBox = document.getElementById('historyBox');
 const historyList = document.getElementById('historyList');
 const definitionBoxEl = document.getElementById('definitionBox');
+const stampContainer = document.getElementById('stampContainer');
 
 const FAST_INTERVAL = 2000;
 const SLOW_INTERVAL = 15000;
@@ -129,6 +131,23 @@ function renderLeaderboard() {
   };
 }
 
+function renderEmojiStamps(guesses) {
+  stampContainer.innerHTML = '';
+  if (!document.body.classList.contains('popup-mode')) return;
+  const boardRect = board.getBoundingClientRect();
+  guesses.forEach((g, idx) => {
+    const tile = board.children[idx * 5];
+    if (!tile) return;
+    const tileRect = tile.getBoundingClientRect();
+    const top = tileRect.top - boardRect.top + tile.offsetHeight / 2;
+    const span = document.createElement('span');
+    span.className = 'board-stamp';
+    span.textContent = g.emoji;
+    span.style.top = `${top}px`;
+    stampContainer.appendChild(span);
+  });
+}
+
 function updateResetButton() {
   if (gameOver) {
     holdResetText.textContent = 'Reset';
@@ -192,6 +211,7 @@ function stopHoldReset() {
 async function fetchState() {
   try {
     const state = await getState();
+    latestState = state;
     if (hadNetworkError) {
       showMessage('Reconnected to server.', { messageEl, messagePopup });
     }
@@ -207,9 +227,10 @@ async function fetchState() {
     historyEntries.push(...state.guesses);
     renderHistory(historyList, historyEntries);
 
-    maxRows = state.max_rows || 6;
-    updateBoard(board, state, guessInput, maxRows, gameOver);
-    updateKeyboardFromGuesses(keyboard, state.guesses);
+  maxRows = state.max_rows || 6;
+  updateBoard(board, state, guessInput, maxRows, gameOver);
+  renderEmojiStamps(state.guesses);
+  updateKeyboardFromGuesses(keyboard, state.guesses);
     const constraints = updateHardModeConstraints(state.guesses);
     requiredLetters = constraints.requiredLetters;
     greenPositions = constraints.greenPositions;
@@ -338,7 +359,9 @@ applyDarkModePreference(darkModeToggle);
 createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl);
-if (window.innerWidth > 600) {
+updatePopupMode(boardArea, historyBox, definitionBoxEl);
+renderEmojiStamps([]);
+if (window.innerWidth > 600 && !document.body.classList.contains('popup-mode')) {
   document.body.classList.add('history-open');
   document.body.classList.add('definition-open');
 }
@@ -348,7 +371,11 @@ setInterval(checkInactivity, 5000);
 document.addEventListener('keydown', onActivity);
 document.addEventListener('click', onActivity);
 window.addEventListener('resize', repositionResetButton);
-window.addEventListener('resize', () => positionSidePanels(boardArea, historyBox, definitionBoxEl));
+window.addEventListener('resize', () => {
+  positionSidePanels(boardArea, historyBox, definitionBoxEl);
+  updatePopupMode(boardArea, historyBox, definitionBoxEl);
+  if (latestState) renderEmojiStamps(latestState.guesses);
+});
 updateVH();
 window.addEventListener('resize', updateVH);
 
