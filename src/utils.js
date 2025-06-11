@@ -75,6 +75,25 @@ export function positionSidePanels(boardArea, historyBox, definitionBox) {
   }
 }
 
+export function updatePopupMode(boardArea, historyBox, definitionBox) {
+  if (window.innerWidth > 600) {
+    const total =
+      historyBox.offsetWidth +
+      boardArea.offsetWidth +
+      definitionBox.offsetWidth +
+      120; // margins used in positioning
+    if (total > window.innerWidth) {
+      document.body.classList.add('popup-mode');
+      document.body.classList.remove('history-open');
+      document.body.classList.remove('definition-open');
+    } else {
+      document.body.classList.remove('popup-mode');
+    }
+  } else {
+    document.body.classList.remove('popup-mode');
+  }
+}
+
 export function updateVH() {
   const vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);

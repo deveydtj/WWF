@@ -205,6 +205,29 @@
         transform: scale(0);
         opacity: 0;
       }
+
+      body.popup-mode #historyClose,
+      body.popup-mode #definitionClose {
+        display: block;
+      }
+      body.popup-mode #historyBox,
+      body.popup-mode #definitionBox {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        transform: translate(-50%, -50%) scale(0);
+        max-width: 90%;
+        z-index: 80;
+      }
+      body.popup-mode.history-open #historyBox {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      body.popup-mode.definition-open #definitionBox {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
     }
 
     h1 {
@@ -327,6 +350,27 @@
       margin: 20px auto;
       width: max-content;
       position: relative;
+    }
+
+    #stampContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 5;
+      display: none;
+    }
+
+    .board-stamp {
+      position: absolute;
+      left: 0;
+      transform: translate(-110%, -50%);
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    body.popup-mode #stampContainer {
+      display: block;
     }
 
     .tile {
@@ -923,6 +967,7 @@
     <!-- Board -->
     <div id="boardArea">
       <div id="board"></div>
+      <div id="stampContainer"></div>
       <button id="optionsToggle" title="More Options">⚙️</button>
     </div>
 
