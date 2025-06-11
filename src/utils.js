@@ -98,6 +98,11 @@ export function updatePopupMode(boardArea, historyBox, definitionBox) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
   }
+  // When switching to narrow screens, reset inline styles set by
+  // positionSidePanels so panels return to the normal flow.
+  if (window.innerWidth <= 600) {
+    positionSidePanels(boardArea, historyBox, definitionBox);
+  }
 }
 
 export function updateVH() {
