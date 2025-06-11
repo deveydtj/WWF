@@ -17,6 +17,8 @@ A small multiplayer adaptation of Wordle. The frontend lives in `index.html` whi
 - **Hold‑to‑reset button** (or instant reset once the game is over).
 - **Inactive player detection** – entries on the leaderboard fade if a player has not
   acted for several minutes.
+- **"Close call" notification** if another player submits the winning word less than a
+  second before you.
 
 ## Requirements
 
@@ -41,6 +43,9 @@ python server.py
 The server loads its words from `sgb-words.txt` and stores state in
 `game_persist.json`. It listens on port `5001`, so open
 `http://localhost:5001` in your browser to start playing.
+The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
+or the network is unavailable, definitions are loaded from
+`offline_definitions.json`.
 
 ## Point System
 
@@ -56,12 +61,16 @@ first to uncover information about the hidden word:
 
 ## Testing
 
-Run the unit tests from the repository root. Make sure Pytest is installed
-(``pip install pytest`` if needed) and then run:
+Run the unit tests from the repository root. Make sure Pytest and Node.js are
+installed (`pip install pytest` and `node --version` should succeed) and then
+run:
 
 ```bash
 python -m pytest -v
 ```
+Some frontend tests execute small Node.js scripts, so a recent Node installation
+is required for the full suite to run successfully. If Node isn't available,
+the overlay mode tests will be skipped.
 
 ## Repository layout
 

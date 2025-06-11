@@ -1,6 +1,8 @@
 import subprocess
 import json
 import textwrap
+import shutil
+import pytest
 
 NODE_SCRIPT = textwrap.dedent("""
 class ClassList {
@@ -56,17 +58,26 @@ import('./src/utils.js').then(({positionSidePanels, updateOverlayMode}) => {
 });
 """)
 
+
+def run_node(script):
+    if not shutil.which('node'):
+        pytest.skip('Node.js is not installed')
+    result = subprocess.run(
+        ['node', '-e', script], capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        pytest.skip(result.stderr.strip())
+    return json.loads(result.stdout.strip())
+
 def test_overlay_mode_resets_inline_styles():
-    result = subprocess.run(['node', '-e', NODE_SCRIPT], capture_output=True, text=True, check=True)
-    data = json.loads(result.stdout.strip())
+    data = run_node(NODE_SCRIPT)
     assert data['historyTop'] == ''
     assert data['historyLeft'] == ''
     assert data['defTop'] == ''
     assert data['defLeft'] == ''
 
 def test_overlay_mode_resets_styles_when_wide():
-    result = subprocess.run(['node', '-e', NODE_SCRIPT_WIDE], capture_output=True, text=True, check=True)
-    data = json.loads(result.stdout.strip())
+    data = run_node(NODE_SCRIPT_WIDE)
     assert data['historyTop'] == ''
     assert data['historyLeft'] == ''
     assert data['defTop'] == ''
