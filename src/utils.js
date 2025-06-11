@@ -4,10 +4,23 @@ export function showMessage(msg, {messageEl, messagePopup}) {
   if (isMobile) {
     messagePopup.textContent = msg;
     messagePopup.style.display = 'block';
-    setTimeout(() => { messagePopup.style.display = 'none'; }, 2000);
+    messagePopup.style.animation = 'fadeInOut 2s';
+    messagePopup.addEventListener('animationend', () => {
+      messagePopup.style.display = 'none';
+      messagePopup.style.animation = '';
+    }, { once: true });
   } else {
     messageEl.textContent = msg;
-    messageEl.style.visibility = msg ? 'visible' : 'hidden';
+    if (msg) {
+      messageEl.style.visibility = 'visible';
+      messageEl.style.animation = 'fadeInOut 2s';
+      messageEl.addEventListener('animationend', () => {
+        messageEl.style.visibility = 'hidden';
+        messageEl.style.animation = '';
+      }, { once: true });
+    } else {
+      messageEl.style.visibility = 'hidden';
+    }
   }
 }
 
