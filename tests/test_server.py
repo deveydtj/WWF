@@ -382,6 +382,37 @@ def test_fetch_definition_success(monkeypatch, server_env):
     assert definition == 'a fruit'
 
 
+def test_fetch_definition_strips_html(monkeypatch, server_env):
+    server, _ = server_env
+
+    payload = json.dumps([
+        {
+            'meanings': [
+                {
+                    'definitions': [
+                        {'definition': '<b>a fruit</b>'}
+                    ]
+                }
+            ]
+        }
+    ]).encode('utf-8')
+
+    class DummyResp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            pass
+
+        def read(self):
+            return payload
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', lambda *a, **k: DummyResp())
+
+    definition = server.fetch_definition('apple')
+    assert definition == 'a fruit'
+
+
 def test_fetch_definition_exception(monkeypatch, server_env):
     server, _ = server_env
 
