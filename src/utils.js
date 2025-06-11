@@ -51,6 +51,34 @@ export function repositionResetButton() {
   }
 }
 
+function animatePanelToCenter(box) {
+  if (typeof box.getBoundingClientRect !== 'function') {
+    box.style.transition = '';
+    box.style.transform = '';
+    box.style.position = '';
+    box.style.top = '';
+    box.style.left = '';
+    return;
+  }
+  const rect = box.getBoundingClientRect();
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  const offsetX = centerX - (rect.left + rect.width / 2);
+  const offsetY = centerY - (rect.top + rect.height / 2);
+  box.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+  box.style.transform = 'translate(0, 0) scale(1)';
+  requestAnimationFrame(() => {
+    box.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(0)`;
+  });
+  setTimeout(() => {
+    box.style.transition = '';
+    box.style.transform = '';
+    box.style.position = '';
+    box.style.top = '';
+    box.style.left = '';
+  }, 310);
+}
+
 export function positionSidePanels(boardArea, historyBox, definitionBox) {
   if (window.innerWidth > 600) {
     const boardRect = boardArea.getBoundingClientRect();
@@ -94,6 +122,10 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox) {
     document.body.classList.remove('overlay-mode');
   }
   const isPopup = document.body.classList.contains('overlay-mode');
+  if (!wasPopup && isPopup) {
+    animatePanelToCenter(historyBox);
+    animatePanelToCenter(definitionBox);
+  }
   if (wasPopup && !isPopup && window.innerWidth > 600) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
@@ -101,12 +133,15 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox) {
   // When switching to narrow screens or into overlay mode, reset inline styles
   // so panels are positioned by CSS rules instead of leftover absolute values.
   if (window.innerWidth <= 600 || isPopup) {
-    historyBox.style.position = '';
-    historyBox.style.top = '';
-    historyBox.style.left = '';
-    definitionBox.style.position = '';
-    definitionBox.style.top = '';
-    definitionBox.style.left = '';
+    // styles will be cleared after animation by animatePanelToCenter
+    if (wasPopup || !isPopup) {
+      historyBox.style.position = '';
+      historyBox.style.top = '';
+      historyBox.style.left = '';
+      definitionBox.style.position = '';
+      definitionBox.style.top = '';
+      definitionBox.style.left = '';
+    }
   }
 }
 
