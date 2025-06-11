@@ -212,65 +212,70 @@ function stopHoldReset() {
 }
 ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev => holdReset.addEventListener(ev, stopHoldReset));
 
-async function fetchState() {
-  try {
-    const state = await getState();
-    latestState = state;
-    if (hadNetworkError) {
-      showMessage('Reconnected to server.', { messageEl, messagePopup });
-    }
-    hadNetworkError = false;
-    activeEmojis = state.active_emojis || [];
-    leaderboard = state.leaderboard || [];
-    renderLeaderboard();
+function applyState(state) {
+  latestState = state;
+  activeEmojis = state.active_emojis || [];
+  leaderboard = state.leaderboard || [];
+  renderLeaderboard();
 
-    const historyEntries = [];
-    if (state.past_games) {
-      state.past_games.forEach(game => game.forEach(e => historyEntries.push(e)));
-    }
-    historyEntries.push(...state.guesses);
-    renderHistory(historyList, historyEntries);
+  const historyEntries = [];
+  if (state.past_games) {
+    state.past_games.forEach(game => game.forEach(e => historyEntries.push(e)));
+  }
+  historyEntries.push(...state.guesses);
+  renderHistory(historyList, historyEntries);
 
   maxRows = state.max_rows || 6;
   updateBoard(board, state, guessInput, maxRows, gameOver);
   renderEmojiStamps(state.guesses);
   updateKeyboardFromGuesses(keyboard, state.guesses);
-    const constraints = updateHardModeConstraints(state.guesses);
-    requiredLetters = constraints.requiredLetters;
-    greenPositions = constraints.greenPositions;
-    const prevGameOver = gameOver;
-    gameOver = state.is_over;
-    guessInput.disabled = gameOver;
-    submitButton.disabled = gameOver;
-    updateResetButton();
 
-    if (state.is_over && state.definition) {
-      definitionText.textContent = `${state.target_word.toUpperCase()} – ${state.definition}`;
-    } else if (state.last_word && state.last_definition) {
-      definitionText.textContent = `${state.last_word.toUpperCase()} – ${state.last_definition}`;
-    } else {
-      definitionText.textContent = '';
-    }
+  const constraints = updateHardModeConstraints(state.guesses);
+  requiredLetters = constraints.requiredLetters;
+  greenPositions = constraints.greenPositions;
+  const prevGameOver = gameOver;
+  gameOver = state.is_over;
+  guessInput.disabled = gameOver;
+  submitButton.disabled = gameOver;
+  updateResetButton();
 
-    const justEnded = !prevGameOver && state.is_over;
-    if (justEnded && document.body.classList.contains('overlay-mode')) {
-      document.body.classList.add('definition-open');
-      clearTimeout(autoDefTimeout);
-      autoDefTimeout = setTimeout(() => {
-        document.body.classList.remove('definition-open');
-      }, 10000);
-    }
+  if (state.is_over && state.definition) {
+    definitionText.textContent = `${state.target_word.toUpperCase()} – ${state.definition}`;
+  } else if (state.last_word && state.last_definition) {
+    definitionText.textContent = `${state.last_word.toUpperCase()} – ${state.last_definition}`;
+  } else {
+    definitionText.textContent = '';
+  }
 
-    const haveMy = activeEmojis.includes(myEmoji);
-    if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
-      showEmojiModal(activeEmojis, {
-        onChosen: e => { myEmoji = e; fetchState(); },
-        skipAutoCloseRef: { value: skipAutoClose }
-      });
-      showEmojiModalOnNextFetch = false;
-    } else if (!skipAutoClose) {
-      document.getElementById('emojiModal').style.display = 'none';
+  const justEnded = !prevGameOver && state.is_over;
+  if (justEnded && document.body.classList.contains('overlay-mode')) {
+    document.body.classList.add('definition-open');
+    clearTimeout(autoDefTimeout);
+    autoDefTimeout = setTimeout(() => {
+      document.body.classList.remove('definition-open');
+    }, 10000);
+  }
+
+  const haveMy = activeEmojis.includes(myEmoji);
+  if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
+    showEmojiModal(activeEmojis, {
+      onChosen: e => { myEmoji = e; fetchState(); },
+      skipAutoCloseRef: { value: skipAutoClose }
+    });
+    showEmojiModalOnNextFetch = false;
+  } else if (!skipAutoClose) {
+    document.getElementById('emojiModal').style.display = 'none';
+  }
+}
+
+async function fetchState() {
+  try {
+    const state = await getState();
+    if (hadNetworkError) {
+      showMessage('Reconnected to server.', { messageEl, messagePopup });
     }
+    hadNetworkError = false;
+    applyState(state);
   } catch (err) {
     console.error('fetchState error:', err);
     if (!hadNetworkError) {
@@ -293,9 +298,9 @@ async function submitGuessHandler() {
     return;
   }
   const resp = await sendGuess(guess, myEmoji);
+  guessInput.value = '';
   if (resp.status === 'ok') {
-    fetchState();
-    guessInput.value = '';
+    applyState(resp.state);
     if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
     if (resp.won) {
       showMessage('You got it! The word was ' + resp.state.target_word.toUpperCase(), { messageEl, messagePopup });
