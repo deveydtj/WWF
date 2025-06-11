@@ -1,4 +1,6 @@
-export const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+export const isMobile =
+  typeof navigator !== 'undefined' &&
+  /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 export function showMessage(msg, {messageEl, messagePopup}) {
   if (isMobile) {
