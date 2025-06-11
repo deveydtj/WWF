@@ -30,6 +30,7 @@ overview and should be kept up to date as features evolve.
 - **Reset:** If the game is over, a reset button instantly starts a new game. If
   the game is ongoing, the button must be held for two seconds before posting to
   `/reset`.
+- **Close Call Notification:** When two players submit the winning word within one second of each other, display the difference in milliseconds between their submissions.
 
 ## 2. UI/UX
 
@@ -53,6 +54,7 @@ overview and should be kept up to date as features evolve.
 - Data contracts for guesses, leaderboard entries, and definitions are JSON
   objects as defined in the project overview.
 - The client polls `/state` every two seconds to keep the board synchronized.
+- `/guess` responses include a `close_call` object when another player submits the winning word within one second of the winner. Each guess record stores a timestamp so the server can report the milliseconds difference.
 
 ## 4. Technical Constraints
 
