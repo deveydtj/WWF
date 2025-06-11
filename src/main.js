@@ -20,6 +20,7 @@ let requiredLetters = new Set();
 let greenPositions = {};
 let gameOver = false;
 let latestState = null;
+let autoDefTimeout = null;
 
 const board = document.getElementById('board');
 const guessInput = document.getElementById('guessInput');
@@ -234,7 +235,7 @@ async function fetchState() {
     const constraints = updateHardModeConstraints(state.guesses);
     requiredLetters = constraints.requiredLetters;
     greenPositions = constraints.greenPositions;
-
+    const prevGameOver = gameOver;
     gameOver = state.is_over;
     guessInput.disabled = gameOver;
     submitButton.disabled = gameOver;
@@ -246,6 +247,15 @@ async function fetchState() {
       definitionText.textContent = `${state.last_word.toUpperCase()} – ${state.last_definition}`;
     } else {
       definitionText.textContent = '';
+    }
+
+    const justEnded = !prevGameOver && state.is_over;
+    if (justEnded && document.body.classList.contains('popup-mode')) {
+      document.body.classList.add('definition-open');
+      clearTimeout(autoDefTimeout);
+      autoDefTimeout = setTimeout(() => {
+        document.body.classList.remove('definition-open');
+      }, 10000);
     }
 
     const haveMy = activeEmojis.includes(myEmoji);
@@ -345,10 +355,19 @@ historyClose.addEventListener('click', () => { document.body.classList.remove('h
 definitionToggle.addEventListener('click', () => { document.body.classList.toggle('definition-open'); });
 definitionClose.addEventListener('click', () => { document.body.classList.remove('definition-open'); });
 optionsToggle.addEventListener('click', () => {
-  const rect = optionsToggle.getBoundingClientRect();
   optionsMenu.style.display = 'block';
-  optionsMenu.style.top = `${rect.bottom + window.scrollY}px`;
-  optionsMenu.style.left = `${rect.left + window.scrollX}px`;
+  if (document.body.classList.contains('popup-mode')) {
+    optionsMenu.style.position = 'fixed';
+    optionsMenu.style.top = '50%';
+    optionsMenu.style.left = '50%';
+    optionsMenu.style.transform = 'translate(-50%, -50%)';
+  } else {
+    const rect = optionsToggle.getBoundingClientRect();
+    optionsMenu.style.position = 'absolute';
+    optionsMenu.style.top = `${rect.bottom + window.scrollY}px`;
+    optionsMenu.style.left = `${rect.left + window.scrollX}px`;
+    optionsMenu.style.transform = '';
+  }
 });
 optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
 menuHistory.addEventListener('click', () => { historyToggle.click(); optionsMenu.style.display = 'none'; });

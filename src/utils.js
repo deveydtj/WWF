@@ -98,10 +98,15 @@ export function updatePopupMode(boardArea, historyBox, definitionBox) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
   }
-  // When switching to narrow screens, reset inline styles set by
-  // positionSidePanels so panels return to the normal flow.
-  if (window.innerWidth <= 600) {
-    positionSidePanels(boardArea, historyBox, definitionBox);
+  // When switching to narrow screens or into popup mode, reset inline styles
+  // so panels are positioned by CSS rules instead of leftover absolute values.
+  if (window.innerWidth <= 600 || isPopup) {
+    historyBox.style.position = '';
+    historyBox.style.top = '';
+    historyBox.style.left = '';
+    definitionBox.style.position = '';
+    definitionBox.style.top = '';
+    definitionBox.style.left = '';
   }
 }
 
