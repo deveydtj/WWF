@@ -4,7 +4,7 @@ import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateOverlayMode, updateVH, isMobile } from './utils.js';
+import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateOverlayMode, updateVH, applyLayoutMode, isMobile } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -402,6 +402,7 @@ menuDarkMode.addEventListener('click', () => { darkModeToggle.click(); });
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 
 applyDarkModePreference(darkModeToggle);
+applyLayoutMode();
 createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
@@ -422,6 +423,7 @@ window.addEventListener('resize', repositionResetButton);
 window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   updateOverlayMode(boardArea, historyBox, definitionBoxEl, chatBox);
+  applyLayoutMode();
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 updateVH();

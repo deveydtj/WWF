@@ -173,3 +173,16 @@ export function updateVH() {
   const vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);
 }
+
+export function applyLayoutMode() {
+  const width = window.innerWidth;
+  let mode = 'full';
+  if (width <= 600) {
+    mode = 'light';
+  } else if (width <= 900) {
+    mode = 'medium';
+  }
+  if (document.body.dataset.mode !== mode) {
+    document.body.dataset.mode = mode;
+  }
+}
