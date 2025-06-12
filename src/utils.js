@@ -82,7 +82,7 @@ function animatePanelToCenter(box) {
 }
 
 export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox) {
-  if (window.innerWidth > 600) {
+  if (window.innerWidth > 900) {
     const boardRect = boardArea.getBoundingClientRect();
     const top = boardRect.top + window.scrollY;
     const left = boardRect.left + window.scrollX;
@@ -118,7 +118,7 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
 export function updateOverlayMode(boardArea, historyBox, definitionBox, chatBox) {
   const wasPopup = document.body.classList.contains('overlay-mode');
   let willBePopup = false;
-  if (window.innerWidth > 600) {
+  if (window.innerWidth > 900) {
     const total =
       historyBox.offsetWidth +
       boardArea.offsetWidth +
@@ -144,7 +144,7 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox, chatBox)
 
   const isPopup = document.body.classList.contains('overlay-mode');
 
-  if (wasPopup && !isPopup && window.innerWidth > 600) {
+  if (wasPopup && !isPopup && window.innerWidth > 900) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
     if (chatBox) document.body.classList.add('chat-open');
