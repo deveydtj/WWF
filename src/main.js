@@ -407,6 +407,8 @@ renderEmojiStamps([]);
 if (window.innerWidth > 600 && !document.body.classList.contains('overlay-mode')) {
   document.body.classList.add('history-open');
   document.body.classList.add('definition-open');
+  // Recalculate panel positions now that definition is visible
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 }
 fetchState();
 startPolling(FAST_INTERVAL);
