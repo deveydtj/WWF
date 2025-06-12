@@ -223,37 +223,6 @@
         display: none;
       }
 
-      body.overlay-mode #historyClose,
-      body.overlay-mode #definitionClose,
-      body.overlay-mode #chatClose {
-        display: block;
-      }
-      body.overlay-mode #historyBox,
-      body.overlay-mode #definitionBox,
-      body.overlay-mode #chatBox {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        right: auto;
-        transform: translate(-50%, -50%) scale(0);
-        max-width: 90%;
-        z-index: 80;
-      }
-      body.overlay-mode.history-open #historyBox {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      body.overlay-mode.definition-open #definitionBox {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      body.overlay-mode.chat-open #chatBox {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      body.overlay-mode #optionsMenu {
-        max-width: 90%;
-      }
     }
 
     h1 {
@@ -491,7 +460,7 @@
       line-height: 1;
     }
 
-    body.overlay-mode #stampContainer {
+    body[data-mode='medium'] #stampContainer {
       display: block;
     }
 

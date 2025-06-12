@@ -115,59 +115,6 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
   }
 }
 
-export function updateOverlayMode(boardArea, historyBox, definitionBox, chatBox) {
-  const wasPopup = document.body.classList.contains('overlay-mode');
-  let willBePopup = false;
-  if (window.innerWidth > 900) {
-    const total =
-      historyBox.offsetWidth +
-      boardArea.offsetWidth +
-      definitionBox.offsetWidth +
-      120; // margins used in positioning
-    willBePopup = total > window.innerWidth;
-  }
-
-  if (!wasPopup && willBePopup) {
-    animatePanelToCenter(historyBox);
-    animatePanelToCenter(definitionBox);
-    if (chatBox) animatePanelToCenter(chatBox);
-  }
-
-  if (willBePopup) {
-    document.body.classList.add('overlay-mode');
-    document.body.classList.remove('history-open');
-    document.body.classList.remove('definition-open');
-    document.body.classList.remove('chat-open');
-  } else {
-    document.body.classList.remove('overlay-mode');
-  }
-
-  const isPopup = document.body.classList.contains('overlay-mode');
-
-  if (wasPopup && !isPopup && window.innerWidth > 900) {
-    document.body.classList.add('history-open');
-    document.body.classList.add('definition-open');
-    if (chatBox) document.body.classList.add('chat-open');
-  }
-  // When switching to narrow screens or into overlay mode, reset inline styles
-  // so panels are positioned by CSS rules instead of leftover absolute values.
-  if (window.innerWidth <= 600 || isPopup) {
-    // styles will be cleared after animation by animatePanelToCenter
-    if (wasPopup || !isPopup) {
-      historyBox.style.position = '';
-      historyBox.style.top = '';
-      historyBox.style.left = '';
-      definitionBox.style.position = '';
-      definitionBox.style.top = '';
-      definitionBox.style.left = '';
-      if (chatBox) {
-        chatBox.style.position = '';
-        chatBox.style.top = '';
-        chatBox.style.left = '';
-      }
-    }
-  }
-}
 
 export function updateVH() {
   const vh = window.innerHeight * 0.01;
