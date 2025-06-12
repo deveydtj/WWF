@@ -27,9 +27,6 @@ const submitButton = document.getElementById('submitGuess');
 const messageEl = document.getElementById('message');
 const messagePopup = document.getElementById('messagePopup');
 const keyboard = document.getElementById('keyboard');
-const darkModeToggle = document.getElementById('darkModeToggle');
-const historyToggle = document.getElementById('historyToggle');
-const definitionToggle = document.getElementById('definitionToggle');
 const definitionText = document.getElementById('definitionText');
 const definitionBox = document.getElementById('definitionBox');
 const chatBox = document.getElementById('chatBox');
@@ -377,21 +374,23 @@ setupTypingListeners({
   isAnimating: () => false
 });
 
-darkModeToggle.addEventListener('click', () => {
+function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark-mode');
   localStorage.setItem('darkMode', isDark);
-  applyDarkModePreference(darkModeToggle);
-});
+  applyDarkModePreference(menuDarkMode);
+}
 
-historyToggle.addEventListener('click', () => {
+function toggleHistory() {
   togglePanel('history-open');
-});
+}
+
+function toggleDefinition() {
+  togglePanel('definition-open');
+}
+
 historyClose.addEventListener('click', () => {
   document.body.classList.remove('history-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-});
-definitionToggle.addEventListener('click', () => {
-  togglePanel('definition-open');
 });
 definitionClose.addEventListener('click', () => {
   document.body.classList.remove('definition-open');
@@ -419,16 +418,16 @@ optionsToggle.addEventListener('click', () => {
   optionsMenu.style.transform = '';
 });
 optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
-menuHistory.addEventListener('click', () => { historyToggle.click(); optionsMenu.style.display = 'none'; });
-menuDefinition.addEventListener('click', () => { definitionToggle.click(); optionsMenu.style.display = 'none'; });
+menuHistory.addEventListener('click', () => { toggleHistory(); optionsMenu.style.display = 'none'; });
+menuDefinition.addEventListener('click', () => { toggleDefinition(); optionsMenu.style.display = 'none'; });
 menuChat.addEventListener('click', () => {
   togglePanel('chat-open');
   optionsMenu.style.display = 'none';
 });
-menuDarkMode.addEventListener('click', () => { darkModeToggle.click(); });
+menuDarkMode.addEventListener('click', toggleDarkMode);
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 
-applyDarkModePreference(darkModeToggle);
+applyDarkModePreference(menuDarkMode);
 applyLayoutMode();
 createBoard(board, maxRows);
 repositionResetButton();
