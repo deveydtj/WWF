@@ -207,11 +207,13 @@
       }
 
       body.overlay-mode #historyClose,
-      body.overlay-mode #definitionClose {
+      body.overlay-mode #definitionClose,
+      body.overlay-mode #chatClose {
         display: block;
       }
       body.overlay-mode #historyBox,
-      body.overlay-mode #definitionBox {
+      body.overlay-mode #definitionBox,
+      body.overlay-mode #chatBox {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -225,6 +227,10 @@
         opacity: 1;
       }
       body.overlay-mode.definition-open #definitionBox {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      body.overlay-mode.chat-open #chatBox {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
       }
@@ -293,6 +299,46 @@
     }
     #definitionBox::-webkit-scrollbar {
       display: none;
+    }
+
+    #chatBox {
+      position: absolute;
+      top: 100px;
+      right: calc(20px + 280px);
+      width: 260px;
+      max-height: 70vh;
+      overflow-y: auto;
+      background: var(--bg-color);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow:
+        inset 2px 2px 5px var(--shadow-color-dark),
+        inset -2px -2px 5px var(--shadow-color-light);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #chatBox::-webkit-scrollbar { display: none; }
+
+    .chat-entry {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 6px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .chat-entry.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .chat-emoji { margin-right: 6px; }
+    .chat-bubble {
+      background: var(--bg-color);
+      padding: 6px 10px;
+      border-radius: 12px;
+      box-shadow: inset 2px 2px 5px var(--shadow-color-dark),
+                  inset -2px -2px 5px var(--shadow-color-light);
     }
 
     #historyList {
@@ -837,6 +883,23 @@
         z-index: 50;
       }
 
+      #chatBox {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        max-height: 0;
+        overflow-y: hidden;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        background: var(--bg-color);
+        opacity: 0;
+        transform: translateY(100%);
+        z-index: 50;
+      }
+
       body.history-open #historyBox {
         max-height: 50vh;
         max-width: calc(98% - 20px);
@@ -851,6 +914,20 @@
       }
 
       body.definition-open #definitionBox {
+        display: block;
+        max-height: 40vh;
+        max-width: calc(98% - 20px);
+        padding: 8px;
+        overflow-y: auto;
+        border-radius: 0;
+        box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                    inset -2px -2px 4px var(--shadow-color-light);
+        opacity: 1;
+        transform: translateY(0);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+
+      body.chat-open #chatBox {
         display: block;
         max-height: 40vh;
         max-width: calc(98% - 20px);
@@ -971,11 +1048,13 @@
     <!-- Option Buttons -->
     <button id="historyToggle" title="Show/Hide History">📜</button>
     <button id="definitionToggle" title="Show/Hide Definition">📖</button>
+    <button id="chatToggle" title="Show/Hide Chat">💬</button>
     <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
     <div id="optionsMenu" style="display:none;">
       <button id="optionsClose" class="popup-close">✖</button>
       <button id="menuHistory">📜 History</button>
       <button id="menuDefinition">📖 Definition</button>
+      <button id="menuChat">💬 Chat</button>
       <button id="menuDarkMode">🌙/☀️</button>
     </div>
 
@@ -991,6 +1070,14 @@
     <div id="definitionBox">
       <button id="definitionClose" class="popup-close">✖</button>
       <div id="definitionText"></div>
+    </div>
+    <div id="chatBox">
+      <button id="chatClose" class="popup-close">✖</button>
+      <div id="chatMessages"></div>
+      <form id="chatForm" style="display:flex; margin-top:6px;">
+        <input id="chatInput" type="text" style="flex:1;" maxlength="140" autocomplete="off" />
+        <button id="chatSend" type="submit">Send</button>
+      </form>
     </div>
 
     <div id="titleBar">

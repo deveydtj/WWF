@@ -615,3 +615,18 @@ def test_close_call_not_triggered(monkeypatch, server_env):
     assert status == 403
     assert 'close_call' not in data
 
+
+def test_chat_post_and_get(server_env):
+    server, request = server_env
+
+    request.method = 'POST'
+    request.json = {'text': 'hello', 'emoji': '😀'}
+    resp = server.chat()
+    assert resp['status'] == 'ok'
+    assert server.chat_messages[-1]['text'] == 'hello'
+
+    request.method = 'GET'
+    request.json = None
+    data = server.chat()
+    assert data['messages'][-1]['text'] == 'hello'
+

@@ -34,3 +34,18 @@ export async function sendHeartbeat(emoji) {
     body: JSON.stringify({ emoji })
   });
 }
+
+export async function sendChatMessage(text, emoji) {
+  const r = await fetch('/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, emoji })
+  });
+  return r.json();
+}
+
+export async function getChatMessages() {
+  const r = await fetch('/chat');
+  if (!r.ok) throw new Error('Network response was not OK');
+  return r.json();
+}

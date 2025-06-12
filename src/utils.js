@@ -81,7 +81,7 @@ function animatePanelToCenter(box) {
   }, 310);
 }
 
-export function positionSidePanels(boardArea, historyBox, definitionBox) {
+export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox) {
   if (window.innerWidth > 600) {
     const boardRect = boardArea.getBoundingClientRect();
     const top = boardRect.top + window.scrollY;
@@ -95,6 +95,11 @@ export function positionSidePanels(boardArea, historyBox, definitionBox) {
     definitionBox.style.position = 'absolute';
     definitionBox.style.top = `${top}px`;
     definitionBox.style.left = `${right + 60}px`;
+    if (chatBox) {
+      chatBox.style.position = 'absolute';
+      chatBox.style.top = `${top}px`;
+      chatBox.style.left = `${right + definitionBox.offsetWidth + 100}px`;
+    }
   } else {
     historyBox.style.position = '';
     historyBox.style.top = '';
@@ -102,10 +107,15 @@ export function positionSidePanels(boardArea, historyBox, definitionBox) {
     definitionBox.style.position = '';
     definitionBox.style.top = '';
     definitionBox.style.left = '';
+    if (chatBox) {
+      chatBox.style.position = '';
+      chatBox.style.top = '';
+      chatBox.style.left = '';
+    }
   }
 }
 
-export function updateOverlayMode(boardArea, historyBox, definitionBox) {
+export function updateOverlayMode(boardArea, historyBox, definitionBox, chatBox) {
   const wasPopup = document.body.classList.contains('overlay-mode');
   let willBePopup = false;
   if (window.innerWidth > 600) {
@@ -113,6 +123,7 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox) {
       historyBox.offsetWidth +
       boardArea.offsetWidth +
       definitionBox.offsetWidth +
+      (chatBox ? chatBox.offsetWidth : 0) +
       120; // margins used in positioning
     willBePopup = total > window.innerWidth;
   }
@@ -120,12 +131,14 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox) {
   if (!wasPopup && willBePopup) {
     animatePanelToCenter(historyBox);
     animatePanelToCenter(definitionBox);
+    if (chatBox) animatePanelToCenter(chatBox);
   }
 
   if (willBePopup) {
     document.body.classList.add('overlay-mode');
     document.body.classList.remove('history-open');
     document.body.classList.remove('definition-open');
+    document.body.classList.remove('chat-open');
   } else {
     document.body.classList.remove('overlay-mode');
   }
@@ -135,6 +148,7 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox) {
   if (wasPopup && !isPopup && window.innerWidth > 600) {
     document.body.classList.add('history-open');
     document.body.classList.add('definition-open');
+    if (chatBox) document.body.classList.add('chat-open');
   }
   // When switching to narrow screens or into overlay mode, reset inline styles
   // so panels are positioned by CSS rules instead of leftover absolute values.
@@ -147,6 +161,11 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox) {
       definitionBox.style.position = '';
       definitionBox.style.top = '';
       definitionBox.style.left = '';
+      if (chatBox) {
+        chatBox.style.position = '';
+        chatBox.style.top = '';
+        chatBox.style.left = '';
+      }
     }
   }
 }
