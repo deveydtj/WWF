@@ -85,3 +85,13 @@ overview and should be kept up to date as features evolve.
 - Potential future features include animations, sound effects, user account
   linking, hints, and internationalization support.
 
+## 7. Chat Box
+
+- Optional side panel for real-time text chat during a game.
+- Users can toggle the chat panel to show or hide it at any time.
+- The panel scales smoothly with all screen sizes, maintaining usability on mobile and desktop.
+- Uses each player's selected emoji as their chat avatar.
+- Messages appear with soft neumorphic bubbles and animated transitions.
+- Chat history updates live for all participants as messages are posted.
+- Must be fully keyboard accessible and responsive on mobile and desktop.
+

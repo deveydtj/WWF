@@ -24,6 +24,13 @@ as they are completed.
 - [ ] Provide hint or challenge modes.
 - [ ] Begin planning for internationalization support.
 
+## Chat Box
+
+- [x] Implement a chat panel for players to send messages during a game.
+- [x] Add a toggle control to show or hide the chat panel on any screen size.
+- [x] Use each player's selected emoji as their chat avatar.
+- [x] Add neumorphic animations for message bubbles appearing and disappearing.
+
 ## Code Quality
 
 - [ ] Expand unit tests to cover additional API and UI logic.

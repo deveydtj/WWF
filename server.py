@@ -36,6 +36,7 @@ definition = None     # definition for the last solved word
 last_word = None      # last completed word
 last_definition = None  # definition of last completed word
 win_timestamp = None   # timestamp when the winning guess was submitted
+chat_messages = []     # list of chat messages
 
 
 def sanitize_definition(text: str) -> str:
@@ -59,7 +60,8 @@ def save_data():
         "definition": definition,
         "last_word": last_word,
         "last_definition": last_definition,
-        "win_timestamp": win_timestamp
+        "win_timestamp": win_timestamp,
+        "chat_messages": chat_messages
     }
     with open(GAME_FILE, "w") as f:
         json.dump(data, f)
@@ -68,7 +70,7 @@ def save_data():
 def load_data():
     global WORDS, leaderboard, ip_to_emoji, winner_emoji
     global target_word, guesses, is_over, found_greens, found_yellows, past_games, definition
-    global last_word, last_definition, win_timestamp
+    global last_word, last_definition, win_timestamp, chat_messages
 
     # Load word list
     with open(WORDS_FILE) as f:
@@ -91,6 +93,7 @@ def load_data():
                 last_word     = data.get("last_word")
                 last_definition = data.get("last_definition")
                 win_timestamp = data.get("win_timestamp")
+                chat_messages[:] = data.get("chat_messages", [])
             except Exception:
                 leaderboard.clear()
                 ip_to_emoji.clear()
@@ -105,6 +108,7 @@ def load_data():
                 last_word = None
                 last_definition = None
                 win_timestamp = None
+                chat_messages.clear()
     else:
         leaderboard.clear()
         ip_to_emoji.clear()
@@ -119,6 +123,7 @@ def load_data():
         last_word = None
         last_definition = None
         win_timestamp = None
+        chat_messages.clear()
 
 # ---- Game Logic ----
 def pick_new_word():
@@ -255,7 +260,8 @@ def state():
         "past_games":    past_games,
         "definition":    definition if is_over else None,
         "last_word":     last_word,
-        "last_definition": last_definition
+        "last_definition": last_definition,
+        "chat_messages": chat_messages
     })
 
 @app.route("/emoji", methods=["POST"])
@@ -410,6 +416,21 @@ def guess_word():
         "won": won,
         "over": over
     })
+
+@app.route("/chat", methods=["GET", "POST"])
+def chat():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        text = (data.get("text") or "").strip()
+        emoji = data.get("emoji")
+        if not text:
+            return jsonify({"status": "error", "msg": "Empty message."}), 400
+        if emoji not in leaderboard:
+            return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
+        chat_messages.append({"emoji": emoji, "text": text, "ts": time.time()})
+        save_data()
+        return jsonify({"status": "ok"})
+    return jsonify({"messages": chat_messages})
 
 @app.route("/reset", methods=["POST"])
 def reset_game():
