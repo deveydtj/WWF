@@ -13,7 +13,6 @@ let myEmoji = getMyEmoji();
 let showEmojiModalOnNextFetch = false;
 let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
-let lastDeltaTimeout = null;
 let hadNetworkError = false;
 
 let maxRows = 6;
@@ -77,16 +76,29 @@ if (isMobile) {
 }
 
 function showPointsDelta(delta) {
-  const el = document.getElementById('pointsDelta');
-  if (lastDeltaTimeout) clearTimeout(lastDeltaTimeout);
-  el.className = '';
-  if (delta > 0) el.classList.add('positive');
-  if (delta < 0) el.classList.add('negative');
-  el.textContent = (delta > 0 ? '+' : '') + delta + ' point' + (Math.abs(delta) !== 1 ? 's' : '');
-  el.classList.add('visible');
-  lastDeltaTimeout = setTimeout(() => {
-    el.classList.remove('visible');
-  }, 2200);
+  const msg = (delta > 0 ? '+' : '') + delta + ' point' + (Math.abs(delta) !== 1 ? 's' : '');
+  if (isMobile) {
+    // Mobile uses the popup element
+    messagePopup.textContent = msg;
+    messagePopup.style.display = 'block';
+    messagePopup.style.animation = 'fadeInOut 2s';
+    messagePopup.addEventListener('animationend', () => {
+      messagePopup.style.display = 'none';
+      messagePopup.style.animation = '';
+    }, { once: true });
+  } else {
+    messageEl.classList.remove('positive', 'negative');
+    if (delta > 0) messageEl.classList.add('positive');
+    if (delta < 0) messageEl.classList.add('negative');
+    messageEl.textContent = msg;
+    messageEl.style.visibility = 'visible';
+    messageEl.style.animation = 'fadeInOut 2s';
+    messageEl.addEventListener('animationend', () => {
+      messageEl.style.visibility = 'hidden';
+      messageEl.style.animation = '';
+      messageEl.classList.remove('positive', 'negative');
+    }, { once: true });
+  }
 }
 
 function centerLeaderboardOnMe() {
