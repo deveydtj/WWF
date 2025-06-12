@@ -34,7 +34,6 @@ const historyToggle = document.getElementById('historyToggle');
 const definitionToggle = document.getElementById('definitionToggle');
 const definitionText = document.getElementById('definitionText');
 const definitionBox = document.getElementById('definitionBox');
-const chatToggle = document.getElementById('chatToggle');
 const chatBox = document.getElementById('chatBox');
 const chatMessagesEl = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
@@ -372,7 +371,6 @@ historyToggle.addEventListener('click', () => { document.body.classList.toggle('
 historyClose.addEventListener('click', () => { document.body.classList.remove('history-open'); });
 definitionToggle.addEventListener('click', () => { document.body.classList.toggle('definition-open'); });
 definitionClose.addEventListener('click', () => { document.body.classList.remove('definition-open'); });
-chatToggle.addEventListener('click', () => { document.body.classList.toggle('chat-open'); });
 chatClose.addEventListener('click', () => { document.body.classList.remove('chat-open'); });
 optionsToggle.addEventListener('click', () => {
   optionsMenu.style.display = 'block';
@@ -394,7 +392,10 @@ optionsToggle.addEventListener('click', () => {
 optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
 menuHistory.addEventListener('click', () => { historyToggle.click(); optionsMenu.style.display = 'none'; });
 menuDefinition.addEventListener('click', () => { definitionToggle.click(); optionsMenu.style.display = 'none'; });
-menuChat.addEventListener('click', () => { chatToggle.click(); optionsMenu.style.display = 'none'; });
+menuChat.addEventListener('click', () => {
+  document.body.classList.toggle('chat-open');
+  optionsMenu.style.display = 'none';
+});
 menuDarkMode.addEventListener('click', () => { darkModeToggle.click(); });
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 

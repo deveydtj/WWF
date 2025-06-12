@@ -34,7 +34,12 @@ export function setupTypingListeners({keyboardEl, guessInput, submitButton, subm
       event.preventDefault();
       return;
     }
-    if (guessInput.disabled || document.activeElement === guessInput) return;
+    const active = document.activeElement;
+    if (guessInput.disabled || active === guessInput) return;
+    if (active && active !== document.body &&
+        (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+      return;
+    }
     const key = event.key.toLowerCase();
     const currentValue = guessInput.value;
     if (key === 'enter') {
