@@ -1,4 +1,4 @@
-import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess } from './board.js';
+import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from './api.js';
@@ -160,6 +160,14 @@ function renderEmojiStamps(guesses) {
   });
 }
 
+async function performReset() {
+  await animateTilesOut(board);
+  await resetGame();
+  await fetchState();
+  await animateTilesIn(board);
+  showMessage('Game reset!', { messageEl, messagePopup });
+}
+
 function updateResetButton() {
   if (gameOver) {
     holdResetText.textContent = 'Reset';
@@ -167,12 +175,7 @@ function updateResetButton() {
     holdResetProgress.style.opacity = '0';
     holdReset.onmousedown = null;
     holdReset.ontouchstart = null;
-    holdReset.onclick = () => {
-      resetGame().then(() => {
-        fetchState();
-        showMessage('Game reset!', { messageEl, messagePopup });
-      });
-    };
+    holdReset.onclick = () => { performReset(); };
   } else {
     holdResetText.textContent = 'Reset';
     holdResetProgress.style.opacity = '0.9';
@@ -205,10 +208,7 @@ function startHoldReset() {
       setTimeout(() => {
         holdResetProgress.style.width = '0%';
       }, 350);
-      resetGame().then(() => {
-        fetchState();
-        showMessage('Game reset!', { messageEl, messagePopup });
-      });
+      performReset();
     }
   }, 20);
 }

@@ -507,6 +507,14 @@
                   inset -3px -3px 6px var(--absent-shadow-light);
     }
 
+    .tile.reset-out {
+      animation: tileResetOut 0.25s forwards;
+    }
+
+    .tile.reset-in {
+      animation: tileResetIn 0.25s forwards;
+    }
+
     /* ─── Input & Buttons ─── */
     #inputArea {
       display: flex;
@@ -661,6 +669,30 @@
       10% { opacity: 1; transform: translateY(0); }
       90% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    @keyframes tileResetOut {
+      to {
+        box-shadow: 0 0 0 var(--shadow-color-dark),
+                    0 0 0 var(--shadow-color-light);
+        transform: scale(0.8);
+        opacity: 0;
+      }
+    }
+
+    @keyframes tileResetIn {
+      from {
+        box-shadow: 0 0 0 var(--shadow-color-dark),
+                    0 0 0 var(--shadow-color-light);
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        box-shadow: 5px 5px 10px var(--shadow-color-dark),
+                    -5px -5px 10px var(--shadow-color-light);
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     /* ─── Hold-to-Reset Neumorphic ─── */

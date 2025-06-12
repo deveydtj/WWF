@@ -29,6 +29,21 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
   }
 }
 
+export function animateTilesOut(board) {
+  const tiles = Array.from(board.children);
+  tiles.forEach(t => t.classList.add('reset-out'));
+  return new Promise(resolve => setTimeout(resolve, 250));
+}
+
+export function animateTilesIn(board) {
+  const tiles = Array.from(board.children);
+  tiles.forEach(t => {
+    t.classList.add('reset-in');
+    t.addEventListener('animationend', () => t.classList.remove('reset-in'), { once: true });
+  });
+  return new Promise(resolve => setTimeout(resolve, 250));
+}
+
 export function resetKeyboard(keyboard) {
   Array.from(keyboard.querySelectorAll('.key')).forEach(key => {
     key.classList.remove('correct', 'present', 'absent');
