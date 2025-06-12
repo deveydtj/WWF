@@ -4,7 +4,7 @@ import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateOverlayMode, updateVH, applyLayoutMode, isMobile } from './utils.js';
+import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateVH, applyLayoutMode, isMobile } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -21,7 +21,6 @@ let requiredLetters = new Set();
 let greenPositions = {};
 let gameOver = false;
 let latestState = null;
-let autoDefTimeout = null;
 
 const board = document.getElementById('board');
 const guessInput = document.getElementById('guessInput');
@@ -144,7 +143,7 @@ function renderLeaderboard() {
 
 function renderEmojiStamps(guesses) {
   stampContainer.innerHTML = '';
-  if (!document.body.classList.contains('overlay-mode')) return;
+  if (document.body.dataset.mode !== 'medium') return;
   const boardRect = board.getBoundingClientRect();
   guesses.forEach((g, idx) => {
     const tile = board.children[idx * 5];
@@ -260,13 +259,6 @@ function applyState(state) {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 
   const justEnded = !prevGameOver && state.is_over;
-  if (justEnded && document.body.classList.contains('overlay-mode')) {
-    document.body.classList.add('definition-open');
-    clearTimeout(autoDefTimeout);
-    autoDefTimeout = setTimeout(() => {
-      document.body.classList.remove('definition-open');
-    }, 10000);
-  }
 
   const haveMy = activeEmojis.includes(myEmoji);
   if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
@@ -429,9 +421,8 @@ applyLayoutMode();
 createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-updateOverlayMode(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
-if (window.innerWidth > 900 && !document.body.classList.contains('overlay-mode')) {
+if (window.innerWidth > 900) {
   document.body.classList.add('history-open');
   document.body.classList.add('definition-open');
   // Recalculate panel positions now that definition is visible
@@ -445,7 +436,6 @@ document.addEventListener('click', onActivity);
 window.addEventListener('resize', repositionResetButton);
 window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-  updateOverlayMode(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
