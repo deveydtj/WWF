@@ -354,6 +354,16 @@ function checkInactivity() {
   }
 }
 
+function togglePanel(panelClass) {
+  if (document.body.dataset.mode === 'medium') {
+    ['history-open', 'definition-open', 'chat-open'].forEach(c => {
+      if (c !== panelClass) document.body.classList.remove(c);
+    });
+  }
+  document.body.classList.toggle(panelClass);
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+}
+
 setupTypingListeners({
   keyboardEl: keyboard,
   guessInput,
@@ -370,16 +380,14 @@ darkModeToggle.addEventListener('click', () => {
 });
 
 historyToggle.addEventListener('click', () => {
-  document.body.classList.toggle('history-open');
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  togglePanel('history-open');
 });
 historyClose.addEventListener('click', () => {
   document.body.classList.remove('history-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 definitionToggle.addEventListener('click', () => {
-  document.body.classList.toggle('definition-open');
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  togglePanel('definition-open');
 });
 definitionClose.addEventListener('click', () => {
   document.body.classList.remove('definition-open');
@@ -410,9 +418,8 @@ optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none
 menuHistory.addEventListener('click', () => { historyToggle.click(); optionsMenu.style.display = 'none'; });
 menuDefinition.addEventListener('click', () => { definitionToggle.click(); optionsMenu.style.display = 'none'; });
 menuChat.addEventListener('click', () => {
-  document.body.classList.toggle('chat-open');
+  togglePanel('chat-open');
   optionsMenu.style.display = 'none';
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 menuDarkMode.addEventListener('click', () => { darkModeToggle.click(); });
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
@@ -424,7 +431,7 @@ repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 updateOverlayMode(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
-if (window.innerWidth > 600 && !document.body.classList.contains('overlay-mode')) {
+if (window.innerWidth > 900 && !document.body.classList.contains('overlay-mode')) {
   document.body.classList.add('history-open');
   document.body.classList.add('definition-open');
   // Recalculate panel positions now that definition is visible

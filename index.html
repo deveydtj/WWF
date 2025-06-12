@@ -173,13 +173,14 @@
       align-items: center;
       justify-content: center;
       padding: 0;
+      z-index: 1000;
     }
     .close-btn:active {
       box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
                   inset -2px -2px 4px var(--inset-shadow-light);
     }
 
-    @media (min-width: 601px) {
+    @media (min-width: 901px) {
       #historyClose,
       #definitionClose {
         display: none;
@@ -1111,6 +1112,35 @@
       #definitionBox,
       #chatBox {
         width: 220px;
+      }
+
+      #optionsToggle {
+        display: block;
+      }
+
+      body[data-mode='medium'] #historyClose,
+      body[data-mode='medium'] #definitionClose,
+      body[data-mode='medium'] #chatClose {
+        display: block;
+      }
+
+      body[data-mode='medium'] #historyBox,
+      body[data-mode='medium'] #definitionBox,
+      body[data-mode='medium'] #chatBox {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 80;
+      }
+
+      body[data-mode='medium']:not(.history-open) #historyBox,
+      body[data-mode='medium']:not(.definition-open) #definitionBox,
+      body[data-mode='medium']:not(.chat-open) #chatBox {
+        display: none;
       }
 
       #board {
