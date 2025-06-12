@@ -857,33 +857,12 @@
       border: 2px solid var(--correct-bg);
     }
 
-    #pointsDelta {
-      margin: 6px auto 0;
-      min-height: 26px;
-      font-size: 1.1em;
-      font-weight: bold;
-      color: var(--present-bg);
-      background: var(--bg-color);
-      box-shadow: 2px 2px 7px var(--shadow-color-dark),
-                  -2px -2px 7px var(--shadow-color-light);
-      border-radius: 10px;
-      display: block;
-      width: max-content;
-      padding: 3px 14px;
-      opacity: 0;
-      transition: opacity 0.4s, color 0.3s;
-    }
-
-    #pointsDelta.positive {
+    #message.positive {
       color: var(--correct-bg);
     }
 
-    #pointsDelta.negative {
+    #message.negative {
       color: #ba1c1c;
-    }
-
-    #pointsDelta.visible {
-      opacity: 1;
     }
 
     * {
@@ -1241,9 +1220,8 @@
       <button id="submitGuess">Guess</button>
     </div>
 
-    <div id="pointsDelta"></div>
-    <p id="message"></p>
-    <div id="messagePopup"></div>
+      <p id="message"></p>
+      <div id="messagePopup"></div>
 
     <!-- Keyboard -->
     <div id="keyboard">
