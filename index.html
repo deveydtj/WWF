@@ -333,13 +333,45 @@
       transform: translateY(0);
     }
     .chat-emoji { margin-right: 6px; }
-    .chat-bubble {
-      background: var(--bg-color);
-      padding: 6px 10px;
-      border-radius: 12px;
-      box-shadow: inset 2px 2px 5px var(--shadow-color-dark),
-                  inset -2px -2px 5px var(--shadow-color-light);
-    }
+      .chat-bubble {
+        background: var(--bg-color);
+        padding: 6px 10px;
+        border-radius: 12px;
+        box-shadow: inset 2px 2px 5px var(--shadow-color-dark),
+                    inset -2px -2px 5px var(--shadow-color-light);
+      }
+
+      #chatInput,
+      #chatSend {
+        border: none;
+        padding: 8px 12px;
+        font-size: 16px;
+        border-radius: 10px;
+        background-color: var(--bg-color);
+        box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+                    inset -3px -3px 6px var(--inset-shadow-light);
+        color: var(--text-color);
+        outline: none;
+        transition: box-shadow 0.2s, background-color 0.3s, color 0.3s;
+      }
+
+      #chatInput {
+        flex: 1;
+        margin-right: 6px;
+      }
+
+      #chatSend {
+        cursor: pointer;
+        font-weight: 500;
+        box-shadow: 5px 5px 10px var(--shadow-color-dark),
+                    -5px -5px 10px var(--shadow-color-light);
+      }
+
+      #chatSend:active {
+        box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+                    inset -3px -3px 6px var(--inset-shadow-light);
+        color: var(--text-color-light);
+      }
 
     #historyList {
       list-style: none;
