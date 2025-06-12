@@ -325,7 +325,7 @@
       max-height: 70vh;
       overflow-y: auto;
       background: var(--bg-color);
-      padding: 10px;
+      padding: 36px 10px 10px;
       border-radius: 8px;
       box-shadow:
         inset 2px 2px 5px var(--shadow-color-dark),
@@ -1012,7 +1012,7 @@
         display: block;
         max-height: 40vh;
         max-width: calc(98% - 20px);
-        padding: 8px;
+        padding: 36px 8px 8px;
         overflow-y: auto;
         border-radius: 0;
         box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
@@ -1100,6 +1100,33 @@
       #message {
         font-size: 16px;
         margin-top: 12px;
+      }
+    }
+
+    /* ─────────────────────────────────────────────
+       C) Medium mode adjustments
+       ───────────────────────────────────────────── */
+    @media (min-width: 601px) and (max-width: 900px) {
+      #historyBox,
+      #definitionBox,
+      #chatBox {
+        width: 220px;
+      }
+
+      #board {
+        grid-template-columns: repeat(5, 55px);
+        grid-gap: 8px;
+        max-width: 307px;
+      }
+
+      .tile {
+        width: 55px;
+        height: 55px;
+      }
+
+      .key {
+        min-width: 34px;
+        height: 50px;
       }
     }
   </style>
