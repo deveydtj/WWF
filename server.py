@@ -39,6 +39,38 @@ win_timestamp = None   # timestamp when the winning guess was submitted
 chat_messages = []     # list of chat messages
 
 
+def reset_state():
+    """Clear all persistent game data."""
+    leaderboard.clear()
+    ip_to_emoji.clear()
+    guesses.clear()
+    found_greens.clear()
+    found_yellows.clear()
+    past_games.clear()
+    chat_messages.clear()
+    global winner_emoji, target_word, is_over, definition
+    global last_word, last_definition, win_timestamp
+    winner_emoji = None
+    target_word = ""
+    is_over = False
+    definition = None
+    last_word = None
+    last_definition = None
+    win_timestamp = None
+
+
+def reset_round():
+    """Start a fresh round without clearing scores."""
+    guesses.clear()
+    found_greens.clear()
+    found_yellows.clear()
+    global is_over, winner_emoji, definition, win_timestamp
+    is_over = False
+    winner_emoji = None
+    definition = None
+    win_timestamp = None
+
+
 def sanitize_definition(text: str) -> str:
     """Remove HTML tags and extra whitespace from a definition."""
     text = re.sub(r"<[^>]*>", "", text)
@@ -68,15 +100,17 @@ def save_data():
 
 
 def load_data():
+    """Load persistent state from disk or initialize fresh data."""
     global WORDS, leaderboard, ip_to_emoji, winner_emoji
     global target_word, guesses, is_over, found_greens, found_yellows, past_games, definition
     global last_word, last_definition, win_timestamp, chat_messages
 
-    # Load word list
+    # Load word list used for the game. File contains one five-letter word per line.
     with open(WORDS_FILE) as f:
         WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
 
     if os.path.exists(GAME_FILE):
+        # Restore previous game session. Any failure falls back to a clean state.
         with open(GAME_FILE) as f:
             try:
                 data = json.load(f)
@@ -95,49 +129,19 @@ def load_data():
                 win_timestamp = data.get("win_timestamp")
                 chat_messages[:] = data.get("chat_messages", [])
             except Exception:
-                leaderboard.clear()
-                ip_to_emoji.clear()
-                winner_emoji = None
-                target_word  = ""
-                guesses.clear()
-                is_over = False
-                found_greens.clear()
-                found_yellows.clear()
-                past_games.clear()
-                definition = None
-                last_word = None
-                last_definition = None
-                win_timestamp = None
-                chat_messages.clear()
+                reset_state()
     else:
-        leaderboard.clear()
-        ip_to_emoji.clear()
-        winner_emoji = None
-        target_word  = ""
-        guesses.clear()
-        is_over = False
-        found_greens.clear()
-        found_yellows.clear()
-        past_games.clear()
-        definition = None
-        last_word = None
-        last_definition = None
-        win_timestamp = None
-        chat_messages.clear()
+        reset_state()
 
 # ---- Game Logic ----
 def pick_new_word():
-    global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows, definition, win_timestamp
+    """Select a new target word and reset round data."""
+    global target_word
     target_word = random.choice(WORDS)
-    guesses.clear()
-    is_over = False
-    winner_emoji = None
-    found_greens = set()
-    found_yellows = set()
-    definition = None
-    win_timestamp = None
+    reset_round()
 
 def fetch_definition(word):
+    """Look up the definition of *word* using online and offline sources."""
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     logging.info(f"Fetching definition for '{word}'")
     try:
@@ -203,15 +207,21 @@ def result_for_guess(guess, target):
     return result
 
 def get_required_letters_and_positions():
-    required_letters = set()
-    green_positions = {}
-    for g in guesses:
-        for i, res in enumerate(g["result"]):
-            if res == "correct":
-                required_letters.add(g["guess"][i])
-                green_positions[i] = g["guess"][i]
-            elif res == "present":
-                required_letters.add(g["guess"][i])
+    """Return letters and fixed positions discovered so far."""
+    # Collect any letters that have appeared as green or yellow
+    required_letters = {
+        g["guess"][i]
+        for g in guesses
+        for i, res in enumerate(g["result"])
+        if res in ("correct", "present")
+    }
+    # Remember exact positions that are known to be green
+    green_positions = {
+        i: g["guess"][i]
+        for g in guesses
+        for i, res in enumerate(g["result"])
+        if res == "correct"
+    }
     return required_letters, green_positions
 
 def validate_hard_mode(guess):
@@ -219,16 +229,17 @@ def validate_hard_mode(guess):
     for idx, ch in green_positions.items():
         if guess[idx] != ch:
             return False, f"Letter {ch.upper()} must be in position {idx+1}."
-    if required_letters:
-        if not all(l in guess for l in required_letters):
-            missing = [l for l in required_letters if l not in guess]
-            return False, f"Guess must contain letter(s): {', '.join(m.upper() for m in missing)}."
+    missing = required_letters - set(guess)
+    if missing:
+        letters = ", ".join(m.upper() for m in sorted(missing))
+        return False, f"Guess must contain letter(s): {letters}."
     return True, ""
 
 # ---- API Routes ----
 
 @app.route("/state", methods=["GET", "POST"])
 def state():
+    """Return current game state and optionally update activity timestamps."""
     # ——— Heartbeat: bump AFK timestamp on every client poll ———
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
@@ -266,6 +277,7 @@ def state():
 
 @app.route("/emoji", methods=["POST"])
 def set_emoji():
+    """Register or update a player's emoji avatar."""
     data = request.json or {}
     emoji = data.get("emoji")
     ip = get_client_ip()
@@ -296,6 +308,7 @@ def set_emoji():
 
 @app.route("/guess", methods=["POST"])
 def guess_word():
+    """Handle a player's guess and update scores and game state."""
     global is_over, winner_emoji, found_greens, found_yellows, definition
     global last_word, last_definition, win_timestamp
     data = request.json or {}
@@ -306,6 +319,7 @@ def guess_word():
     points_delta = 0
     now = time.time()
 
+    # --- Validate input and current game status ---
     if is_over:
         close_call = None
         if guess == target_word and win_timestamp and emoji != winner_emoji:
@@ -326,6 +340,7 @@ def guess_word():
 
     leaderboard[emoji]["last_active"] = now
 
+    # --- Enforce hard mode constraints ---
     ok, msg = validate_hard_mode(guess)
     if not ok:
         return jsonify({"status": "error", "msg": msg}), 400
@@ -335,7 +350,7 @@ def guess_word():
     already_guessed = any(g["guess"] == guess for g in guesses)
     guesses.append(new_entry)
 
-    # Points logic: Only award for globally new discoveries!
+    # --- Scoring: award points only for globally new discoveries ---
     global_found_this_turn = set()
     for i, r in enumerate(result):
         letter = guess[i]
@@ -357,7 +372,7 @@ def guess_word():
                 found_yellows.add(letter)
                 global_found_this_turn.add(letter)
 
-    # Bonus for win, penalty for wrong final guess
+    # --- Game over checks and bonuses ---
     won = guess == target_word
     over = False
 
@@ -387,9 +402,10 @@ def guess_word():
 
     leaderboard[emoji]["score"] += points_delta
     save_data()
-    # — attach this turn’s points so client can render a history
+    # Attach this turn’s points so the client can render a history
     new_entry["points"] = points_delta
 
+    # Build up the latest game state for the client
     resp_state = {
         "guesses": guesses,
         "target_word": target_word if is_over else None,
@@ -419,6 +435,7 @@ def guess_word():
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
+    """Post or retrieve simple text chat messages."""
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         text = (data.get("text") or "").strip()
@@ -434,6 +451,7 @@ def chat():
 
 @app.route("/reset", methods=["POST"])
 def reset_game():
+    """Archive the finished game and start a new round."""
     # Save the just-finished game into history
     past_games.append(list(guesses))
     pick_new_word()
