@@ -77,3 +77,13 @@ is required for the full suite to run successfully.
 - `index.html` – browser client
 - `sgb-words.txt` – word list used by the game
 - `tests/` – Pytest suite
+
+## Layout Modes
+
+The client adjusts its interface based on viewport width:
+
+- **Light Mode** – up to **600px** wide. The layout stacks vertically with large touch areas and panels sliding up from the bottom.
+- **Medium Mode** – widths between **601px** and **900px**. Panels sit beside the board but use narrower widths and slightly smaller tiles.
+- **Full Mode** – wider than **900px**. The game uses the largest tile and panel sizes and displays the richest interface.
+
+The mode updates automatically on window resize or device orientation changes.

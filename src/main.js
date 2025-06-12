@@ -4,7 +4,7 @@ import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateOverlayMode, updateVH, isMobile } from './utils.js';
+import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateOverlayMode, updateVH, applyLayoutMode, isMobile } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -369,11 +369,26 @@ darkModeToggle.addEventListener('click', () => {
   applyDarkModePreference(darkModeToggle);
 });
 
-historyToggle.addEventListener('click', () => { document.body.classList.toggle('history-open'); });
-historyClose.addEventListener('click', () => { document.body.classList.remove('history-open'); });
-definitionToggle.addEventListener('click', () => { document.body.classList.toggle('definition-open'); });
-definitionClose.addEventListener('click', () => { document.body.classList.remove('definition-open'); });
-chatClose.addEventListener('click', () => { document.body.classList.remove('chat-open'); });
+historyToggle.addEventListener('click', () => {
+  document.body.classList.toggle('history-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+});
+historyClose.addEventListener('click', () => {
+  document.body.classList.remove('history-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+});
+definitionToggle.addEventListener('click', () => {
+  document.body.classList.toggle('definition-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+});
+definitionClose.addEventListener('click', () => {
+  document.body.classList.remove('definition-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+});
+chatClose.addEventListener('click', () => {
+  document.body.classList.remove('chat-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+});
 optionsToggle.addEventListener('click', () => {
   optionsMenu.style.display = 'block';
   const rect = optionsToggle.getBoundingClientRect();
@@ -397,11 +412,13 @@ menuDefinition.addEventListener('click', () => { definitionToggle.click(); optio
 menuChat.addEventListener('click', () => {
   document.body.classList.toggle('chat-open');
   optionsMenu.style.display = 'none';
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 menuDarkMode.addEventListener('click', () => { darkModeToggle.click(); });
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 
 applyDarkModePreference(darkModeToggle);
+applyLayoutMode();
 createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
@@ -422,6 +439,7 @@ window.addEventListener('resize', repositionResetButton);
 window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   updateOverlayMode(boardArea, historyBox, definitionBoxEl, chatBox);
+  applyLayoutMode();
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 updateVH();
