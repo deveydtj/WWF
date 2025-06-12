@@ -80,46 +80,6 @@
       overflow-y: auto;
     }
 
-    #darkModeToggle {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      font-size: 24px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-      color: var(--text-color-light);
-      line-height: 1;
-    }
-
-    #historyToggle {
-      display: block;
-      position: absolute;
-      top: 15px;
-      right: 60px;
-      font-size: 20px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-      color: var(--text-color-light);
-      line-height: 1;
-    }
-
-    #definitionToggle {
-      display: block;
-      position: absolute;
-      top: 15px;
-      right: 105px;
-      font-size: 20px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-      color: var(--text-color-light);
-      line-height: 1;
-    }
 
     #optionsToggle {
       display: none;
@@ -183,10 +143,6 @@
     @media (min-width: 901px) {
       #historyClose,
       #definitionClose {
-        display: none;
-      }
-      #historyToggle,
-      #definitionToggle {
         display: none;
       }
       #optionsToggle {
@@ -887,17 +843,7 @@
           padding: 10px;
         }
 
-        #darkModeToggle {
-          display: none;
-        }
 
-      #historyToggle {
-        display: none;
-      }
-
-      #definitionToggle {
-        display: none;
-      }
 
       #optionsToggle {
         display: block;
@@ -1163,10 +1109,7 @@
       </div>
     </div>
 
-    <!-- Option Buttons -->
-    <button id="historyToggle" title="Show/Hide History">📜</button>
-    <button id="definitionToggle" title="Show/Hide Definition">📖</button>
-    <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
+    <!-- Options Menu -->
     <div id="optionsMenu" style="display:none;">
       <button id="optionsClose" class="close-btn">✖</button>
       <button id="menuHistory">📜 History</button>
