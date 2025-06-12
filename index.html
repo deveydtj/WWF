@@ -304,7 +304,7 @@
     #chatBox {
       position: absolute;
       top: 100px;
-      right: calc(20px + 280px);
+      left: calc(100% + 20px);
       width: 260px;
       max-height: 70vh;
       overflow-y: auto;
@@ -358,6 +358,7 @@
       #chatInput {
         flex: 1;
         margin-right: 6px;
+        min-width: 0;
       }
 
       #chatSend {
@@ -1104,7 +1105,7 @@
       <div id="definitionText"></div>
     </div>
     <div id="chatBox">
-      <button id="chatClose" class="popup-close">✖</button>
+      <button id="chatClose" class="popup-close" type="button">✖</button>
       <div id="chatMessages"></div>
       <form id="chatForm" style="display:flex; margin-top:6px;">
         <input id="chatInput" type="text" style="flex:1;" maxlength="140" autocomplete="off" />
