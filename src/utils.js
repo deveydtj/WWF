@@ -97,8 +97,8 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
     definitionBox.style.left = `${right + 60}px`;
     if (chatBox) {
       chatBox.style.position = 'absolute';
-      chatBox.style.top = `${top}px`;
-      chatBox.style.left = `${right + definitionBox.offsetWidth + 100}px`;
+      chatBox.style.left = `${right + 60}px`;
+      chatBox.style.top = `${top + definitionBox.offsetHeight + 20}px`;
     }
   } else {
     historyBox.style.position = '';
@@ -123,7 +123,6 @@ export function updateOverlayMode(boardArea, historyBox, definitionBox, chatBox)
       historyBox.offsetWidth +
       boardArea.offsetWidth +
       definitionBox.offsetWidth +
-      (chatBox ? chatBox.offsetWidth : 0) +
       120; // margins used in positioning
     willBePopup = total > window.innerWidth;
   }
