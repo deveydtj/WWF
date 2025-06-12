@@ -155,15 +155,28 @@
       color: var(--text-color-light);
     }
 
-    .popup-close {
+    .close-btn {
       position: absolute;
       top: 5px;
       right: 5px;
-      background: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--bg-color);
       border: none;
       font-size: 16px;
       cursor: pointer;
       color: var(--text-color-light);
+      box-shadow: 2px 2px 4px var(--shadow-color-dark),
+                  -2px -2px 4px var(--shadow-color-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .close-btn:active {
+      box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+                  inset -2px -2px 4px var(--inset-shadow-light);
     }
 
     @media (min-width: 601px) {
@@ -204,6 +217,9 @@
       body:not(.definition-open) #definitionBox {
         transform: scale(0);
         opacity: 0;
+      }
+      body:not(.chat-open) #chatBox {
+        display: none;
       }
 
       body.overlay-mode #historyClose,
@@ -1115,7 +1131,7 @@
     <button id="definitionToggle" title="Show/Hide Definition">📖</button>
     <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
     <div id="optionsMenu" style="display:none;">
-      <button id="optionsClose" class="popup-close">✖</button>
+      <button id="optionsClose" class="close-btn">✖</button>
       <button id="menuHistory">📜 History</button>
       <button id="menuDefinition">📖 Definition</button>
       <button id="menuChat">💬 Chat</button>
@@ -1124,7 +1140,7 @@
 
     <!-- Game History Panel -->
     <div id="historyBox">
-      <button id="historyClose" class="popup-close">✖</button>
+      <button id="historyClose" class="close-btn">✖</button>
       <h3>History</h3>
       <ul id="historyList"></ul>
     </div>
@@ -1132,11 +1148,11 @@
     <!-- Leaderboard -->
     <div id="leaderboard"></div>
     <div id="definitionBox">
-      <button id="definitionClose" class="popup-close">✖</button>
+      <button id="definitionClose" class="close-btn">✖</button>
       <div id="definitionText"></div>
     </div>
     <div id="chatBox">
-      <button id="chatClose" class="popup-close" type="button">✖</button>
+      <button id="chatClose" class="close-btn" type="button">✖</button>
       <div id="chatMessages"></div>
       <form id="chatForm" style="display:flex; margin-top:6px;">
         <input id="chatInput" type="text" style="flex:1;" maxlength="140" autocomplete="off" />

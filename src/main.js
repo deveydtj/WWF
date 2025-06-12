@@ -257,6 +257,7 @@ function applyState(state) {
   } else {
     definitionText.textContent = '';
   }
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 
   const justEnded = !prevGameOver && state.is_over;
   if (justEnded && document.body.classList.contains('overlay-mode')) {
@@ -321,6 +322,7 @@ async function submitGuessHandler() {
     }
     if (resp.over && resp.state.definition) {
       definitionText.textContent = `${resp.state.target_word.toUpperCase()} – ${resp.state.definition}`;
+      positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
     }
   } else {
     if (resp.close_call) {
