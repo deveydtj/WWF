@@ -116,8 +116,11 @@ def test_duplicate_guess_and_sorted_leaderboard(server_env):
 
     request.json = {'guess': 'enter', 'emoji': '😀'}
     duplicate = server.guess_word()
-    assert duplicate['status'] == 'error'
-    assert 'already guessed' in duplicate['msg']
+    assert isinstance(duplicate, tuple)
+    data, status = duplicate
+    assert status == 400
+    assert data['status'] == 'error'
+    assert 'already guessed' in data['msg']
 
 
 def test_validate_hard_mode_missing_letter(server_env):
@@ -295,6 +298,22 @@ def test_guess_word_invalid_word_returns_400(server_env, word):
     assert data['status'] == 'error'
 
 
+def test_guess_word_invalid_word_duplicate_returns_400(server_env):
+    server, request = server_env
+
+    request.json = {'guess': 'zzzzz', 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    request.json = {'guess': 'zzzzz', 'emoji': '😀'}
+    dup = server.guess_word()
+
+    assert isinstance(dup, tuple)
+    data, status = dup
+    assert status == 400
+    assert data['status'] == 'error'
+
+
 def test_guess_word_after_game_over_returns_403(server_env):
     server, request = server_env
 
@@ -457,6 +476,18 @@ def test_fetch_definition_sets_user_agent(monkeypatch, server_env):
     server.fetch_definition('apple')
 
     assert captured['ua'] and 'Mozilla' in captured['ua']
+
+
+def test_fetch_definition_offline_fallback(monkeypatch, server_env):
+    server, _ = server_env
+
+    def fail(*a, **k):
+        raise server.urllib.error.URLError('offline')
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fail)
+
+    definition = server.fetch_definition('crane')
+    assert definition == 'a large bird or lifting machine'
 
 
 def test_definition_available_after_game_over(monkeypatch, server_env):

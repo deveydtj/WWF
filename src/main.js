@@ -290,10 +290,12 @@ function applyState(state) {
   submitButton.disabled = gameOver;
   updateResetButton();
 
-  if (state.is_over && state.definition) {
-    definitionText.textContent = `${state.target_word.toUpperCase()} – ${state.definition}`;
-  } else if (state.last_word && state.last_definition) {
-    definitionText.textContent = `${state.last_word.toUpperCase()} – ${state.last_definition}`;
+  if (state.is_over) {
+    const def = state.definition || 'Definition not found.';
+    definitionText.textContent = `${state.target_word.toUpperCase()} – ${def}`;
+  } else if (state.last_word) {
+    const def = state.last_definition || 'Definition not found.';
+    definitionText.textContent = `${state.last_word.toUpperCase()} – ${def}`;
   } else {
     definitionText.textContent = '';
   }
@@ -355,8 +357,9 @@ async function submitGuessHandler() {
     if (resp.over && !resp.won) {
       showMessage('Game Over! The word was ' + resp.state.target_word.toUpperCase(), { messageEl, messagePopup });
     }
-    if (resp.over && resp.state.definition) {
-      definitionText.textContent = `${resp.state.target_word.toUpperCase()} – ${resp.state.definition}`;
+    if (resp.over) {
+      const def = resp.state.definition || 'Definition not found.';
+      definitionText.textContent = `${resp.state.target_word.toUpperCase()} – ${def}`;
       positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
     }
   } else {
