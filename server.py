@@ -225,6 +225,33 @@ def validate_hard_mode(guess):
             return False, f"Guess must contain letter(s): {', '.join(m.upper() for m in missing)}."
     return True, ""
 
+def build_state_payload():
+    """Assemble the full game state dictionary returned to clients."""
+    lb = [
+        {
+            "emoji": emoji,
+            "score": leaderboard[emoji]["score"],
+            "last_active": leaderboard[emoji].get("last_active", 0),
+        }
+        for emoji in leaderboard
+    ]
+    lb.sort(key=lambda e: e["score"], reverse=True)
+
+    return {
+        "guesses": guesses,
+        "target_word": target_word if is_over else None,
+        "is_over": is_over,
+        "leaderboard": lb,
+        "active_emojis": list(leaderboard.keys()),
+        "winner_emoji": winner_emoji,
+        "max_rows": MAX_ROWS,
+        "past_games": past_games,
+        "definition": definition if is_over else None,
+        "last_word": last_word,
+        "last_definition": last_definition,
+        "chat_messages": chat_messages,
+    }
+
 # ---- API Routes ----
 
 @app.route("/state", methods=["GET", "POST"])
@@ -237,32 +264,8 @@ def state():
             leaderboard[e]["last_active"] = time.time()
             save_data()
 
-    # ——— Build leaderboard payload exactly as before ———
-    lb = [
-        {
-            "emoji": emoji,
-            "score": leaderboard[emoji]["score"],
-            "last_active": leaderboard[emoji].get("last_active", 0)
-        }
-        for emoji in leaderboard
-    ]
-    lb.sort(key=lambda e: e["score"], reverse=True)
-
-    # ——— Return full game state exactly as before ———
-    return jsonify({
-        "guesses":      guesses,
-        "target_word":  target_word if is_over else None,
-        "is_over":      is_over,
-        "leaderboard":  lb,
-        "active_emojis": list(leaderboard.keys()),
-        "winner_emoji":  winner_emoji,
-        "max_rows":      MAX_ROWS,
-        "past_games":    past_games,
-        "definition":    definition if is_over else None,
-        "last_word":     last_word,
-        "last_definition": last_definition,
-        "chat_messages": chat_messages
-    })
+    # Build and return current game state
+    return jsonify(build_state_payload())
 
 @app.route("/emoji", methods=["POST"])
 def set_emoji():
@@ -390,24 +393,7 @@ def guess_word():
     # — attach this turn’s points so client can render a history
     new_entry["points"] = points_delta
 
-    resp_state = {
-        "guesses": guesses,
-        "target_word": target_word if is_over else None,
-        "is_over": is_over,
-        "leaderboard": sorted([
-            {
-                "emoji": e,
-                "score": leaderboard[e]["score"],
-                "last_active": leaderboard[e].get("last_active", 0)
-            } for e in leaderboard
-        ], key=lambda x: x["score"], reverse=True),
-        "active_emojis": list(leaderboard.keys()),
-        "winner_emoji": winner_emoji,
-        "max_rows": MAX_ROWS,
-        "definition": definition if is_over else None,
-        "last_word": last_word,
-        "last_definition": last_definition
-    }
+    resp_state = build_state_payload()
 
     return jsonify({
         "status": "ok",
