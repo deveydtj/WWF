@@ -62,3 +62,39 @@ def test_apply_state_updates_definition_text():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
     assert 'definitionText.textContent' in text
     assert 'state.definition' in text or 'state.last_definition' in text
+
+
+def test_side_panels_centered_and_limited_in_medium_mode():
+    text = INDEX.read_text(encoding='utf-8')
+    for panel in ['#historyBox', '#definitionBox', '#chatBox']:
+        assert f"body[data-mode='medium'] {panel}" in text
+    assert 'position: fixed;' in text
+    assert 'transform: translate(-50%, -50%);' in text
+    assert 'max-width: 90%;' in text
+    assert 'max-height: 80vh;' in text
+
+
+def test_popups_fill_viewport():
+    text = INDEX.read_text(encoding='utf-8')
+    for popup_id in ['#emojiModal', '#closeCallPopup']:
+        assert f'{popup_id} {{' in text
+        assert 'position: fixed;' in text
+        for edge in ['top: 0', 'left: 0', 'right: 0', 'bottom: 0']:
+            assert edge in text
+
+
+def test_options_menu_clamped_to_viewport():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'window.innerWidth - rect.right' in text
+    assert 'Math.max(10 + window.scrollX' in text
+
+
+def test_side_panels_fixed_to_bottom_in_light_mode():
+    text = INDEX.read_text(encoding='utf-8')
+    patterns = [
+        r"@media \(max-width: 600px\)[\s\S]*?#historyBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*left: 0",
+        r"@media \(max-width: 600px\)[\s\S]*?#definitionBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
+        r"@media \(max-width: 600px\)[\s\S]*?#chatBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
+    ]
+    for pattern in patterns:
+        assert re.search(pattern, text, flags=re.DOTALL)
