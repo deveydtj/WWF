@@ -15,6 +15,9 @@ let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
 let hadNetworkError = false;
 
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+let audioCtx = null;
+
 let maxRows = 6;
 let requiredLetters = new Set();
 let greenPositions = {};
@@ -43,6 +46,7 @@ const menuHistory = document.getElementById('menuHistory');
 const menuDefinition = document.getElementById('menuDefinition');
 const menuChat = document.getElementById('menuChat');
 const menuDarkMode = document.getElementById('menuDarkMode');
+const menuSound = document.getElementById('menuSound');
 const holdReset = document.getElementById('holdReset');
 const holdResetProgress = document.getElementById('holdResetProgress');
 const holdResetText = document.getElementById('holdResetText');
@@ -97,6 +101,22 @@ function showPointsDelta(delta) {
       messageEl.classList.remove('positive', 'negative');
     }, { once: true });
   }
+}
+
+function playClick() {
+  if (!soundEnabled) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.05);
 }
 
 function centerLeaderboardOnMe() {
@@ -233,6 +253,7 @@ function stopHoldReset() {
 
 // Apply the server state to the UI and update all related variables
 function applyState(state) {
+  const prevGuessCount = latestState ? latestState.guesses.length : 0;
   latestState = state;
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
@@ -250,7 +271,13 @@ function applyState(state) {
   renderHistory(historyList, historyEntries);
 
   maxRows = state.max_rows || 6;
-  updateBoard(board, state, guessInput, maxRows, gameOver);
+  const animateRow = state.guesses.length > prevGuessCount ? state.guesses.length - 1 : -1;
+  updateBoard(board, state, guessInput, maxRows, gameOver, animateRow);
+  if (animateRow >= 0) {
+    for (let i = 0; i < 5; i++) {
+      setTimeout(playClick, i * 150);
+    }
+  }
   renderEmojiStamps(state.guesses);
   updateKeyboardFromGuesses(keyboard, state.guesses);
 
@@ -390,6 +417,12 @@ function toggleDarkMode() {
   applyDarkModePreference(menuDarkMode);
 }
 
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('soundEnabled', soundEnabled);
+  menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
+}
+
 function toggleHistory() {
   togglePanel('history-open');
 }
@@ -435,9 +468,11 @@ menuChat.addEventListener('click', () => {
   optionsMenu.style.display = 'none';
 });
 menuDarkMode.addEventListener('click', toggleDarkMode);
+menuSound.addEventListener('click', toggleSound);
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 
 applyDarkModePreference(menuDarkMode);
+menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
 repositionResetButton();
