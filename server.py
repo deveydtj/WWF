@@ -327,11 +327,11 @@ def guess_word():
         if close_call:
             resp["close_call"] = close_call
         return jsonify(resp), 403
-    existing = [g["guess"] for g in guesses]
-    if guess in existing:
-        return jsonify(status="error", msg="You’ve already guessed that word.")
     if not guess or len(guess) != 5 or guess not in WORDS:
         return jsonify({"status": "error", "msg": "Not a valid 5-letter word."}), 400
+    existing = [g["guess"] for g in guesses]
+    if guess in existing:
+        return jsonify(status="error", msg="You’ve already guessed that word."), 400
     if emoji not in leaderboard or leaderboard[emoji]["ip"] != ip:
         return jsonify({"status": "error", "msg": "Please pick an emoji before playing."}), 403
 
