@@ -46,6 +46,26 @@ def sanitize_definition(text: str) -> str:
     return " ".join(text.split())
 
 
+def _reset_state() -> None:
+    """Initialize all persistent in-memory structures to defaults."""
+    leaderboard.clear()
+    ip_to_emoji.clear()
+    global winner_emoji, target_word, is_over, definition
+    global last_word, last_definition, win_timestamp
+    winner_emoji = None
+    target_word = ""
+    guesses.clear()
+    is_over = False
+    found_greens.clear()
+    found_yellows.clear()
+    past_games.clear()
+    definition = None
+    last_word = None
+    last_definition = None
+    win_timestamp = None
+    chat_messages.clear()
+
+
 def save_data():
     data = {
         "leaderboard": leaderboard,
@@ -95,35 +115,9 @@ def load_data():
                 win_timestamp = data.get("win_timestamp")
                 chat_messages[:] = data.get("chat_messages", [])
             except Exception:
-                leaderboard.clear()
-                ip_to_emoji.clear()
-                winner_emoji = None
-                target_word  = ""
-                guesses.clear()
-                is_over = False
-                found_greens.clear()
-                found_yellows.clear()
-                past_games.clear()
-                definition = None
-                last_word = None
-                last_definition = None
-                win_timestamp = None
-                chat_messages.clear()
+                _reset_state()
     else:
-        leaderboard.clear()
-        ip_to_emoji.clear()
-        winner_emoji = None
-        target_word  = ""
-        guesses.clear()
-        is_over = False
-        found_greens.clear()
-        found_yellows.clear()
-        past_games.clear()
-        definition = None
-        last_word = None
-        last_definition = None
-        win_timestamp = None
-        chat_messages.clear()
+        _reset_state()
 
 # ---- Game Logic ----
 def pick_new_word():
