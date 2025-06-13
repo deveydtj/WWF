@@ -7,6 +7,10 @@ export function createBoard(board, rows = 6) {
   }
 }
 
+/**
+ * Render all guesses and the current input onto the board.
+ * Existing tiles are cleared before applying new status classes.
+ */
 export function updateBoard(board, state, guessInput, rows = 6, gameOver = false) {
   const guesses = state.guesses;
   const tiles = board.children;
@@ -50,6 +54,10 @@ export function resetKeyboard(keyboard) {
   });
 }
 
+/**
+ * Update the on-screen keyboard colors based on prior guesses.
+ * Later guesses override earlier ones so the highest information wins.
+ */
 export function updateKeyboardFromGuesses(keyboard, guesses) {
   resetKeyboard(keyboard);
   const statusOrder = { absent: 1, present: 2, correct: 3 };
@@ -69,6 +77,9 @@ export function updateKeyboardFromGuesses(keyboard, guesses) {
   }
 }
 
+/**
+ * Derive required letters and fixed positions from previous guesses.
+ */
 export function updateHardModeConstraints(guesses) {
   const requiredLetters = new Set();
   const greenPositions = {};
@@ -85,6 +96,9 @@ export function updateHardModeConstraints(guesses) {
   return { requiredLetters, greenPositions };
 }
 
+/**
+ * Validate a guess against the hard mode constraints and show errors.
+ */
 export function isValidHardModeGuess(guess, requiredLetters, greenPositions, showMessage) {
   for (const index in greenPositions) {
     if (guess[index] !== greenPositions[index]) {

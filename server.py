@@ -127,6 +127,7 @@ def load_data():
 
 # ---- Game Logic ----
 def pick_new_word():
+    """Choose a new target word and reset all in-memory game state."""
     global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows, definition, win_timestamp
     target_word = random.choice(WORDS)
     guesses.clear()
@@ -138,6 +139,7 @@ def pick_new_word():
     win_timestamp = None
 
 def fetch_definition(word):
+    """Look up a word's definition online with an offline JSON fallback."""
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     logging.info(f"Fetching definition for '{word}'")
     try:
@@ -183,11 +185,13 @@ def fetch_definition(word):
     return None
 
 def get_client_ip():
+    """Return the client's IP address, accounting for proxies."""
     if request.headers.getlist("X-Forwarded-For"):
         return request.headers.getlist("X-Forwarded-For")[0].split(',')[0]
     return request.remote_addr or "unknown"
 
 def result_for_guess(guess, target):
+    """Return Wordle-style feedback comparing a guess to the target."""
     result = ["absent"] * 5
     target_letters = list(target)
     for i in range(5):
@@ -203,6 +207,7 @@ def result_for_guess(guess, target):
     return result
 
 def get_required_letters_and_positions():
+    """Aggregate hard mode constraints from prior guesses."""
     required_letters = set()
     green_positions = {}
     for g in guesses:
@@ -215,6 +220,7 @@ def get_required_letters_and_positions():
     return required_letters, green_positions
 
 def validate_hard_mode(guess):
+    """Check a guess against hard mode constraints."""
     required_letters, green_positions = get_required_letters_and_positions()
     for idx, ch in green_positions.items():
         if guess[idx] != ch:
@@ -269,6 +275,7 @@ def state():
 
 @app.route("/emoji", methods=["POST"])
 def set_emoji():
+    """Register or change the player's emoji avatar."""
     data = request.json or {}
     emoji = data.get("emoji")
     ip = get_client_ip()
@@ -299,6 +306,7 @@ def set_emoji():
 
 @app.route("/guess", methods=["POST"])
 def guess_word():
+    """Process a player's guess and update scores and game state."""
     global is_over, winner_emoji, found_greens, found_yellows, definition
     global last_word, last_definition, win_timestamp
     data = request.json or {}
@@ -420,6 +428,7 @@ def chat():
 
 @app.route("/reset", methods=["POST"])
 def reset_game():
+    """Archive the current game and start a fresh one."""
     # Save the just-finished game into history
     past_games.append(list(guesses))
     pick_new_word()

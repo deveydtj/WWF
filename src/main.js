@@ -72,6 +72,7 @@ if (isMobile) {
   messageEl.style.visibility = 'hidden';
 }
 
+// Animate the temporary points indicator after each guess
 function showPointsDelta(delta) {
   const msg = (delta > 0 ? '+' : '') + delta + ' point' + (Math.abs(delta) !== 1 ? 's' : '');
   if (isMobile) {
@@ -112,6 +113,7 @@ function centerLeaderboardOnMe() {
   }
 }
 
+// Rebuild the leaderboard DOM and keep it centered on the current player
 function renderLeaderboard() {
   const lb = document.getElementById('leaderboard');
   lb.innerHTML = '';
@@ -150,6 +152,7 @@ function renderLeaderboard() {
   };
 }
 
+// Display emoji markers beside each completed guess in medium mode
 function renderEmojiStamps(guesses) {
   stampContainer.innerHTML = '';
   if (document.body.dataset.mode !== 'medium') return;
@@ -196,6 +199,7 @@ function updateResetButton() {
 }
 
 let holdProgress = null;
+// Animate the hold-to-reset progress bar and trigger a reset when complete
 function startHoldReset() {
   let heldTime = 0;
   const holdDuration = 2000;
@@ -227,6 +231,7 @@ function stopHoldReset() {
 }
 ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev => holdReset.addEventListener(ev, stopHoldReset));
 
+// Apply the server state to the UI and update all related variables
 function applyState(state) {
   latestState = state;
   activeEmojis = state.active_emojis || [];
@@ -281,6 +286,7 @@ function applyState(state) {
   }
 }
 
+// Retrieve the latest game state from the server and handle connection issues
 async function fetchState() {
   try {
     const state = await getState();
@@ -298,6 +304,7 @@ async function fetchState() {
   }
 }
 
+// Handle guess submission from input or keyboard
 async function submitGuessHandler() {
   if (gameOver) return;
   const guess = guessInput.value.trim().toLowerCase();
@@ -343,18 +350,21 @@ function onActivity() {
   fetchState();
 }
 
+// Begin polling the server at the given interval for state updates
 function startPolling(interval) {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(fetchState, interval);
   currentInterval = interval;
 }
 
+// Slow down polling when the user has been inactive for a while
 function checkInactivity() {
   if (Date.now() - lastActivity > INACTIVE_DELAY && currentInterval !== SLOW_INTERVAL) {
     startPolling(SLOW_INTERVAL);
   }
 }
 
+// Toggle one of the side panels while closing any others in medium mode
 function togglePanel(panelClass) {
   if (document.body.dataset.mode === 'medium') {
     ['history-open', 'definition-open', 'chat-open'].forEach(c => {
