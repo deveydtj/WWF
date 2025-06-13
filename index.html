@@ -170,13 +170,20 @@
       body:not(.history-open) #historyBox {
         transform: scale(0);
         opacity: 0;
+        pointer-events: none;
       }
       body:not(.definition-open) #definitionBox {
         transform: scale(0);
         opacity: 0;
+        pointer-events: none;
+      }
+      #chatBox {
+        transform-origin: left center;
       }
       body:not(.chat-open) #chatBox {
-        display: none;
+        transform: scale(0);
+        opacity: 0;
+        pointer-events: none;
       }
 
     }
@@ -828,7 +835,8 @@
       -ms-user-select: none;
     }
 
-    #guessInput {
+    #definitionBox,
+    #chatBox {
       user-select: text;
       -webkit-user-select: text;
       -moz-user-select: text;
@@ -861,12 +869,13 @@
         box-shadow: none;
         background: var(--bg-color);
         opacity: 0;
-        transform: translateY(100%);
+        transform-origin: bottom center;
+        transform: scale(0);
         z-index: 50;
+        pointer-events: none;
       }
 
       #definitionBox {
-        display: none;
         position: fixed;
         bottom: 0;
         right: 0;
@@ -878,12 +887,13 @@
         box-shadow: none;
         background: var(--bg-color);
         opacity: 0;
-        transform: translateY(100%);
+        transform-origin: bottom center;
+        transform: scale(0);
         z-index: 50;
+        pointer-events: none;
       }
 
       #chatBox {
-        display: none;
         position: fixed;
         bottom: 0;
         right: 0;
@@ -895,10 +905,12 @@
         box-shadow: none;
         background: var(--bg-color);
         opacity: 0;
-        transform: translateY(100%);
+        transform-origin: bottom center;
+        transform: scale(0);
         z-index: 50;
         display: flex;
         flex-direction: column;
+        pointer-events: none;
       }
 
       body.history-open #historyBox {
@@ -910,8 +922,9 @@
         box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
                     inset -2px -2px 4px var(--shadow-color-light);
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1);
         transition: transform 0.3s ease, opacity 0.3s ease;
+        pointer-events: auto;
       }
 
       body.definition-open #definitionBox {
@@ -924,8 +937,9 @@
         box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
                     inset -2px -2px 4px var(--shadow-color-light);
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1);
         transition: transform 0.3s ease, opacity 0.3s ease;
+        pointer-events: auto;
       }
 
       body.chat-open #chatBox {
@@ -938,9 +952,10 @@
         box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
                     inset -2px -2px 4px var(--shadow-color-light);
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1);
         transition: transform 0.3s ease, opacity 0.3s ease;
         flex-direction: column;
+        pointer-events: auto;
       }
 
       #historyBox h3 {
@@ -1063,10 +1078,17 @@
         flex-direction: column;
       }
 
+      body[data-mode='medium'] #historyBox,
+      body[data-mode='medium'] #definitionBox,
+      body[data-mode='medium'] #chatBox {
+        transform-origin: center center;
+      }
       body[data-mode='medium']:not(.history-open) #historyBox,
       body[data-mode='medium']:not(.definition-open) #definitionBox,
       body[data-mode='medium']:not(.chat-open) #chatBox {
-        display: none;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        pointer-events: none;
       }
 
       #board {
