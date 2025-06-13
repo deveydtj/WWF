@@ -13,6 +13,7 @@ A small multiplayer adaptation of Wordle. The frontend lives in `index.html` whi
 - **History panel** showing guesses from the current and previous games.
 - **Word definition popup** when a game ends so everyone can learn the meaning of the
   solution.
+- **In-game chat box** so players can talk while solving the puzzle together.
 - **Dark mode toggle** and responsive layout for small screens.
 - **Hold‑to‑reset button** (or instant reset once the game is over).
 - **Inactive player detection** – entries on the leaderboard fade if a player has not
@@ -77,6 +78,9 @@ is required for the full suite to run successfully.
 - `index.html` – browser client
 - `sgb-words.txt` – word list used by the game
 - `tests/` – Pytest suite
+- `src/` – modular JavaScript code loaded by `index.html`
+- `offline_definitions.json` – fallback word definitions
+- `package.json` – Node settings used by frontend tests
 
 ## Layout Modes
 
