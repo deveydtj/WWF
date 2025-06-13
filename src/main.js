@@ -15,7 +15,8 @@ let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
 let hadNetworkError = false;
 
-let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+// Default to sound off unless user explicitly enabled it
+let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 let audioCtx = null;
 
 let maxRows = 6;
