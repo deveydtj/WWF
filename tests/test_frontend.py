@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+import subprocess, json
 
 INDEX = Path('index.html')
 SRC_DIR = Path('src')
@@ -98,3 +99,64 @@ def test_side_panels_fixed_to_bottom_in_light_mode():
     ]
     for pattern in patterns:
         assert re.search(pattern, text, flags=re.DOTALL)
+
+def test_chat_box_and_controls_exist():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<div id="chatBox"' in text
+    assert '<div id="chatMessages"' in text
+    assert '<form id="chatForm"' in text
+    assert '<input id="chatInput"' in text
+    assert '<button id="chatSend"' in text
+
+
+def test_hold_to_reset_elements_exist():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<button id="holdReset"' in text
+    assert '<span id="holdResetText"' in text
+    assert '<span id="holdResetProgress"' in text
+
+
+def test_options_menu_has_dark_and_sound_buttons():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<button id="menuDarkMode"' in text
+    assert '<button id="menuSound"' in text
+
+
+def test_message_containers_exist():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<p id="message"' in text
+    assert '<div id="messagePopup"' in text
+
+
+def test_show_message_desktop_behavior():
+    script = """
+import { showMessage } from './src/utils.js';
+const messageEl = { style: {}, textContent: '', addEventListener(){} };
+const messagePopup = { style: {}, textContent: '', addEventListener(){} };
+showMessage('Hi', { messageEl, messagePopup });
+console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.visibility }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['text'] == 'Hi'
+    assert data['vis'] == 'visible'
+
+
+def test_show_message_hides_when_empty():
+    script = """
+import { showMessage } from './src/utils.js';
+const messageEl = { style: {}, textContent: '', addEventListener(){} };
+const messagePopup = { style: {}, textContent: '', addEventListener(){} };
+showMessage('', { messageEl, messagePopup });
+console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.visibility }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['text'] == ''
+    assert data['vis'] == 'hidden'
