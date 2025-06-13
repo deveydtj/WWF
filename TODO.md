@@ -20,9 +20,6 @@ as they are completed.
 
  - [x] Animate tile reveal after each guess.
  - [x] Add optional sound effects with on/off toggle.
-- [ ] Add support for user account linking (optional feature).
-- [ ] Provide hint or challenge modes.
-- [ ] Begin planning for internationalization support.
 
 ## Chat Box
 
