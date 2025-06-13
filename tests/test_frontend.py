@@ -37,3 +37,28 @@ def test_main_js_imports_modules():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
     for mod in ['board.js', 'history.js', 'emoji.js', 'api.js', 'keyboard.js', 'utils.js']:
         assert f"./{mod}" in text, f"main.js should import {mod}"
+
+
+def test_definition_panel_elements_exist():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<div id="definitionBox"' in text
+    assert '<div id="definitionText"' in text
+
+
+def test_definition_panel_css_rules():
+    text = INDEX.read_text(encoding='utf-8')
+    assert 'body:not(.definition-open) #definitionBox' in text
+    assert 'body.definition-open #definitionBox' in text
+
+
+def test_toggle_definition_function():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'function toggleDefinition()' in text
+    assert "togglePanel('definition-open')" in text
+    assert 'definitionClose.addEventListener' in text
+
+
+def test_apply_state_updates_definition_text():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'definitionText.textContent' in text
+    assert 'state.definition' in text or 'state.last_definition' in text
