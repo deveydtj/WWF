@@ -53,34 +53,6 @@ export function repositionResetButton() {
   }
 }
 
-function animatePanelToCenter(box) {
-  if (typeof box.getBoundingClientRect !== 'function') {
-    box.style.transition = '';
-    box.style.transform = '';
-    box.style.position = '';
-    box.style.top = '';
-    box.style.left = '';
-    return;
-  }
-  const rect = box.getBoundingClientRect();
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
-  const offsetX = centerX - (rect.left + rect.width / 2);
-  const offsetY = centerY - (rect.top + rect.height / 2);
-  box.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-  box.style.transform = 'translate(0, 0) scale(1)';
-  requestAnimationFrame(() => {
-    box.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(0)`;
-  });
-  setTimeout(() => {
-    box.style.transition = '';
-    box.style.transform = '';
-    box.style.position = '';
-    box.style.top = '';
-    box.style.left = '';
-  }, 310);
-}
-
 export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox) {
   if (window.innerWidth > 900) {
     const boardRect = boardArea.getBoundingClientRect();

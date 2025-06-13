@@ -1,5 +1,4 @@
 import { updateBoard } from './board.js';
-import { getState } from './api.js';
 
 export function handleVirtualKey(event, {guessInput, submitGuessHandler, isAnimating}, updateBoardFromTyping) {
   if (event.target.classList.contains('key') && !guessInput.disabled && !isAnimating()) {
@@ -62,7 +61,7 @@ export function setupTypingListeners({keyboardEl, guessInput, submitButton, subm
   });
 }
 
-export async function updateBoardFromTyping(boardEl, guessInput, rows, gameOver) {
-  const state = await getState();
+export function updateBoardFromTyping(boardEl, state, guessInput, rows, gameOver) {
+  if (!state) return;
   updateBoard(boardEl, state, guessInput, rows, gameOver);
 }

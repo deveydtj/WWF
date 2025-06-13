@@ -380,7 +380,7 @@ setupTypingListeners({
   guessInput,
   submitButton,
   submitGuessHandler,
-  updateBoardFromTyping: () => updateBoardFromTyping(board, guessInput, maxRows, gameOver),
+  updateBoardFromTyping: () => updateBoardFromTyping(board, latestState, guessInput, maxRows, gameOver),
   isAnimating: () => false
 });
 
