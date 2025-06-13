@@ -11,7 +11,7 @@ export function createBoard(board, rows = 6) {
  * Render all guesses and the current input onto the board.
  * Existing tiles are cleared before applying new status classes.
  */
-export function updateBoard(board, state, guessInput, rows = 6, gameOver = false) {
+export function updateBoard(board, state, guessInput, rows = 6, gameOver = false, animateRow = -1) {
   const guesses = state.guesses;
   const tiles = board.children;
   for (let i = 0; i < rows * 5; i++) {
@@ -23,6 +23,11 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
       const tile = tiles[row * 5 + i];
       tile.textContent = g.guess[i].toUpperCase();
       tile.classList.add(g.result[i]);
+      if (row === animateRow) {
+        tile.style.transitionDelay = `${i * 0.15}s`;
+      } else {
+        tile.style.transitionDelay = '';
+      }
     }
   });
   if (!gameOver && guessInput.value && guesses.length < rows) {
