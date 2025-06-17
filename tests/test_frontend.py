@@ -108,6 +108,12 @@ def test_chat_box_and_controls_exist():
     assert '<input id="chatInput"' in text
     assert '<button id="chatSend"' in text
 
+def test_chat_notify_icon_present_and_styled():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<button id="chatNotify"' in text
+    assert '#chatNotify {' in text
+    assert '@keyframes wiggle' in text
+
 
 def test_hold_to_reset_elements_exist():
     text = INDEX.read_text(encoding='utf-8')

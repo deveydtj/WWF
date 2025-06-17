@@ -59,6 +59,9 @@ const stampContainer = document.getElementById('stampContainer');
 const closeCallPopup = document.getElementById('closeCallPopup');
 const closeCallText = document.getElementById('closeCallText');
 const closeCallOk = document.getElementById('closeCallOk');
+const chatNotify = document.getElementById('chatNotify');
+
+let chatWiggleTimer = null;
 
 const FAST_INTERVAL = 2000;
 const SLOW_INTERVAL = 15000;
@@ -118,6 +121,26 @@ function playClick() {
   gain.connect(audioCtx.destination);
   osc.start();
   osc.stop(audioCtx.currentTime + 0.05);
+}
+
+function showChatNotify() {
+  chatNotify.style.display = 'block';
+  requestAnimationFrame(() => chatNotify.classList.add('visible'));
+  clearTimeout(chatWiggleTimer);
+  chatWiggleTimer = setTimeout(() => {
+    if (chatNotify.classList.contains('visible')) {
+      chatNotify.classList.add('wiggle');
+      chatNotify.addEventListener('animationend', () => {
+        chatNotify.classList.remove('wiggle');
+      }, { once: true });
+    }
+  }, 2000);
+}
+
+function hideChatNotify() {
+  chatNotify.classList.remove('visible');
+  chatNotify.style.display = 'none';
+  clearTimeout(chatWiggleTimer);
 }
 
 function centerLeaderboardOnMe() {
@@ -255,6 +278,7 @@ function stopHoldReset() {
 // Apply the server state to the UI and update all related variables
 function applyState(state) {
   const prevGuessCount = latestState ? latestState.guesses.length : 0;
+  const prevChatCount = latestState && latestState.chat_messages ? latestState.chat_messages.length : 0;
   latestState = state;
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
@@ -262,6 +286,9 @@ function applyState(state) {
 
   if (state.chat_messages) {
     renderChat(chatMessagesEl, state.chat_messages);
+    if (state.chat_messages.length > prevChatCount && !document.body.classList.contains('chat-open')) {
+      showChatNotify();
+    }
   }
 
   const historyEntries = [];
@@ -447,6 +474,10 @@ chatClose.addEventListener('click', () => {
   document.body.classList.remove('chat-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
+chatNotify.addEventListener('click', () => {
+  togglePanel('chat-open');
+  hideChatNotify();
+});
 optionsToggle.addEventListener('click', () => {
   optionsMenu.style.display = 'block';
   const rect = optionsToggle.getBoundingClientRect();
@@ -469,6 +500,7 @@ menuHistory.addEventListener('click', () => { toggleHistory(); optionsMenu.style
 menuDefinition.addEventListener('click', () => { toggleDefinition(); optionsMenu.style.display = 'none'; });
 menuChat.addEventListener('click', () => {
   togglePanel('chat-open');
+  hideChatNotify();
   optionsMenu.style.display = 'none';
 });
 menuDarkMode.addEventListener('click', toggleDarkMode);
