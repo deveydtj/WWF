@@ -160,3 +160,72 @@ console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.v
     data = json.loads(result.stdout.strip())
     assert data['text'] == ''
     assert data['vis'] == 'hidden'
+
+def test_position_side_panels_full_mode():
+    script = """
+import { positionSidePanels } from './src/utils.js';
+
+const boardArea = {
+  getBoundingClientRect() { return { top: 100, left: 200, right: 400 }; }
+};
+const historyBox = { offsetWidth: 120, style: {} };
+const definitionBox = { offsetHeight: 150, style: {} };
+const chatBox = { style: {} };
+
+global.window = { innerWidth: 1024, scrollX: 0, scrollY: 0 };
+positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+console.log(JSON.stringify({
+  history: historyBox.style,
+  definition: definitionBox.style,
+  chat: chatBox.style
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['history']['position'] == 'absolute'
+    assert data['history']['top'] == '100px'
+    assert data['history']['left'] == '20px'
+    assert data['definition']['position'] == 'absolute'
+    assert data['definition']['top'] == '100px'
+    assert data['definition']['left'] == '460px'
+    assert data['chat']['position'] == 'absolute'
+    assert data['chat']['left'] == '460px'
+    assert data['chat']['top'] == '270px'
+
+def test_position_side_panels_reset_small_mode():
+    script = """
+import { positionSidePanels } from './src/utils.js';
+
+const boardArea = { getBoundingClientRect() { return { top: 0, left: 0, right: 0 }; } };
+const historyBox = { style: { position: 'absolute', top: '10px', left: '20px' } };
+const definitionBox = { style: { position: 'absolute', top: '10px', left: '40px' } };
+const chatBox = { style: { position: 'absolute', top: '30px', left: '40px' } };
+
+historyBox.offsetWidth = 100;
+definitionBox.offsetHeight = 50;
+
+global.window = { innerWidth: 800, scrollX: 0, scrollY: 0 };
+positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+console.log(JSON.stringify({
+  history: historyBox.style,
+  definition: definitionBox.style,
+  chat: chatBox.style
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['history']['position'] == ''
+    assert data['history']['top'] == ''
+    assert data['history']['left'] == ''
+    assert data['definition']['position'] == ''
+    assert data['definition']['top'] == ''
+    assert data['definition']['left'] == ''
+    assert data['chat']['position'] == ''
+    assert data['chat']['left'] == ''
+    assert data['chat']['top'] == ''
