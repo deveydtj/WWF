@@ -95,6 +95,37 @@
       left: calc(100% + 10px);
     }
 
+    #chatNotify {
+      display: none;
+      font-size: 26px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      color: var(--text-color-light);
+      line-height: 1;
+      position: absolute;
+      top: 36px;
+      left: calc(100% + 10px);
+      opacity: 0;
+      transform: scale(0);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 60;
+    }
+    #chatNotify.visible {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-15deg); }
+      75% { transform: rotate(15deg); }
+    }
+    #chatNotify.wiggle {
+      animation: wiggle 0.6s;
+    }
+
     #optionsMenu {
       position: absolute;
       background: var(--bg-color);
@@ -146,6 +177,12 @@
         display: none;
       }
       #optionsToggle {
+        display: block;
+      }
+      #chatNotify {
+        display: block;
+      }
+      #chatNotify {
         display: block;
       }
       #boardArea {
@@ -856,6 +893,9 @@
       #optionsToggle {
         display: block;
       }
+      #chatNotify {
+        display: block;
+      }
 
       #historyBox {
         position: fixed;
@@ -1178,6 +1218,7 @@
       <div id="board"></div>
       <div id="stampContainer"></div>
       <button id="optionsToggle" title="More Options">⚙️</button>
+      <button id="chatNotify" title="Open Chat" style="display:none;">💬</button>
     </div>
 
     <!-- Guess Input -->
