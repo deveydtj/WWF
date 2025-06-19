@@ -85,9 +85,10 @@ def test_popups_fill_viewport():
 
 
 def test_options_menu_clamped_to_viewport():
-    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    assert 'window.innerWidth - rect.right' in text
-    assert 'Math.max(10 + window.scrollX' in text
+    main_text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    utils_text = (SRC_DIR / 'utils.js').read_text(encoding='utf-8')
+    assert 'showPopup(optionsMenu, optionsToggle)' in main_text
+    assert 'export function positionPopup' in utils_text
 
 
 def test_side_panels_fixed_to_bottom_in_light_mode():

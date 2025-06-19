@@ -105,3 +105,30 @@ export function applyLayoutMode() {
     document.body.dataset.mode = mode;
   }
 }
+
+export function positionPopup(popup, anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const menuWidth = popup.offsetWidth;
+  const menuHeight = popup.offsetHeight;
+  let left = rect.right + 10 + window.scrollX;
+  if (window.innerWidth - rect.right < menuWidth + 10) {
+    if (rect.left >= menuWidth + 10) {
+      left = rect.left - menuWidth - 10 + window.scrollX;
+    } else {
+      left = Math.max(10 + window.scrollX, window.innerWidth - menuWidth - 10);
+    }
+  }
+  let top = rect.top + window.scrollY;
+  if (rect.bottom + menuHeight > window.scrollY + window.innerHeight - 10) {
+    top = window.scrollY + window.innerHeight - menuHeight - 10;
+  }
+  top = Math.max(top, window.scrollY + 10);
+  popup.style.position = 'absolute';
+  popup.style.left = `${left}px`;
+  popup.style.top = `${top}px`;
+}
+
+export function showPopup(popup, anchor) {
+  popup.style.display = 'block';
+  positionPopup(popup, anchor);
+}
