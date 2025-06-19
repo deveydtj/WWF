@@ -9,6 +9,7 @@ import urllib.error
 import logging
 import re
 import html
+import threading
 
 app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
@@ -177,6 +178,26 @@ def fetch_definition(word):
         logging.info(f"Unexpected error fetching definition for '{word}': {e}")
     logging.info(f"No definition found for '{word}'")
     return None
+
+
+def _definition_worker(word: str) -> None:
+    """Background task to fetch a word's definition and persist it."""
+    global definition, last_word, last_definition
+    definition = fetch_definition(word)
+    logging.info(
+        f"Definition lookup complete for '{word}': {definition or 'None'}"
+    )
+    last_word = word
+    last_definition = definition
+    save_data()
+
+
+def start_definition_lookup(word: str) -> threading.Thread:
+    """Start asynchronous definition lookup for the solved word."""
+    t = threading.Thread(target=_definition_worker, args=(word,))
+    t.daemon = True
+    t.start()
+    return t
 
 def get_client_ip():
     """Return the client's IP address, accounting for proxies."""
@@ -379,12 +400,7 @@ def guess_word():
             points_delta -= 3  # Last guess, failed
 
     if over:
-        definition = fetch_definition(target_word)
-        logging.info(
-            f"Definition lookup complete for '{target_word}': {definition or 'None'}"
-        )
-        last_word = target_word
-        last_definition = definition
+        start_definition_lookup(target_word)
 
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
