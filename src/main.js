@@ -454,6 +454,33 @@ function toggleSound() {
   menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 }
 
+function repositionOptionsMenu() {
+  const rect = optionsToggle.getBoundingClientRect();
+  optionsMenu.style.position = 'absolute';
+  const menuWidth = optionsMenu.offsetWidth;
+  const menuHeight = optionsMenu.offsetHeight;
+  let left;
+  if (window.innerWidth - rect.right >= menuWidth + 10) {
+    left = rect.right + 10 + window.scrollX;
+  } else if (rect.left >= menuWidth + 10) {
+    left = rect.left - menuWidth - 10 + window.scrollX;
+  } else {
+    left = Math.max(10 + window.scrollX, window.innerWidth - menuWidth - 10);
+  }
+
+  let top = rect.top + window.scrollY;
+  if (top + menuHeight > window.innerHeight + window.scrollY - 10) {
+    top = window.innerHeight + window.scrollY - menuHeight - 10;
+  }
+  if (top < window.scrollY + 10) {
+    top = window.scrollY + 10;
+  }
+
+  optionsMenu.style.left = `${left}px`;
+  optionsMenu.style.top = `${top}px`;
+  optionsMenu.style.transform = '';
+}
+
 function toggleHistory() {
   togglePanel('history-open');
 }
@@ -480,20 +507,7 @@ chatNotify.addEventListener('click', () => {
 });
 optionsToggle.addEventListener('click', () => {
   optionsMenu.style.display = 'block';
-  const rect = optionsToggle.getBoundingClientRect();
-  optionsMenu.style.position = 'absolute';
-  const menuWidth = optionsMenu.offsetWidth;
-  let left;
-  if (window.innerWidth - rect.right >= menuWidth + 10) {
-    left = rect.right + 10 + window.scrollX;
-  } else if (rect.left >= menuWidth + 10) {
-    left = rect.left - menuWidth - 10 + window.scrollX;
-  } else {
-    left = Math.max(10 + window.scrollX, window.innerWidth - menuWidth - 10);
-  }
-  optionsMenu.style.left = `${left}px`;
-  optionsMenu.style.top = `${rect.top + window.scrollY}px`;
-  optionsMenu.style.transform = '';
+  repositionOptionsMenu();
 });
 optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
 menuHistory.addEventListener('click', () => { toggleHistory(); optionsMenu.style.display = 'none'; });
@@ -530,6 +544,7 @@ window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
   if (latestState) renderEmojiStamps(latestState.guesses);
+  if (optionsMenu.style.display === 'block') repositionOptionsMenu();
 });
 updateVH();
 window.addEventListener('resize', updateVH);
