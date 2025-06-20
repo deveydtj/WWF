@@ -134,6 +134,9 @@
       box-shadow: 2px 2px 8px var(--shadow-color-dark),
                   -2px -2px 8px var(--shadow-color-light);
       z-index: 70;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     #optionsMenu button {
@@ -888,14 +891,19 @@
           padding: 10px;
         }
 
+        #optionsMenu {
+          position: fixed;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
 
-
-      #optionsToggle {
-        display: block;
-      }
-      #chatNotify {
-        display: block;
-      }
+        #optionsToggle {
+          display: block;
+        }
+        #chatNotify {
+          display: block;
+        }
 
       #historyBox {
         position: fixed;

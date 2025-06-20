@@ -4,7 +4,8 @@ import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton, positionSidePanels, updateVH, applyLayoutMode, isMobile } from './utils.js';
+import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton,
+         positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -479,21 +480,7 @@ chatNotify.addEventListener('click', () => {
   hideChatNotify();
 });
 optionsToggle.addEventListener('click', () => {
-  optionsMenu.style.display = 'block';
-  const rect = optionsToggle.getBoundingClientRect();
-  optionsMenu.style.position = 'absolute';
-  const menuWidth = optionsMenu.offsetWidth;
-  let left;
-  if (window.innerWidth - rect.right >= menuWidth + 10) {
-    left = rect.right + 10 + window.scrollX;
-  } else if (rect.left >= menuWidth + 10) {
-    left = rect.left - menuWidth - 10 + window.scrollX;
-  } else {
-    left = Math.max(10 + window.scrollX, window.innerWidth - menuWidth - 10);
-  }
-  optionsMenu.style.left = `${left}px`;
-  optionsMenu.style.top = `${rect.top + window.scrollY}px`;
-  optionsMenu.style.transform = '';
+  showPopup(optionsMenu, optionsToggle);
 });
 optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
 menuHistory.addEventListener('click', () => { toggleHistory(); optionsMenu.style.display = 'none'; });

@@ -43,6 +43,8 @@ overview and should be kept up to date as features evolve.
 - Feedback includes toast messages for errors and game events, shake animation
   for invalid guesses, and transient point deltas after submissions.
 - All interactive elements must be accessible via keyboard and screen readers.
+- Popups opened from the options menu use a shared positioning helper so they
+  remain fully visible on small screens.
 
 ## 3. Server Integration
 
