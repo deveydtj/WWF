@@ -267,8 +267,8 @@ def test_guess_word_correct_word_wins_game(server_env, monkeypatch):
     assert resp['over'] is True
     assert server.is_over
     assert server.winner_emoji == '😀'
-    assert resp['pointsDelta'] == 11
-    assert server.leaderboard['😀']['score'] == 11
+    assert resp['pointsDelta'] == 9
+    assert server.leaderboard['😀']['score'] == 9
 
     # After game over, resetting should archive game and start fresh
     prev_guesses = list(server.guesses)
@@ -335,8 +335,8 @@ def test_guess_word_points_for_new_letters_and_penalties(server_env):
     request.remote_addr = '1'
     first = server.guess_word()
 
-    assert first['pointsDelta'] == 3
-    assert server.leaderboard['😀']['score'] == 3
+    assert first['pointsDelta'] == pytest.approx(1.5)
+    assert server.leaderboard['😀']['score'] == pytest.approx(1.5)
     assert server.found_greens == {'e'}
     assert server.found_yellows == {'a'}
 
@@ -344,7 +344,7 @@ def test_guess_word_points_for_new_letters_and_penalties(server_env):
     second = server.guess_word()
 
     assert second['pointsDelta'] == -1
-    assert server.leaderboard['😀']['score'] == 2
+    assert server.leaderboard['😀']['score'] == pytest.approx(0.5)
 
 def test_pick_new_word_resets_state(server_env, monkeypatch):
     server, _ = server_env
