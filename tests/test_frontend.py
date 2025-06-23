@@ -5,6 +5,8 @@ import subprocess, json
 INDEX = Path('index.html')
 SRC_DIR = Path('src')
 
+
+NEUMORPHIC = Path('neumorphic.css')
 EXPECTED_MODULES = [
     'api.js',
     'board.js',
@@ -47,7 +49,7 @@ def test_definition_panel_elements_exist():
 
 
 def test_definition_panel_css_rules():
-    text = INDEX.read_text(encoding='utf-8')
+    text = NEUMORPHIC.read_text(encoding='utf-8')
     assert 'body:not(.definition-open) #definitionBox' in text
     assert 'body.definition-open #definitionBox' in text
 
@@ -66,7 +68,7 @@ def test_apply_state_updates_definition_text():
 
 
 def test_side_panels_centered_and_limited_in_medium_mode():
-    text = INDEX.read_text(encoding='utf-8')
+    text = NEUMORPHIC.read_text(encoding='utf-8')
     for panel in ['#historyBox', '#definitionBox', '#chatBox']:
         assert f"body[data-mode='medium'] {panel}" in text
     assert 'position: fixed;' in text
@@ -76,7 +78,7 @@ def test_side_panels_centered_and_limited_in_medium_mode():
 
 
 def test_popups_fill_viewport():
-    text = INDEX.read_text(encoding='utf-8')
+    text = NEUMORPHIC.read_text(encoding='utf-8')
     for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup']:
         assert f'{popup_id} {{' in text
         assert 'position: fixed;' in text
@@ -92,7 +94,7 @@ def test_options_menu_clamped_to_viewport():
 
 
 def test_side_panels_fixed_to_bottom_in_light_mode():
-    text = INDEX.read_text(encoding='utf-8')
+    text = NEUMORPHIC.read_text(encoding='utf-8')
     patterns = [
         r"@media \(max-width: 600px\)[\s\S]*?#historyBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*left: 0",
         r"@media \(max-width: 600px\)[\s\S]*?#definitionBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
@@ -110,11 +112,11 @@ def test_chat_box_and_controls_exist():
     assert '<button id="chatSend"' in text
 
 def test_chat_notify_icon_present_and_styled():
-    text = INDEX.read_text(encoding='utf-8')
-    assert '<button id="chatNotify"' in text
-    assert '#chatNotify {' in text
-    assert '@keyframes wiggle' in text
-
+    html = INDEX.read_text(encoding='utf-8')
+    css = NEUMORPHIC.read_text(encoding='utf-8')
+    assert '<button id="chatNotify"' in html
+    assert '#chatNotify {' in css
+    assert '@keyframes wiggle' in css
 
 def test_hold_to_reset_elements_exist():
     text = INDEX.read_text(encoding='utf-8')
@@ -126,6 +128,7 @@ def test_hold_to_reset_elements_exist():
 def test_options_menu_has_dark_and_sound_buttons():
     text = INDEX.read_text(encoding='utf-8')
     assert '<button id="menuDarkMode"' in text
+    assert '<button id="menuTheme"' in text
     assert '<button id="menuSound"' in text
     assert '<button id="menuInfo"' in text
 

@@ -32,6 +32,15 @@ export function applyDarkModePreference(toggle) {
   toggle.textContent = prefersDark ? '☀️' : '🌙';
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
+export function applyThemePreference(link, toggle) {
+  const theme = localStorage.getItem("theme") || "neumorphic";
+  link.href = `${theme}.css`;
+  if (toggle) {
+    toggle.textContent = theme === "neumorphic" ? "Liquid Glass" : "Neumorphic";
+    toggle.title = theme === "neumorphic" ? "Switch to Liquid Glass Theme" : "Switch to Neumorphic Theme";
+  }
+}
+
 
 export function shakeInput(input) {
   input.style.animation = 'shake 0.4s';
