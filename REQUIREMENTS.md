@@ -78,16 +78,7 @@ overview and should be kept up to date as features evolve.
 - Board and keyboard logic should allow future changes to word length and row
   count.
 
-## 6. Known Issues / Future Enhancements
-
-- Add more ARIA roles and better focus management for accessibility.
-- Ensure definition text from the backend is sanitized for display.
-- Consider adapting the polling interval when users are idle.
-- Handle race conditions when two users try to claim the same emoji.
-- Potential future features include animations, sound effects, user account
-  linking, hints, and internationalization support.
-
-## 7. Chat Box
+## 6. Chat Box
 
 - Optional side panel for real-time text chat during a game.
 - Users can toggle the chat panel to show or hide it at any time.
