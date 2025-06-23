@@ -5,7 +5,7 @@ import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from '
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton,
-         positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup } from './utils.js';
+         positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup, applyThemePreference } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -49,6 +49,8 @@ const menuDefinition = document.getElementById('menuDefinition');
 const menuChat = document.getElementById('menuChat');
 const menuDarkMode = document.getElementById('menuDarkMode');
 const menuSound = document.getElementById('menuSound');
+const menuTheme = document.getElementById("menuTheme");
+const themeStylesheet = document.getElementById("themeStylesheet");
 const holdReset = document.getElementById('holdReset');
 const holdResetProgress = document.getElementById('holdResetProgress');
 const holdResetText = document.getElementById('holdResetText');
@@ -458,6 +460,13 @@ function toggleSound() {
   menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 }
 
+function toggleTheme() {
+  const current = localStorage.getItem("theme") || "neumorphic";
+  const next = current === "neumorphic" ? "liquid-glass" : "neumorphic";
+  localStorage.setItem("theme", next);
+  applyThemePreference(themeStylesheet, menuTheme);
+}
+
 function toggleHistory() {
   togglePanel('history-open');
 }
@@ -500,10 +509,12 @@ menuChat.addEventListener('click', () => {
 menuInfo.addEventListener('click', () => { showInfo(); optionsMenu.style.display = 'none'; });
 menuDarkMode.addEventListener('click', toggleDarkMode);
 menuSound.addEventListener('click', toggleSound);
+menuTheme.addEventListener("click", () => { toggleTheme(); optionsMenu.style.display = "none"; });
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 infoClose.addEventListener('click', () => { infoPopup.style.display = 'none'; });
 
 applyDarkModePreference(menuDarkMode);
+applyThemePreference(themeStylesheet, menuTheme);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
