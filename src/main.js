@@ -61,6 +61,9 @@ const closeCallPopup = document.getElementById('closeCallPopup');
 const closeCallText = document.getElementById('closeCallText');
 const closeCallOk = document.getElementById('closeCallOk');
 const chatNotify = document.getElementById('chatNotify');
+const infoPopup = document.getElementById('infoPopup');
+const infoClose = document.getElementById('infoClose');
+const menuInfo = document.getElementById('menuInfo');
 
 let chatWiggleTimer = null;
 
@@ -426,7 +429,7 @@ function checkInactivity() {
 // Toggle one of the side panels while closing any others in medium mode
 function togglePanel(panelClass) {
   if (document.body.dataset.mode === 'medium') {
-    ['history-open', 'definition-open', 'chat-open'].forEach(c => {
+    ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
       if (c !== panelClass) document.body.classList.remove(c);
     });
   }
@@ -463,6 +466,10 @@ function toggleDefinition() {
   togglePanel('definition-open');
 }
 
+function showInfo() {
+  infoPopup.style.display = 'flex';
+}
+
 historyClose.addEventListener('click', () => {
   document.body.classList.remove('history-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
@@ -490,9 +497,11 @@ menuChat.addEventListener('click', () => {
   hideChatNotify();
   optionsMenu.style.display = 'none';
 });
+menuInfo.addEventListener('click', () => { showInfo(); optionsMenu.style.display = 'none'; });
 menuDarkMode.addEventListener('click', toggleDarkMode);
 menuSound.addEventListener('click', toggleSound);
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
+infoClose.addEventListener('click', () => { infoPopup.style.display = 'none'; });
 
 applyDarkModePreference(menuDarkMode);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';

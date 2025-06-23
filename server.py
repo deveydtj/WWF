@@ -21,6 +21,17 @@ WORDS_FILE = "sgb-words.txt"
 GAME_FILE = "game_persist.json"
 MAX_ROWS = 6
 
+# Standard Scrabble letter values used for scoring
+SCRABBLE_SCORES = {
+    **{l: 1 for l in "aeilnorstu"},
+    **{l: 2 for l in "dg"},
+    **{l: 3 for l in "bcmp"},
+    **{l: 4 for l in "fhvwy"},
+    "k": 5,
+    **{l: 8 for l in "jx"},
+    **{l: 10 for l in "qz"},
+}
+
 # ---- Globals ----
 WORDS = []
 target_word = ""
@@ -365,21 +376,23 @@ def guess_word():
     global_found_this_turn = set()
     for i, r in enumerate(result):
         letter = guess[i]
+        value = SCRABBLE_SCORES.get(letter, 1)
         if r == "correct":
             # if we've never scored this letter as green *this game*:
             if letter not in found_greens and letter not in global_found_this_turn:
                 if letter in found_yellows:
-                    # it was yellow before, now green → +1
-                    points_delta += 1
+                    # yellow previously discovered → award remaining half
+                    points_delta += value / 2
                     found_yellows.remove(letter)
                 else:
-                    # brand-new green → +2
-                    points_delta += 2
+                    # brand-new green → full value
+                    points_delta += value
                 found_greens.add(letter)
                 global_found_this_turn.add(letter)
         elif r == "present":
             if letter not in found_greens and letter not in found_yellows and letter not in global_found_this_turn:
-                points_delta += 1
+                # yellow discovery → half value
+                points_delta += value / 2
                 found_yellows.add(letter)
                 global_found_this_turn.add(letter)
 

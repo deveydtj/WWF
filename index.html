@@ -846,6 +846,31 @@
       font-size: 16px;
     }
 
+    #infoPopup {
+      background: rgba(0, 0, 0, 0.33);
+      position: fixed;
+      z-index: 101;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #infoBox {
+      background: var(--bg-color);
+      box-shadow: 0 8px 32px var(--shadow-color-dark),
+                  0 0 0 3px var(--shadow-color-light);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+
     .emoji-choice {
       font-size: 2.1em;
       margin: 12px;
@@ -1180,6 +1205,19 @@
       </div>
     </div>
 
+    <!-- Info Popup -->
+    <div id="infoPopup" style="display:none;">
+      <div id="infoBox">
+        <button id="infoClose" class="close-btn">✖</button>
+        <div id="infoContent">
+          <h3>How to Play</h3>
+          <p>Guess the hidden five-letter word in six tries. Letters turn <strong>green</strong> when in the correct spot and <strong>yellow</strong> when present in the word but in the wrong position.</p>
+          <h3>Scoring</h3>
+          <p>Each letter is worth its Scrabble tile value. Green letters award the full value, while yellow letters grant half until confirmed green.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Options Menu -->
     <div id="optionsMenu" style="display:none;">
       <button id="optionsClose" class="close-btn">✖</button>
@@ -1188,6 +1226,7 @@
       <button id="menuChat">💬 Chat</button>
       <button id="menuDarkMode">🌙/☀️</button>
       <button id="menuSound">🔈 Sound Off</button>
+      <button id="menuInfo">ℹ️ Info</button>
     </div>
 
     <!-- Game History Panel -->

@@ -77,7 +77,7 @@ def test_side_panels_centered_and_limited_in_medium_mode():
 
 def test_popups_fill_viewport():
     text = INDEX.read_text(encoding='utf-8')
-    for popup_id in ['#emojiModal', '#closeCallPopup']:
+    for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup']:
         assert f'{popup_id} {{' in text
         assert 'position: fixed;' in text
         for edge in ['top: 0', 'left: 0', 'right: 0', 'bottom: 0']:
@@ -127,6 +127,13 @@ def test_options_menu_has_dark_and_sound_buttons():
     text = INDEX.read_text(encoding='utf-8')
     assert '<button id="menuDarkMode"' in text
     assert '<button id="menuSound"' in text
+    assert '<button id="menuInfo"' in text
+
+
+def test_info_popup_elements_exist():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<div id="infoPopup"' in text
+    assert '<div id="infoBox"' in text
 
 
 def test_message_containers_exist():

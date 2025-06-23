@@ -18,6 +18,7 @@ A small multiplayer adaptation of Wordle. The frontend lives in `index.html` whi
 - **Hold‑to‑reset button** (or instant reset once the game is over).
 - **Inactive player detection** – entries on the leaderboard fade if a player has not
   acted for several minutes.
+- **Info pop‑up** in the options menu explaining gameplay and scoring.
 - **"Close call" notification** if another player submits the winning word less than a
   second before you.
 
@@ -50,15 +51,18 @@ or the network is unavailable, definitions are loaded from
 
 ## Point System
 
-Points are shared across all players on the leaderboard. You score by being the
-first to uncover information about the hidden word:
+Points are shared across all players on the leaderboard. Letter discoveries are
+valued using traditional Scrabble tile scores. A green letter awards its full
+value. A yellow letter grants **half** its value, with the remaining half paid
+out if that letter later turns green. The standard bonuses and penalties still
+apply:
 
-- **+2** for revealing a brand new green letter.
-- **+1** for turning a previously yellow letter green.
-- **+1** for finding a brand new yellow letter.
 - **+3** bonus for guessing the correct word.
 - **-3** penalty if your final guess is wrong when the board is full.
 - **-1** penalty for repeating a guess that adds no new letters.
+
+You can view these rules at any time in-game by opening the ℹ️ info pop-up from
+the options menu.
 
 ## Testing
 
