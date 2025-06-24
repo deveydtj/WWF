@@ -32,6 +32,15 @@ export function applyDarkModePreference(toggle) {
   toggle.textContent = prefersDark ? '☀️' : '🌙';
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
+export function applyThemePreference(link, toggle) {
+  const theme = localStorage.getItem("theme") || "neumorphic";
+  link.href = `${theme}.css`;
+  if (toggle) {
+    toggle.textContent = theme === "neumorphic" ? "Liquid Glass" : "Neumorphic";
+    toggle.title = theme === "neumorphic" ? "Switch to Liquid Glass Theme" : "Switch to Neumorphic Theme";
+  }
+}
+
 
 export function shakeInput(input) {
   input.style.animation = 'shake 0.4s';
@@ -131,4 +140,63 @@ export function positionPopup(popup, anchor) {
 export function showPopup(popup, anchor) {
   popup.style.display = 'block';
   positionPopup(popup, anchor);
+}
+
+export function createBokehOverlay(el, opts = {}) {
+  const { small = false } = opts;
+  const overlay = document.createElement('div');
+  overlay.className = 'bokeh-overlay';
+  const count = small ? 3 : 4;
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'particle';
+    const size = (small ? 8 : 15) + Math.random() * (small ? 12 : 25);
+    dot.style.width = `${size}px`;
+    dot.style.height = `${size}px`;
+    dot.style.left = `${Math.random() * 100}%`;
+    dot.style.top = `${Math.random() * 100}%`;
+    const dur = small ? 0.8 + Math.random() * 0.6 : 1.5 + Math.random() * 2.5;
+    dot.style.animationDuration = `${dur}s`;
+    overlay.appendChild(dot);
+  }
+  if (getComputedStyle(el).position === 'static') {
+    el.style.position = 'relative';
+  }
+  el.appendChild(overlay);
+  return overlay;
+}
+
+export function removeBokehOverlay(el) {
+  const overlay = el.querySelector(':scope > .bokeh-overlay');
+  if (overlay) overlay.remove();
+}
+
+export function installBokehListeners() {
+  document.addEventListener(
+    'animationstart',
+    (e) => {
+      if ((localStorage.getItem('theme') || 'neumorphic') === 'liquid-glass') {
+        createBokehOverlay(e.target);
+      }
+    },
+    true
+  );
+  document.addEventListener(
+    'animationend',
+    (e) => {
+      removeBokehOverlay(e.target);
+    },
+    true
+  );
+
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      if ((localStorage.getItem('theme') || 'neumorphic') === 'liquid-glass') {
+        createBokehOverlay(e.target, { small: true });
+        setTimeout(() => removeBokehOverlay(e.target), 600);
+      }
+    },
+    true
+  );
 }

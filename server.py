@@ -467,6 +467,11 @@ def index():
 def src_files(filename):
     return send_from_directory('src', filename)
 
+# Serve CSS files in the project root
+@app.route('/<path:filename>.css')
+def css_files(filename):
+    return send_from_directory('.', f"{filename}.css")
+
 if __name__ == "__main__":
     load_data()
     if not target_word:
