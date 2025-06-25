@@ -462,15 +462,15 @@ def reset_game():
 def index():
     return send_from_directory(".", "index.html")
 
-# Serve JavaScript modules from the src directory
-@app.route('/src/<path:filename>')
-def src_files(filename):
-    return send_from_directory('src', filename)
+# Serve static JavaScript modules
+@app.route('/js/<path:filename>')
+def js_files(filename):
+    return send_from_directory('static/js', filename)
 
-# Serve the neumorphic theme stylesheet
-@app.route('/neumorphic.css')
-def theme_css():
-    return send_from_directory('.', 'neumorphic.css')
+# Serve CSS assets
+@app.route('/css/<path:filename>')
+def css_files(filename):
+    return send_from_directory('static/css', filename)
 
 if __name__ == "__main__":
     load_data()

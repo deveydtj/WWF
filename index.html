@@ -4,25 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Wordle Game (Hard Mode, Shared)</title>
-  <link rel="stylesheet" href="neumorphic.css">
-
+  <link rel="stylesheet" href="static/css/theme.css">
+  <link rel="stylesheet" href="static/css/layout.css">
 </head>
 
 <body>
   <div id="appContainer">
     <!-- Emoji Picker Modal -->
-    <div id="emojiModal" style="display:none;">
+    <div id="emojiModal">
       <div id="emojiModalBox">
-        <div style="margin-bottom:12px; font-size:1.2em;">
+        <div>
           Pick your emoji for this game:
         </div>
         <div id="emojiChoices"></div>
-        <div id="emojiModalError" style="color: #ba1c1c; font-size:1em; margin-top:6px;"></div>
+        <div id="emojiModalError"></div>
       </div>
     </div>
 
     <!-- Close Call Popup -->
-    <div id="closeCallPopup" style="display:none;">
+    <div id="closeCallPopup">
       <div id="closeCallBox">
         <div id="closeCallText"></div>
         <button id="closeCallOk">OK</button>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Info Popup -->
-    <div id="infoPopup" style="display:none;">
+    <div id="infoPopup">
       <div id="infoBox">
         <button id="infoClose" class="close-btn">✖</button>
         <div id="infoContent">
@@ -43,7 +43,7 @@
     </div>
 
     <!-- Options Menu -->
-    <div id="optionsMenu" style="display:none;">
+    <div id="optionsMenu">
       <button id="optionsClose" class="close-btn">✖</button>
       <button id="menuHistory">📜 History</button>
       <button id="menuDefinition">📖 Definition</button>
@@ -69,8 +69,8 @@
     <div id="chatBox">
       <button id="chatClose" class="close-btn" type="button">✖</button>
       <div id="chatMessages"></div>
-      <form id="chatForm" style="display:flex; margin-top:6px;">
-        <input id="chatInput" type="text" style="flex:1;" maxlength="140" autocomplete="off" />
+      <form id="chatForm">
+        <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
         <button id="chatSend" type="submit">Send</button>
       </form>
     </div>
@@ -90,7 +90,7 @@
       <div id="board"></div>
       <div id="stampContainer"></div>
       <button id="optionsToggle" title="More Options">⚙️</button>
-      <button id="chatNotify" title="Open Chat" style="display:none;">💬</button>
+      <button id="chatNotify" title="Open Chat">💬</button>
     </div>
 
     <!-- Guess Input -->
@@ -128,7 +128,7 @@
         <button class="key" data-key="l">L</button>
       </div>
       <div class="keyboard-row">
-        <button class="key" data-key="Enter" style="min-width: 60px;">Enter</button>
+        <button class="key wide" data-key="Enter">Enter</button>
         <button class="key" data-key="z">Z</button>
         <button class="key" data-key="x">X</button>
         <button class="key" data-key="c">C</button>
@@ -136,11 +136,11 @@
         <button class="key" data-key="b">B</button>
         <button class="key" data-key="n">N</button>
         <button class="key" data-key="m">M</button>
-        <button class="key" data-key="Backspace" style="min-width: 60px;">Bksp</button>
+        <button class="key wide" data-key="Backspace">Bksp</button>
       </div>
     </div>
   </div>
 
-  <script type="module" src="src/main.js"></script>
+  <script type="module" src="static/js/main.js"></script>
 </body>
 </html>

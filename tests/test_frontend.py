@@ -3,8 +3,12 @@ from pathlib import Path
 import subprocess, json
 
 INDEX = Path('index.html')
-CSS_FILE = Path('neumorphic.css')
-SRC_DIR = Path('src')
+CSS_THEME = Path('static/css/theme.css')
+CSS_LAYOUT = Path('static/css/layout.css')
+SRC_DIR = Path('static/js')
+
+def read_css():
+    return CSS_THEME.read_text(encoding='utf-8') + CSS_LAYOUT.read_text(encoding='utf-8')
 
 EXPECTED_MODULES = [
     'api.js',
@@ -26,12 +30,13 @@ def test_modules_exist_and_export():
 
 def test_index_html_uses_module_script():
     text = INDEX.read_text(encoding='utf-8')
-    assert '<link rel="stylesheet" href="neumorphic.css"' in text
+    assert '<link rel="stylesheet" href="static/css/theme.css"' in text
+    assert '<link rel="stylesheet" href="static/css/layout.css"' in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
     assert len(scripts) == 1, "index.html should contain exactly one script tag"
     script = scripts[0]
     assert 'type="module"' in script
-    assert 'src="src/main.js"' in script
+    assert 'src="static/js/main.js"' in script
     # ensure no inline script content
     inside = re.sub(r'<script[^>]*>|</script>', '', script, flags=re.DOTALL).strip()
     assert inside == ''
@@ -49,7 +54,7 @@ def test_definition_panel_elements_exist():
 
 
 def test_definition_panel_css_rules():
-    css = CSS_FILE.read_text(encoding='utf-8')
+    css = read_css()
     assert 'body:not(.definition-open) #definitionBox' in css
     assert 'body.definition-open #definitionBox' in css
 
@@ -68,7 +73,7 @@ def test_apply_state_updates_definition_text():
 
 
 def test_side_panels_centered_and_limited_in_medium_mode():
-    css = CSS_FILE.read_text(encoding='utf-8')
+    css = read_css()
     for panel in ['#historyBox', '#definitionBox', '#chatBox']:
         assert f"body[data-mode='medium'] {panel}" in css
     assert 'position: fixed;' in css
@@ -78,7 +83,7 @@ def test_side_panels_centered_and_limited_in_medium_mode():
 
 
 def test_popups_fill_viewport():
-    css = CSS_FILE.read_text(encoding='utf-8')
+    css = read_css()
     for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup']:
         assert f'{popup_id} {{' in css
         assert 'position: fixed;' in css
@@ -94,7 +99,7 @@ def test_options_menu_clamped_to_viewport():
 
 
 def test_side_panels_fixed_to_bottom_in_light_mode():
-    css = CSS_FILE.read_text(encoding='utf-8')
+    css = read_css()
     patterns = [
         r"@media \(max-width: 600px\)[\s\S]*?#historyBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*left: 0",
         r"@media \(max-width: 600px\)[\s\S]*?#definitionBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
@@ -113,7 +118,7 @@ def test_chat_box_and_controls_exist():
 
 def test_chat_notify_icon_present_and_styled():
     text = INDEX.read_text(encoding='utf-8')
-    css = CSS_FILE.read_text(encoding='utf-8')
+    css = read_css()
     assert '<button id="chatNotify"' in text
     assert '#chatNotify {' in css
     assert '@keyframes wiggle' in css
@@ -147,7 +152,7 @@ def test_message_containers_exist():
 
 def test_show_message_desktop_behavior():
     script = """
-import { showMessage } from './src/utils.js';
+import { showMessage } from './static/js/utils.js';
 const messageEl = { style: {}, textContent: '', addEventListener(){} };
 const messagePopup = { style: {}, textContent: '', addEventListener(){} };
 showMessage('Hi', { messageEl, messagePopup });
@@ -164,7 +169,7 @@ console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.v
 
 def test_show_message_hides_when_empty():
     script = """
-import { showMessage } from './src/utils.js';
+import { showMessage } from './static/js/utils.js';
 const messageEl = { style: {}, textContent: '', addEventListener(){} };
 const messagePopup = { style: {}, textContent: '', addEventListener(){} };
 showMessage('', { messageEl, messagePopup });
@@ -180,7 +185,7 @@ console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.v
 
 def test_position_side_panels_full_mode():
     script = """
-import { positionSidePanels } from './src/utils.js';
+import { positionSidePanels } from './static/js/utils.js';
 
 const boardArea = {
   getBoundingClientRect() { return { top: 100, left: 200, right: 400 }; }
@@ -214,7 +219,7 @@ console.log(JSON.stringify({
 
 def test_position_side_panels_reset_small_mode():
     script = """
-import { positionSidePanels } from './src/utils.js';
+import { positionSidePanels } from './static/js/utils.js';
 
 const boardArea = { getBoundingClientRect() { return { top: 0, left: 0, right: 0 }; } };
 const historyBox = { style: { position: 'absolute', top: '10px', left: '20px' } };
