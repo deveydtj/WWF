@@ -1,0 +1,103 @@
+/* Shared layout for game board and controls */
+:root {
+  --board-tile-size: 60px;
+  --board-gap: 10px;
+  --board-max-width: 340px;
+  --tile-font-size: 28px;
+  --tile-radius: 8px;
+  --key-min-width: 35px;
+  --key-height: 50px;
+  --key-font-size: 16px;
+  --key-radius: 8px;
+}
+
+body[data-mode='light'] {
+  --board-tile-size: 50px;
+  --board-gap: 5px;
+  --board-max-width: 260px;
+  --tile-font-size: 22px;
+  --tile-radius: 4px;
+  --key-min-width: 32px;
+  --key-height: 48px;
+}
+
+body[data-mode='medium'] {
+  --board-tile-size: 55px;
+  --board-gap: 8px;
+  --board-max-width: 307px;
+  --key-min-width: 34px;
+  --key-height: 50px;
+}
+
+#board {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(5, var(--board-tile-size));
+  grid-gap: var(--board-gap);
+  max-width: var(--board-max-width);
+}
+
+#boardArea {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin: 20px auto;
+  width: max-content;
+  position: relative;
+}
+
+.tile {
+  width: var(--board-tile-size);
+  height: var(--board-tile-size);
+  font-size: var(--tile-font-size);
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: var(--tile-radius);
+}
+
+#keyboard {
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.key {
+  min-width: var(--key-min-width);
+  height: var(--key-height);
+  margin: 3px;
+  border-radius: var(--key-radius);
+  font-size: var(--key-font-size);
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+#historyBox {
+  top: 0;
+  left: auto;
+  right: calc(100% + 20px);
+  transform-origin: right center;
+}
+
+#definitionBox {
+  top: 0;
+  right: auto;
+  left: calc(100% + 20px);
+  transform-origin: left center;
+}
+
+body:not(.history-open) #historyBox,
+body:not(.definition-open) #definitionBox {
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}

@@ -26,6 +26,7 @@ def test_modules_exist_and_export():
 
 def test_index_html_uses_module_script():
     text = INDEX.read_text(encoding='utf-8')
+    assert '<link rel="stylesheet" href="layout.css"' in text
     assert '<link rel="stylesheet" href="neumorphic.css"' in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
     assert len(scripts) == 1, "index.html should contain exactly one script tag"
@@ -49,7 +50,7 @@ def test_definition_panel_elements_exist():
 
 
 def test_definition_panel_css_rules():
-    css = CSS_FILE.read_text(encoding='utf-8')
+    css = CSS_FILE.read_text(encoding='utf-8') + Path('layout.css').read_text(encoding='utf-8')
     assert 'body:not(.definition-open) #definitionBox' in css
     assert 'body.definition-open #definitionBox' in css
 

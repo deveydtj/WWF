@@ -661,3 +661,10 @@ def test_chat_post_and_get(server_env):
     data = server.chat()
     assert data['messages'][-1]['text'] == 'hello'
 
+
+def test_css_routes_serve_files(server_env):
+    server, _ = server_env
+
+    assert server.theme_css('layout') == './layout.css'
+    assert server.theme_css('neumorphic') == './neumorphic.css'
+
