@@ -467,10 +467,11 @@ def index():
 def src_files(filename):
     return send_from_directory('src', filename)
 
-# Serve the neumorphic theme stylesheet
-@app.route('/neumorphic.css')
-def theme_css():
-    return send_from_directory('.', 'neumorphic.css')
+# Serve any CSS file in the repository root
+@app.route('/<path:filename>.css')
+def theme_css(filename):
+    """Serve CSS assets from the project root."""
+    return send_from_directory('.', f"{filename}.css")
 
 if __name__ == "__main__":
     load_data()

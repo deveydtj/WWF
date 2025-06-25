@@ -26,6 +26,7 @@ Frontend (HTML/JS/CSS)
 • Prioritize accessibility and responsive design across all device sizes (mobile, tablet, desktop).
 • Use semantic HTML elements and keep styles modular.
 • Reference the latest Figma, design doc, or Art Style Guide (if present).
+• Ensure every CSS file has a corresponding route in server.py so stylesheets are served correctly. Update these routes when adding new CSS files.
 
 Backend (Python)
 • Follow RESTful API best practices in server.py and related files.
