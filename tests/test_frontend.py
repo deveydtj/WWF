@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess, json
 
 INDEX = Path('index.html')
+CSS_FILE = Path('neumorphic.css')
 SRC_DIR = Path('src')
 
 EXPECTED_MODULES = [
@@ -25,6 +26,7 @@ def test_modules_exist_and_export():
 
 def test_index_html_uses_module_script():
     text = INDEX.read_text(encoding='utf-8')
+    assert '<link rel="stylesheet" href="neumorphic.css"' in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
     assert len(scripts) == 1, "index.html should contain exactly one script tag"
     script = scripts[0]
@@ -47,9 +49,9 @@ def test_definition_panel_elements_exist():
 
 
 def test_definition_panel_css_rules():
-    text = INDEX.read_text(encoding='utf-8')
-    assert 'body:not(.definition-open) #definitionBox' in text
-    assert 'body.definition-open #definitionBox' in text
+    css = CSS_FILE.read_text(encoding='utf-8')
+    assert 'body:not(.definition-open) #definitionBox' in css
+    assert 'body.definition-open #definitionBox' in css
 
 
 def test_toggle_definition_function():
@@ -66,22 +68,22 @@ def test_apply_state_updates_definition_text():
 
 
 def test_side_panels_centered_and_limited_in_medium_mode():
-    text = INDEX.read_text(encoding='utf-8')
+    css = CSS_FILE.read_text(encoding='utf-8')
     for panel in ['#historyBox', '#definitionBox', '#chatBox']:
-        assert f"body[data-mode='medium'] {panel}" in text
-    assert 'position: fixed;' in text
-    assert 'transform: translate(-50%, -50%);' in text
-    assert 'max-width: 90%;' in text
-    assert 'max-height: 80vh;' in text
+        assert f"body[data-mode='medium'] {panel}" in css
+    assert 'position: fixed;' in css
+    assert 'transform: translate(-50%, -50%);' in css
+    assert 'max-width: 90%;' in css
+    assert 'max-height: 80vh;' in css
 
 
 def test_popups_fill_viewport():
-    text = INDEX.read_text(encoding='utf-8')
+    css = CSS_FILE.read_text(encoding='utf-8')
     for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup']:
-        assert f'{popup_id} {{' in text
-        assert 'position: fixed;' in text
+        assert f'{popup_id} {{' in css
+        assert 'position: fixed;' in css
         for edge in ['top: 0', 'left: 0', 'right: 0', 'bottom: 0']:
-            assert edge in text
+            assert edge in css
 
 
 def test_options_menu_clamped_to_viewport():
@@ -92,14 +94,14 @@ def test_options_menu_clamped_to_viewport():
 
 
 def test_side_panels_fixed_to_bottom_in_light_mode():
-    text = INDEX.read_text(encoding='utf-8')
+    css = CSS_FILE.read_text(encoding='utf-8')
     patterns = [
         r"@media \(max-width: 600px\)[\s\S]*?#historyBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*left: 0",
         r"@media \(max-width: 600px\)[\s\S]*?#definitionBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
         r"@media \(max-width: 600px\)[\s\S]*?#chatBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
     ]
     for pattern in patterns:
-        assert re.search(pattern, text, flags=re.DOTALL)
+        assert re.search(pattern, css, flags=re.DOTALL)
 
 def test_chat_box_and_controls_exist():
     text = INDEX.read_text(encoding='utf-8')
@@ -111,9 +113,10 @@ def test_chat_box_and_controls_exist():
 
 def test_chat_notify_icon_present_and_styled():
     text = INDEX.read_text(encoding='utf-8')
+    css = CSS_FILE.read_text(encoding='utf-8')
     assert '<button id="chatNotify"' in text
-    assert '#chatNotify {' in text
-    assert '@keyframes wiggle' in text
+    assert '#chatNotify {' in css
+    assert '@keyframes wiggle' in css
 
 
 def test_hold_to_reset_elements_exist():
