@@ -60,6 +60,11 @@ def test_toggle_definition_function():
     assert "togglePanel('definition-open')" in text
     assert 'definitionClose.addEventListener' in text
 
+def test_toggle_glass_function():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'function toggleGlassTheme()' in text
+    assert 'applyGlassPreference' in text
+
 
 def test_apply_state_updates_definition_text():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
@@ -129,8 +134,13 @@ def test_hold_to_reset_elements_exist():
 def test_options_menu_has_dark_and_sound_buttons():
     text = INDEX.read_text(encoding='utf-8')
     assert '<button id="menuDarkMode"' in text
+    assert '<button id="menuGlass"' in text
     assert '<button id="menuSound"' in text
     assert '<button id="menuInfo"' in text
+
+def test_particle_layer_exists():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<div id="particleLayer"' in text
 
 
 def test_info_popup_elements_exist():
