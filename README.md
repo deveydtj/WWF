@@ -80,10 +80,11 @@ is required for the full suite to run successfully.
 
 - `server.py` – Flask backend
 - `index.html` – browser client
-- `neumorphic.css` – neumorphic theme styles
+- `static/css/theme.css` – neumorphic theme styles
+- `static/css/layout.css` – responsive layout rules
 - `sgb-words.txt` – word list used by the game
 - `tests/` – Pytest suite
-- `src/` – modular JavaScript code loaded by `index.html`
+- `static/js/` – modular JavaScript loaded by `index.html`
 - `offline_definitions.json` – fallback word definitions
 - `package.json` – Node settings used by frontend tests
 
