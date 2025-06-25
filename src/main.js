@@ -463,6 +463,16 @@ function toggleGlassTheme() {
   document.body.classList.toggle('glass-theme', !usingGlass);
   localStorage.setItem('glassTheme', !usingGlass);
   menuGlass.textContent = !usingGlass ? '🪟 Glass On' : '🪟 Glass Off';
+  if (usingGlass) {
+    // Switching back to neumorphic - remove particle layer
+    particleLayer.innerHTML = '';
+    particleLayer.remove();
+  } else {
+    // Enabling glass theme - insert particle layer if missing
+    if (!document.body.contains(particleLayer)) {
+      document.getElementById('appContainer').prepend(particleLayer);
+    }
+  }
 }
 
 function applyGlassPreference() {
@@ -470,6 +480,10 @@ function applyGlassPreference() {
   themeStylesheet.setAttribute('href', prefers ? 'glass.css' : 'neumorphic.css');
   document.body.classList.toggle('glass-theme', prefers);
   menuGlass.textContent = prefers ? '🪟 Glass On' : '🪟 Glass Off';
+  if (!prefers) {
+    particleLayer.innerHTML = '';
+    particleLayer.remove();
+  }
 }
 
 function toggleSound() {

@@ -470,7 +470,7 @@ def src_files(filename):
 # Serve any CSS file in the repository root
 @app.route('/<path:filename>.css')
 def theme_css(filename):
-    """Serve CSS assets from the project root."""
+    """Serve CSS assets (themes and layout styles) from the project root."""
     return send_from_directory('.', f"{filename}.css")
 
 if __name__ == "__main__":
