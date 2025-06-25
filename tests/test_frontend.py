@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess, json
 
 INDEX = Path('index.html')
-CSS_FILE = Path('neumorphic.css')
+CSS_FILE = Path('layout.css')
 SRC_DIR = Path('src')
 
 EXPECTED_MODULES = [
@@ -26,6 +26,7 @@ def test_modules_exist_and_export():
 
 def test_index_html_uses_module_script():
     text = INDEX.read_text(encoding='utf-8')
+    assert '<link rel="stylesheet" href="layout.css"' in text
     assert '<link rel="stylesheet" href="neumorphic.css"' in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
     assert len(scripts) == 1, "index.html should contain exactly one script tag"
