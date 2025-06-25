@@ -467,6 +467,11 @@ def index():
 def src_files(filename):
     return send_from_directory('src', filename)
 
+# Serve the neumorphic theme stylesheet
+@app.route('/neumorphic.css')
+def theme_css():
+    return send_from_directory('.', 'neumorphic.css')
+
 if __name__ == "__main__":
     load_data()
     if not target_word:
