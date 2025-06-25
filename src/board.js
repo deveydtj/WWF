@@ -30,10 +30,26 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
       }
     }
   });
-  if (!gameOver && guessInput.value && guesses.length < rows) {
-    for (let i = 0; i < guessInput.value.length; i++) {
-      const tile = tiles[guesses.length * 5 + i];
-      tile.textContent = guessInput.value[i].toUpperCase();
+
+  const greenPositions = {};
+  guesses.forEach(g => {
+    for (let i = 0; i < 5; i++) {
+      if (g.result[i] === 'correct') {
+        greenPositions[i] = g.guess[i];
+      }
+    }
+  });
+
+  if (!gameOver && guesses.length < rows) {
+    const rowIndex = guesses.length;
+    for (let i = 0; i < 5; i++) {
+      const tile = tiles[rowIndex * 5 + i];
+      if (i < guessInput.value.length) {
+        tile.textContent = guessInput.value[i].toUpperCase();
+      } else if (greenPositions[i]) {
+        tile.textContent = greenPositions[i].toUpperCase();
+        tile.classList.add('ghost');
+      }
     }
   }
 }

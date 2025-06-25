@@ -483,6 +483,10 @@
       opacity: 0.6;
     }
 
+    .tile.ghost {
+      opacity: 0.4;
+    }
+
     .tile.correct,
     .tile.present,
     .tile.absent {
