@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Wordle Game (Hard Mode, Shared)</title>
-  <link rel="stylesheet" href="neumorphic.css">
+  <link rel="stylesheet" href="neumorphic.css" id="themeStylesheet">
 
 </head>
 
 <body>
   <div id="appContainer">
+    <div id="particleLayer"></div>
     <!-- Emoji Picker Modal -->
     <div id="emojiModal" style="display:none;">
       <div id="emojiModalBox">
@@ -49,6 +50,7 @@
       <button id="menuDefinition">📖 Definition</button>
       <button id="menuChat">💬 Chat</button>
       <button id="menuDarkMode">🌙/☀️</button>
+      <button id="menuGlass">🪟 Glass</button>
       <button id="menuSound">🔈 Sound Off</button>
       <button id="menuInfo">ℹ️ Info</button>
     </div>

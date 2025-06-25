@@ -15,6 +15,7 @@ A small multiplayer adaptation of Wordle. The frontend lives in `index.html` whi
   solution.
 - **In-game chat box** so players can talk while solving the puzzle together.
 - **Dark mode toggle** and responsive layout for small screens.
+- **Liquid Glass theme** with translucent panels and interactive particle effects.
 - **Hold‑to‑reset button** (or instant reset once the game is over).
 - **Inactive player detection** – entries on the leaderboard fade if a player has not
   acted for several minutes.

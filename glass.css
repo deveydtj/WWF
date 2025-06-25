@@ -1,0 +1,67 @@
+:root {
+  --accent-blue: rgba(173,216,230,0.7);
+  --accent-purple: rgba(221,160,221,0.7);
+  --accent-pink: rgba(255,182,193,0.7);
+  --accent-cyan: rgba(0,255,255,0.7);
+}
+
+body.glass-theme {
+  backdrop-filter: blur(14px) saturate(1.2);
+  background: linear-gradient(135deg, rgba(30,30,45,0.8), rgba(10,10,20,0.8));
+  --text-color: #ffffff;
+  --text-color-light: #f0f0f0;
+  --bg-color: rgba(255,255,255,0.15);
+  --tile-bg: rgba(255,255,255,0.15);
+  --key-bg: rgba(255,255,255,0.15);
+  --key-text: #fff;
+  --border-color: rgba(255,255,255,0.3);
+}
+
+body.glass-theme #boardArea,
+body.glass-theme #keyboard,
+body.glass-theme #optionsMenu,
+body.glass-theme #historyBox,
+body.glass-theme #definitionBox,
+body.glass-theme #chatBox {
+  background: var(--bg-color);
+  backdrop-filter: blur(20px);
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25), inset 0 0 1px rgba(255,255,255,0.4);
+}
+
+body.glass-theme .tile,
+body.glass-theme .key,
+body.glass-theme button {
+  background: var(--bg-color);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3), inset 0 0 1px rgba(255,255,255,0.4);
+}
+
+#particleLayer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(8px);
+  opacity: 0.8;
+  animation: particleFade 0.6s forwards;
+}
+
+@keyframes particleFade {
+  to { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle { animation: none; }
+}

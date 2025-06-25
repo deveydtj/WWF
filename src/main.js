@@ -6,6 +6,7 @@ import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup } from './utils.js';
+import { initParticleEffects } from './particles.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -48,6 +49,7 @@ const menuHistory = document.getElementById('menuHistory');
 const menuDefinition = document.getElementById('menuDefinition');
 const menuChat = document.getElementById('menuChat');
 const menuDarkMode = document.getElementById('menuDarkMode');
+const menuGlass = document.getElementById('menuGlass');
 const menuSound = document.getElementById('menuSound');
 const holdReset = document.getElementById('holdReset');
 const holdResetProgress = document.getElementById('holdResetProgress');
@@ -64,6 +66,8 @@ const chatNotify = document.getElementById('chatNotify');
 const infoPopup = document.getElementById('infoPopup');
 const infoClose = document.getElementById('infoClose');
 const menuInfo = document.getElementById('menuInfo');
+const themeStylesheet = document.getElementById('themeStylesheet');
+const particleLayer = document.getElementById('particleLayer');
 
 let chatWiggleTimer = null;
 
@@ -452,6 +456,22 @@ function toggleDarkMode() {
   applyDarkModePreference(menuDarkMode);
 }
 
+function toggleGlassTheme() {
+  const usingGlass = themeStylesheet.getAttribute('href') === 'glass.css';
+  const newHref = usingGlass ? 'neumorphic.css' : 'glass.css';
+  themeStylesheet.setAttribute('href', newHref);
+  document.body.classList.toggle('glass-theme', !usingGlass);
+  localStorage.setItem('glassTheme', !usingGlass);
+  menuGlass.textContent = !usingGlass ? '🪟 Glass On' : '🪟 Glass Off';
+}
+
+function applyGlassPreference() {
+  const prefers = localStorage.getItem('glassTheme') === 'true';
+  themeStylesheet.setAttribute('href', prefers ? 'glass.css' : 'neumorphic.css');
+  document.body.classList.toggle('glass-theme', prefers);
+  menuGlass.textContent = prefers ? '🪟 Glass On' : '🪟 Glass Off';
+}
+
 function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem('soundEnabled', soundEnabled);
@@ -499,16 +519,19 @@ menuChat.addEventListener('click', () => {
 });
 menuInfo.addEventListener('click', () => { showInfo(); optionsMenu.style.display = 'none'; });
 menuDarkMode.addEventListener('click', toggleDarkMode);
+menuGlass.addEventListener('click', toggleGlassTheme);
 menuSound.addEventListener('click', toggleSound);
 closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
 infoClose.addEventListener('click', () => { infoPopup.style.display = 'none'; });
 
 applyDarkModePreference(menuDarkMode);
+applyGlassPreference();
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+initParticleEffects(particleLayer);
 renderEmojiStamps([]);
 if (window.innerWidth > 900) {
   document.body.classList.add('history-open');
