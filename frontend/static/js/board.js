@@ -11,7 +11,7 @@ export function createBoard(board, rows = 6) {
  * Render all guesses and the current input onto the board.
  * Existing tiles are cleared before applying new status classes.
  */
-export function updateBoard(board, state, guessInput, rows = 6, gameOver = false, animateRow = -1) {
+export function updateBoard(board, state, guessInput, rows = 6, gameOver = false, animateRow = -1, hint = null, hintRow = null) {
   const guesses = state.guesses;
   const tiles = board.children;
   for (let i = 0; i < rows * 5; i++) {
@@ -44,7 +44,11 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
     const rowIndex = guesses.length;
     for (let i = 0; i < 5; i++) {
       const tile = tiles[rowIndex * 5 + i];
-      if (i < guessInput.value.length) {
+      tile.classList.toggle('hint-target', hintRow === rowIndex);
+      if (hint && hint.row === rowIndex && hint.col === i) {
+        tile.textContent = hint.letter.toUpperCase();
+        tile.classList.add('ghost');
+      } else if (i < guessInput.value.length) {
         tile.textContent = guessInput.value[i].toUpperCase();
       } else if (greenPositions[i]) {
         tile.textContent = greenPositions[i].toUpperCase();

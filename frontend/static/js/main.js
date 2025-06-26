@@ -1,7 +1,7 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
-import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates } from './api.js';
+import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton,
@@ -25,6 +25,8 @@ let requiredLetters = new Set();
 let greenPositions = {};
 let gameOver = false;
 let latestState = null;
+let dailyDoubleRow = null;
+let dailyDoubleHint = null;
 
 const board = document.getElementById('board');
 const guessInput = document.getElementById('guessInput');
@@ -317,7 +319,14 @@ function applyState(state) {
 
   maxRows = state.max_rows || 6;
   const animateRow = state.guesses.length > prevGuessCount ? state.guesses.length - 1 : -1;
-  updateBoard(board, state, guessInput, maxRows, gameOver, animateRow);
+  updateBoard(board, state, guessInput, maxRows, gameOver, animateRow, dailyDoubleHint, dailyDoubleRow);
+  if (dailyDoubleRow !== null && state.guesses.length > dailyDoubleRow) {
+    dailyDoubleRow = null;
+    dailyDoubleHint = null;
+  }
+  if (dailyDoubleHint && state.guesses.length > dailyDoubleHint.row) {
+    dailyDoubleHint = null;
+  }
   if (animateRow >= 0) {
     for (let i = 0; i < 5; i++) {
       setTimeout(playClick, i * 150);
@@ -395,6 +404,11 @@ async function submitGuessHandler() {
   guessInput.value = '';
   if (resp.status === 'ok') {
     applyState(resp.state);
+    if (resp.daily_double) {
+      dailyDoubleRow = resp.state.guesses.length;
+      dailyDoubleHint = null;
+      showMessage('Daily Double! Tap a tile in the next row for a hint.', { messageEl, messagePopup });
+    }
     if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
     if (resp.won) {
       showMessage('You got it! The word was ' + resp.state.target_word.toUpperCase(), { messageEl, messagePopup });
@@ -470,7 +484,7 @@ setupTypingListeners({
   guessInput,
   submitButton,
   submitGuessHandler,
-  updateBoardFromTyping: () => updateBoardFromTyping(board, latestState, guessInput, maxRows, gameOver),
+  updateBoardFromTyping: () => updateBoardFromTyping(board, latestState, guessInput, maxRows, gameOver, dailyDoubleHint, dailyDoubleRow),
   isAnimating: () => false
 });
 
@@ -557,6 +571,26 @@ window.addEventListener('resize', () => {
 });
 updateVH();
 window.addEventListener('resize', updateVH);
+
+board.addEventListener('click', async (e) => {
+  if (dailyDoubleRow === null) return;
+  const tile = e.target.closest('.tile');
+  if (!tile) return;
+  const tiles = Array.from(board.children);
+  const index = tiles.indexOf(tile);
+  if (index === -1) return;
+  const row = Math.floor(index / 5);
+  const col = index % 5;
+  if (row !== dailyDoubleRow) return;
+  const resp = await requestHint(col, myEmoji);
+  if (resp.status === 'ok') {
+    dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
+    dailyDoubleRow = null;
+    fetchState();
+  } else if (resp.msg) {
+    showMessage(resp.msg, { messageEl, messagePopup });
+  }
+});
 
 chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();

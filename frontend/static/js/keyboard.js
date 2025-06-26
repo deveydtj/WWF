@@ -61,7 +61,7 @@ export function setupTypingListeners({keyboardEl, guessInput, submitButton, subm
   });
 }
 
-export function updateBoardFromTyping(boardEl, state, guessInput, rows, gameOver) {
+export function updateBoardFromTyping(boardEl, state, guessInput, rows, gameOver, hint = null, hintRow = null) {
   if (!state) return;
-  updateBoard(boardEl, state, guessInput, rows, gameOver);
+  updateBoard(boardEl, state, guessInput, rows, gameOver, -1, hint, hintRow);
 }

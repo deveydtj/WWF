@@ -33,11 +33,11 @@ as they are completed.
   - Show the fastest player the time delta between their guess and the
     runner-up(s).
 - [ ] Implement Daily Double feature:
-  - Grant a hidden hint when a player turns the Daily Double tile green.
-  - Let the player choose one unrevealed tile in the next row to preview in a
+  - [x] Grant a hidden hint when a player turns the Daily Double tile green.
+  - [x] Let the player choose one unrevealed tile in the next row to preview in a
     ghost/outline style.
-  - Prevent other players from seeing the revealed hint.
-  - Disallow Daily Double tile selection on the bottom row.
+  - [x] Prevent other players from seeing the revealed hint.
+  - [x] Disallow Daily Double tile selection on the bottom row.
 
 ## UI Enhancements
 
@@ -60,6 +60,6 @@ as they are completed.
 
 - [ ] Expand unit tests to cover additional API and UI logic.
 - [ ] Document public functions in the JavaScript code.
-- [ ] Add integration tests for Close-Call and Daily Double scenarios.
+- [x] Add integration tests for Close-Call and Daily Double scenarios.
 - [ ] Keep this TODO list updated as new issues are discovered.
 

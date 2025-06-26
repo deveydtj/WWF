@@ -50,6 +50,15 @@ export async function getChatMessages() {
   return r.json();
 }
 
+export async function requestHint(col, emoji) {
+  const r = await fetch('/hint', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ col, emoji })
+  });
+  return r.json();
+}
+
 export function subscribeToUpdates(onMessage) {
   if (!window.EventSource) return null;
   const es = new EventSource('/stream');

@@ -781,6 +781,11 @@
       opacity: 0.4;
     }
 
+    .tile.hint-target {
+      border: 2px dashed var(--present-bg);
+      cursor: pointer;
+    }
+
     .tile.correct,
     .tile.present,
     .tile.absent {
