@@ -5,7 +5,8 @@ import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscri
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
-         positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup } from './utils.js';
+         positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup,
+         openDialog, closeDialog, focusFirstElement } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -377,7 +378,7 @@ function applyState(state) {
     });
     showEmojiModalOnNextFetch = false;
   } else if (!skipAutoClose) {
-    document.getElementById('emojiModal').style.display = 'none';
+    closeDialog(document.getElementById('emojiModal'));
   }
 }
 
@@ -438,6 +439,7 @@ async function submitGuessHandler() {
     if (resp.close_call) {
       closeCallText.textContent = `Close call! ${resp.close_call.winner} beat you by ${resp.close_call.delta_ms}ms.`;
       closeCallPopup.style.display = 'flex';
+      openDialog(closeCallPopup);
     } else {
       showMessage(resp.msg, { messageEl, messagePopup });
     }
@@ -515,14 +517,21 @@ function toggleSound() {
 
 function toggleHistory() {
   togglePanel('history-open');
+  if (document.body.classList.contains('history-open')) {
+    focusFirstElement(historyBox);
+  }
 }
 
 function toggleDefinition() {
   togglePanel('definition-open');
+  if (document.body.classList.contains('definition-open')) {
+    focusFirstElement(definitionBoxEl);
+  }
 }
 
 function showInfo() {
   infoPopup.style.display = 'flex';
+  openDialog(infoPopup);
 }
 
 historyClose.addEventListener('click', () => {
@@ -540,23 +549,29 @@ chatClose.addEventListener('click', () => {
 chatNotify.addEventListener('click', () => {
   togglePanel('chat-open');
   hideChatNotify();
+  if (document.body.classList.contains('chat-open')) {
+    focusFirstElement(chatBox);
+  }
 });
 optionsToggle.addEventListener('click', () => {
   showPopup(optionsMenu, optionsToggle);
 });
-optionsClose.addEventListener('click', () => { optionsMenu.style.display = 'none'; });
-menuHistory.addEventListener('click', () => { toggleHistory(); optionsMenu.style.display = 'none'; });
-menuDefinition.addEventListener('click', () => { toggleDefinition(); optionsMenu.style.display = 'none'; });
+optionsClose.addEventListener('click', () => { closeDialog(optionsMenu); });
+menuHistory.addEventListener('click', () => { toggleHistory(); closeDialog(optionsMenu); });
+menuDefinition.addEventListener('click', () => { toggleDefinition(); closeDialog(optionsMenu); });
 menuChat.addEventListener('click', () => {
   togglePanel('chat-open');
   hideChatNotify();
-  optionsMenu.style.display = 'none';
+  if (document.body.classList.contains('chat-open')) {
+    focusFirstElement(chatBox);
+  }
+  closeDialog(optionsMenu);
 });
-menuInfo.addEventListener('click', () => { showInfo(); optionsMenu.style.display = 'none'; });
+menuInfo.addEventListener('click', () => { showInfo(); closeDialog(optionsMenu); });
 menuDarkMode.addEventListener('click', toggleDarkMode);
 menuSound.addEventListener('click', toggleSound);
-closeCallOk.addEventListener('click', () => { closeCallPopup.style.display = 'none'; });
-infoClose.addEventListener('click', () => { infoPopup.style.display = 'none'; });
+closeCallOk.addEventListener('click', () => { closeDialog(closeCallPopup); });
+infoClose.addEventListener('click', () => { closeDialog(infoPopup); });
 
 applyDarkModePreference(menuDarkMode);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';

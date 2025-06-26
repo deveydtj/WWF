@@ -11,9 +11,9 @@
 <body>
   <div id="appContainer">
     <!-- Emoji Picker Modal -->
-    <div id="emojiModal">
+    <div id="emojiModal" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading">
       <div id="emojiModalBox">
-        <div>
+        <div id="emojiModalHeading">
           Pick your emoji for this game:
         </div>
         <div id="emojiChoices"></div>
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Close Call Popup -->
-    <div id="closeCallPopup">
+    <div id="closeCallPopup" role="alertdialog" aria-modal="true" aria-labelledby="closeCallText">
       <div id="closeCallBox">
         <div id="closeCallText"></div>
         <button id="closeCallOk">OK</button>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Info Popup -->
-    <div id="infoPopup">
+    <div id="infoPopup" role="dialog" aria-modal="true" aria-label="Game information">
       <div id="infoBox">
         <button id="infoClose" class="close-btn">✖</button>
         <div id="infoContent">
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Options Menu -->
-    <div id="optionsMenu">
+    <div id="optionsMenu" role="dialog" aria-modal="true" aria-label="Options menu">
       <button id="optionsClose" class="close-btn">✖</button>
       <button id="menuHistory">📜 History</button>
       <button id="menuDefinition">📖 Definition</button>
@@ -56,20 +56,22 @@
     </div>
 
     <!-- Game History Panel -->
-    <div id="historyBox">
+    <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
       <button id="historyClose" class="close-btn">✖</button>
-      <h3>History</h3>
+      <h3 id="historyHeading">History</h3>
       <ul id="historyList"></ul>
     </div>
 
     <!-- Leaderboard -->
-    <div id="leaderboard"></div>
-    <div id="definitionBox">
+    <div id="leaderboard" role="region" aria-label="Leaderboard"></div>
+    <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
       <button id="definitionClose" class="close-btn">✖</button>
+      <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
       <div id="definitionText"></div>
     </div>
-    <div id="chatBox">
+    <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
       <button id="chatClose" class="close-btn" type="button">✖</button>
+      <h3 id="chatHeading" class="visually-hidden">Chat</h3>
       <div id="chatMessages"></div>
       <form id="chatForm">
         <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
@@ -90,7 +92,7 @@
 
     <!-- Board -->
     <div id="boardArea">
-      <div id="board"></div>
+      <div id="board" role="grid" aria-label="Guess grid"></div>
       <div id="stampContainer"></div>
       <button id="optionsToggle" title="More Options">⚙️</button>
       <button id="chatNotify" title="Open Chat">💬</button>
