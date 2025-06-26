@@ -123,6 +123,17 @@ def test_chat_notify_icon_present_and_styled():
     assert '#chatNotify {' in css
     assert '@keyframes wiggle' in css
 
+def test_options_and_chat_icons_visible():
+    css = read_css()
+    chat_rules = [m.group(0) for m in re.finditer(r'#chatNotify\s*{[^}]*}', css)]
+    assert chat_rules and 'display: block' in chat_rules[-1]
+    opt_rules = [m.group(0) for m in re.finditer(r'#optionsToggle\s*{[^}]*}', css)]
+    assert opt_rules and 'display: block' in opt_rules[-1]
+
+def test_hide_chat_notify_keeps_icon_visible():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert "chatNotify.style.display = 'none'" not in text
+
 
 def test_hold_to_reset_elements_exist():
     text = INDEX.read_text(encoding='utf-8')
@@ -136,6 +147,22 @@ def test_options_menu_has_dark_and_sound_buttons():
     assert '<button id="menuDarkMode"' in text
     assert '<button id="menuSound"' in text
     assert '<button id="menuInfo"' in text
+
+def test_apply_dark_mode_preference_labels_button():
+    script = """
+import { applyDarkModePreference } from './frontend/static/js/utils.js';
+global.document = { body: { classList: { toggle(){} } } };
+global.localStorage = { getItem(){ return 'true'; } };
+const btn = { textContent: '', title: '' };
+applyDarkModePreference(btn);
+console.log(JSON.stringify(btn));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert 'Light Mode' in data['textContent']
 
 
 def test_info_popup_elements_exist():
@@ -251,3 +278,29 @@ console.log(JSON.stringify({
     assert data['chat']['position'] == ''
     assert data['chat']['left'] == ''
     assert data['chat']['top'] == ''
+
+def test_apply_layout_mode_adjusts_for_panel_space():
+    script = """
+import { applyLayoutMode } from './frontend/static/js/utils.js';
+
+const boardArea = { getBoundingClientRect(){ return { left: 305, right: 645 }; } };
+const historyBox = { offsetWidth: 260 };
+const definitionBox = { offsetWidth: 260 };
+global.window = { innerWidth: 950 };
+global.document = {
+  body: { dataset: {} },
+  getElementById(id){
+    if(id==='boardArea') return boardArea;
+    if(id==='historyBox') return historyBox;
+    if(id==='definitionBox') return definitionBox;
+    return null;
+  }
+};
+applyLayoutMode();
+console.log(document.body.dataset.mode);
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip() == 'medium'
