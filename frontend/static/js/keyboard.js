@@ -1,5 +1,12 @@
 import { updateBoard } from './board.js';
 
+/**
+ * Handle clicks or touches on the on-screen keyboard.
+ *
+ * @param {Event} event
+ * @param {{guessInput:HTMLInputElement, submitGuessHandler:Function, isAnimating:Function}} opts
+ * @param {Function} updateBoardFromTyping
+ */
 export function handleVirtualKey(event, {guessInput, submitGuessHandler, isAnimating}, updateBoardFromTyping) {
   if (event.target.classList.contains('key') && !guessInput.disabled && !isAnimating()) {
     event.preventDefault();
@@ -17,6 +24,17 @@ export function handleVirtualKey(event, {guessInput, submitGuessHandler, isAnima
   }
 }
 
+/**
+ * Wire up DOM event listeners for all keyboard input mechanisms.
+ *
+ * @param {Object} cfg
+ * @param {HTMLElement} cfg.keyboardEl
+ * @param {HTMLInputElement} cfg.guessInput
+ * @param {HTMLElement} cfg.submitButton
+ * @param {Function} cfg.submitGuessHandler
+ * @param {Function} cfg.updateBoardFromTyping
+ * @param {Function} cfg.isAnimating
+ */
 export function setupTypingListeners({keyboardEl, guessInput, submitButton, submitGuessHandler, updateBoardFromTyping, isAnimating}) {
   keyboardEl.addEventListener('click', (e) => handleVirtualKey(e, {guessInput, submitGuessHandler, isAnimating}, updateBoardFromTyping));
   keyboardEl.addEventListener('touchstart', (e) => handleVirtualKey(e, {guessInput, submitGuessHandler, isAnimating}, updateBoardFromTyping));
@@ -61,6 +79,17 @@ export function setupTypingListeners({keyboardEl, guessInput, submitButton, subm
   });
 }
 
+/**
+ * Re-render the board when the input value changes.
+ *
+ * @param {HTMLElement} boardEl
+ * @param {Object} state
+ * @param {HTMLInputElement} guessInput
+ * @param {number} rows
+ * @param {boolean} gameOver
+ * @param {Object|null} [hint]
+ * @param {number|null} [hintRow]
+ */
 export function updateBoardFromTyping(boardEl, state, guessInput, rows, gameOver, hint = null, hintRow = null) {
   if (!state) return;
   updateBoard(boardEl, state, guessInput, rows, gameOver, -1, hint, hintRow);
