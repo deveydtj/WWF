@@ -25,6 +25,7 @@ track of guesses and scores.
 - **Daily Double** bonus that awards a hidden letter when you uncover a special tile.
   The qualifying player may privately reveal one tile on the next row.
 - **Hint badge** shows next to your emoji while a Daily Double hint is unused.
+- **Accessible color contrast** ensures text is readable in light and dark modes.
 
 ## Requirements
 

@@ -104,12 +104,12 @@
       <button id="submitGuess">Guess</button>
     </div>
 
-      <p id="message"></p>
-      <div id="messagePopup"></div>
+      <p id="message" role="status" aria-live="polite"></p>
+      <div id="messagePopup" role="status" aria-live="polite"></div>
       <div id="ariaLive" aria-live="polite"></div>
 
     <!-- Keyboard -->
-    <div id="keyboard">
+    <div id="keyboard" role="group" aria-label="On-screen keyboard">
       <div class="keyboard-row">
         <button class="key" data-key="q">Q</button>
         <button class="key" data-key="w">W</button>
