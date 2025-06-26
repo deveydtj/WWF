@@ -55,7 +55,8 @@ overview and should be kept up to date as features evolve.
   - `POST /reset` – reset the game.
 - Data contracts for guesses, leaderboard entries, and definitions are JSON
   objects as defined in the project overview.
-- The client polls `/state` every two seconds to keep the board synchronized.
+- Clients subscribe to `/stream` using Server-Sent Events for real-time updates
+  and fall back to polling `/state` if the stream disconnects.
 - `/guess` responses include a `close_call` object when another player submits the winning word within one second of the winner. Each guess record stores a timestamp so the server can report the milliseconds difference.
 
 ## 4. Technical Constraints

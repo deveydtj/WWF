@@ -33,6 +33,7 @@ Backend (Python)
 • Follow RESTful API best practices in server.py and related files.
 • Use environment variables for secrets and configuration.
 • Validate incoming API requests and handle errors gracefully.
+• Use the `/stream` SSE endpoint to push state updates to clients and reduce polling.
 
 Responsive Layout
 • Implement breakpoints for “Light,” “Medium,” and “Full” modes, targeting mobile, tablet, and desktop, respectively.

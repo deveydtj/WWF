@@ -10,6 +10,8 @@ import logging
 import re
 import html
 import threading
+import queue
+from pathlib import Path
 
 app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
@@ -17,8 +19,10 @@ CORS(app)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
 
-WORDS_FILE = "sgb-words.txt"
-GAME_FILE = "game_persist.json"
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "frontend"
+WORDS_FILE = BASE_DIR / "sgb-words.txt"
+GAME_FILE = BASE_DIR / "game_persist.json"
 MAX_ROWS = 6
 
 # Standard Scrabble letter values used for scoring
@@ -49,6 +53,7 @@ last_word = None      # last completed word
 last_definition = None  # definition of last completed word
 win_timestamp = None   # timestamp when the winning guess was submitted
 chat_messages = []     # list of chat messages
+listeners = set()      # SSE client queues
 
 
 def sanitize_definition(text: str) -> str:
@@ -201,6 +206,7 @@ def _definition_worker(word: str) -> None:
     last_word = word
     last_definition = definition
     save_data()
+    broadcast_state()
 
 
 def start_definition_lookup(word: str) -> threading.Thread:
@@ -284,7 +290,35 @@ def build_state_payload():
         "chat_messages": chat_messages,
     }
 
+
+def broadcast_state() -> None:
+    """Send the latest game state to all connected SSE clients."""
+    data = json.dumps(build_state_payload())
+    for q in list(listeners):
+        try:
+            q.put_nowait(data)
+        except Exception:
+            listeners.discard(q)
+
 # ---- API Routes ----
+
+@app.route("/stream")
+def stream():
+    """Server-Sent Events endpoint for real-time updates."""
+    from flask import Response
+
+    q = queue.Queue()
+    listeners.add(q)
+
+    def gen():
+        try:
+            while True:
+                data = q.get()
+                yield f"data: {data}\n\n"
+        finally:
+            listeners.discard(q)
+
+    return Response(gen(), mimetype="text/event-stream")
 
 @app.route("/state", methods=["GET", "POST"])
 def state():
@@ -328,6 +362,7 @@ def set_emoji():
     leaderboard[emoji]["last_active"] = now
     ip_to_emoji[ip] = emoji
     save_data()
+    broadcast_state()
     return jsonify({"status": "ok"})
 
 @app.route("/guess", methods=["POST"])
@@ -425,6 +460,7 @@ def guess_word():
     new_entry["points"] = points_delta
 
     resp_state = build_state_payload()
+    broadcast_state()
 
     return jsonify({
         "status": "ok",
@@ -446,6 +482,7 @@ def chat():
             return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
         chat_messages.append({"emoji": emoji, "text": text, "ts": time.time()})
         save_data()
+        broadcast_state()
         return jsonify({"status": "ok"})
     return jsonify({"messages": chat_messages})
 
@@ -456,22 +493,23 @@ def reset_game():
     past_games.append(list(guesses))
     pick_new_word()
     save_data()
+    broadcast_state()
     return jsonify({"status": "ok"})
 
 @app.route("/")
 def index():
     # Serve the bundled frontend from the new directory
-    return send_from_directory("frontend", "index.html")
+    return send_from_directory(str(FRONTEND_DIR), "index.html")
 
 # Serve static JavaScript modules
 @app.route('/js/<path:filename>')
 def js_files(filename):
-    return send_from_directory('frontend/static/js', filename)
+    return send_from_directory(str(FRONTEND_DIR / 'static' / 'js'), filename)
 
 # Serve CSS assets
 @app.route('/css/<path:filename>')
 def css_files(filename):
-    return send_from_directory('frontend/static/css', filename)
+    return send_from_directory(str(FRONTEND_DIR / 'static' / 'css'), filename)
 
 if __name__ == "__main__":
     load_data()
