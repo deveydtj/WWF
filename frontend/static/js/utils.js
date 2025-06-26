@@ -151,7 +151,78 @@ export function positionPopup(popup, anchor) {
   popup.style.top = `${top}px`;
 }
 
+let lastFocused = null;
+let trapHandler = null;
+let trappedDialog = null;
+
+function getFocusable(container) {
+  return Array.from(
+    container.querySelectorAll(
+      'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+  );
+}
+
+function trapFocus(dialog) {
+  const focusable = getFocusable(dialog);
+  let first = focusable[0];
+  let last = focusable[focusable.length - 1];
+  if (!first) {
+    dialog.setAttribute('tabindex', '-1');
+    first = last = dialog;
+  }
+  const handler = (e) => {
+    if (e.key === 'Tab') {
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    } else if (e.key === 'Escape') {
+      closeDialog(dialog);
+    }
+  };
+  dialog.addEventListener('keydown', handler);
+  first.focus();
+  return handler;
+}
+
+export function openDialog(dialog) {
+  lastFocused = document.activeElement;
+  trappedDialog = dialog;
+  trapHandler = trapFocus(dialog);
+}
+
+export function closeDialog(dialog) {
+  dialog.style.display = 'none';
+  if (trapHandler) {
+    dialog.removeEventListener('keydown', trapHandler);
+    trapHandler = null;
+  }
+  if (lastFocused && typeof lastFocused.focus === 'function') {
+    lastFocused.focus();
+  }
+  trappedDialog = null;
+}
+
+export function focusFirstElement(container) {
+  const focusable = getFocusable(container);
+  if (focusable.length) {
+    focusable[0].focus();
+  } else {
+    container.setAttribute('tabindex', '-1');
+    container.focus();
+  }
+}
+
 export function showPopup(popup, anchor) {
   popup.style.display = 'block';
   positionPopup(popup, anchor);
+  openDialog(popup);
 }

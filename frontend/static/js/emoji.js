@@ -1,4 +1,5 @@
 import { sendEmoji } from './api.js';
+import { openDialog, closeDialog } from './utils.js';
 
 export function getMyEmoji() {
   return localStorage.getItem('myEmoji') || null;
@@ -35,7 +36,7 @@ export function showEmojiModal(takenEmojis, {
         if (skipAutoCloseRef) skipAutoCloseRef.value = false;
         setMyEmoji(e);
         if (typeof onChosen === 'function') onChosen(e);
-        modal.style.display = 'none';
+        closeDialog(modal);
       } else {
         errorEl.textContent = data.msg || 'That emoji is taken.';
       }
@@ -45,5 +46,6 @@ export function showEmojiModal(takenEmojis, {
   });
 
   errorEl.textContent = '';
-  modal.style.display = '';
+  modal.style.display = 'flex';
+  openDialog(modal);
 }
