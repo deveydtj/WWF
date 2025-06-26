@@ -29,7 +29,7 @@ export function showMessage(msg, {messageEl, messagePopup}) {
 export function applyDarkModePreference(toggle) {
   const prefersDark = localStorage.getItem('darkMode') === 'true';
   document.body.classList.toggle('dark-mode', prefersDark);
-  toggle.textContent = prefersDark ? '☀️' : '🌙';
+  toggle.textContent = prefersDark ? '☀️ Light Mode' : '🌙 Dark Mode';
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
 

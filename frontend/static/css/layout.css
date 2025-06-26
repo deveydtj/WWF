@@ -369,7 +369,7 @@
 
 
     #optionsToggle {
-      display: none;
+      display: block;
       font-size: 28px;
       background: none;
       border: none;
@@ -383,7 +383,7 @@
     }
 
     #chatNotify {
-      display: none;
+      display: block;
       font-size: 26px;
       background: none;
       border: none;
@@ -394,13 +394,12 @@
       position: absolute;
       top: 36px;
       left: calc(100% + 10px);
-      opacity: 0;
-      transform: scale(0);
+      opacity: 1;
+      transform: scale(1);
       transition: opacity 0.3s, transform 0.3s;
       z-index: 60;
     }
     #chatNotify.visible {
-      display: block;
       opacity: 1;
       transform: scale(1);
     }
