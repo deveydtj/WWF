@@ -373,7 +373,7 @@ def test_pick_new_word_resets_state(server_env, monkeypatch):
 def test_fetch_definition_success(monkeypatch, server_env):
     server, _ = server_env
 
-    payload = json.dumps([
+    payload = [
         {
             'meanings': [
                 {
@@ -383,19 +383,16 @@ def test_fetch_definition_success(monkeypatch, server_env):
                 }
             ]
         }
-    ]).encode('utf-8')
+    ]
 
     class DummyResp:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
+        def raise_for_status(self):
             pass
 
-        def read(self):
+        def json(self):
             return payload
 
-    monkeypatch.setattr(server.urllib.request, 'urlopen', lambda *a, **k: DummyResp())
+    monkeypatch.setattr(server.requests, 'get', lambda *a, **k: DummyResp())
 
     definition = server.fetch_definition('apple')
     assert definition == 'a fruit'
@@ -404,7 +401,7 @@ def test_fetch_definition_success(monkeypatch, server_env):
 def test_fetch_definition_strips_html(monkeypatch, server_env):
     server, _ = server_env
 
-    payload = json.dumps([
+    payload = [
         {
             'meanings': [
                 {
@@ -414,19 +411,16 @@ def test_fetch_definition_strips_html(monkeypatch, server_env):
                 }
             ]
         }
-    ]).encode('utf-8')
+    ]
 
     class DummyResp:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
+        def raise_for_status(self):
             pass
 
-        def read(self):
+        def json(self):
             return payload
 
-    monkeypatch.setattr(server.urllib.request, 'urlopen', lambda *a, **k: DummyResp())
+    monkeypatch.setattr(server.requests, 'get', lambda *a, **k: DummyResp())
 
     definition = server.fetch_definition('apple')
     assert definition == 'a fruit'
@@ -445,7 +439,7 @@ def test_fetch_definition_exception(monkeypatch, server_env):
     def raise_err(*a, **k):
         raise ValueError('fail')
 
-    monkeypatch.setattr(server.urllib.request, 'urlopen', raise_err)
+    monkeypatch.setattr(server.requests, 'get', raise_err)
 
     definition = server.fetch_definition('apple')
     assert definition is None
@@ -457,21 +451,17 @@ def test_fetch_definition_sets_user_agent(monkeypatch, server_env):
     captured = {}
 
     class DummyResp:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
+        def raise_for_status(self):
             pass
 
-        def read(self):
-            return b"[]"
+        def json(self):
+            return []
 
-    def fake_urlopen(req, *a, **k):
-        ua = req.get_header('User-Agent') or req.get_header('User-agent')
-        captured['ua'] = ua
+    def fake_get(url, headers=None, **kw):
+        captured['ua'] = headers.get('User-Agent')
         return DummyResp()
 
-    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+    monkeypatch.setattr(server.requests, 'get', fake_get)
 
     server.fetch_definition('apple')
 
@@ -482,9 +472,9 @@ def test_fetch_definition_offline_fallback(monkeypatch, server_env):
     server, _ = server_env
 
     def fail(*a, **k):
-        raise server.urllib.error.URLError('offline')
+        raise server.requests.RequestException('offline')
 
-    monkeypatch.setattr(server.urllib.request, 'urlopen', fail)
+    monkeypatch.setattr(server.requests, 'get', fail)
 
     definition = server.fetch_definition('crane')
     assert definition == 'a large bird or lifting machine'
