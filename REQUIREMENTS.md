@@ -32,6 +32,7 @@ overview and should be kept up to date as features evolve.
   `/reset`.
 - **Close Call Notification:** When two players submit the winning word within two seconds of each other, display the difference in milliseconds between their submissions.
 - **Daily Double Bonus:** One random tile (not on the final row) contains a bonus. When a player turns it green, they may privately reveal one tile on the next row. Only that player sees the letter.
+- The client must display a persistent hint indicator whenever the player has an unused Daily Double bonus.
 
 ## 2. UI/UX
 

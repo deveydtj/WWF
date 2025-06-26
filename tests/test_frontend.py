@@ -175,6 +175,7 @@ def test_message_containers_exist():
     text = INDEX.read_text(encoding='utf-8')
     assert '<p id="message"' in text
     assert '<div id="messagePopup"' in text
+    assert '<div id="ariaLive"' in text
 
 
 def test_show_message_desktop_behavior():
@@ -304,3 +305,26 @@ console.log(document.body.dataset.mode);
         capture_output=True, text=True, check=True
     )
     assert result.stdout.strip() == 'medium'
+
+
+def test_announce_updates_live_region():
+    script = """
+import { announce } from './frontend/static/js/utils.js';
+const el = { textContent: '' };
+global.document = { getElementById(){ return el; } };
+announce('hello');
+console.log(el.textContent);
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip() == 'hello'
+
+
+def test_ghost_tile_has_outline():
+    css = read_css()
+    pattern = r"\.tile\.ghost\s*{[^}]*opacity:\s*0\.4;[^}]*border:\s*2px" \
+              r"[^;]*var\(--text-color\)[^}]*outline:\s*2px" \
+              r"[^;]*var\(--text-color\)"
+    assert re.search(pattern, css, flags=re.DOTALL)
