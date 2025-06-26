@@ -50,6 +50,11 @@ The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
 or the network is unavailable, definitions are loaded from
 `offline_definitions.json`.
 
+The server also exposes a **Server-Sent Events** endpoint at `/stream` which
+pushes game state updates to connected clients in real time. The frontend
+subscribes to this stream and falls back to periodic polling if the connection
+drops.
+
 ## Point System
 
 Points are shared across all players on the leaderboard. Letter discoveries are
