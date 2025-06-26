@@ -1,7 +1,7 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
-import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage } from './api.js';
+import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton,
@@ -73,6 +73,7 @@ const INACTIVE_DELAY = 60000; // 1 minute
 let lastActivity = Date.now();
 let pollTimer;
 let currentInterval = FAST_INTERVAL;
+let eventSource = null;
 
 if (isMobile) {
   guessInput.readOnly = true;
@@ -407,7 +408,7 @@ async function submitGuessHandler() {
 
 function onActivity() {
   lastActivity = Date.now();
-  if (currentInterval !== FAST_INTERVAL) startPolling(FAST_INTERVAL);
+  if (!eventSource && currentInterval !== FAST_INTERVAL) startPolling(FAST_INTERVAL);
   sendHeartbeat(myEmoji);
   fetchState();
 }
@@ -421,8 +422,23 @@ function startPolling(interval) {
 
 // Slow down polling when the user has been inactive for a while
 function checkInactivity() {
-  if (Date.now() - lastActivity > INACTIVE_DELAY && currentInterval !== SLOW_INTERVAL) {
+  if (!eventSource && Date.now() - lastActivity > INACTIVE_DELAY && currentInterval !== SLOW_INTERVAL) {
     startPolling(SLOW_INTERVAL);
+  }
+}
+
+function initEventStream() {
+  eventSource = subscribeToUpdates((state) => {
+    applyState(state);
+  });
+  if (eventSource) {
+    eventSource.onerror = () => {
+      eventSource.close();
+      eventSource = null;
+      startPolling(FAST_INTERVAL);
+    };
+  } else {
+    startPolling(FAST_INTERVAL);
   }
 }
 
@@ -517,7 +533,7 @@ if (window.innerWidth > 900) {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 }
 fetchState();
-startPolling(FAST_INTERVAL);
+initEventStream();
 setInterval(checkInactivity, 5000);
 document.addEventListener('keydown', onActivity);
 document.addEventListener('click', onActivity);

@@ -49,3 +49,15 @@ export async function getChatMessages() {
   if (!r.ok) throw new Error('Network response was not OK');
   return r.json();
 }
+
+export function subscribeToUpdates(onMessage) {
+  if (!window.EventSource) return null;
+  const es = new EventSource('/stream');
+  es.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      onMessage(data);
+    } catch {}
+  };
+  return es;
+}
