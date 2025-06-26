@@ -72,7 +72,7 @@ as they are completed.
   - Unit test badge visibility and disappearance.
   - Integration test a reconnect scenario showing the hint after reload.
   - A11y test for ARIA messages and color contrast compliance.
-- [ ] Analytics (optional):
+  - [x] Analytics (optional):
   - Log a `daily_double_used` event server-side with timestamp and player ID.
 
 ## Chat Box
