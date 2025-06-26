@@ -626,7 +626,7 @@ def test_close_call_not_triggered(monkeypatch, server_env):
     request.remote_addr = '1'
     server.guess_word()
 
-    monkeypatch.setattr(server.time, 'time', lambda: 2.5)
+    monkeypatch.setattr(server.time, 'time', lambda: 3.5)
     request.json = {'guess': server.target_word, 'emoji': '😎'}
     request.remote_addr = '2'
     resp = server.guess_word()
@@ -635,6 +635,83 @@ def test_close_call_not_triggered(monkeypatch, server_env):
     data, status = resp
     assert status == 403
     assert 'close_call' not in data
+
+
+def test_daily_double_awarded(monkeypatch, server_env):
+    server, request = server_env
+    server.daily_double_index = 0
+
+    monkeypatch.setattr(server.time, 'time', lambda: 1.0)
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+
+    assert resp['daily_double'] is True
+
+
+def test_daily_double_not_awarded(server_env):
+    server, request = server_env
+    server.daily_double_index = 5  # row 1 first tile
+
+    request.json = {'guess': 'enter', 'emoji': '😀'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+
+    assert resp['daily_double'] is False
+
+
+def test_hint_selection_for_daily_double_winner(server_env):
+    server, request = server_env
+    server.daily_double_index = 0
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    request.json = {'emoji': '😀', 'col': 2}
+    resp = server.select_hint()
+
+    assert resp['status'] == 'ok'
+    assert resp['row'] == 1
+    assert resp['letter'] == server.target_word[2]
+    assert '😀' not in server.daily_double_pending
+
+
+def test_hint_selection_invalid_player(server_env):
+    server, request = server_env
+    server.daily_double_index = 0
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    request.json = {'emoji': '😎', 'col': 2}
+    request.remote_addr = '2'
+    resp = server.select_hint()
+
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status in (400, 403)
+
+
+def test_hint_cannot_be_used_twice(server_env):
+    server, request = server_env
+    server.daily_double_index = 0
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    request.json = {'emoji': '😀', 'col': 2}
+    request.remote_addr = '1'
+    first = server.select_hint()
+    assert first['status'] == 'ok'
+
+    request.json = {'emoji': '😀', 'col': 1}
+    second = server.select_hint()
+    assert isinstance(second, tuple)
+    data, status = second
+    assert status == 400
 
 
 def test_chat_post_and_get(server_env):

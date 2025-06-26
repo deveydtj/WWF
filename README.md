@@ -20,8 +20,10 @@ track of guesses and scores.
 - **Inactive player detection** – entries on the leaderboard fade if a player has not
   acted for several minutes.
 - **Info pop‑up** in the options menu explaining gameplay and scoring.
-- **"Close call" notification** if another player submits the winning word less than a
-  second before you.
+- **"Close call" notification** if another player submits the winning word within
+  two seconds of your own guess.
+- **Daily Double** bonus that awards a hidden letter when you uncover a special tile.
+  The qualifying player may privately reveal one tile on the next row.
 
 ## Requirements
 

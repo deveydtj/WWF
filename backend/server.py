@@ -38,6 +38,8 @@ else:
     requests = _requests
 import logging
 import re
+
+CLOSE_CALL_WINDOW = 2.0  # seconds
 import html
 import threading
 import queue
@@ -86,6 +88,11 @@ chat_messages = []     # list of chat messages
 listeners = set()      # SSE client queues
 emoji_lock = threading.Lock()  # guard emoji selection operations
 
+# Daily Double state
+daily_double_index = None  # board tile index (0-based) containing the bonus
+daily_double_winners = set()  # emojis that triggered the bonus
+daily_double_pending = {}  # emoji -> row index eligible for hint selection
+
 
 def sanitize_definition(text: str) -> str:
     """Remove HTML tags and extra whitespace from a definition."""
@@ -100,6 +107,7 @@ def _reset_state() -> None:
     ip_to_emoji.clear()
     global winner_emoji, target_word, is_over, definition
     global last_word, last_definition, win_timestamp
+    global daily_double_index, daily_double_winners, daily_double_pending
     winner_emoji = None
     target_word = ""
     guesses.clear()
@@ -112,6 +120,9 @@ def _reset_state() -> None:
     last_definition = None
     win_timestamp = None
     chat_messages.clear()
+    daily_double_index = None
+    daily_double_winners.clear()
+    daily_double_pending.clear()
 
 
 def save_data():
@@ -129,7 +140,10 @@ def save_data():
         "last_word": last_word,
         "last_definition": last_definition,
         "win_timestamp": win_timestamp,
-        "chat_messages": chat_messages
+        "chat_messages": chat_messages,
+        "daily_double_index": daily_double_index,
+        "daily_double_winners": list(daily_double_winners),
+        "daily_double_pending": daily_double_pending
     }
     with open(GAME_FILE, "w") as f:
         json.dump(data, f)
@@ -139,6 +153,7 @@ def load_data():
     global WORDS, leaderboard, ip_to_emoji, winner_emoji
     global target_word, guesses, is_over, found_greens, found_yellows, past_games, definition
     global last_word, last_definition, win_timestamp, chat_messages
+    global daily_double_index, daily_double_winners, daily_double_pending
 
     # Load word list
     with open(WORDS_FILE) as f:
@@ -162,6 +177,9 @@ def load_data():
                 last_definition = data.get("last_definition")
                 win_timestamp = data.get("win_timestamp")
                 chat_messages[:] = data.get("chat_messages", [])
+                daily_double_index = data.get("daily_double_index")
+                daily_double_winners = set(data.get("daily_double_winners", []))
+                daily_double_pending = data.get("daily_double_pending", {})
             except Exception:
                 _reset_state()
     else:
@@ -171,6 +189,7 @@ def load_data():
 def pick_new_word():
     """Choose a new target word and reset all in-memory game state."""
     global target_word, guesses, is_over, winner_emoji, found_greens, found_yellows, definition, win_timestamp
+    global daily_double_index, daily_double_winners, daily_double_pending
     target_word = random.choice(WORDS)
     guesses.clear()
     is_over = False
@@ -179,6 +198,9 @@ def pick_new_word():
     found_yellows = set()
     definition = None
     win_timestamp = None
+    daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
+    daily_double_winners.clear()
+    daily_double_pending.clear()
 
 def fetch_definition(word):
     """Look up a word's definition online with an offline JSON fallback."""
@@ -418,7 +440,7 @@ def guess_word():
         close_call = None
         if guess == target_word and win_timestamp and emoji != winner_emoji:
             diff = now - win_timestamp
-            if diff <= 1:
+            if diff <= CLOSE_CALL_WINDOW:
                 close_call = {"delta_ms": int(diff * 1000), "winner": winner_emoji}
         resp = {"status": "error", "msg": "Game is over. Please reset."}
         if close_call:
@@ -438,10 +460,20 @@ def guess_word():
     if not ok:
         return jsonify({"status": "error", "msg": msg}), 400
 
+    row_index = len(guesses)
     result = result_for_guess(guess, target_word)
     new_entry = {"guess": guess, "result": result, "emoji": emoji, "ts": now}
     already_guessed = any(g["guess"] == guess for g in guesses)
     guesses.append(new_entry)
+
+    dd_award = False
+    if daily_double_index is not None:
+        dd_row = daily_double_index // 5
+        dd_col = daily_double_index % 5
+        if row_index == dd_row and result[dd_col] == "correct" and emoji not in daily_double_winners:
+            daily_double_winners.add(emoji)
+            daily_double_pending[emoji] = row_index + 1
+            dd_award = True
 
     # Points logic: Only award for globally new discoveries!
     global_found_this_turn = set()
@@ -503,8 +535,37 @@ def guess_word():
         "pointsDelta": points_delta,
         "state": resp_state,
         "won": won,
-        "over": over
+        "over": over,
+        "daily_double": dd_award
     })
+
+
+@app.route("/hint", methods=["POST"])
+def select_hint():
+    """Allow a Daily Double winner to reveal a letter in the next row."""
+    data = request.get_json(silent=True) or {}
+    emoji = data.get("emoji")
+    col = data.get("col")
+    ip = get_client_ip()
+
+    if emoji not in leaderboard or leaderboard[emoji]["ip"] != ip:
+        return jsonify({"status": "error", "msg": "Invalid player."}), 403
+
+    if emoji not in daily_double_pending:
+        return jsonify({"status": "error", "msg": "No hint available."}), 400
+
+    try:
+        col = int(col)
+    except (TypeError, ValueError):
+        return jsonify({"status": "error", "msg": "Invalid column."}), 400
+
+    if not 0 <= col < 5:
+        return jsonify({"status": "error", "msg": "Invalid column."}), 400
+
+    row = daily_double_pending.pop(emoji)
+    letter = target_word[col]
+    save_data()
+    return jsonify({"status": "ok", "row": row, "col": col, "letter": letter})
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():

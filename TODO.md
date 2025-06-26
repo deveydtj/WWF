@@ -15,10 +15,10 @@ as they are completed.
 - [x] Sanitize definition text received from the backend before display.
 - [x] Handle race conditions when two players attempt to select the same emoji.
 - [x] Allow polling interval to decrease when no users are active.
-- [ ] Close-Call Expansion: Detect "same-word" submissions that occur within two
+- [x] Close-Call Expansion: Detect "same-word" submissions that occur within two
   seconds and include the milliseconds difference in the `/guess` response for
   all involved players.
-- [ ] Daily Double State:
+- [x] Daily Double State:
   - Randomly assign a hidden "Daily Double" tile each game (never on the last
     row).
   - Persist tile index server-side and expose a per-player flag when they
