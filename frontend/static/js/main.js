@@ -60,6 +60,8 @@ const stampContainer = document.getElementById('stampContainer');
 const closeCallPopup = document.getElementById('closeCallPopup');
 const closeCallText = document.getElementById('closeCallText');
 const closeCallOk = document.getElementById('closeCallOk');
+// Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
+closeCallPopup.style.display = 'none';
 const chatNotify = document.getElementById('chatNotify');
 const infoPopup = document.getElementById('infoPopup');
 const infoClose = document.getElementById('infoClose');
@@ -227,6 +229,17 @@ async function performReset() {
   showMessage('Game reset!', { messageEl, messagePopup });
 }
 
+async function quickResetHandler() {
+  // Ensure our view is up to date before attempting a one-click reset.
+  await fetchState();
+  if (!latestState.is_over) {
+    // Another player already started a new round; switch to hold-to-reset mode.
+    showMessage('Board already reset.', { messageEl, messagePopup });
+    return;
+  }
+  await performReset();
+}
+
 function updateResetButton() {
   if (gameOver) {
     holdResetText.textContent = 'Reset';
@@ -234,7 +247,7 @@ function updateResetButton() {
     holdResetProgress.style.opacity = '0';
     holdReset.onmousedown = null;
     holdReset.ontouchstart = null;
-    holdReset.onclick = () => { performReset(); };
+    holdReset.onclick = () => { quickResetHandler(); };
   } else {
     holdResetText.textContent = 'Reset';
     holdResetProgress.style.opacity = '0.9';
