@@ -30,7 +30,8 @@ overview and should be kept up to date as features evolve.
 - **Reset:** If the game is over, a reset button instantly starts a new game. If
   the game is ongoing, the button must be held for two seconds before posting to
   `/reset`.
-- **Close Call Notification:** When two players submit the winning word within one second of each other, display the difference in milliseconds between their submissions.
+- **Close Call Notification:** When two players submit the winning word within two seconds of each other, display the difference in milliseconds between their submissions.
+- **Daily Double Bonus:** One random tile (not on the final row) contains a bonus. When a player turns it green, they may privately reveal one tile on the next row. Only that player sees the letter.
 
 ## 2. UI/UX
 
@@ -61,7 +62,7 @@ overview and should be kept up to date as features evolve.
   objects as defined in the project overview.
 - Clients subscribe to `/stream` using Server-Sent Events for real-time updates
   and fall back to polling `/state` if the stream disconnects.
-- `/guess` responses include a `close_call` object when another player submits the winning word within one second of the winner. Each guess record stores a timestamp so the server can report the milliseconds difference.
+- `/guess` responses include a `close_call` object when another player submits the winning word within two seconds of the winner. Each guess record stores a timestamp so the server can report the milliseconds difference.
 
 ## 4. Technical Constraints
 
