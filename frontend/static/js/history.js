@@ -1,3 +1,9 @@
+/**
+ * Render the history sidebar showing all previous guesses.
+ *
+ * @param {HTMLElement} container - UL/OL element that receives list items.
+ * @param {Array} guesses - Combined guess history.
+ */
 export function renderHistory(container, guesses) {
   container.innerHTML = '';
   for (let i = guesses.length - 1; i >= 0; i--) {

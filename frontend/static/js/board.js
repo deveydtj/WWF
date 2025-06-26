@@ -1,3 +1,9 @@
+/**
+ * Build an empty game board consisting of ``rows`` rows of tiles.
+ *
+ * @param {HTMLElement} board - Container element.
+ * @param {number} [rows=6] - Number of rows to generate.
+ */
 export function createBoard(board, rows = 6) {
   board.innerHTML = '';
   for (let i = 0; i < rows * 5; i++) {
@@ -58,12 +64,24 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
   }
 }
 
+/**
+ * Play the reset animation that slides tiles off the board.
+ *
+ * @param {HTMLElement} board - Game board element.
+ * @returns {Promise<void>} Resolves when animation completes.
+ */
 export function animateTilesOut(board) {
   const tiles = Array.from(board.children);
   tiles.forEach(t => t.classList.add('reset-out'));
   return new Promise(resolve => setTimeout(resolve, 250));
 }
 
+/**
+ * Slide tiles back in after a reset animation.
+ *
+ * @param {HTMLElement} board - Board element.
+ * @returns {Promise<void>} Resolves after tiles animate in.
+ */
 export function animateTilesIn(board) {
   const tiles = Array.from(board.children);
   tiles.forEach(t => {
@@ -73,6 +91,11 @@ export function animateTilesIn(board) {
   return new Promise(resolve => setTimeout(resolve, 250));
 }
 
+/**
+ * Clear all status classes from the on-screen keyboard.
+ *
+ * @param {HTMLElement} keyboard - Keyboard container.
+ */
 export function resetKeyboard(keyboard) {
   Array.from(keyboard.querySelectorAll('.key')).forEach(key => {
     key.classList.remove('correct', 'present', 'absent');
@@ -82,6 +105,9 @@ export function resetKeyboard(keyboard) {
 /**
  * Update the on-screen keyboard colors based on prior guesses.
  * Later guesses override earlier ones so the highest information wins.
+ *
+ * @param {HTMLElement} keyboard - Keyboard container.
+ * @param {Array} guesses - List of guess objects from the server.
  */
 export function updateKeyboardFromGuesses(keyboard, guesses) {
   resetKeyboard(keyboard);
@@ -104,6 +130,9 @@ export function updateKeyboardFromGuesses(keyboard, guesses) {
 
 /**
  * Derive required letters and fixed positions from previous guesses.
+ *
+ * @param {Array} guesses - Guess history from the server.
+ * @returns {{requiredLetters:Set<string>, greenPositions:Object}}
  */
 export function updateHardModeConstraints(guesses) {
   const requiredLetters = new Set();
@@ -122,7 +151,13 @@ export function updateHardModeConstraints(guesses) {
 }
 
 /**
- * Validate a guess against the hard mode constraints and show errors.
+ * Validate a guess against the hard mode constraints and report errors.
+ *
+ * @param {string} guess
+ * @param {Set<string>} requiredLetters
+ * @param {Object} greenPositions
+ * @param {(msg:string)=>void} showMessage - Callback for errors.
+ * @returns {boolean} True when the guess meets all constraints.
  */
 export function isValidHardModeGuess(guess, requiredLetters, greenPositions, showMessage) {
   for (const index in greenPositions) {

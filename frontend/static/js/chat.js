@@ -1,3 +1,9 @@
+/**
+ * Render chat messages into the chat panel.
+ *
+ * @param {HTMLElement} container - Chat message container.
+ * @param {Array} messages - Array of chat objects {emoji, text}.
+ */
 export function renderChat(container, messages) {
   // If messages were cleared (e.g., new game), reset the container
   if (messages.length < container.childElementCount) {

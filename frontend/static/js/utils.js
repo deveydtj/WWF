@@ -1,7 +1,17 @@
+/**
+ * Basic mobile device check used to tailor UI behavior.
+ * @type {boolean}
+ */
 export const isMobile =
   typeof navigator !== 'undefined' &&
   /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+/**
+ * Display a transient message to the user.
+ *
+ * @param {string} msg
+ * @param {{messageEl:HTMLElement, messagePopup:HTMLElement}} param1
+ */
 export function showMessage(msg, {messageEl, messagePopup}) {
   if (isMobile) {
     messagePopup.textContent = msg;
@@ -26,6 +36,11 @@ export function showMessage(msg, {messageEl, messagePopup}) {
   }
 }
 
+/**
+ * Update the ARIA live region with a message for screen readers.
+ *
+ * @param {string} text
+ */
 export function announce(text) {
   const el = typeof document !== 'undefined' ? document.getElementById('ariaLive') : null;
   if (el) {
@@ -33,6 +48,11 @@ export function announce(text) {
   }
 }
 
+/**
+ * Sync the UI with the stored dark mode preference.
+ *
+ * @param {HTMLElement} toggle - The dark mode toggle button.
+ */
 export function applyDarkModePreference(toggle) {
   const prefersDark = localStorage.getItem('darkMode') === 'true';
   document.body.classList.toggle('dark-mode', prefersDark);
@@ -40,6 +60,11 @@ export function applyDarkModePreference(toggle) {
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
 
+/**
+ * Apply a shake animation to indicate invalid input.
+ *
+ * @param {HTMLElement} input
+ */
 export function shakeInput(input) {
   input.style.animation = 'shake 0.4s';
   input.addEventListener('animationend', () => {
@@ -47,6 +72,9 @@ export function shakeInput(input) {
   }, { once: true });
 }
 
+/**
+ * Move the reset button based on viewport width.
+ */
 export function repositionResetButton() {
   const resetWrapper = document.getElementById('resetWrapper');
   const titleBar = document.getElementById('titleBar');
@@ -60,6 +88,14 @@ export function repositionResetButton() {
   }
 }
 
+/**
+ * Position the side panels relative to the board depending on width.
+ *
+ * @param {HTMLElement} boardArea
+ * @param {HTMLElement} historyBox
+ * @param {HTMLElement} definitionBox
+ * @param {HTMLElement} [chatBox]
+ */
 export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox) {
   if (window.innerWidth > 900) {
     const boardRect = boardArea.getBoundingClientRect();
@@ -95,11 +131,17 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
 }
 
 
+/**
+ * Update the CSS `--vh` custom property to handle mobile browser chrome.
+ */
 export function updateVH() {
   const vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);
 }
 
+/**
+ * Set the layout mode (light/medium/full) based on viewport width.
+ */
 export function applyLayoutMode() {
   const width = window.innerWidth;
   let mode = 'full';
@@ -129,6 +171,12 @@ export function applyLayoutMode() {
   }
 }
 
+/**
+ * Place a popup near an anchor element while clamping to the viewport.
+ *
+ * @param {HTMLElement} popup
+ * @param {HTMLElement} anchor
+ */
 export function positionPopup(popup, anchor) {
   const rect = anchor.getBoundingClientRect();
   const menuWidth = popup.offsetWidth;
@@ -193,12 +241,22 @@ function trapFocus(dialog) {
   return handler;
 }
 
+/**
+ * Trap focus inside a dialog until it is closed.
+ *
+ * @param {HTMLElement} dialog
+ */
 export function openDialog(dialog) {
   lastFocused = document.activeElement;
   trappedDialog = dialog;
   trapHandler = trapFocus(dialog);
 }
 
+/**
+ * Close a dialog and restore focus to the previous element.
+ *
+ * @param {HTMLElement} dialog
+ */
 export function closeDialog(dialog) {
   dialog.style.display = 'none';
   if (trapHandler) {
@@ -211,6 +269,11 @@ export function closeDialog(dialog) {
   trappedDialog = null;
 }
 
+/**
+ * Focus the first focusable element within a container.
+ *
+ * @param {HTMLElement} container
+ */
 export function focusFirstElement(container) {
   const focusable = getFocusable(container);
   if (focusable.length) {
@@ -221,6 +284,12 @@ export function focusFirstElement(container) {
   }
 }
 
+/**
+ * Display a popup anchored to a button or element.
+ *
+ * @param {HTMLElement} popup
+ * @param {HTMLElement} anchor
+ */
 export function showPopup(popup, anchor) {
   popup.style.display = 'block';
   positionPopup(popup, anchor);

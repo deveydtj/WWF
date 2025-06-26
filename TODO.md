@@ -85,7 +85,7 @@ as they are completed.
 ## Code Quality
 
 - [ ] Expand unit tests to cover additional API and UI logic.
-- [ ] Document public functions in the JavaScript code.
+- [x] Document public functions in the JavaScript code.
 - [x] Add integration tests for Close-Call and Daily Double scenarios.
 - [ ] Keep this TODO list updated as new issues are discovered.
 
