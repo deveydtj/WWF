@@ -15,9 +15,13 @@
 
         #optionsToggle {
           display: block;
+          left: auto;
+          right: 0;
         }
         #chatNotify {
           display: block;
+          left: auto;
+          right: 0;
         }
 
       #historyBox {
@@ -215,6 +219,12 @@
 
       #optionsToggle {
         display: block;
+        left: auto;
+        right: 0;
+      }
+      #chatNotify {
+        left: auto;
+        right: 0;
       }
 
       body[data-mode='medium'] #historyClose,
