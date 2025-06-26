@@ -45,6 +45,10 @@ overview and should be kept up to date as features evolve.
 - All interactive elements must be accessible via keyboard and screen readers.
 - Popups opened from the options menu use a shared positioning helper so they
   remain fully visible on small screens.
+- Modal Popups (non-side-panel):
+  - Can be dismissed by clicking/tapping anywhere outside the popup (click-off dismissal).
+  - Display a softly blurred page backdrop while open, reducing visual noise and directing focus to the modal.
+  - Retain all existing accessibility guarantees (keyboard focus trap, ESC to close, ARIA roles, etc.).
 
 ## 3. Server Integration
 
@@ -70,6 +74,7 @@ overview and should be kept up to date as features evolve.
   keyboard; desktop supports both.
 - On mobile, the viewport `--vh` custom property is updated on resize to account
   for browser chrome.
+- Blurred popup backdrop must be implemented with vanilla CSS only (e.g., `backdrop-filter`).
 
 ## 5. Extensibility
 
