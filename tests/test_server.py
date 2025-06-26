@@ -752,3 +752,26 @@ def test_chat_post_and_get(server_env):
     data = server.chat()
     assert data['messages'][-1]['text'] == 'hello'
 
+
+def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
+    server, request = server_env
+    server.daily_double_index = 0
+    log_file = tmp_path / 'analytics.log'
+    monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    request.json = {'emoji': '😀', 'col': 2}
+    request.remote_addr = '1'
+    resp = server.select_hint()
+    assert resp['status'] == 'ok'
+
+    with open(log_file) as f:
+        line = f.readline()
+    entry = json.loads(line)
+    assert entry['event'] == 'daily_double_used'
+    assert entry['emoji'] == '😀'
+    assert entry['ip'] == '1'
+

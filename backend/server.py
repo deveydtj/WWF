@@ -55,6 +55,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 WORDS_FILE = BASE_DIR / "sgb-words.txt"
 GAME_FILE = BASE_DIR / "game_persist.json"
+ANALYTICS_FILE = BASE_DIR / "analytics.log"
 MAX_ROWS = 6
 
 # Standard Scrabble letter values used for scoring
@@ -360,6 +361,21 @@ def broadcast_state() -> None:
         except Exception:
             listeners.discard(q)
 
+
+def log_daily_double_used(emoji: str, ip: str) -> None:
+    """Append a Daily Double usage event to the analytics log."""
+    entry = {
+        "event": "daily_double_used",
+        "emoji": emoji,
+        "ip": ip,
+        "timestamp": time.time(),
+    }
+    try:
+        with open(ANALYTICS_FILE, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:  # pragma: no cover - logging failures shouldn't break API
+        logging.info(f"Failed to log analytics event: {e}")
+
 # ---- API Routes ----
 
 @app.route("/stream")
@@ -582,6 +598,7 @@ def select_hint():
     row = daily_double_pending.pop(emoji)
     letter = target_word[col]
     save_data()
+    log_daily_double_used(emoji, ip)
     return jsonify({
         "status": "ok",
         "row": row,
