@@ -1,7 +1,8 @@
 # Wordle With Friends (WWF)
 
-A small multiplayer adaptation of Wordle. The frontend lives in `index.html` while
-`server.py` provides a Flask API that keeps track of guesses and scores.
+A small multiplayer adaptation of Wordle. The frontend lives under the
+`frontend/` directory while `backend/server.py` provides a Flask API that keeps
+track of guesses and scores.
 
 ## Game Features
 
@@ -39,7 +40,7 @@ pip install Flask Flask-Cors
 From the project root, run:
 
 ```bash
-python server.py
+python backend/server.py
 ```
 
 The server loads its words from `sgb-words.txt` and stores state in
@@ -78,13 +79,12 @@ is required for the full suite to run successfully.
 
 ## Repository layout
 
-- `server.py` – Flask backend
-- `index.html` – browser client
-- `static/css/theme.css` – neumorphic theme styles
-- `static/css/layout.css` – responsive layout rules
+- `backend/server.py` – Flask backend
+- `frontend/index.html` – browser client
+- `frontend/static/css/theme.css` – color theme styles
+- `frontend/static/css/layout.css` – layout and responsive rules
 - `sgb-words.txt` – word list used by the game
-- `tests/` – Pytest suite
-- `static/js/` – modular JavaScript loaded by `index.html`
+- `frontend/static/js/` – modular JavaScript loaded by `index.html`
 - `offline_definitions.json` – fallback word definitions
 - `package.json` – Node settings used by frontend tests
 

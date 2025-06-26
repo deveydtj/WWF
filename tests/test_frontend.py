@@ -2,10 +2,10 @@ import re
 from pathlib import Path
 import subprocess, json
 
-INDEX = Path('index.html')
-CSS_THEME = Path('static/css/theme.css')
-CSS_LAYOUT = Path('static/css/layout.css')
-SRC_DIR = Path('static/js')
+INDEX = Path('frontend/index.html')
+CSS_THEME = Path('frontend/static/css/theme.css')
+CSS_LAYOUT = Path('frontend/static/css/layout.css')
+SRC_DIR = Path('frontend/static/js')
 
 def read_css():
     return CSS_THEME.read_text(encoding='utf-8') + CSS_LAYOUT.read_text(encoding='utf-8')
@@ -152,7 +152,7 @@ def test_message_containers_exist():
 
 def test_show_message_desktop_behavior():
     script = """
-import { showMessage } from './static/js/utils.js';
+import { showMessage } from './frontend/static/js/utils.js';
 const messageEl = { style: {}, textContent: '', addEventListener(){} };
 const messagePopup = { style: {}, textContent: '', addEventListener(){} };
 showMessage('Hi', { messageEl, messagePopup });
@@ -169,7 +169,7 @@ console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.v
 
 def test_show_message_hides_when_empty():
     script = """
-import { showMessage } from './static/js/utils.js';
+import { showMessage } from './frontend/static/js/utils.js';
 const messageEl = { style: {}, textContent: '', addEventListener(){} };
 const messagePopup = { style: {}, textContent: '', addEventListener(){} };
 showMessage('', { messageEl, messagePopup });
@@ -185,7 +185,7 @@ console.log(JSON.stringify({ text: messageEl.textContent, vis: messageEl.style.v
 
 def test_position_side_panels_full_mode():
     script = """
-import { positionSidePanels } from './static/js/utils.js';
+import { positionSidePanels } from './frontend/static/js/utils.js';
 
 const boardArea = {
   getBoundingClientRect() { return { top: 100, left: 200, right: 400 }; }
@@ -219,7 +219,7 @@ console.log(JSON.stringify({
 
 def test_position_side_panels_reset_small_mode():
     script = """
-import { positionSidePanels } from './static/js/utils.js';
+import { positionSidePanels } from './frontend/static/js/utils.js';
 
 const boardArea = { getBoundingClientRect() { return { top: 0, left: 0, right: 0 }; } };
 const historyBox = { style: { position: 'absolute', top: '10px', left: '20px' } };

@@ -63,7 +63,7 @@ def load_server():
     sys.modules['flask'] = flask_stub
     sys.modules['flask_cors'] = cors_stub
 
-    server = importlib.import_module('server')
+    server = importlib.import_module('backend.server')
     importlib.reload(server)
 
     return server, request

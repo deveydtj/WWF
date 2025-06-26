@@ -460,17 +460,18 @@ def reset_game():
 
 @app.route("/")
 def index():
-    return send_from_directory(".", "index.html")
+    # Serve the bundled frontend from the new directory
+    return send_from_directory("frontend", "index.html")
 
 # Serve static JavaScript modules
 @app.route('/js/<path:filename>')
 def js_files(filename):
-    return send_from_directory('static/js', filename)
+    return send_from_directory('frontend/static/js', filename)
 
 # Serve CSS assets
 @app.route('/css/<path:filename>')
 def css_files(filename):
-    return send_from_directory('static/css', filename)
+    return send_from_directory('frontend/static/css', filename)
 
 if __name__ == "__main__":
     load_data()

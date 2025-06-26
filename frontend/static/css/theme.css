@@ -1,0 +1,77 @@
+:root {
+  --bg-color: #e0e5ec;
+  --text-color: #3d4a5a;
+  --text-color-light: #5a677a;
+  --shadow-color-dark: #bec3c9;
+  --shadow-color-light: #ffffff;
+  --inset-shadow-dark: #bec3c9;
+  --inset-shadow-light: #ffffff;
+  --tile-bg: #e0e5ec;
+  --key-bg: #e0e5ec;
+  --key-text: #5a677a;
+  --correct-bg: #6aaa64;
+  --present-bg: #c9b458;
+  --absent-bg: #787c7e;
+  --correct-shadow-dark: #5a9354;
+  --correct-shadow-light: #7ccc74;
+  --present-shadow-dark: #b09d4d;
+  --present-shadow-light: #e2cb63;
+  --absent-shadow-dark: #666a6c;
+  --absent-shadow-light: #8a8e90;
+  --border-color: transparent;
+}
+
+body.dark-mode {
+  --bg-color: #2c303a;
+  --text-color: #d1d1d1;
+  --text-color-light: #b0b8c4;
+  --shadow-color-dark: #1f2229;
+  --shadow-color-light: #393e4b;
+  --inset-shadow-dark: #1f2229;
+  --inset-shadow-light: #393e4b;
+  --tile-bg: #2c303a;
+  --key-bg: #4f5564;
+  --absent-bg: #3a3a3c;
+  --key-text: #e1e1e1;
+  --correct-bg: #538d4e;
+  --present-bg: #b59f3b;
+  --correct-shadow-dark: #416d3e;
+  --correct-shadow-light: #65ab5e;
+  --present-shadow-dark: #8f7c2d;
+  --present-shadow-light: #dbc249;
+  --absent-shadow-dark: #2e2e30;
+  --absent-shadow-light: #464648;
+  --border-color: #4a4a4f;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.emoji-choice:hover {
+  border: 2px solid var(--correct-bg);
+}
+
+#message.positive { color: var(--correct-bg); }
+#message.negative { color: #ba1c1c; }
+
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+#definitionBox,
+#chatBox {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
