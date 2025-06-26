@@ -84,6 +84,7 @@ last_definition = None  # definition of last completed word
 win_timestamp = None   # timestamp when the winning guess was submitted
 chat_messages = []     # list of chat messages
 listeners = set()      # SSE client queues
+emoji_lock = threading.Lock()  # guard emoji selection operations
 
 
 def sanitize_definition(text: str) -> str:
@@ -372,24 +373,31 @@ def set_emoji():
     if not emoji or not isinstance(emoji, str):
         return jsonify({"status": "error", "msg": "Invalid emoji."}), 400
 
-    if emoji in leaderboard and leaderboard[emoji]["ip"] != ip:
-        return jsonify({"status": "error", "msg": "That emoji is taken!"}), 409
+    with emoji_lock:
+        if emoji in leaderboard and leaderboard[emoji]["ip"] != ip:
+            return (
+                jsonify({"status": "error", "msg": "That emoji is taken!"}),
+                409,
+            )
 
-    prev_emoji = ip_to_emoji.get(ip)
-    if prev_emoji and prev_emoji != emoji:
-        leaderboard.pop(prev_emoji, None)
+        prev_emoji = ip_to_emoji.get(ip)
+        if prev_emoji and prev_emoji != emoji:
+            leaderboard.pop(prev_emoji, None)
 
-    leaderboard[emoji] = leaderboard.get(emoji, {
-        "ip": ip,
-        "score": 0,
-        "used_yellow": [],
-        "used_green": [],
-        "last_active": now
-    })
-    leaderboard[emoji]["ip"] = ip
-    leaderboard[emoji]["last_active"] = now
-    ip_to_emoji[ip] = emoji
-    save_data()
+        leaderboard[emoji] = leaderboard.get(
+            emoji,
+            {
+                "ip": ip,
+                "score": 0,
+                "used_yellow": [],
+                "used_green": [],
+                "last_active": now,
+            },
+        )
+        leaderboard[emoji]["ip"] = ip
+        leaderboard[emoji]["last_active"] = now
+        ip_to_emoji[ip] = emoji
+        save_data()
     broadcast_state()
     return jsonify({"status": "ok"})
 
