@@ -6,9 +6,9 @@ as they are completed.
 
 ## Accessibility
 
-- [ ] Add additional ARIA roles for interactive elements.
- - [x] Implement focus management for keyboard users.
-- [ ] Verify color contrast and adjust themes if necessary.
+- [x] Add additional ARIA roles for interactive elements.
+- [x] Implement focus management for keyboard users.
+- [x] Verify color contrast and adjust themes if necessary.
 
 ## Backend Integration
 

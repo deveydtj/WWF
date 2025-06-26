@@ -19,6 +19,7 @@
   --absent-shadow-dark: #666a6c;
   --absent-shadow-light: #8a8e90;
   --border-color: transparent;
+  --error-color: #ba1c1c;
 }
 
 body.dark-mode {
@@ -42,6 +43,7 @@ body.dark-mode {
   --absent-shadow-dark: #2e2e30;
   --absent-shadow-light: #464648;
   --border-color: #4a4a4f;
+  --error-color: #ff7b7b;
 }
 
 body {
@@ -59,7 +61,7 @@ body {
 }
 
 #message.positive { color: var(--correct-bg); }
-#message.negative { color: #ba1c1c; }
+#message.negative { color: var(--error-color); }
 
 * {
   user-select: none;
