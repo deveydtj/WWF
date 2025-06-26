@@ -146,7 +146,6 @@ function showChatNotify() {
 
 function hideChatNotify() {
   chatNotify.classList.remove('visible');
-  chatNotify.style.display = 'none';
   clearTimeout(chatWiggleTimer);
 }
 

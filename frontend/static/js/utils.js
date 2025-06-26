@@ -29,7 +29,7 @@ export function showMessage(msg, {messageEl, messagePopup}) {
 export function applyDarkModePreference(toggle) {
   const prefersDark = localStorage.getItem('darkMode') === 'true';
   document.body.classList.toggle('dark-mode', prefersDark);
-  toggle.textContent = prefersDark ? '☀️' : '🌙';
+  toggle.textContent = prefersDark ? '☀️ Light Mode' : '🌙 Dark Mode';
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
 
@@ -100,6 +100,22 @@ export function applyLayoutMode() {
     mode = 'light';
   } else if (width <= 900) {
     mode = 'medium';
+  } else {
+    const boardArea = document.getElementById('boardArea');
+    const historyBox = document.getElementById('historyBox');
+    const definitionBox = document.getElementById('definitionBox');
+    if (boardArea && historyBox && definitionBox) {
+      const rect = boardArea.getBoundingClientRect();
+      const leftSpace = rect.left;
+      const rightSpace = width - rect.right;
+      const margin = 60;
+      if (
+        leftSpace < historyBox.offsetWidth + margin ||
+        rightSpace < definitionBox.offsetWidth + margin
+      ) {
+        mode = 'medium';
+      }
+    }
   }
   if (document.body.dataset.mode !== mode) {
     document.body.dataset.mode = mode;
