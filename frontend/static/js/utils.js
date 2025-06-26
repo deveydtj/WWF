@@ -26,6 +26,13 @@ export function showMessage(msg, {messageEl, messagePopup}) {
   }
 }
 
+export function announce(text) {
+  const el = typeof document !== 'undefined' ? document.getElementById('ariaLive') : null;
+  if (el) {
+    el.textContent = text;
+  }
+}
+
 export function applyDarkModePreference(toggle) {
   const prefersDark = localStorage.getItem('darkMode') === 'true';
   document.body.classList.toggle('dark-mode', prefersDark);

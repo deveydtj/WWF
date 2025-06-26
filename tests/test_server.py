@@ -647,6 +647,7 @@ def test_daily_double_awarded(monkeypatch, server_env):
     resp = server.guess_word()
 
     assert resp['daily_double'] is True
+    assert resp['daily_double_available'] is True
 
 
 def test_daily_double_not_awarded(server_env):
@@ -675,6 +676,7 @@ def test_hint_selection_for_daily_double_winner(server_env):
     assert resp['row'] == 1
     assert resp['letter'] == server.target_word[2]
     assert '😀' not in server.daily_double_pending
+    assert resp['daily_double_available'] is False
 
 
 def test_hint_selection_invalid_player(server_env):
@@ -712,6 +714,28 @@ def test_hint_cannot_be_used_twice(server_env):
     assert isinstance(second, tuple)
     data, status = second
     assert status == 400
+
+
+def test_state_reports_daily_double_available(server_env):
+    server, request = server_env
+    server.daily_double_index = 0
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    request.method = 'POST'
+    request.json = {'emoji': '😀'}
+    state = server.state()
+    assert state['daily_double_available'] is True
+
+    request.json = {'emoji': '😀', 'col': 2}
+    request.remote_addr = '1'
+    server.select_hint()
+
+    request.json = {'emoji': '😀'}
+    state2 = server.state()
+    assert state2['daily_double_available'] is False
 
 
 def test_chat_post_and_get(server_env):

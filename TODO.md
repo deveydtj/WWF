@@ -49,6 +49,32 @@ as they are completed.
    - Ghost-style preview for the chosen hint tile.
    - Tooltip/toast informing the player they earned a hint.
 
+## Daily Double Visibility
+
+- [x] State plumbing:
+  - Expose `daily_double_available` in `/state` and `/guess` responses.
+  - Persist the flag in `game_persist.json` and clear it once used or after a reset.
+- [x] HUD indicator:
+  - Show a small "🔍 x1" badge next to the player emoji and in the toolbar while the bonus is unused.
+  - Pulse the badge every few seconds until the hint is taken.
+- [ ] Action affordance:
+  - Display a tooltip when the bonus is earned prompting the next-row reveal.
+  - Disable other input during tile selection.
+  - Provide a keyboard-only path with Space/Enter to activate and arrow keys to choose, announced via ARIA live region.
+- [ ] Feedback & accessibility:
+  - [x] Announce "Daily Double earned" and "Hint applied" via ARIA live messages.
+  - Use a ghost style with high-contrast outline for the revealed tile.
+  - Optional sound jingle when the bonus is granted and spent.
+- [ ] Copy & docs:
+  - Document the feature in the Info popup and note the hint badge in the README.
+  - Add a gameplay requirement for a persistent bonus indicator.
+- [ ] Testing:
+  - Unit test badge visibility and disappearance.
+  - Integration test a reconnect scenario showing the hint after reload.
+  - A11y test for ARIA messages and color contrast compliance.
+- [ ] Analytics (optional):
+  - Log a `daily_double_used` event server-side with timestamp and player ID.
+
 ## Chat Box
 
 - [x] Implement a chat panel for players to send messages during a game.

@@ -314,8 +314,12 @@ def validate_hard_mode(guess):
             return False, f"Guess must contain letter(s): {', '.join(m.upper() for m in missing)}."
     return True, ""
 
-def build_state_payload():
-    """Assemble the full game state dictionary returned to clients."""
+def build_state_payload(emoji: str | None = None):
+    """Assemble the full game state dictionary returned to clients.
+
+    When ``emoji`` is provided, include a ``daily_double_available`` boolean
+    indicating whether that player currently has an unused hint.
+    """
     lb = [
         {
             "emoji": emoji,
@@ -326,7 +330,7 @@ def build_state_payload():
     ]
     lb.sort(key=lambda e: e["score"], reverse=True)
 
-    return {
+    payload = {
         "guesses": guesses,
         "target_word": target_word if is_over else None,
         "is_over": is_over,
@@ -340,6 +344,11 @@ def build_state_payload():
         "last_definition": last_definition,
         "chat_messages": chat_messages,
     }
+
+    if emoji is not None:
+        payload["daily_double_available"] = emoji in daily_double_pending
+
+    return payload
 
 
 def broadcast_state() -> None:
@@ -374,15 +383,22 @@ def stream():
 @app.route("/state", methods=["GET", "POST"])
 def state():
     # ——— Heartbeat: bump AFK timestamp on every client poll ———
+    emoji = None
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         e = data.get("emoji")
         if e and e in leaderboard:
             leaderboard[e]["last_active"] = time.time()
             save_data()
+            emoji = e
+    else:
+        try:
+            emoji = request.args.get("emoji")
+        except Exception:
+            emoji = None
 
     # Build and return current game state
-    return jsonify(build_state_payload())
+    return jsonify(build_state_payload(emoji))
 
 @app.route("/emoji", methods=["POST"])
 def set_emoji():
@@ -527,7 +543,7 @@ def guess_word():
     # — attach this turn’s points so client can render a history
     new_entry["points"] = points_delta
 
-    resp_state = build_state_payload()
+    resp_state = build_state_payload(emoji)
     broadcast_state()
 
     return jsonify({
@@ -536,7 +552,8 @@ def guess_word():
         "state": resp_state,
         "won": won,
         "over": over,
-        "daily_double": dd_award
+        "daily_double": dd_award,
+        "daily_double_available": emoji in daily_double_pending
     })
 
 
@@ -565,7 +582,13 @@ def select_hint():
     row = daily_double_pending.pop(emoji)
     letter = target_word[col]
     save_data()
-    return jsonify({"status": "ok", "row": row, "col": col, "letter": letter})
+    return jsonify({
+        "status": "ok",
+        "row": row,
+        "col": col,
+        "letter": letter,
+        "daily_double_available": False,
+    })
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():

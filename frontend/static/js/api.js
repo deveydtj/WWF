@@ -1,5 +1,6 @@
-export async function getState() {
-  const r = await fetch('/state');
+export async function getState(emoji) {
+  const url = emoji ? `/state?emoji=${encodeURIComponent(emoji)}` : '/state';
+  const r = await fetch(url);
   if (!r.ok) throw new Error('Network response was not OK');
   return r.json();
 }

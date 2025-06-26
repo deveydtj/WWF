@@ -4,7 +4,7 @@ import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
 import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
-import { showMessage, applyDarkModePreference, shakeInput, repositionResetButton,
+import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup } from './utils.js';
 
 let activeEmojis = [];
@@ -27,6 +27,7 @@ let gameOver = false;
 let latestState = null;
 let dailyDoubleRow = null;
 let dailyDoubleHint = null;
+let dailyDoubleAvailable = false;
 
 const board = document.getElementById('board');
 const guessInput = document.getElementById('guessInput');
@@ -62,6 +63,7 @@ const stampContainer = document.getElementById('stampContainer');
 const closeCallPopup = document.getElementById('closeCallPopup');
 const closeCallText = document.getElementById('closeCallText');
 const closeCallOk = document.getElementById('closeCallOk');
+const titleHintBadge = document.getElementById('titleHintBadge');
 // Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
 closeCallPopup.style.display = 'none';
 const chatNotify = document.getElementById('chatNotify');
@@ -177,7 +179,9 @@ function renderLeaderboard() {
     if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
       node.classList.add('inactive');
     }
-    node.innerText = `${entry.emoji} ${entry.score}`;
+    const label = document.createElement('span');
+    label.textContent = `${entry.emoji} ${entry.score}`;
+    node.appendChild(label);
 
     if (entry.emoji === myEmoji) {
       node.style.cursor = 'pointer';
@@ -187,6 +191,12 @@ function renderLeaderboard() {
         const taken = activeEmojis.filter(e => e !== myEmoji);
         showEmojiModal(taken, { onChosen: (e) => { myEmoji = e; fetchState(); }, skipAutoCloseRef: { value: skipAutoClose } });
       });
+      if (dailyDoubleAvailable) {
+        const badge = document.createElement('span');
+        badge.className = 'hint-badge';
+        badge.textContent = '🔍 x1';
+        node.appendChild(badge);
+      }
     }
 
     lb.appendChild(node);
@@ -301,7 +311,9 @@ function applyState(state) {
   latestState = state;
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
+  dailyDoubleAvailable = !!state.daily_double_available;
   renderLeaderboard();
+  titleHintBadge.style.display = dailyDoubleAvailable ? 'inline' : 'none';
 
   if (state.chat_messages) {
     renderChat(chatMessagesEl, state.chat_messages);
@@ -372,7 +384,7 @@ function applyState(state) {
 // Retrieve the latest game state from the server and handle connection issues
 async function fetchState() {
   try {
-    const state = await getState();
+    const state = await getState(myEmoji);
     if (hadNetworkError) {
       showMessage('Reconnected to server.', { messageEl, messagePopup });
     }
@@ -408,6 +420,7 @@ async function submitGuessHandler() {
       dailyDoubleRow = resp.state.guesses.length;
       dailyDoubleHint = null;
       showMessage('Daily Double! Tap a tile in the next row for a hint.', { messageEl, messagePopup });
+      announce('Daily Double earned \u2013 choose one tile in the next row to preview.');
     }
     if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
     if (resp.won) {
@@ -586,6 +599,8 @@ board.addEventListener('click', async (e) => {
   if (resp.status === 'ok') {
     dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
     dailyDoubleRow = null;
+    showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
+    announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);
     fetchState();
   } else if (resp.msg) {
     showMessage(resp.msg, { messageEl, messagePopup });

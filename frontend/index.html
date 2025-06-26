@@ -38,6 +38,8 @@
           <p>Guess the hidden five-letter word in six tries. Letters turn <strong>green</strong> when in the correct spot and <strong>yellow</strong> when present in the word but in the wrong position.</p>
           <h3>Scoring</h3>
           <p>Each letter is worth its Scrabble tile value. Green letters award the full value, while yellow letters grant half until confirmed green.</p>
+          <h3>Daily Double</h3>
+          <p>A random tile may hide a bonus. When you turn it green, a “🔍” hint becomes available. Tap any unrevealed tile in the next row to preview its letter – only you can see this ghosted tile.</p>
         </div>
       </div>
     </div>
@@ -83,6 +85,7 @@
         </button>
       </div>
       <h1>WordleWithFriends</h1>
+      <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
     </div>
 
     <!-- Board -->
@@ -101,6 +104,7 @@
 
       <p id="message"></p>
       <div id="messagePopup"></div>
+      <div id="ariaLive" aria-live="polite"></div>
 
     <!-- Keyboard -->
     <div id="keyboard">
