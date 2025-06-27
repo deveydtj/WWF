@@ -7,6 +7,7 @@ import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled } from './utils.js';
+import { updateHintBadge } from './hintBadge.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -379,7 +380,7 @@ function applyState(state) {
   leaderboard = state.leaderboard || [];
   dailyDoubleAvailable = !!state.daily_double_available;
   renderLeaderboard();
-  titleHintBadge.style.display = dailyDoubleAvailable ? 'inline' : 'none';
+  updateHintBadge(titleHintBadge, dailyDoubleAvailable);
 
   if (state.chat_messages) {
     renderChat(chatMessagesEl, state.chat_messages);

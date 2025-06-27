@@ -398,3 +398,22 @@ def test_play_jingle_function_present():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
     assert 'function playJingle()' in text
     assert 'announce(' in text
+
+
+def test_update_hint_badge_toggles_display():
+    script = """
+import { updateHintBadge } from './frontend/static/js/hintBadge.js';
+const badge = { style: { display: 'none' } };
+updateHintBadge(badge, true);
+const afterTrue = badge.style.display;
+updateHintBadge(badge, false);
+const afterFalse = badge.style.display;
+console.log(JSON.stringify({ afterTrue, afterFalse }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['afterTrue'] == 'inline'
+    assert data['afterFalse'] == 'none'
