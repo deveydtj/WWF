@@ -436,18 +436,29 @@ def set_emoji():
 
         prev_emoji = ip_to_emoji.get(ip)
         if prev_emoji and prev_emoji != emoji:
-            leaderboard.pop(prev_emoji, None)
-
-        leaderboard[emoji] = leaderboard.get(
-            emoji,
-            {
-                "ip": ip,
-                "score": 0,
-                "used_yellow": [],
-                "used_green": [],
-                "last_active": now,
-            },
-        )
+            # Move existing entry so score and history persist
+            entry = leaderboard.pop(
+                prev_emoji,
+                {
+                    "ip": ip,
+                    "score": 0,
+                    "used_yellow": [],
+                    "used_green": [],
+                    "last_active": now,
+                },
+            )
+            leaderboard[emoji] = entry
+        else:
+            leaderboard.setdefault(
+                emoji,
+                {
+                    "ip": ip,
+                    "score": 0,
+                    "used_yellow": [],
+                    "used_green": [],
+                    "last_active": now,
+                },
+            )
         leaderboard[emoji]["ip"] = ip
         leaderboard[emoji]["last_active"] = now
         ip_to_emoji[ip] = emoji

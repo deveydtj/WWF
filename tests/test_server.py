@@ -201,10 +201,11 @@ def test_set_emoji_duplicate_different_ip(server_env):
     assert '3' not in server.ip_to_emoji
 
 
-def test_set_emoji_changes_remove_previous(server_env):
+def test_set_emoji_changes_migrate_score(server_env):
     server, request = server_env
 
     # establish initial mapping for ip '1'
+    server.leaderboard['😀']['score'] = 5
     request.json = {'emoji': '😀'}
     request.remote_addr = '1'
     resp1 = server.set_emoji()
@@ -219,6 +220,7 @@ def test_set_emoji_changes_remove_previous(server_env):
     assert server.ip_to_emoji['1'] == '🥳'
     assert '🥳' in server.leaderboard
     assert '😀' not in server.leaderboard
+    assert server.leaderboard['🥳']['score'] == 5
 
 
 def test_state_get_returns_sorted_leaderboard(server_env):
