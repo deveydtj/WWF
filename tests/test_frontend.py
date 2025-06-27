@@ -457,3 +457,79 @@ console.log(JSON.stringify({ afterTrue, afterFalse }));
     data = json.loads(result.stdout.strip())
     assert data['afterTrue'] == 'inline'
     assert data['afterFalse'] == 'none'
+
+def test_create_board_generates_tiles():
+    script = """
+import { createBoard } from './frontend/static/js/board.js';
+const board = { innerHTML: '', children: [], appendChild(el){ this.children.push(el); } };
+global.document = { createElement(){ return { className: '', tabIndex: 0 }; } };
+createBoard(board, 2);
+console.log(JSON.stringify({ count: board.children.length, cls: board.children[0].className, tab: board.children[0].tabIndex }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['count'] == 10
+    assert data['cls'] == 'tile'
+    assert data['tab'] == -1
+
+
+def test_hard_mode_constraints_and_validation():
+    script = """
+import { updateHardModeConstraints, isValidHardModeGuess } from './frontend/static/js/board.js';
+const guesses = [
+  { guess: 'crane', result: ['absent','present','absent','absent','correct'] },
+  { guess: 'slate', result: ['correct','absent','absent','present','absent'] }
+];
+const out = updateHardModeConstraints(guesses);
+let msg1 = null, msg2 = null;
+const ok = isValidHardModeGuess('stare', out.requiredLetters, out.greenPositions, m=>{msg1=m;});
+const bad = isValidHardModeGuess('crony', out.requiredLetters, out.greenPositions, m=>{msg2=m;});
+console.log(JSON.stringify({
+  required: Array.from(out.requiredLetters).sort(),
+  greens: out.greenPositions,
+  ok,
+  bad,
+  msg1,
+  msg2
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert set(data['required']) == {'e', 'r', 's', 't'}
+    assert data['greens']['0'] == 's'
+    assert data['greens']['4'] == 'e'
+    assert data['ok'] is True
+    assert data['bad'] is False
+    assert 'letter' in data['msg2'].lower()
+
+
+def test_update_keyboard_from_guesses():
+    script = """
+import { updateKeyboardFromGuesses } from './frontend/static/js/board.js';
+function makeKey(){ return { classList: { classes: [], add(c){ this.classes.push(c); }, remove(){} } }; }
+const keyboard = {
+  keys: { a: makeKey(), r: makeKey(), e: makeKey() },
+  querySelectorAll(){ return Object.values(this.keys).map(k => ({ classList: k.classList })); },
+  querySelector(sel){ const m = sel.match(/data-key=\"([a-z])\"/); return m ? this.keys[m[1]] : null; }
+};
+const guesses = [
+  { guess: 'arise', result: ['absent','present','absent','absent','correct'] },
+  { guess: 'apple', result: ['correct','absent','absent','absent','absent'] }
+];
+updateKeyboardFromGuesses(keyboard, guesses);
+console.log(JSON.stringify({ a: keyboard.keys['a'].classList.classes[0], r: keyboard.keys['r'].classList.classes[0], e: keyboard.keys['e'].classList.classes[0] }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['a'] == 'correct'
+    assert data['r'] == 'present'
+    assert data['e'] == 'correct'
