@@ -19,7 +19,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
 - [x] Provide a fully keyboard-driven flow for Daily Double selection
       (toggle `.hint-selecting` on badge click or `Space`, constrain focus to eligible tiles).
-- [ ] Optional jingle should respect the sound toggle and announce via `#ariaLive`.
+- [x] Optional jingle should respect the sound toggle and announce via `#ariaLive`.
 
 ## Testing
 

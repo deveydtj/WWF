@@ -180,6 +180,26 @@ function playClick() {
   osc.stop(audioCtx.currentTime + 0.05);
 }
 
+function playJingle() {
+  if (!soundEnabled) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  const notes = [523.25, 659.25, 783.99];
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.2);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + i * 0.2);
+    osc.stop(audioCtx.currentTime + i * 0.2 + 0.18);
+  });
+  announce('Jingle playing');
+}
+
 function showChatNotify() {
   chatNotify.style.display = 'block';
   requestAnimationFrame(() => chatNotify.classList.add('visible'));
@@ -477,6 +497,7 @@ async function submitGuessHandler() {
     if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
     if (resp.won) {
       showMessage('You got it! The word was ' + resp.state.target_word.toUpperCase(), { messageEl, messagePopup });
+      playJingle();
     }
     if (resp.over && !resp.won) {
       showMessage('Game Over! The word was ' + resp.state.target_word.toUpperCase(), { messageEl, messagePopup });
