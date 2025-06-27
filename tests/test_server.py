@@ -775,3 +775,23 @@ def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
     assert entry['emoji'] == '😀'
     assert entry['ip'] == '1'
 
+
+def test_reconnect_with_active_daily_double(tmp_path, server_env, monkeypatch):
+    server, request = server_env
+    server.daily_double_index = 0
+    game_file = tmp_path / 'game.json'
+    monkeypatch.setattr(server, 'GAME_FILE', str(game_file))
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    server.save_data()
+    server._reset_state()
+    server.load_data()
+
+    request.method = 'POST'
+    request.json = {'emoji': '😀'}
+    state = server.state()
+    assert state['daily_double_available'] is True
+

@@ -24,8 +24,8 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 ## Testing
 
 - [x] Unit test hint badge visibility and disappearance.
-- [ ] Integration test reconnecting with an active Daily Double hint.
-- [ ] A11y test for live region announcements and color contrast.
+ - [x] Integration test reconnecting with an active Daily Double hint.
+- [x] A11y test for live region announcements and color contrast.
 - [ ] Expand unit tests to cover additional API and UI logic.
 - [ ] Add focused Jest/Pytest cases for Daily Double scenarios.
 
