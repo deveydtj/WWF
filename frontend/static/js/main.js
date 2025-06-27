@@ -585,6 +585,22 @@ function showInfo() {
   openDialog(infoPopup);
 }
 
+function toggleHintSelection() {
+  if (dailyDoubleRow === null) return;
+  const selecting = document.body.classList.toggle('hint-selecting');
+  const tiles = Array.from(board.children);
+  tiles.forEach((t, i) => {
+    const row = Math.floor(i / 5);
+    t.tabIndex = selecting && row === dailyDoubleRow ? 0 : -1;
+  });
+  if (selecting) {
+    focusFirstElement(board);
+    announce('Hint selection active. Use arrow keys to choose a tile, then press Enter.');
+  } else {
+    announce('Hint selection canceled.');
+  }
+}
+
 historyClose.addEventListener('click', () => {
   document.body.classList.remove('history-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
@@ -623,6 +639,13 @@ menuDarkMode.addEventListener('click', toggleDarkMode);
 menuSound.addEventListener('click', toggleSound);
 closeCallOk.addEventListener('click', () => { closeDialog(closeCallPopup); });
 infoClose.addEventListener('click', () => { closeDialog(infoPopup); });
+titleHintBadge.addEventListener('click', toggleHintSelection);
+titleHintBadge.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    toggleHintSelection();
+  }
+});
 
 applyDarkModePreference(menuDarkMode);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
@@ -651,6 +674,24 @@ window.addEventListener('resize', () => {
 updateVH();
 window.addEventListener('resize', updateVH);
 
+async function selectHint(col) {
+  hideHintTooltip();
+  const resp = await requestHint(col, myEmoji);
+  if (resp.status === 'ok') {
+    dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
+    dailyDoubleRow = null;
+    document.body.classList.remove('hint-selecting');
+    Array.from(board.children).forEach(t => (t.tabIndex = -1));
+    setGameInputDisabled(gameOver);
+    hideHintTooltip();
+    showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
+    announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);
+    fetchState();
+  } else if (resp.msg) {
+    showMessage(resp.msg, { messageEl, messagePopup });
+  }
+}
+
 board.addEventListener('click', async (e) => {
   if (dailyDoubleRow === null) return;
   const tile = e.target.closest('.tile');
@@ -661,18 +702,27 @@ board.addEventListener('click', async (e) => {
   const row = Math.floor(index / 5);
   const col = index % 5;
   if (row !== dailyDoubleRow) return;
-  hideHintTooltip();
-  const resp = await requestHint(col, myEmoji);
-  if (resp.status === 'ok') {
-    dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
-    dailyDoubleRow = null;
-    setGameInputDisabled(gameOver);
-    hideHintTooltip();
-    showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
-    announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);
-    fetchState();
-  } else if (resp.msg) {
-    showMessage(resp.msg, { messageEl, messagePopup });
+  await selectHint(col);
+});
+
+board.addEventListener('keydown', async (e) => {
+  if (!document.body.classList.contains('hint-selecting')) return;
+  const tiles = Array.from(board.children).slice(dailyDoubleRow * 5, dailyDoubleRow * 5 + 5);
+  let index = tiles.indexOf(document.activeElement);
+  if (index === -1) index = 0;
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    tiles[(index + 4) % 5].focus();
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    tiles[(index + 1) % 5].focus();
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    await selectHint(index);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    document.body.classList.remove('hint-selecting');
+    tiles.forEach(t => (t.tabIndex = -1));
   }
 });
 

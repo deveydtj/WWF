@@ -9,6 +9,7 @@ export function createBoard(board, rows = 6) {
   for (let i = 0; i < rows * 5; i++) {
     const tile = document.createElement('div');
     tile.className = 'tile';
+    tile.tabIndex = -1;
     board.appendChild(tile);
   }
 }

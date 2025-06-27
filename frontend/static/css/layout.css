@@ -811,6 +811,11 @@
       cursor: pointer;
     }
 
+    body.hint-selecting .tile:not(.hint-target) {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
     .tile.correct,
     .tile.present,
     .tile.absent {
