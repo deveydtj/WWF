@@ -89,6 +89,20 @@ export function repositionResetButton() {
 }
 
 /**
+ * Enable or disable game input elements, e.g. while selecting a Daily Double hint.
+ *
+ * @param {boolean} disabled
+ */
+export function setGameInputDisabled(disabled) {
+  const guessInput = typeof document !== 'undefined' ? document.getElementById('guessInput') : null;
+  const submitButton = typeof document !== 'undefined' ? document.getElementById('submitGuess') : null;
+  const chatInput = typeof document !== 'undefined' ? document.getElementById('chatInput') : null;
+  if (guessInput) guessInput.disabled = disabled;
+  if (submitButton) submitButton.disabled = disabled;
+  if (chatInput) chatInput.disabled = disabled;
+}
+
+/**
  * Position the side panels relative to the board depending on width.
  *
  * @param {HTMLElement} boardArea

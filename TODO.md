@@ -58,8 +58,8 @@ as they are completed.
   - Show a small "🔍 x1" badge next to the player emoji and in the toolbar while the bonus is unused.
   - Pulse the badge every few seconds until the hint is taken.
 - [ ] Action affordance:
-  - Display a tooltip when the bonus is earned prompting the next-row reveal.
-  - Disable other input during tile selection.
+  - [x] Display a tooltip when the bonus is earned prompting the next-row reveal.
+  - [x] Disable other input during tile selection.
   - Provide a keyboard-only path with Space/Enter to activate and arrow keys to choose, announced via ARIA live region.
 - [ ] Feedback & accessibility:
   - [x] Announce "Daily Double earned" and "Hint applied" via ARIA live messages.

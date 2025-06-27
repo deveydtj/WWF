@@ -356,3 +356,39 @@ console.log(JSON.stringify({ openFocused, display: dialog.style.display, restore
     assert data['openFocused'] is True
     assert data['display'] == 'none'
     assert data['restored'] is True
+
+
+def test_hint_tooltip_element_and_css():
+    text = INDEX.read_text(encoding='utf-8')
+    assert '<div id="hintTooltip"' in text
+    css = read_css()
+    assert '#hintTooltip' in css
+
+
+def test_set_game_input_disabled_toggles_inputs():
+    script = """
+import { setGameInputDisabled } from './frontend/static/js/utils.js';
+const guessInput = { disabled: false };
+const submitButton = { disabled: false };
+const chatInput = { disabled: false };
+global.document = {
+  getElementById(id) {
+    if(id==='guessInput') return guessInput;
+    if(id==='submitGuess') return submitButton;
+    if(id==='chatInput') return chatInput;
+    return null;
+  }
+};
+setGameInputDisabled(true);
+const afterDisable = [guessInput.disabled, submitButton.disabled, chatInput.disabled];
+setGameInputDisabled(false);
+const afterEnable = [guessInput.disabled, submitButton.disabled, chatInput.disabled];
+console.log(JSON.stringify({ afterDisable, afterEnable }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['afterDisable'] == [True, True, True]
+    assert data['afterEnable'] == [False, False, False]
