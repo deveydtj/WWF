@@ -795,3 +795,39 @@ def test_reconnect_with_active_daily_double(tmp_path, server_env, monkeypatch):
     state = server.state()
     assert state['daily_double_available'] is True
 
+
+def test_daily_double_awarded_only_once(server_env):
+    server, request = server_env
+    server.WORDS.append('ample')
+    server.daily_double_index = 0
+    request.json = {'guess': 'ample', 'emoji': '😀'}
+    request.remote_addr = '1'
+    first = server.guess_word()
+    assert first['daily_double'] is True
+    assert server.daily_double_pending['😀'] == 1
+
+    request.json = {'guess': server.target_word, 'emoji': '😀'}
+    second = server.guess_word()
+    assert second['daily_double'] is False
+    assert server.daily_double_pending['😀'] == 1
+
+
+def test_chat_empty_message_returns_400(server_env):
+    server, request = server_env
+    request.method = 'POST'
+    request.json = {'text': '   ', 'emoji': '😀'}
+    resp = server.chat()
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 400
+    assert data['status'] == 'error'
+
+
+def test_set_emoji_invalid_input(server_env):
+    server, request = server_env
+    request.json = {'emoji': ''}
+    resp = server.set_emoji()
+    assert isinstance(resp, tuple)
+    data, status = resp
+    assert status == 400
+    assert data['status'] == 'error'
