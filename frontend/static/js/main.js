@@ -8,6 +8,7 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
          positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
+import { saveHintState, loadHintState } from './hintState.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -30,6 +31,7 @@ let latestState = null;
 let dailyDoubleRow = null;
 let dailyDoubleHint = null;
 let dailyDoubleAvailable = false;
+({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji));
 
 const board = document.getElementById('board');
 const guessInput = document.getElementById('guessInput');
@@ -256,7 +258,7 @@ function renderLeaderboard() {
       node.addEventListener('click', () => {
         skipAutoClose = true;
         const taken = activeEmojis.filter(e => e !== myEmoji);
-        showEmojiModal(taken, { onChosen: (e) => { myEmoji = e; fetchState(); }, skipAutoCloseRef: { value: skipAutoClose } });
+        showEmojiModal(taken, { onChosen: (e) => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); }, skipAutoCloseRef: { value: skipAutoClose } });
       });
       if (dailyDoubleAvailable) {
         const badge = document.createElement('span');
@@ -404,9 +406,11 @@ function applyState(state) {
     dailyDoubleHint = null;
     hideHintTooltip();
     setGameInputDisabled(gameOver);
+    saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
   }
   if (dailyDoubleHint && state.guesses.length > dailyDoubleHint.row) {
     dailyDoubleHint = null;
+    saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
   }
   if (animateRow >= 0) {
     for (let i = 0; i < 5; i++) {
@@ -440,7 +444,7 @@ function applyState(state) {
   const haveMy = activeEmojis.includes(myEmoji);
   if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
     showEmojiModal(activeEmojis, {
-      onChosen: e => { myEmoji = e; fetchState(); },
+      onChosen: e => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
       skipAutoCloseRef: { value: skipAutoClose }
     });
     showEmojiModalOnNextFetch = false;
@@ -491,6 +495,7 @@ async function submitGuessHandler() {
         dailyDoubleRow = resp.state.guesses.length;
         dailyDoubleHint = null;
         setGameInputDisabled(true);
+        saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
       showMessage('Daily Double! Tap a tile in the next row for a hint.', { messageEl, messagePopup });
       showHintTooltip('Tap a tile in the next row to reveal a letter!');
       announce('Daily Double earned \u2013 choose one tile in the next row to preview.');
@@ -705,6 +710,7 @@ async function selectHint(col) {
     document.body.classList.remove('hint-selecting');
     Array.from(board.children).forEach(t => (t.tabIndex = -1));
     setGameInputDisabled(gameOver);
+    saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
     hideHintTooltip();
     showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
     announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);

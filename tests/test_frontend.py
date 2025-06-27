@@ -16,6 +16,7 @@ EXPECTED_MODULES = [
     'emoji.js',
     'history.js',
     'keyboard.js',
+    'hintState.js',
     'main.js',
     'utils.js'
 ]
@@ -533,3 +534,21 @@ console.log(JSON.stringify({ a: keyboard.keys['a'].classList.classes[0], r: keyb
     assert data['a'] == 'correct'
     assert data['r'] == 'present'
     assert data['e'] == 'correct'
+
+
+def test_hint_state_round_trip():
+    script = """
+import { saveHintState, loadHintState } from './frontend/static/js/hintState.js';
+global.localStorage = { data: {}, setItem(k,v){ this.data[k]=v; }, getItem(k){ return this.data[k]; } };
+saveHintState('😀', 1, { row: 1, col: 2, letter: 'a' });
+const out = loadHintState('😀');
+console.log(JSON.stringify(out));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['row'] == 1
+    assert data['hint']['col'] == 2
+    assert data['hint']['letter'] == 'a'
