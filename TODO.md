@@ -44,8 +44,8 @@ as they are completed.
  - [x] Animate tile reveal after each guess.
  - [x] Add optional sound effects with on/off toggle.
  - [x] Close-Call Notifications: design a neumorphic popup/overlay.
- - [ ] Daily Double FX:
-   - Confetti/particle burst on the qualifying tile.
+- [ ] Daily Double FX:
+   - [x] Confetti/particle burst on the qualifying tile.
    - Ghost-style preview for the chosen hint tile.
    - Tooltip/toast informing the player they earned a hint.
 

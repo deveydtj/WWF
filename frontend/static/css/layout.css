@@ -755,6 +755,21 @@
       line-height: 1;
     }
 
+    .confetti-container {
+      position: absolute;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+    }
+
     body[data-mode='medium'] #stampContainer {
       display: block;
     }
