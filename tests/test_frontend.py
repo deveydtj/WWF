@@ -392,3 +392,9 @@ console.log(JSON.stringify({ afterDisable, afterEnable }));
     data = json.loads(result.stdout.strip())
     assert data['afterDisable'] == [True, True, True]
     assert data['afterEnable'] == [False, False, False]
+
+
+def test_play_jingle_function_present():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'function playJingle()' in text
+    assert 'announce(' in text
