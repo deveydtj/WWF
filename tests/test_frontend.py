@@ -328,3 +328,31 @@ def test_ghost_tile_has_outline():
               r"[^;]*var\(--text-color\)[^}]*outline:\s*2px" \
               r"[^;]*var\(--text-color\)"
     assert re.search(pattern, css, flags=re.DOTALL)
+
+
+def test_open_and_close_dialog_restores_focus():
+    script = """
+import { openDialog, closeDialog } from './frontend/static/js/utils.js';
+let openFocused = false;
+let restored = false;
+const first = { focus(){ openFocused = true; } };
+const dialog = {
+  style: {},
+  setAttribute(){},
+  querySelectorAll(){ return [first]; },
+  addEventListener(){},
+  removeEventListener(){},
+};
+global.document = { activeElement: { focus(){ restored = true; } } };
+openDialog(dialog);
+closeDialog(dialog);
+console.log(JSON.stringify({ openFocused, display: dialog.style.display, restored }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['openFocused'] is True
+    assert data['display'] == 'none'
+    assert data['restored'] is True
