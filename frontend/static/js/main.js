@@ -131,6 +131,39 @@ function hideHintTooltip() {
   hintTooltip.style.display = 'none';
 }
 
+function burstConfetti(row, col) {
+  const tiles = Array.from(board.children);
+  const tile = tiles[row * 5 + col];
+  if (!tile) return;
+  const boardRect = boardArea.getBoundingClientRect();
+  const tileRect = tile.getBoundingClientRect();
+  const originX = tileRect.left - boardRect.left + tileRect.width / 2;
+  const originY = tileRect.top - boardRect.top + tileRect.height / 2;
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  container.style.left = `${originX}px`;
+  container.style.top = `${originY}px`;
+  boardArea.appendChild(container);
+  const colors = ['#f87171', '#facc15', '#34d399', '#60a5fa', '#a78bfa'];
+  for (let i = 0; i < 15; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.backgroundColor = colors[i % colors.length];
+    const dx = (Math.random() - 0.5) * 120;
+    const dy = -Math.random() * 120 - 30;
+    const rotate = Math.random() * 720;
+    piece.style.transform = 'translate(0,0) rotate(0deg)';
+    piece.style.opacity = '1';
+    piece.style.transition = 'transform 0.8s ease-out, opacity 0.8s';
+    container.appendChild(piece);
+    requestAnimationFrame(() => {
+      piece.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
+      piece.style.opacity = '0';
+    });
+  }
+  setTimeout(() => container.remove(), 900);
+}
+
 function playClick() {
   if (!soundEnabled) return;
   if (!audioCtx) {
@@ -428,12 +461,15 @@ async function submitGuessHandler() {
   }
   const resp = await sendGuess(guess, myEmoji);
   guessInput.value = '';
-  if (resp.status === 'ok') {
-    applyState(resp.state);
-    if (resp.daily_double) {
-      dailyDoubleRow = resp.state.guesses.length;
-      dailyDoubleHint = null;
-      setGameInputDisabled(true);
+    if (resp.status === 'ok') {
+      applyState(resp.state);
+      if (resp.daily_double) {
+        if (resp.daily_double_tile) {
+          burstConfetti(resp.daily_double_tile.row, resp.daily_double_tile.col);
+        }
+        dailyDoubleRow = resp.state.guesses.length;
+        dailyDoubleHint = null;
+        setGameInputDisabled(true);
       showMessage('Daily Double! Tap a tile in the next row for a hint.', { messageEl, messagePopup });
       showHintTooltip('Tap a tile in the next row to reveal a letter!');
       announce('Daily Double earned \u2013 choose one tile in the next row to preview.');

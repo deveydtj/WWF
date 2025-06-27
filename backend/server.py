@@ -499,6 +499,8 @@ def guess_word():
     guesses.append(new_entry)
 
     dd_award = False
+    award_row = None
+    award_col = None
     if daily_double_index is not None:
         dd_row = daily_double_index // 5
         dd_col = daily_double_index % 5
@@ -506,6 +508,8 @@ def guess_word():
             daily_double_winners.add(emoji)
             daily_double_pending[emoji] = row_index + 1
             dd_award = True
+            award_row = dd_row
+            award_col = dd_col
 
     # Points logic: Only award for globally new discoveries!
     global_found_this_turn = set()
@@ -562,15 +566,18 @@ def guess_word():
     resp_state = build_state_payload(emoji)
     broadcast_state()
 
-    return jsonify({
+    resp = {
         "status": "ok",
         "pointsDelta": points_delta,
         "state": resp_state,
         "won": won,
         "over": over,
         "daily_double": dd_award,
-        "daily_double_available": emoji in daily_double_pending
-    })
+        "daily_double_available": emoji in daily_double_pending,
+    }
+    if dd_award:
+        resp["daily_double_tile"] = {"row": award_row, "col": award_col}
+    return jsonify(resp)
 
 
 @app.route("/hint", methods=["POST"])
