@@ -322,6 +322,46 @@ console.log(el.textContent);
     assert result.stdout.strip() == 'hello'
 
 
+def hex_to_rgb(h):
+    h = h.lstrip('#')
+    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+
+def rel_luminance(rgb):
+    def channel(c):
+        c = c / 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = map(channel, rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast_ratio(c1, c2):
+    l1 = rel_luminance(c1)
+    l2 = rel_luminance(c2)
+    if l1 < l2:
+        l1, l2 = l2, l1
+    return (l1 + 0.05) / (l2 + 0.05)
+
+
+def test_color_contrast_meets_wcag():
+    css = read_css()
+
+    def extract(section, var):
+        pattern = rf"{section}\s*{{[^}}]*--{var}:\s*(#[0-9a-fA-F]{{6}})"
+        m = re.search(pattern, css)
+        assert m, f"{var} not found in {section}"
+        return hex_to_rgb(m.group(1))
+
+    light_bg = extract(r":root", "bg-color")
+    light_text = extract(r":root", "text-color")
+    dark_bg = extract(r"body.dark-mode", "bg-color")
+    dark_text = extract(r"body.dark-mode", "text-color")
+
+    assert contrast_ratio(light_text, light_bg) >= 4.5
+    assert contrast_ratio(dark_text, dark_bg) >= 4.5
+
+
 def test_ghost_tile_has_outline():
     css = read_css()
     pattern = r"\.tile\.ghost\s*{[^}]*opacity:\s*0\.4;[^}]*border:\s*2px" \
