@@ -65,7 +65,7 @@ as they are completed.
   - [x] Announce "Daily Double earned" and "Hint applied" via ARIA live messages.
   - Use a ghost style with high-contrast outline for the revealed tile.
   - Optional sound jingle when the bonus is granted and spent.
-- [ ] Copy & docs:
+- [x] Copy & docs:
   - Document the feature in the Info popup and note the hint badge in the README.
   - Add a gameplay requirement for a persistent bonus indicator.
 - [ ] Testing:
