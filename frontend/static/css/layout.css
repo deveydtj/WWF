@@ -907,6 +907,35 @@
       pointer-events: none;
     }
 
+    #hintTooltip {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 6px 10px;
+      border-radius: 6px;
+      box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                  -3px -3px 6px var(--shadow-color-light);
+      white-space: nowrap;
+      pointer-events: none;
+      font-size: 0.9em;
+    }
+
+    #hintTooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid var(--bg-color);
+      transform: translateX(-50%);
+    }
+
     #ariaLive {
       position: absolute;
       width: 1px;

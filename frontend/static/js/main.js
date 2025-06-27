@@ -6,7 +6,7 @@ import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup,
-         openDialog, closeDialog, focusFirstElement } from './utils.js';
+         openDialog, closeDialog, focusFirstElement, setGameInputDisabled } from './utils.js';
 
 let activeEmojis = [];
 let leaderboard = [];
@@ -61,6 +61,7 @@ const historyBox = document.getElementById('historyBox');
 const historyList = document.getElementById('historyList');
 const definitionBoxEl = document.getElementById('definitionBox');
 const stampContainer = document.getElementById('stampContainer');
+const hintTooltip = document.getElementById('hintTooltip');
 const closeCallPopup = document.getElementById('closeCallPopup');
 const closeCallText = document.getElementById('closeCallText');
 const closeCallOk = document.getElementById('closeCallOk');
@@ -117,6 +118,17 @@ function showPointsDelta(delta) {
       messageEl.classList.remove('positive', 'negative');
     }, { once: true });
   }
+}
+
+function showHintTooltip(text) {
+  if (!hintTooltip) return;
+  hintTooltip.textContent = text;
+  hintTooltip.style.display = 'block';
+}
+
+function hideHintTooltip() {
+  if (!hintTooltip) return;
+  hintTooltip.style.display = 'none';
 }
 
 function playClick() {
@@ -336,6 +348,8 @@ function applyState(state) {
   if (dailyDoubleRow !== null && state.guesses.length > dailyDoubleRow) {
     dailyDoubleRow = null;
     dailyDoubleHint = null;
+    hideHintTooltip();
+    setGameInputDisabled(gameOver);
   }
   if (dailyDoubleHint && state.guesses.length > dailyDoubleHint.row) {
     dailyDoubleHint = null;
@@ -353,8 +367,7 @@ function applyState(state) {
   greenPositions = constraints.greenPositions;
   const prevGameOver = gameOver;
   gameOver = state.is_over;
-  guessInput.disabled = gameOver;
-  submitButton.disabled = gameOver;
+  setGameInputDisabled(gameOver || dailyDoubleRow !== null);
   updateResetButton();
 
   if (state.is_over) {
@@ -420,7 +433,9 @@ async function submitGuessHandler() {
     if (resp.daily_double) {
       dailyDoubleRow = resp.state.guesses.length;
       dailyDoubleHint = null;
+      setGameInputDisabled(true);
       showMessage('Daily Double! Tap a tile in the next row for a hint.', { messageEl, messagePopup });
+      showHintTooltip('Tap a tile in the next row to reveal a letter!');
       announce('Daily Double earned \u2013 choose one tile in the next row to preview.');
     }
     if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
@@ -610,10 +625,13 @@ board.addEventListener('click', async (e) => {
   const row = Math.floor(index / 5);
   const col = index % 5;
   if (row !== dailyDoubleRow) return;
+  hideHintTooltip();
   const resp = await requestHint(col, myEmoji);
   if (resp.status === 'ok') {
     dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
     dailyDoubleRow = null;
+    setGameInputDisabled(gameOver);
+    hideHintTooltip();
     showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
     announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);
     fetchState();
