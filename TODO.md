@@ -14,20 +14,20 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 - Exposed `daily_double_available` in API responses and HUD badge.
 - Implemented chat panel with toggle and animations.
 - Documented public functions and added integration tests for major features.
+- Provided a fully keyboard-driven flow for Daily Double selection
+  (toggle `.hint-selecting` on badge click or `Space`, constrain focus to eligible tiles).
+- Optional jingle respects the sound toggle and announces via `#ariaLive`.
+- Unit test hint badge visibility and disappearance.
+- Integration test reconnecting with an active Daily Double hint.
+- A11y test for live region announcements and color contrast.
+- Expand unit tests to cover additional API and UI logic.
+- Add focused Jest/Pytest cases for Daily Double scenarios.
 
 ## Accessibility
-
-- [x] Provide a fully keyboard-driven flow for Daily Double selection
-      (toggle `.hint-selecting` on badge click or `Space`, constrain focus to eligible tiles).
-- [x] Optional jingle should respect the sound toggle and announce via `#ariaLive`.
+No outstanding tasks.
 
 ## Testing
-
-- [x] Unit test hint badge visibility and disappearance.
- - [x] Integration test reconnecting with an active Daily Double hint.
-- [x] A11y test for live region announcements and color contrast.
-- [x] Expand unit tests to cover additional API and UI logic.
-- [x] Add focused Jest/Pytest cases for Daily Double scenarios.
+No outstanding tasks.
 
 ## Polish
 
