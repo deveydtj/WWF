@@ -23,10 +23,33 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 - Expand unit tests to cover additional API and UI logic.
 - Add focused Jest/Pytest cases for Daily Double scenarios.
 
-## Accessibility
-No outstanding tasks.
+## Lobby System & API
+
+- [ ] Convert global game state to a per-lobby dictionary keyed by six-character lobby codes.
+- [ ] Implement the `/lobby` route family: create, state, emoji, guess, reset, stream, and lobby list.
+- [ ] Enforce lobby lifecycle (waiting → active → finished) and purge idle or finished lobbies after 30 minutes.
+- [ ] Require a `host_token` for privileged actions and rate-limit lobby creation.
+
+## Frontend
+
+- [ ] Build new landing page with create/join flows and share link tools.
+- [ ] Display lobby header with code, player count, and host controls.
+- [ ] Persist emoji across reloads and reclaim it via `POST /lobby/<id>/emoji`.
+
+## Hosting & DevOps
+
+- [ ] Containerize the Flask API and push images to ECR.
+- [ ] Provision S3, CloudFront, ACM, ALB, and an ECS service via infrastructure as code.
+- [ ] Configure GitHub Actions for CI/CD including Cypress tests and cache invalidation.
+- [ ] Move persistence to Redis or DynamoDB when running multiple ECS tasks.
 
 ## Testing
+
+- [ ] Add unit tests for lobby creation, join/rejoin flows, and SSE isolation per lobby.
+- [ ] Add integration tests ensuring guesses and chat do not leak across lobbies.
+- [ ] Add Playwright end-to-end test covering lobby creation through auto-expiration.
+
+## Accessibility
 No outstanding tasks.
 
 ## Polish

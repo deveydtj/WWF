@@ -51,19 +51,29 @@ overview and should be kept up to date as features evolve.
   - Can be dismissed by clicking/tapping anywhere outside the popup (click-off dismissal).
   - Display a softly blurred page backdrop while open, reducing visual noise and directing focus to the modal.
   - Retain all existing accessibility guarantees (keyboard focus trap, ESC to close, ARIA roles, etc.).
+- Landing page at `/` offers Create and Join dialogs with lobby code validation.
+- `/lobby/<id>` shows the game board for that lobby with a header displaying code, player count, and host controls.
+- Player list panel shows avatars, scores, AFK status, and kick controls for the host.
+- On first load the client hydrates state from `GET /lobby/<id>/state` and subscribes to `/lobby/<id>/stream` with polling fallback.
+- Reconnecting with a stored emoji reclaims it via `POST /lobby/<id>/emoji`.
 
 ## 3. Server Integration
 
 - **Endpoints:**
-  - `GET /state` – returns the current game state (guesses, leaderboard, etc.).
-  - `POST /state` – heartbeat with selected emoji to indicate activity.
-  - `POST /guess` – submit a guess and return updated state.
-  - `POST /reset` – reset the game.
-- Data contracts for guesses, leaderboard entries, and definitions are JSON
-  objects as defined in the project overview.
-- Clients subscribe to `/stream` using Server-Sent Events for real-time updates
-  and fall back to polling `/state` if the stream disconnects.
+  - `POST /lobby` – create a new lobby and return `{id, host_token, join_url}`.
+  - `GET /lobby/<id>/state` – fetch the current state for that lobby.
+  - `POST /lobby/<id>/state` – heartbeat used to mark a player active.
+  - `POST /lobby/<id>/emoji` – claim or change an emoji inside the lobby.
+  - `POST /lobby/<id>/guess` – submit a word guess.
+  - `POST /lobby/<id>/reset` – host only; begins a new round.
+  - `GET /lobby/<id>/stream` – SSE stream scoped to that lobby.
+  - `GET /lobbies` – (optional) list of public lobbies with player counts.
+- All game data is namespaced by the six-character lobby code.
+- Data contracts for guesses, leaderboard entries, and definitions remain JSON objects as defined in the project overview.
+- Clients subscribe to `/lobby/<id>/stream` for updates and fall back to polling `GET /lobby/<id>/state` if the stream closes.
 - `/guess` responses include a `close_call` object when another player submits the winning word within two seconds of the winner. Each guess record stores a timestamp so the server can report the milliseconds difference.
+- Lobby creation is rate-limited to five per IP per minute. Lobby codes must match `[A-Za-z0-9]{6}`. Privileged actions require the `host_token` returned by `POST /lobby` and stored client-side.
+- Lobbies transition from **waiting** → **active** → **finished** and are automatically purged if idle or finished for 30 minutes. The hidden `target_word` is never exposed until a lobby finishes.
 
 ## 4. Technical Constraints
 
@@ -95,4 +105,19 @@ overview and should be kept up to date as features evolve.
 - Messages appear with soft neumorphic bubbles and animated transitions.
 - Chat history updates live for all participants as messages are posted.
 - Must be fully keyboard accessible and responsive on mobile and desktop.
+
+## 7. Hosting & DevOps
+
+- Static frontend assets served from an S3 bucket behind CloudFront with TLS from ACM.
+- Flask API packaged as a Docker image and run on ECS Fargate behind an Application Load Balancer.
+- DNS records under Route 53 route `play.<domain>.com` to the ALB and `static.<domain>.com` to CloudFront.
+- GitHub Actions builds the image, pushes to ECR, forces a new ECS deployment, runs Cypress tests, and invalidates the CloudFront cache on success.
+- CloudWatch metrics track ALB response time and task CPU/memory while logs stream to CloudWatch with a retention policy.
+- A daily Lambda purges idle lobbies from Redis or DynamoDB when used.
+
+## 8. Testing Requirements
+
+- Unit tests cover lobby creation, join/expire logic, emoji selection, and per-lobby SSE isolation.
+- Integration tests run multiple lobbies in parallel to verify guesses and chat never leak between them.
+- End-to-end tests with Playwright create a lobby, share the link, join from a second browser, play to completion, and confirm the lobby auto-expires.
 
