@@ -891,6 +891,20 @@ def lobby_reset(code):
 def lobby_chat(code):
     return _with_lobby(code, chat)
 
+
+# ---- Maintenance ----
+
+@app.route("/internal/purge", methods=["POST"])
+def cleanup_lobbies():
+    """Purge idle or finished lobbies.
+
+    This endpoint is intended for the scheduled Lambda job defined in the
+    Terraform configuration. It simply calls ``purge_lobbies`` and returns a
+    small status payload.
+    """
+    purge_lobbies()
+    return jsonify({"status": "ok"})
+
 @app.route("/")
 def index():
     """Serve the landing page."""

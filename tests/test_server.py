@@ -1020,3 +1020,16 @@ def test_purge_lobbies_removes_idle_finished(server_env):
     state.last_activity -= server.LOBBY_TTL + 1
     server.purge_lobbies()
     assert code not in server.LOBBIES
+
+
+def test_cleanup_endpoint_triggers_purge(monkeypatch, server_env):
+    server, _ = server_env
+    called = {}
+
+    def fake_purge():
+        called['yes'] = True
+
+    monkeypatch.setattr(server, 'purge_lobbies', fake_purge)
+    resp = server.cleanup_lobbies()
+    assert resp['status'] == 'ok'
+    assert called.get('yes')

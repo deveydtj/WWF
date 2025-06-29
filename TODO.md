@@ -137,7 +137,7 @@ No outstanding tasks.
 ### Analytics, Logging & Monitoring
 - [x] Log structured JSON events for `lobby_created`, `lobby_joined` and `lobby_finished`.
 - [x] Create CloudWatch metric filters alerting on error rates above five per minute.
-- [ ] Schedule a daily CloudWatch Event or Lambda to trigger the idle-lobby cleanup if not using the in-process thread.
+- [x] Schedule a daily CloudWatch Event or Lambda to trigger the idle-lobby cleanup if not using the in-process thread.
 
 -### Docs & Deliverables
 - [x] Update `ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
