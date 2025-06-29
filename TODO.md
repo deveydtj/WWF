@@ -96,7 +96,7 @@ No outstanding tasks.
  - [x] Clean up idle lobbies every ten minutes when `last_active` is over thirty minutes old.
 - [ ] Add middleware for rate limiting (max five lobby creations per IP per minute) and lobby id validation.
 - [ ] Toggle persistence: JSON file in single-instance mode, stubs for Redis or DynamoDB otherwise.
-- [ ] Add unit tests for all lobby service helpers.
+- [x] Add unit tests for all lobby service helpers.
 
 ### Landing Page & Client Routing
  - [x] Add `frontend/landing.html`, `landing.js` and `landing.css` implementing the hero panel and create/join flows.

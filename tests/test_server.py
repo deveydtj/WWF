@@ -1039,3 +1039,43 @@ def test_lobby_page_serves_game_html(server_env):
     server, _ = server_env
     path = server.lobby_page('ABC123')
     assert path.endswith('game.html')
+
+def test_get_lobby_creates_and_returns(server_env):
+    server, _ = server_env
+    code = 'ZXCV12'
+    assert code not in server.LOBBIES
+    lobby = server.get_lobby(code)
+    assert code in server.LOBBIES
+    assert server.LOBBIES[code] is lobby
+    # second call returns same object
+    again = server.get_lobby(code)
+    assert again is lobby
+
+
+def test_lobby_id_returns_correct_code(server_env):
+    server, _ = server_env
+    code = 'ID1234'
+    lobby = server.get_lobby(code)
+    assert server._lobby_id(lobby) == code
+
+
+def test_with_lobby_switches_and_restores(server_env):
+    server, _ = server_env
+    code = 'ROOM11'
+    lobby = server.get_lobby(code)
+    original = server.current_state
+
+    def dummy():
+        return server._lobby_id(server.current_state)
+
+    result = server._with_lobby(code, dummy)
+    assert result == code
+    assert server.current_state is original
+
+
+def test_with_lobby_rejects_invalid_code(server_env):
+    server, _ = server_env
+    data, status = server._with_lobby('bad!', lambda: None)
+    assert status == 400
+    assert data['status'] == 'error'
+
