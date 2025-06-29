@@ -72,6 +72,7 @@ const titleHintBadge = document.getElementById('titleHintBadge');
 const lobbyCodeEl = document.getElementById('lobbyCode');
 const playerCountEl = document.getElementById('playerCount');
 const copyLobbyLink = document.getElementById('copyLobbyLink');
+const leaveLobby = document.getElementById('leaveLobby');
 const lobbyHeader = document.getElementById('lobbyHeader');
 // Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
 closeCallPopup.style.display = 'none';
@@ -99,6 +100,12 @@ if (copyLobbyLink && LOBBY_CODE) {
       showMessage('Link copied!', { messageEl, messagePopup });
       announce('Lobby link copied');
     });
+  });
+}
+
+if (leaveLobby && LOBBY_CODE) {
+  leaveLobby.addEventListener('click', () => {
+    window.location.href = '/';
   });
 }
 
