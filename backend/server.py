@@ -918,6 +918,13 @@ def game_page():
     root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root), "game.html")
 
+
+@app.route("/lobby/<code>")
+def lobby_page(code: str):
+    """Serve the game client for a specific lobby."""
+    root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "game.html")
+
 # Serve static JavaScript modules
 @app.route('/static/js/<path:filename>')
 @app.route('/js/<path:filename>')

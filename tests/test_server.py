@@ -1033,3 +1033,9 @@ def test_cleanup_endpoint_triggers_purge(monkeypatch, server_env):
     resp = server.cleanup_lobbies()
     assert resp['status'] == 'ok'
     assert called.get('yes')
+
+
+def test_lobby_page_serves_game_html(server_env):
+    server, _ = server_env
+    path = server.lobby_page('ABC123')
+    assert path.endswith('game.html')
