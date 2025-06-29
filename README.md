@@ -88,6 +88,9 @@ python -m pytest -v
 ```
 Some frontend tests execute small Node.js scripts, so a recent Node installation
 is required for the full suite to run successfully.
+An optional end-to-end test using Playwright will run if the `playwright`
+package and browsers are installed. It checks lobby creation through automatic
+expiration.
 
 ## Repository layout
 
