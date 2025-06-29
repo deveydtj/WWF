@@ -1,8 +1,11 @@
 # Wordle With Friends (WWF)
 
 A small multiplayer adaptation of Wordle. The frontend lives under the
-`frontend/` directory while `backend/server.py` provides a Flask API that keeps
-track of guesses and scores.
+`frontend/` directory while `backend/server.py` provides a Flask API. The
+server supports **multiple lobbies**, each identified by a six character code.
+Every lobby maintains its own guesses, chat log and scoreboard while sharing
+the same application code. See [ARCHITECTURE.md](ARCHITECTURE.md) for a diagram
+of the overall flow.
 
 ## Game Features
 
@@ -58,10 +61,17 @@ The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
 or the network is unavailable, definitions are loaded from
 `offline_definitions.json`.
 
-The server also exposes a **Server-Sent Events** endpoint at `/stream` which
-pushes game state updates to connected clients in real time. The frontend
-subscribes to this stream and falls back to periodic polling if the connection
-drops.
+Each lobby exposes a set of REST endpoints under `/lobby/<id>`:
+
+- `GET /lobby/<id>/state` – retrieve the latest state
+- `POST /lobby/<id>/state` – heartbeat to mark the player active
+- `POST /lobby/<id>/emoji` – claim or change an emoji
+- `POST /lobby/<id>/guess` – submit a word
+- `POST /lobby/<id>/reset` – start a new round (host token required)
+- `GET /lobby/<id>/stream` – Server‑Sent Events channel
+
+The SSE stream pushes state updates in real time. The client falls back to
+polling these endpoints if the stream disconnects.
 
 ## Point System
 
@@ -165,4 +175,4 @@ for usage instructions.
 
 - Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
 - Pull requests must pass status checks for Pytest, Cypress, and `terraform plan` before merging to `main`.
-- See [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md) for details on configuring deployment secrets and running Terraform.
+- See [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md) for details on configuring deployment secrets and running Terraform. Further architectural details can be found in [ARCHITECTURE.md](ARCHITECTURE.md).

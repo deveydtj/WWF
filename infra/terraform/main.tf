@@ -81,6 +81,20 @@ resource "aws_ecs_task_definition" "api" {
       portMappings = [
         { containerPort = 5001, protocol = "tcp" }
       ]
+      environment = [
+        {
+          name  = "SINGLE_INSTANCE"
+          value = var.single_instance ? "true" : "false"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.api.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "wwf"
+        }
+      }
     }
   ])
 }
@@ -167,6 +181,34 @@ resource "aws_security_group" "api" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+# ------- CloudWatch Logs and Alerts -------
+resource "aws_cloudwatch_log_group" "api" {
+  name              = "/ecs/wwf-api"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_metric_filter" "api_errors" {
+  name           = "wwf-api-errors"
+  log_group_name = aws_cloudwatch_log_group.api.name
+  pattern        = "?ERROR ?"
+  metric_transformation {
+    name      = "ErrorCount"
+    namespace = "WWF"
+    value     = "1"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "api_error_rate" {
+  alarm_name          = "wwf-api-error-rate"
+  metric_name         = aws_cloudwatch_log_metric_filter.api_errors.metric_transformation[0].name
+  namespace           = "WWF"
+  statistic           = "Sum"
+  period              = 60
+  evaluation_periods  = 1
+  threshold           = 5
+  comparison_operator = "GreaterThanThreshold"
 }
 
 
