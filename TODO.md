@@ -41,7 +41,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 - [x] Write Jest DOM tests for rendering, validation, and preference storage.
 - [x] Implement How-to-Play accordion toggle and inline join-code validation.
 - [ ] Display lobby header with code, player count, and host controls.
-- [ ] Persist emoji across reloads and reclaim it via `POST /lobby/<id>/emoji`.
+- [x] Persist emoji across reloads and reclaim it via `POST /lobby/<id>/emoji`.
 
 ## Hosting & DevOps
 
