@@ -40,6 +40,10 @@ else:
 import logging
 import re
 from dataclasses import dataclass, field
+try:
+    import redis  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    redis = None
 
 CLOSE_CALL_WINDOW = 2.0  # seconds
 import html
@@ -60,6 +64,17 @@ WORDS_FILE = BASE_DIR / "sgb-words.txt"
 GAME_FILE = BASE_DIR / "game_persist.json"
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
 MAX_ROWS = 6
+
+# Optional Redis persistence for multi-instance deployments
+REDIS_URL = os.environ.get("REDIS_URL")
+redis_client = None
+if REDIS_URL and redis is not None:
+    try:
+        redis_client = redis.from_url(REDIS_URL)
+        redis_client.ping()
+    except Exception as e:  # pragma: no cover - runtime check
+        logging.warning("Redis connection failed: %s", e)
+        redis_client = None
 
 # Standard Scrabble letter values used for scoring
 SCRABBLE_SCORES = {
@@ -189,6 +204,14 @@ def _reset_state(s: GameState | None = None) -> GameState:
 def save_data(s: GameState | None = None):
     if s is None:
         s = current_state
+    # determine lobby code for this state
+    code = None
+    for cid, state in LOBBIES.items():
+        if state is s:
+            code = cid
+            break
+    if code is None:
+        code = DEFAULT_LOBBY
     data = {
         "leaderboard": s.leaderboard,
         "ip_to_emoji": s.ip_to_emoji,
@@ -211,8 +234,14 @@ def save_data(s: GameState | None = None):
         "phase": s.phase,
         "last_activity": s.last_activity,
     }
-    with open(GAME_FILE, "w") as f:
-        json.dump(data, f)
+    if redis_client:
+        try:
+            redis_client.set(f"wwf:{code}", json.dumps(data))
+        except Exception as e:  # pragma: no cover - redis failures
+            logging.warning("Redis save failed: %s", e)
+    if code == DEFAULT_LOBBY:
+        with open(GAME_FILE, "w") as f:
+            json.dump(data, f)
 
 
 def load_data(s: GameState | None = None):
@@ -220,37 +249,61 @@ def load_data(s: GameState | None = None):
     if s is None:
         s = current_state
 
+    code = None
+    for cid, state in LOBBIES.items():
+        if state is s:
+            code = cid
+            break
+    if code is None:
+        code = DEFAULT_LOBBY
+
     # Load word list
     with open(WORDS_FILE) as f:
         WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
 
-    if os.path.exists(GAME_FILE):
+    data = None
+    if redis_client:
+        try:
+            blob = redis_client.get(f"wwf:{code}")
+            if blob:
+                data = json.loads(blob)
+        except Exception as e:  # pragma: no cover - redis failures
+            logging.warning("Redis load failed: %s", e)
+
+    if data is None and code == DEFAULT_LOBBY and os.path.exists(GAME_FILE):
         with open(GAME_FILE) as f:
             try:
                 data = json.load(f)
-                s.leaderboard   = data.get("leaderboard", {})
-                s.ip_to_emoji   = data.get("ip_to_emoji", {})
-                s.winner_emoji  = data.get("winner_emoji")
-                s.target_word   = data.get("target_word", "")
-                s.guesses[:]    = data.get("guesses", [])
-                s.is_over       = data.get("is_over", False)
-                s.found_greens  = set(data.get("found_greens", []))
-                s.found_yellows = set(data.get("found_yellows", []))
-                s.past_games[:] = data.get("past_games", [])
-                s.definition    = data.get("definition")
-                s.last_word     = data.get("last_word")
-                s.last_definition = data.get("last_definition")
-                s.win_timestamp = data.get("win_timestamp")
-                s.chat_messages[:] = data.get("chat_messages", [])
-                s.daily_double_index = data.get("daily_double_index")
-                s.daily_double_winners = set(data.get("daily_double_winners", []))
-                s.daily_double_pending = data.get("daily_double_pending", {})
-                s.host_token = data.get("host_token")
-                s.phase = data.get("phase", "waiting")
-                s.last_activity = data.get("last_activity", time.time())
             except Exception:
                 _reset_state(s)
-    else:
+                data = None
+
+    if not data:
+        _reset_state(s)
+        return
+
+    try:
+        s.leaderboard = data.get("leaderboard", {})
+        s.ip_to_emoji = data.get("ip_to_emoji", {})
+        s.winner_emoji = data.get("winner_emoji")
+        s.target_word = data.get("target_word", "")
+        s.guesses[:] = data.get("guesses", [])
+        s.is_over = data.get("is_over", False)
+        s.found_greens = set(data.get("found_greens", []))
+        s.found_yellows = set(data.get("found_yellows", []))
+        s.past_games[:] = data.get("past_games", [])
+        s.definition = data.get("definition")
+        s.last_word = data.get("last_word")
+        s.last_definition = data.get("last_definition")
+        s.win_timestamp = data.get("win_timestamp")
+        s.chat_messages[:] = data.get("chat_messages", [])
+        s.daily_double_index = data.get("daily_double_index")
+        s.daily_double_winners = set(data.get("daily_double_winners", []))
+        s.daily_double_pending = data.get("daily_double_pending", {})
+        s.host_token = data.get("host_token")
+        s.phase = data.get("phase", "waiting")
+        s.last_activity = data.get("last_activity", time.time())
+    except Exception:
         _reset_state(s)
 
 # ---- Game Logic ----
