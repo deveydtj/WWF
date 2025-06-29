@@ -359,7 +359,7 @@ function renderEmojiStamps(guesses) {
 
 async function performReset() {
   await animateTilesOut(board);
-  await resetGame();
+  await resetGame(LOBBY_CODE);
   await fetchState();
   await animateTilesIn(board);
   showMessage('Game reset!', { messageEl, messagePopup });
@@ -515,7 +515,7 @@ function applyState(state) {
 // Retrieve the latest game state from the server and handle connection issues
 async function fetchState() {
   try {
-    const state = await getState(myEmoji);
+    const state = await getState(myEmoji, LOBBY_CODE);
     if (hadNetworkError) {
       showMessage('Reconnected to server.', { messageEl, messagePopup });
     }
@@ -543,7 +543,7 @@ async function submitGuessHandler() {
     shakeInput(guessInput);
     return;
   }
-  const resp = await sendGuess(guess, myEmoji);
+  const resp = await sendGuess(guess, myEmoji, LOBBY_CODE);
   guessInput.value = '';
     if (resp.status === 'ok') {
       applyState(resp.state);
@@ -587,7 +587,7 @@ async function submitGuessHandler() {
 function onActivity() {
   lastActivity = Date.now();
   if (!eventSource && currentInterval !== FAST_INTERVAL) startPolling(FAST_INTERVAL);
-  sendHeartbeat(myEmoji);
+  sendHeartbeat(myEmoji, LOBBY_CODE);
   fetchState();
 }
 
@@ -608,7 +608,7 @@ function checkInactivity() {
 function initEventStream() {
   eventSource = subscribeToUpdates((state) => {
     applyState(state);
-  });
+  }, LOBBY_CODE);
   if (eventSource) {
     eventSource.onerror = () => {
       eventSource.close();
@@ -742,7 +742,7 @@ positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
 if (myEmoji) {
   // Reclaim previously selected emoji on reload
-  sendEmoji(myEmoji).catch(() => {});
+  sendEmoji(myEmoji, LOBBY_CODE).catch(() => {});
 }
 if (window.innerWidth > 900) {
   document.body.classList.add('history-open');
@@ -766,7 +766,7 @@ window.addEventListener('resize', updateVH);
 
 async function selectHint(col) {
   hideHintTooltip();
-  const resp = await requestHint(col, myEmoji);
+  const resp = await requestHint(col, myEmoji, LOBBY_CODE);
   if (resp.status === 'ok') {
     dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
     dailyDoubleRow = null;
@@ -822,7 +822,7 @@ chatForm.addEventListener('submit', async (e) => {
   const text = chatInput.value.trim();
   if (!text) return;
   chatInput.value = '';
-  await sendChatMessage(text, myEmoji);
+  await sendChatMessage(text, myEmoji, LOBBY_CODE);
   fetchState();
 });
 
