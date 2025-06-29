@@ -39,3 +39,9 @@ variable "single_instance" {
   default     = true
 }
 
+variable "enable_efs" {
+  description = "Mount an EFS volume for shared JSON persistence"
+  type        = bool
+  default     = false
+}
+

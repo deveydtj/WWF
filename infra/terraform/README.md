@@ -22,8 +22,12 @@ terraform apply \
   -var vpc_id=vpc-123456 \
   -var subnets="[subnet-abc,subnet-def]" \
   -var ecs_task_execution_role=arn:aws:iam::123456:role/ecsTaskExec \
-  -var api_image=123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest
+  -var api_image=123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest \
+  -var enable_efs=true
 ```
+
+`enable_efs` provisions an EFS file system and mounts it at `/data`, setting the
+`GAME_FILE` path accordingly.
 
 This is a minimal configuration and may need to be adjusted for your
 environment. DNS validation records for the ACM certificate should be created

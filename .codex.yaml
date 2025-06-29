@@ -3,12 +3,13 @@ setup:
   - apt-get update -qq
   - >-
     apt-get install -y xvfb libgtk-3-0 libgbm-dev libnss3 libxshmfence1 \
-    libasound2 libatk-bridge2.0-0 libdrm2 curl gconf-service
+    libasound2 libatk-bridge2.0-0 libdrm2 curl gconf-service terraform
   - curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && apt-get install -y nodejs
   - cd frontend && npm ci && npx cypress install && cd ..
   - pip install -r backend/requirements.txt
 test:
   - python -m pytest -q
   - cd frontend && xvfb-run -a npx cypress run --browser electron --headless && cd ..
+  - cd infra/terraform && terraform fmt -check && terraform init -backend=false && terraform plan -input=false -lock=false -var-file=../live/variables.tfvars && cd ../..
 env:
   CYPRESS_CACHE_FOLDER: ".cache/Cypress"
