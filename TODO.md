@@ -76,8 +76,8 @@ No outstanding tasks.
 ## Upcoming Milestones
 
 ### Project Hygiene
-- [ ] Establish a short branch naming convention such as `feat/lobby-backend` or `fix/landing-ui`.
-- [ ] Require GitHub status checks (pytest, Cypress, Terraform plan) before merging to `main`.
+- [x] Establish a short branch naming convention such as `feat/lobby-backend` or `fix/landing-ui`.
+- [x] Require GitHub status checks (pytest, Cypress, Terraform plan) before merging to `main`.
 - [ ] Rename all references to "Wordle With Friends" to the new game name throughout docs and code comments.
 
 ### Backend Refactor to Multi-Lobby
@@ -114,9 +114,9 @@ No outstanding tasks.
 - [ ] Show toast notifications for full lobbies, kicks and expired sessions.
 
 ### Infrastructure & Terraform
-- [ ] Create `infra/live/variables.tfvars` and configure a remote-state backend (S3 + DynamoDB lock).
-- [ ] Insert an ALB idle-timeout override of 3600 seconds and optionally include Redis/Dynamo modules.
-- [ ] Output the CloudFront domain and ALB DNS for CI consumption.
+- [x] Create `infra/live/variables.tfvars` and configure a remote-state backend (S3 + DynamoDB lock).
+- [x] Insert an ALB idle-timeout override of 3600 seconds and optionally include Redis/Dynamo modules.
+- [x] Output the CloudFront domain and ALB DNS for CI consumption.
 
 ### Docker & ECS
 - [x] Expose port 5000 in the Dockerfile and run `gunicorn -k gevent --timeout 0` by default.

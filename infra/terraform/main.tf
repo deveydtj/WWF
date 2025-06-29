@@ -109,6 +109,7 @@ resource "aws_lb" "api" {
   load_balancer_type = "application"
   subnets            = var.subnets
   security_groups    = [aws_security_group.alb.id]
+  idle_timeout       = 3600
 }
 
 resource "aws_lb_listener" "https" {
@@ -168,3 +169,12 @@ resource "aws_security_group" "api" {
   }
 }
 
+
+# ------- Outputs -------
+output "cloudfront_domain" {
+  value = aws_cloudfront_distribution.cdn.domain_name
+}
+
+output "alb_dns_name" {
+  value = aws_lb.api.dns_name
+}
