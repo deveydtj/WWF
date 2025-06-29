@@ -936,4 +936,15 @@ if __name__ == "__main__":
     if not current_state.target_word:
         pick_new_word(current_state)
         save_data()
+    # Launch a background thread that periodically purges idle lobbies
+    def _purge_loop() -> None:
+        while True:
+            time.sleep(600)
+            try:
+                purge_lobbies()
+            except Exception as e:  # pragma: no cover - best effort cleanup
+                logging.warning("Purge thread error: %s", e)
+
+    t = threading.Thread(target=_purge_loop, daemon=True)
+    t.start()
     app.run(host='0.0.0.0', port=5001)

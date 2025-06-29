@@ -93,7 +93,7 @@ No outstanding tasks.
   - `GET /lobby/<id>/stream`
   - `GET /lobbies`
 - [ ] Scope SSE broadcasting to each lobby via `listeners[lobby_id]`.
-- [ ] Clean up idle lobbies every ten minutes when `last_active` is over thirty minutes old.
+ - [x] Clean up idle lobbies every ten minutes when `last_active` is over thirty minutes old.
 - [ ] Add middleware for rate limiting (max five lobby creations per IP per minute) and lobby id validation.
 - [ ] Toggle persistence: JSON file in single-instance mode, stubs for Redis or DynamoDB otherwise.
 - [ ] Add unit tests for all lobby service helpers.
