@@ -2,7 +2,8 @@ import re
 from pathlib import Path
 import subprocess, json
 
-INDEX = Path('frontend/index.html')
+LANDING = Path('frontend/index.html')
+GAME = Path('frontend/game.html')
 CSS_THEME = Path('frontend/static/css/theme.css')
 CSS_LAYOUT = Path('frontend/static/css/layout.css')
 SRC_DIR = Path('frontend/static/js')
@@ -21,6 +22,16 @@ EXPECTED_MODULES = [
     'utils.js'
 ]
 
+def test_landing_page_assets():
+    text = LANDING.read_text(encoding='utf-8')
+    assert '<link rel="stylesheet" href="landing.css"' in text
+    assert '<script type="module" src="landing.js"' in text
+
+def test_landing_page_elements_exist():
+    text = LANDING.read_text(encoding='utf-8')
+    for el_id in ['createBtn', 'joinForm', 'quickBtn', 'rejoinChip']:
+        assert f'id="{el_id}"' in text
+
 def test_modules_exist_and_export():
     for name in EXPECTED_MODULES:
         path = SRC_DIR / name
@@ -30,7 +41,7 @@ def test_modules_exist_and_export():
             assert 'export' in text, f"{name} should contain export statements"
 
 def test_index_html_uses_module_script():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<link rel="stylesheet" href="static/css/theme.css"' in text
     assert '<link rel="stylesheet" href="static/css/layout.css"' in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
@@ -49,7 +60,7 @@ def test_main_js_imports_modules():
 
 
 def test_definition_panel_elements_exist():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<div id="definitionBox"' in text
     assert '<div id="definitionText"' in text
 
@@ -110,7 +121,7 @@ def test_side_panels_fixed_to_bottom_in_light_mode():
         assert re.search(pattern, css, flags=re.DOTALL)
 
 def test_chat_box_and_controls_exist():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<div id="chatBox"' in text
     assert '<div id="chatMessages"' in text
     assert '<form id="chatForm"' in text
@@ -118,7 +129,7 @@ def test_chat_box_and_controls_exist():
     assert '<button id="chatSend"' in text
 
 def test_chat_notify_icon_present_and_styled():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     css = read_css()
     assert '<button id="chatNotify"' in text
     assert '#chatNotify {' in css
@@ -137,14 +148,14 @@ def test_hide_chat_notify_keeps_icon_visible():
 
 
 def test_hold_to_reset_elements_exist():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<button id="holdReset"' in text
     assert '<span id="holdResetText"' in text
     assert '<span id="holdResetProgress"' in text
 
 
 def test_options_menu_has_dark_and_sound_buttons():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<button id="menuDarkMode"' in text
     assert '<button id="menuSound"' in text
     assert '<button id="menuInfo"' in text
@@ -167,13 +178,13 @@ console.log(JSON.stringify(btn));
 
 
 def test_info_popup_elements_exist():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<div id="infoPopup"' in text
     assert '<div id="infoBox"' in text
 
 
 def test_message_containers_exist():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<p id="message"' in text
     assert '<div id="messagePopup"' in text
     assert '<div id="ariaLive"' in text
@@ -400,7 +411,7 @@ console.log(JSON.stringify({ openFocused, display: dialog.style.display, restore
 
 
 def test_hint_tooltip_element_and_css():
-    text = INDEX.read_text(encoding='utf-8')
+    text = GAME.read_text(encoding='utf-8')
     assert '<div id="hintTooltip"' in text
     css = read_css()
     assert '#hintTooltip' in css

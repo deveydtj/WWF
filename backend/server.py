@@ -653,8 +653,13 @@ def reset_game():
 
 @app.route("/")
 def index():
-    # Serve the bundled frontend from the new directory
+    """Serve the landing page."""
     return send_from_directory(str(FRONTEND_DIR), "index.html")
+
+@app.route("/game")
+def game_page():
+    """Serve the main game client."""
+    return send_from_directory(str(FRONTEND_DIR), "game.html")
 
 # Serve static JavaScript modules
 @app.route('/static/js/<path:filename>')

@@ -32,7 +32,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
 ## Frontend
 
-- [ ] Build new landing page served from `/` (see `LANDING_PAGE_REQUIREMENTS.md`).
+- [x] Build new landing page served from `/` (see `LANDING_PAGE_REQUIREMENTS.md`).
 - [ ] Implement hero card actions: create lobby, join validation, and Quick Play.
 - [ ] Display a re-join chip using the last saved lobby code.
 - [ ] Add a sticky header with theme toggle plus Help and GitHub links.
