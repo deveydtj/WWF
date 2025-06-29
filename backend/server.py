@@ -201,17 +201,18 @@ def _reset_state(s: GameState | None = None) -> GameState:
     return s
 
 
+def _lobby_id(s: GameState) -> str:
+    """Return the lobby code for the given ``GameState``."""
+    for cid, state in LOBBIES.items():
+        if state is s:
+            return cid
+    return DEFAULT_LOBBY
+
+
 def save_data(s: GameState | None = None):
     if s is None:
         s = current_state
-    # determine lobby code for this state
-    code = None
-    for cid, state in LOBBIES.items():
-        if state is s:
-            code = cid
-            break
-    if code is None:
-        code = DEFAULT_LOBBY
+    code = _lobby_id(s)
     data = {
         "leaderboard": s.leaderboard,
         "ip_to_emoji": s.ip_to_emoji,
@@ -249,13 +250,7 @@ def load_data(s: GameState | None = None):
     if s is None:
         s = current_state
 
-    code = None
-    for cid, state in LOBBIES.items():
-        if state is s:
-            code = cid
-            break
-    if code is None:
-        code = DEFAULT_LOBBY
+    code = _lobby_id(s)
 
     # Load word list
     with open(WORDS_FILE) as f:
@@ -498,19 +493,37 @@ def broadcast_state(s: GameState | None = None) -> None:
             s.listeners.discard(q)
 
 
-def log_daily_double_used(emoji: str, ip: str) -> None:
-    """Append a Daily Double usage event to the analytics log."""
-    entry = {
-        "event": "daily_double_used",
-        "emoji": emoji,
-        "ip": ip,
-        "timestamp": time.time(),
-    }
+def _log_event(event: str, **fields) -> None:
+    """Write a structured analytics event to ``ANALYTICS_FILE``."""
+    entry = {"event": event, "timestamp": time.time(), **fields}
     try:
         with open(ANALYTICS_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
     except Exception as e:  # pragma: no cover - logging failures shouldn't break API
         logging.info(f"Failed to log analytics event: {e}")
+
+
+def log_daily_double_used(emoji: str, ip: str) -> None:
+    """Append a Daily Double usage event to the analytics log."""
+    _log_event("daily_double_used", emoji=emoji, ip=ip)
+
+
+def log_lobby_created(lobby_id: str, ip: str) -> None:
+    """Log creation of a new lobby."""
+    _log_event("lobby_created", lobby_id=lobby_id, ip=ip)
+
+
+def log_lobby_joined(lobby_id: str, emoji: str, ip: str) -> None:
+    """Log a player joining ``lobby_id``."""
+    _log_event("lobby_joined", lobby_id=lobby_id, emoji=emoji, ip=ip)
+
+
+def log_lobby_finished(lobby_id: str, ip: str | None = None) -> None:
+    """Log a lobby finishing or being reset."""
+    data = {"lobby_id": lobby_id}
+    if ip:
+        data["ip"] = ip
+    _log_event("lobby_finished", **data)
 
 # ---- API Routes ----
 
@@ -564,6 +577,8 @@ def set_emoji():
     if not emoji or not isinstance(emoji, str):
         return jsonify({"status": "error", "msg": "Invalid emoji."}), 400
 
+    new_player = ip not in current_state.ip_to_emoji
+
     with emoji_lock:
         if emoji in current_state.leaderboard and current_state.leaderboard[emoji]["ip"] != ip:
             return (
@@ -602,6 +617,8 @@ def set_emoji():
         current_state.last_activity = now
         save_data()
     broadcast_state()
+    if new_player:
+        log_lobby_joined(_lobby_id(current_state), emoji, ip)
     return jsonify({"status": "ok"})
 
 @app.route("/guess", methods=["POST"])
@@ -792,6 +809,7 @@ def reset_game():
     current_state.last_activity = time.time()
     save_data()
     broadcast_state()
+    log_lobby_finished(DEFAULT_LOBBY, get_client_ip())
     return jsonify({"status": "ok"})
 
 # ---- Lobby-aware Routes ----
@@ -816,6 +834,7 @@ def lobby_create():
     token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
     state.host_token = token
     LOBBIES[code] = state
+    log_lobby_created(code, ip)
     return jsonify({"id": code, "host_token": token})
 
 
@@ -859,7 +878,10 @@ def lobby_reset(code):
     token = data.get("host_token")
     if token != state.host_token:
         return jsonify({"status": "error", "msg": "Invalid host token"}), 403
-    return _with_lobby(code, reset_game)
+    resp = _with_lobby(code, reset_game)
+    if isinstance(resp, dict) and resp.get("status") == "ok":
+        log_lobby_finished(code, get_client_ip())
+    return resp
 
 
 @app.route("/lobby/<code>/chat", methods=["GET", "POST"])
