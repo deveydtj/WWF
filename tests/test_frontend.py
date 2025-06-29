@@ -47,6 +47,35 @@ console.log(JSON.stringify(global.localStorage.data));
     data = json.loads(result.stdout.strip())
     assert data['dark'] == 'true'
 
+def test_store_and_get_last_lobby():
+    script = """
+global.document = { addEventListener(){}, body:{}, getElementById(){return null;} };
+global.localStorage = { data: {}, setItem(k,v){ this.data[k]=v; }, getItem(k){ return this.data[k]; } };
+const mod = await import('./frontend/landing.js');
+mod.storeLastLobby('ABC123');
+console.log(mod.getLastLobby());
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip() == 'ABC123'
+
+def test_show_saved_emoji_populates_element():
+    script = """
+const el = { textContent: '' };
+global.document = { addEventListener(){}, getElementById(id){ return id==='emojiDisplay' ? el : null; }, body:{} };
+global.localStorage = { data: { myEmoji: '🐶' }, getItem(k){ return this.data[k]; } };
+const mod = await import('./frontend/landing.js');
+mod.showSavedEmoji();
+console.log(el.textContent);
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip() == '🐶'
+
 def test_join_code_regex_present():
     text = Path('frontend/landing.js').read_text(encoding='utf-8')
     assert '^[A-Za-z0-9]{6}$' in text
