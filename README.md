@@ -125,3 +125,14 @@ The home page served at `/` is the starting point for all players. It mirrors th
 
 `landing.js` manages form validation, fetch calls, and preference storage while `landing.css` defines layout and neumorphic styling.
 
+
+## Docker
+
+Build and run the Flask API using Docker:
+
+```bash
+docker build -t wwf-api .
+docker run -p 5001:5001 wwf-api
+```
+
+The container exposes port **5001** and serves the game API and static files.
