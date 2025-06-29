@@ -72,6 +72,11 @@ SCRABBLE_SCORES = {
     **{l: 10 for l in "qz"},
 }
 
+# Lobby management constants
+LOBBY_TTL = 30 * 60  # 30 minutes
+LOBBY_CREATION_LIMIT = 5
+LOBBY_CREATION_WINDOW = 60  # seconds
+
 
 # ---- Globals ----
 WORDS = []
@@ -96,12 +101,16 @@ class GameState:
     daily_double_index: int | None = None
     daily_double_winners: set = field(default_factory=set)
     daily_double_pending: dict = field(default_factory=dict)
+    host_token: str | None = None
+    phase: str = "waiting"
+    last_activity: float = field(default_factory=time.time)
 
 
 emoji_lock = threading.Lock()  # guard emoji selection operations
 
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
+CREATION_TIMES: dict[str, list[float]] = {}
 
 # Current active lobby used by legacy routes
 DEFAULT_LOBBY = "DEFAULT"
@@ -113,8 +122,24 @@ def get_lobby(code: str) -> GameState:
     return LOBBIES.setdefault(code, _reset_state(GameState()))
 
 
+def purge_lobbies() -> None:
+    """Remove lobbies that are finished or idle beyond ``LOBBY_TTL``."""
+    now = time.time()
+    expired = []
+    for cid, state in LOBBIES.items():
+        if cid == DEFAULT_LOBBY:
+            continue
+        if now - state.last_activity > LOBBY_TTL and (
+            state.phase == "finished" or not state.leaderboard
+        ):
+            expired.append(cid)
+    for cid in expired:
+        LOBBIES.pop(cid, None)
+
+
 def _with_lobby(code: str, func):
     """Temporarily switch ``current_state`` to the lobby for ``code``."""
+    purge_lobbies()
     global current_state
     state = get_lobby(code)
     prev = current_state
@@ -137,6 +162,7 @@ def _reset_state(s: GameState | None = None) -> GameState:
     if s is None:
         s = GameState()
     else:
+        host_token = s.host_token
         s.leaderboard.clear()
         s.ip_to_emoji.clear()
         s.guesses.clear()
@@ -146,6 +172,7 @@ def _reset_state(s: GameState | None = None) -> GameState:
         s.chat_messages.clear()
         s.daily_double_winners.clear()
         s.daily_double_pending.clear()
+        s.host_token = host_token
     s.winner_emoji = None
     s.target_word = ""
     s.is_over = False
@@ -154,6 +181,8 @@ def _reset_state(s: GameState | None = None) -> GameState:
     s.last_definition = None
     s.win_timestamp = None
     s.daily_double_index = None
+    s.phase = "waiting"
+    s.last_activity = time.time()
     return s
 
 
@@ -178,6 +207,9 @@ def save_data(s: GameState | None = None):
         "daily_double_index": s.daily_double_index,
         "daily_double_winners": list(s.daily_double_winners),
         "daily_double_pending": s.daily_double_pending,
+        "host_token": s.host_token,
+        "phase": s.phase,
+        "last_activity": s.last_activity,
     }
     with open(GAME_FILE, "w") as f:
         json.dump(data, f)
@@ -213,6 +245,9 @@ def load_data(s: GameState | None = None):
                 s.daily_double_index = data.get("daily_double_index")
                 s.daily_double_winners = set(data.get("daily_double_winners", []))
                 s.daily_double_pending = data.get("daily_double_pending", {})
+                s.host_token = data.get("host_token")
+                s.phase = data.get("phase", "waiting")
+                s.last_activity = data.get("last_activity", time.time())
             except Exception:
                 _reset_state(s)
     else:
@@ -239,6 +274,8 @@ def pick_new_word(s: GameState | None = None):
     s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
     s.daily_double_winners.clear()
     s.daily_double_pending.clear()
+    s.phase = "waiting"
+    s.last_activity = time.time()
 
 def fetch_definition(word):
     """Look up a word's definition online with an offline JSON fallback."""
@@ -451,6 +488,7 @@ def state():
         e = data.get("emoji")
         if e and e in current_state.leaderboard:
             current_state.leaderboard[e]["last_active"] = time.time()
+            current_state.last_activity = time.time()
             save_data()
             emoji = e
     else:
@@ -508,6 +546,7 @@ def set_emoji():
         current_state.leaderboard[emoji]["ip"] = ip
         current_state.leaderboard[emoji]["last_active"] = now
         current_state.ip_to_emoji[ip] = emoji
+        current_state.last_activity = now
         save_data()
     broadcast_state()
     return jsonify({"status": "ok"})
@@ -524,6 +563,9 @@ def guess_word():
     points_delta = 0
     now = time.time()
 
+    current_state.last_activity = now
+    if current_state.phase == "waiting":
+        current_state.phase = "active"
     if current_state.is_over:
         close_call = None
         if guess == current_state.target_word and current_state.win_timestamp and emoji != current_state.winner_emoji:
@@ -608,6 +650,7 @@ def guess_word():
             points_delta -= 3  # Last guess, failed
 
     if over:
+        current_state.phase = "finished"
         start_definition_lookup(current_state.target_word, current_state)
 
     # -1 penalty for duplicate guesses with no new yellows/greens
@@ -681,6 +724,7 @@ def chat():
         if emoji not in current_state.leaderboard:
             return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
         current_state.chat_messages.append({"emoji": emoji, "text": text, "ts": time.time()})
+        current_state.last_activity = time.time()
         save_data()
         broadcast_state()
         return jsonify({"status": "ok"})
@@ -692,6 +736,7 @@ def reset_game():
     # Save the just-finished game into history
     current_state.past_games.append(list(current_state.guesses))
     pick_new_word(current_state)
+    current_state.last_activity = time.time()
     save_data()
     broadcast_state()
     return jsonify({"status": "ok"})
@@ -701,11 +746,24 @@ def reset_game():
 @app.route("/lobby", methods=["POST"])
 def lobby_create():
     """Create a new lobby and return its code."""
+    purge_lobbies()
+    ip = get_client_ip()
+    now = time.time()
+    times = CREATION_TIMES.setdefault(ip, [])
+    times[:] = [t for t in times if now - t < LOBBY_CREATION_WINDOW]
+    if len(times) >= LOBBY_CREATION_LIMIT:
+        return jsonify({"status": "error", "msg": "Rate limit"}), 429
+    times.append(now)
+
     code = generate_lobby_code()
+    while code in LOBBIES:
+        code = generate_lobby_code()
     state = _reset_state(GameState())
     pick_new_word(state)
+    token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    state.host_token = token
     LOBBIES[code] = state
-    return jsonify({"id": code})
+    return jsonify({"id": code, "host_token": token})
 
 
 @app.route("/lobbies", methods=["GET"])
@@ -741,6 +799,13 @@ def lobby_guess(code):
 
 @app.route("/lobby/<code>/reset", methods=["POST"])
 def lobby_reset(code):
+    state = LOBBIES.get(code)
+    if not state:
+        return jsonify({"status": "error", "msg": "No such lobby"}), 404
+    data = request.get_json(silent=True) or {}
+    token = data.get("host_token")
+    if token != state.host_token:
+        return jsonify({"status": "error", "msg": "Invalid host token"}), 403
     return _with_lobby(code, reset_game)
 
 

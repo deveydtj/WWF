@@ -27,8 +27,8 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
  - [x] Convert global game state to a per-lobby dictionary keyed by six-character lobby codes.
  - [x] Implement the `/lobby` route family: create, state, emoji, guess, reset, stream, and lobby list.
-- [ ] Enforce lobby lifecycle (waiting → active → finished) and purge idle or finished lobbies after 30 minutes.
-- [ ] Require a `host_token` for privileged actions and rate-limit lobby creation.
+ - [x] Enforce lobby lifecycle (waiting → active → finished) and purge idle or finished lobbies after 30 minutes.
+ - [x] Require a `host_token` for privileged actions and rate-limit lobby creation.
 
 ## Frontend
 
@@ -62,8 +62,8 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
 ## Testing
 
- - [x] Add unit tests for lobby creation, join/rejoin flows, and SSE isolation per lobby.
-- [ ] Add integration tests ensuring guesses and chat do not leak across lobbies.
+- [x] Add unit tests for lobby creation, join/rejoin flows, and SSE isolation per lobby.
+- [x] Add integration tests ensuring guesses and chat do not leak across lobbies.
 - [ ] Add Playwright end-to-end test covering lobby creation through auto-expiration.
 
 ## Accessibility
