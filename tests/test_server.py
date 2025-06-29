@@ -999,3 +999,24 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     assert final['event'] == 'lobby_finished'
     assert final['lobby_id'] == code
     assert final['ip'] == '1'
+
+# Add new tests for lobby code generation and purge
+
+
+def test_generate_lobby_code_valid(server_env):
+    server, _ = server_env
+    codes = {server.generate_lobby_code() for _ in range(50)}
+    assert len(codes) == 50
+    for code in codes:
+        assert server.LOBBY_CODE_RE.fullmatch(code)
+
+
+def test_purge_lobbies_removes_idle_finished(server_env):
+    server, _ = server_env
+    resp = server.lobby_create()
+    code = resp['id']
+    state = server.LOBBIES[code]
+    state.phase = 'finished'
+    state.last_activity -= server.LOBBY_TTL + 1
+    server.purge_lobbies()
+    assert code not in server.LOBBIES

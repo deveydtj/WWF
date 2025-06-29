@@ -68,6 +68,27 @@ jobs:
           rm -rf backend/static/*
           cp -r frontend/dist/* backend/static/
 
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.4.6
+
+      - name: Terraform fmt
+        working-directory: infra/terraform
+        run: terraform fmt -check
+
+      - name: Terraform init
+        working-directory: infra/terraform
+        run: terraform init -backend=false
+
+      - name: Terraform plan
+        working-directory: infra/terraform
+        run: terraform plan -input=false -lock=false -var-file=../live/variables.tfvars
+
+      - name: Terraform apply
+        if: github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID
+        working-directory: infra/terraform
+        run: terraform apply -input=false -lock=false -auto-approve -var-file=../live/variables.tfvars
+
       - name: Configure AWS credentials
         if: github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID
         uses: aws-actions/configure-aws-credentials@v2
