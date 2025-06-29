@@ -29,8 +29,27 @@ def test_landing_page_assets():
 
 def test_landing_page_elements_exist():
     text = LANDING.read_text(encoding='utf-8')
-    for el_id in ['createBtn', 'joinForm', 'quickBtn', 'rejoinChip']:
+    for el_id in ['createBtn', 'joinForm', 'quickBtn', 'rejoinChip', 'emojiDisplay']:
         assert f'id="{el_id}"' in text
+
+def test_set_dark_mode_stores_preference():
+    script = """
+global.document = { addEventListener(){}, body: { classList: { toggle(){}, contains(){return false;} } } };
+global.localStorage = { data: {}, setItem(k,v){ this.data[k]=v; }, getItem(k){return this.data[k];} };
+const mod = await import('./frontend/landing.js');
+mod.setDarkMode(true);
+console.log(JSON.stringify(global.localStorage.data));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['dark'] == 'true'
+
+def test_join_code_regex_present():
+    text = Path('frontend/landing.js').read_text(encoding='utf-8')
+    assert '^[A-Za-z0-9]{6}$' in text
 
 def test_modules_exist_and_export():
     for name in EXPECTED_MODULES:
