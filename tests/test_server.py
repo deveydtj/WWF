@@ -951,3 +951,41 @@ def test_lobby_create_rate_limit(server_env, monkeypatch):
     t[0] = 70
     resp2 = server.lobby_create()
     assert 'id' in resp2
+
+
+def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
+    server, request = server_env
+    log_file = tmp_path / 'analytics.log'
+    monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
+
+    request.remote_addr = '1'
+    resp = server.lobby_create()
+    code = resp['id']
+
+    with open(log_file) as f:
+        entry = json.loads(f.readline())
+    assert entry['event'] == 'lobby_created'
+    assert entry['lobby_id'] == code
+    assert entry['ip'] == '1'
+
+    request.json = {'emoji': '😀'}
+    server.lobby_emoji(code)
+
+    with open(log_file) as f:
+        entries = [json.loads(line) for line in f.readlines()]
+    join = entries[1]
+    assert join['event'] == 'lobby_joined'
+    assert join['lobby_id'] == code
+    assert join['emoji'] == '😀'
+
+    request.json = {'guess': server.LOBBIES[code].target_word, 'emoji': '😀'}
+    server.lobby_guess(code)
+
+    request.json = {'host_token': resp['host_token']}
+    server.lobby_reset(code)
+
+    with open(log_file) as f:
+        final = json.loads(f.readlines()[-1])
+    assert final['event'] == 'lobby_finished'
+    assert final['lobby_id'] == code
+    assert final['ip'] == '1'

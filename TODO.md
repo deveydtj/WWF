@@ -119,7 +119,7 @@ No outstanding tasks.
 - [ ] Output the CloudFront domain and ALB DNS for CI consumption.
 
 ### Docker & ECS
-- [ ] Expose port 5000 in the Dockerfile and run `gunicorn -k gevent --timeout 0` by default.
+- [x] Expose port 5000 in the Dockerfile and run `gunicorn -k gevent --timeout 0` by default.
 - [ ] Pass environment variables such as `SINGLE_INSTANCE=true` in the task definition.
 - [ ] Mount EFS when JSON persistence is enabled.
 
@@ -135,12 +135,12 @@ No outstanding tasks.
 - [ ] Include the new tests in the CI matrix (`pytest -q`, `cypress run --browser chrome`).
 
 ### Analytics, Logging & Monitoring
-- [ ] Log structured JSON events for `lobby_created`, `lobby_joined` and `lobby_finished`.
+- [x] Log structured JSON events for `lobby_created`, `lobby_joined` and `lobby_finished`.
 - [ ] Create CloudWatch metric filters alerting on error rates above five per minute.
 - [ ] Schedule a daily CloudWatch Event or Lambda to trigger the idle-lobby cleanup if not using the in-process thread.
 
 ### Docs & Deliverables
 - [ ] Update `ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
 - [ ] Replace the single-room explanation in `README.md` with the multi-lobby design.
-- [ ] Ensure `LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
-- [ ] Provide a `DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.
+- [x] Ensure `LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
+- [x] Provide a `DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.
