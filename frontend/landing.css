@@ -55,3 +55,17 @@ header {
   overflow: hidden;
   clip: rect(1px,1px,1px,1px);
 }
+
+/* Focus outlines for accessibility */
+button:focus,
+input:focus,
+a:focus {
+  outline: 2px solid var(--present-bg);
+  outline-offset: 2px;
+}
+
+.error-text {
+  color: var(--error-color);
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}

@@ -22,6 +22,20 @@ function announce(msg) {
   if (live) live.textContent = msg;
 }
 
+function showJoinError(msg) {
+  const err = document.getElementById('joinError');
+  if (err) {
+    err.textContent = msg;
+    err.classList.remove('visually-hidden');
+  }
+  announce(msg);
+}
+
+function clearJoinError() {
+  const err = document.getElementById('joinError');
+  if (err) err.classList.add('visually-hidden');
+}
+
 export function showSavedEmoji() {
   const el = document.getElementById('emojiDisplay');
   if (el) {
@@ -74,20 +88,42 @@ function initJoinForm() {
     rejoin.addEventListener('click', () => joinLobby(last));
   }
 
+  input.addEventListener('input', () => {
+    input.value = input.value.toUpperCase();
+    if (!/^[A-Za-z0-9]{0,6}$/.test(input.value)) {
+      showJoinError('Use letters and numbers only');
+    } else {
+      clearJoinError();
+    }
+  });
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const code = input.value.trim();
     if (/^[A-Za-z0-9]{6}$/.test(code)) {
+      clearJoinError();
       joinLobby(code);
     } else {
-      announce('Enter a valid 6 character code');
+      showJoinError('Enter a valid 6 character code');
     }
+  });
+}
+
+function initHowTo() {
+  const toggle = document.getElementById('howToggle');
+  const content = document.getElementById('howContent');
+  if (!toggle || !content) return;
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    content.hidden = expanded;
   });
 }
 
 export function init() {
   initDarkToggle();
   initJoinForm();
+  initHowTo();
   showSavedEmoji();
   document.getElementById('createBtn').addEventListener('click', createLobby);
   document.getElementById('quickBtn').addEventListener('click', quickPlay);
