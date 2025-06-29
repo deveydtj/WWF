@@ -140,10 +140,10 @@ first:
 cd frontend && npm run build && cd ..
 cp -r frontend/dist/* backend/static/
 docker build -t wwf-api .
-docker run -p 5001:5001 wwf-api
+docker run -p 5000:5000 wwf-api
 ```
 
-The container exposes port **5001** and serves the game API and static files.
+The container exposes port **5000** and serves the game API and static files.
 
 ## Continuous Integration
 
