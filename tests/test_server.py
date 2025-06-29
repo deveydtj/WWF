@@ -953,6 +953,16 @@ def test_lobby_create_rate_limit(server_env, monkeypatch):
     assert 'id' in resp2
 
 
+def test_lobby_code_validation(server_env):
+    server, request = server_env
+
+    bad = server.lobby_state('invalid!')
+    assert isinstance(bad, tuple)
+    data, status = bad
+    assert status == 400
+    assert data['status'] == 'error'
+
+
 def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     server, request = server_env
     log_file = tmp_path / 'analytics.log'
