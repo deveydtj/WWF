@@ -22,7 +22,7 @@ function announce(msg) {
   if (live) live.textContent = msg;
 }
 
-function showSavedEmoji() {
+export function showSavedEmoji() {
   const el = document.getElementById('emojiDisplay');
   if (el) {
     const emoji = localStorage.getItem('myEmoji');
@@ -30,11 +30,11 @@ function showSavedEmoji() {
   }
 }
 
-function storeLastLobby(id) {
+export function storeLastLobby(id) {
   localStorage.setItem('lastLobby', id);
 }
 
-function getLastLobby() {
+export function getLastLobby() {
   return localStorage.getItem('lastLobby');
 }
 

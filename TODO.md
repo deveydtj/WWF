@@ -37,7 +37,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 - [x] Display a re-join chip using the last saved lobby code.
 - [x] Add a sticky header with theme toggle plus Help and GitHub links.
 - [x] Show feature highlight cards and a collapsible How-to-Play accordion.
-- [ ] Persist dark mode, emoji, and last lobby code in `localStorage`.
+- [x] Persist dark mode, emoji, and last lobby code in `localStorage`.
 - [x] Write Jest DOM tests for rendering, validation, and preference storage.
 - [ ] Display lobby header with code, player count, and host controls.
 - [ ] Persist emoji across reloads and reclaim it via `POST /lobby/<id>/emoji`.
