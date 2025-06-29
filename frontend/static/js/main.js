@@ -1,7 +1,7 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
-import { getState, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint } from './api.js';
+import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
@@ -681,6 +681,10 @@ createBoard(board, maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
+if (myEmoji) {
+  // Reclaim previously selected emoji on reload
+  sendEmoji(myEmoji).catch(() => {});
+}
 if (window.innerWidth > 900) {
   document.body.classList.add('history-open');
   document.body.classList.add('definition-open');
