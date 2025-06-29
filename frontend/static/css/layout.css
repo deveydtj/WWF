@@ -551,6 +551,11 @@
       font-size: 0.9rem;
     }
 
+    #hostControls {
+      display: flex;
+      gap: 6px;
+    }
+
     /* ─── History Panel ─── */
     #historyBox {
       position: absolute;
