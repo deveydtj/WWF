@@ -833,3 +833,51 @@ def test_set_emoji_invalid_input(server_env):
     data, status = resp
     assert status == 400
     assert data['status'] == 'error'
+
+
+def test_lobby_create_and_isolated_state(server_env):
+    server, request = server_env
+
+    lobby_resp = server.lobby_create()
+    code = lobby_resp['id']
+    assert len(code) == 6
+    assert code in server.LOBBIES
+
+    server.LOBBIES[code].target_word = 'apple'
+
+    request.json = {'emoji': '😀'}
+    request.remote_addr = '1'
+    server.lobby_emoji(code)
+
+    q = server.queue.Queue()
+    server.LOBBIES[code].listeners.add(q)
+
+    request.json = {'guess': 'apple', 'emoji': '😀'}
+    server.lobby_guess(code)
+
+    assert not q.empty()
+
+
+def test_sse_isolation_between_lobbies(server_env):
+    server, request = server_env
+
+    l1 = server.lobby_create()['id']
+    l2 = server.lobby_create()['id']
+    server.LOBBIES[l1].target_word = 'apple'
+    server.LOBBIES[l2].target_word = 'apple'
+
+    request.json = {'emoji': '😀'}
+    request.remote_addr = '1'
+    server.lobby_emoji(l1)
+    server.lobby_emoji(l2)
+
+    q1 = server.queue.Queue()
+    q2 = server.queue.Queue()
+    server.LOBBIES[l1].listeners.add(q1)
+    server.LOBBIES[l2].listeners.add(q2)
+
+    request.json = {'guess': 'apple', 'emoji': '😀'}
+    server.lobby_guess(l1)
+
+    assert not q1.empty()
+    assert q2.empty()
