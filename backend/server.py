@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import random
+import string
 import json
 import os
 import time
@@ -107,6 +108,23 @@ DEFAULT_LOBBY = "DEFAULT"
 current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
 
 
+def get_lobby(code: str) -> GameState:
+    """Return the GameState for ``code``, creating it if needed."""
+    return LOBBIES.setdefault(code, _reset_state(GameState()))
+
+
+def _with_lobby(code: str, func):
+    """Temporarily switch ``current_state`` to the lobby for ``code``."""
+    global current_state
+    state = get_lobby(code)
+    prev = current_state
+    current_state = state
+    try:
+        return func()
+    finally:
+        current_state = prev
+
+
 def sanitize_definition(text: str) -> str:
     """Remove HTML tags and extra whitespace from a definition."""
     text = re.sub(r"<[^>]*>", "", text)
@@ -201,6 +219,11 @@ def load_data(s: GameState | None = None):
         _reset_state(s)
 
 # ---- Game Logic ----
+
+def generate_lobby_code() -> str:
+    """Return a random six-character lobby code."""
+    alphabet = string.ascii_uppercase + string.digits
+    return "".join(random.choices(alphabet, k=6))
 def pick_new_word(s: GameState | None = None):
     """Choose a new target word and reset all in-memory game current_state."""
     if s is None:
@@ -672,6 +695,58 @@ def reset_game():
     save_data()
     broadcast_state()
     return jsonify({"status": "ok"})
+
+# ---- Lobby-aware Routes ----
+
+@app.route("/lobby", methods=["POST"])
+def lobby_create():
+    """Create a new lobby and return its code."""
+    code = generate_lobby_code()
+    state = _reset_state(GameState())
+    pick_new_word(state)
+    LOBBIES[code] = state
+    return jsonify({"id": code})
+
+
+@app.route("/lobbies", methods=["GET"])
+def lobby_list():
+    """Return a list of active lobbies and player counts."""
+    data = [
+        {"id": cid, "players": len(s.leaderboard)}
+        for cid, s in LOBBIES.items()
+        if cid != DEFAULT_LOBBY
+    ]
+    return jsonify({"lobbies": data})
+
+
+@app.route("/lobby/<code>/stream")
+def lobby_stream(code):
+    return _with_lobby(code, stream)
+
+
+@app.route("/lobby/<code>/state", methods=["GET", "POST"])
+def lobby_state(code):
+    return _with_lobby(code, state)
+
+
+@app.route("/lobby/<code>/emoji", methods=["POST"])
+def lobby_emoji(code):
+    return _with_lobby(code, set_emoji)
+
+
+@app.route("/lobby/<code>/guess", methods=["POST"])
+def lobby_guess(code):
+    return _with_lobby(code, guess_word)
+
+
+@app.route("/lobby/<code>/reset", methods=["POST"])
+def lobby_reset(code):
+    return _with_lobby(code, reset_game)
+
+
+@app.route("/lobby/<code>/chat", methods=["GET", "POST"])
+def lobby_chat(code):
+    return _with_lobby(code, chat)
 
 @app.route("/")
 def index():
