@@ -17,7 +17,7 @@ This guide outlines the steps to deploy the Wordle With Friends infrastructure a
    - Run `terraform init -backend-config="bucket=<state-bucket>" -backend-config="dynamodb_table=<lock-table>"` inside `infra/terraform`.
 
 2. **Initial Apply**
-   - Populate `infra/live/variables.tfvars` with the required variables such as `aws_region`, `frontend_bucket`, `domain`, `vpc_id`, `subnets`, `ecs_task_execution_role` and `api_image`.
+   - Populate `infra/live/variables.tfvars` with the required variables such as `aws_region`, `frontend_bucket`, `domain`, `vpc_id`, `subnets`, `ecs_task_execution_role`, `api_image` and optionally `enable_efs`.
    - Execute `terraform plan -var-file=infra/live/variables.tfvars` and review the output.
    - Apply with `terraform apply -var-file=infra/live/variables.tfvars`.
 

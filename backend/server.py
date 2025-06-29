@@ -61,7 +61,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
 STATIC_DIR = BASE_DIR / "backend" / "static"
 WORDS_FILE = BASE_DIR / "sgb-words.txt"
-GAME_FILE = BASE_DIR / "game_persist.json"
+GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json")))
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
 MAX_ROWS = 6
 

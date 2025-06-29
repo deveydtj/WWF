@@ -75,28 +75,44 @@ resource "aws_ecs_task_definition" "api" {
   memory                   = 512
   execution_role_arn       = var.ecs_task_execution_role
   container_definitions = jsonencode([
-    {
-      name  = "api"
-      image = var.api_image
+    merge({
+      name  = "api",
+      image = var.api_image,
       portMappings = [
         { containerPort = 5001, protocol = "tcp" }
-      ]
-      environment = [
+      ],
+      environment = concat([
         {
-          name  = "SINGLE_INSTANCE"
+          name  = "SINGLE_INSTANCE",
           value = var.single_instance ? "true" : "false"
         }
-      ]
+      ], var.enable_efs ? [{ name = "GAME_FILE", value = "/data/game_persist.json" }] : []),
       logConfiguration = {
-        logDriver = "awslogs"
+        logDriver = "awslogs",
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.api.name
-          awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "wwf"
-        }
+          awslogs-group         = aws_cloudwatch_log_group.api.name,
+          awslogs-region        = var.aws_region,
+          awslogs-stream-prefix = "wwf",
+        },
+      }
+    }, var.enable_efs ? {
+      mountPoints = [{
+        sourceVolume  = "game-data",
+        containerPath = "/data",
+        readOnly      = false
+      }]
+    } : {})
+  ])
+
+  dynamic "volume" {
+    for_each = var.enable_efs ? [1] : []
+    content {
+      name = "game-data"
+      efs_volume_configuration {
+        file_system_id = aws_efs_file_system.wwf[0].id
       }
     }
-  ])
+  }
 }
 
 resource "aws_ecs_service" "api" {
@@ -181,6 +197,35 @@ resource "aws_security_group" "api" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_security_group" "efs" {
+  count  = var.enable_efs ? 1 : 0
+  name   = "wwf-efs"
+  vpc_id = var.vpc_id
+  ingress {
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.api.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_efs_file_system" "wwf" {
+  count = var.enable_efs ? 1 : 0
+}
+
+resource "aws_efs_mount_target" "wwf" {
+  for_each       = var.enable_efs ? toset(var.subnets) : {}
+  file_system_id = aws_efs_file_system.wwf[0].id
+  subnet_id      = each.key
+  security_groups = [aws_security_group.efs[0].id]
 }
 
 # ------- CloudWatch Logs and Alerts -------

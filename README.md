@@ -54,8 +54,9 @@ The server now locates its frontend and data files relative to `server.py`,
 so you can run it from any directory.
 
 The server loads its words from `sgb-words.txt` and stores state in
-`game_persist.json` by default. If the `REDIS_URL` environment variable is set,
-state is persisted to that Redis instance instead. It listens on port `5001`, so open
+`game_persist.json` by default. Set the `GAME_FILE` environment variable to
+override this path or configure `REDIS_URL` to persist state in Redis instead.
+It listens on port `5001`, so open
 `http://localhost:5001` in your browser to start playing.
 The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
 or the network is unavailable, definitions are loaded from
@@ -168,8 +169,9 @@ invalidates the CloudFront cache so the latest frontend assets are served.
 Terraform templates in `infra/terraform` provision the AWS resources needed for
 a production deployment. These include an S3 bucket for the static frontend,
 CloudFront distribution with HTTPS via ACM, an Application Load Balancer, and an
-ECS Fargate service running the Flask API. Refer to the README in that directory
-for usage instructions.
+ECS Fargate service running the Flask API. Set `enable_efs` to mount a shared
+EFS volume and override the `GAME_FILE` path. Refer to the README in that
+directory for usage instructions.
 
 ## Repository Practices
 
