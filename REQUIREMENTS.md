@@ -114,10 +114,33 @@ overview and should be kept up to date as features evolve.
 - GitHub Actions builds the image, pushes to ECR, forces a new ECS deployment, runs Cypress tests, and invalidates the CloudFront cache on success.
 - CloudWatch metrics track ALB response time and task CPU/memory while logs stream to CloudWatch with a retention policy.
 - A daily Lambda purges idle lobbies from Redis or DynamoDB when used.
+- Terraform uses remote state in S3 with a DynamoDB lock table.
+- ALB listeners override the idle timeout to 3600 seconds.
+- Optional modules provision Redis or DynamoDB when horizontal scaling is enabled.
+- Output the CloudFront domain and ALB DNS for CI/CD pipelines.
 
 ## 8. Testing Requirements
 
 - Unit tests cover lobby creation, join/expire logic, emoji selection, and per-lobby SSE isolation.
 - Integration tests run multiple lobbies in parallel to verify guesses and chat never leak between them.
 - End-to-end tests with Playwright create a lobby, share the link, join from a second browser, play to completion, and confirm the lobby auto-expires.
+
+## 9. CI/CD and Repository Practices
+
+- Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
+- Merges into `main` require passing status checks for Pytest, Cypress, and `terraform plan`.
+- Secrets required for deployment include `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `ECR_REPO`, `TF_VAR_domain`, and `CF_DISTRIBUTION_ID`.
+- The workflow runs `terraform fmt -check`, `terraform init -backend-config …`, `terraform plan`, and only applies on `main` once tests pass. Deploys end with a CloudFront invalidation.
+
+## 10. Logging & Monitoring
+
+- Structured JSON logs record `lobby_created`, `lobby_joined`, and `lobby_finished` events.
+- CloudWatch metric filters alert when error rates exceed five per minute.
+- A daily CloudWatch Event or Lambda triggers idle-lobby cleanup when not using the in-process thread.
+
+## 11. Documentation & Deliverables
+
+- `ARCHITECTURE.md` outlines the flow from landing page to lobby with SSE diagrams.
+- `README.md` explains the multi-lobby model and links to `LANDING_PAGE_REQUIREMENTS.md`.
+- `DEPLOY_GUIDE.md` documents the Terraform bootstrap process and secret configuration.
 
