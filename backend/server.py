@@ -91,6 +91,7 @@ SCRABBLE_SCORES = {
 LOBBY_TTL = 30 * 60  # 30 minutes
 LOBBY_CREATION_LIMIT = 5
 LOBBY_CREATION_WINDOW = 60  # seconds
+LOBBY_CODE_RE = re.compile(r"^[A-Za-z0-9]{6}$")
 
 
 # ---- Globals ----
@@ -154,6 +155,8 @@ def purge_lobbies() -> None:
 
 def _with_lobby(code: str, func):
     """Temporarily switch ``current_state`` to the lobby for ``code``."""
+    if not LOBBY_CODE_RE.fullmatch(code):
+        return jsonify({"status": "error", "msg": "Invalid lobby code"}), 400
     purge_lobbies()
     global current_state
     state = get_lobby(code)
