@@ -48,7 +48,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
  - [x] Containerize the Flask API and push images to ECR.
 - [x] Provision S3, CloudFront, ACM, ALB, and an ECS service via infrastructure as code.
 - [x] Configure GitHub Actions for CI/CD including Cypress tests and cache invalidation.
-- [ ] Move persistence to Redis or DynamoDB when running multiple ECS tasks.
+- [x] Move persistence to Redis or DynamoDB when running multiple ECS tasks.
 ## CI/CD Pipeline Improvements
 
 - [x] Consolidate backend Python dependencies in `backend/requirements.txt` and update the workflow to install from this file instead of only pytest.
@@ -71,4 +71,4 @@ No outstanding tasks.
 
 ## Polish
 
-- [ ] Keep this TODO list updated as new issues arise.
+- [x] Keep this TODO list updated as new issues arise.

@@ -51,7 +51,8 @@ The server now locates its frontend and data files relative to `server.py`,
 so you can run it from any directory.
 
 The server loads its words from `sgb-words.txt` and stores state in
-`game_persist.json`. It listens on port `5001`, so open
+`game_persist.json` by default. If the `REDIS_URL` environment variable is set,
+state is persisted to that Redis instance instead. It listens on port `5001`, so open
 `http://localhost:5001` in your browser to start playing.
 The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
 or the network is unavailable, definitions are loaded from
