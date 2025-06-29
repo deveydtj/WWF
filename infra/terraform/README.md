@@ -7,6 +7,7 @@ Wordle With Friends in production. It creates:
 - A CloudFront distribution backed by the bucket with HTTPS
 - An ACM certificate for TLS
 - An ECS cluster running the Flask API behind an Application Load Balancer
+- A scheduled Lambda that purges idle lobbies once per day
 
 ## Usage
 
@@ -28,6 +29,10 @@ terraform apply \
 
 `enable_efs` provisions an EFS file system and mounts it at `/data`, setting the
 `GAME_FILE` path accordingly.
+
+The configuration also builds a small Lambda function that hits the `/internal/purge`
+endpoint on the API each morning to clean up idle or finished lobbies. The ALB
+DNS name is passed to the function via the `API_URL` environment variable.
 
 This is a minimal configuration and may need to be adjusted for your
 environment. DNS validation records for the ACM certificate should be created

@@ -256,6 +256,67 @@ resource "aws_cloudwatch_metric_alarm" "api_error_rate" {
   comparison_operator = "GreaterThanThreshold"
 }
 
+# ------- Scheduled Lobby Cleanup -------
+
+data "archive_file" "cleanup_lambda" {
+  type        = "zip"
+  source_file = "${path.module}/cleanup_lambda.py"
+  output_path = "${path.module}/cleanup_lambda.zip"
+}
+
+resource "aws_iam_role" "cleanup_lambda" {
+  name               = "wwf-cleanup-lambda"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "cleanup_logs" {
+  role       = aws_iam_role.cleanup_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_lambda_function" "cleanup" {
+  function_name = "wwf-lobby-cleanup"
+  role          = aws_iam_role.cleanup_lambda.arn
+  runtime       = "python3.11"
+  handler       = "cleanup_lambda.lambda_handler"
+  filename      = data.archive_file.cleanup_lambda.output_path
+  source_code_hash = data.archive_file.cleanup_lambda.output_base64sha256
+  environment {
+    variables = {
+      API_URL = "https://${aws_lb.api.dns_name}"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "daily_cleanup" {
+  name                = "wwf-daily-lobby-cleanup"
+  schedule_expression = "cron(0 5 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "cleanup_target" {
+  rule      = aws_cloudwatch_event_rule.daily_cleanup.name
+  target_id = "lambda"
+  arn       = aws_lambda_function.cleanup.arn
+}
+
+resource "aws_lambda_permission" "allow_events" {
+  statement_id  = "AllowExecutionFromEvents"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cleanup.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.daily_cleanup.arn
+}
+
 
 # ------- Outputs -------
 output "cloudfront_domain" {
