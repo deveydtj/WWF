@@ -2,152 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Wordle Game (Hard Mode, Shared)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wordle With Friends</title>
   <link rel="stylesheet" href="static/css/theme.css">
-  <link rel="stylesheet" href="static/css/layout.css">
+  <link rel="stylesheet" href="landing.css">
 </head>
-
 <body>
-  <div id="appContainer">
-    <!-- Emoji Picker Modal -->
-    <div id="emojiModal" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading">
-      <div id="emojiModalBox">
-        <div id="emojiModalHeading">
-          Pick your emoji for this game:
-        </div>
-        <div id="emojiChoices"></div>
-        <div id="emojiModalError"></div>
-      </div>
-    </div>
-
-    <!-- Close Call Popup -->
-    <div id="closeCallPopup" role="alertdialog" aria-modal="true" aria-labelledby="closeCallText">
-      <div id="closeCallBox">
-        <div id="closeCallText"></div>
-        <button id="closeCallOk">OK</button>
-      </div>
-    </div>
-
-    <!-- Info Popup -->
-    <div id="infoPopup" role="dialog" aria-modal="true" aria-label="Game information">
-      <div id="infoBox">
-        <button id="infoClose" class="close-btn">✖</button>
-        <div id="infoContent">
-          <h3>How to Play</h3>
-          <p>Guess the hidden five-letter word in six tries. Letters turn <strong>green</strong> when in the correct spot and <strong>yellow</strong> when present in the word but in the wrong position.</p>
-          <h3>Scoring</h3>
-          <p>Each letter is worth its Scrabble tile value. Green letters award the full value, while yellow letters grant half until confirmed green.</p>
-          <h3>Daily Double</h3>
-          <p>A random tile may hide a bonus. When you turn it green, a “🔍” hint becomes available. A badge next to your emoji shows when you have a hint. Tap any unrevealed tile in the next row to preview its letter – only you can see this ghosted tile.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Options Menu -->
-    <div id="optionsMenu" role="dialog" aria-modal="true" aria-label="Options menu">
-      <button id="optionsClose" class="close-btn">✖</button>
-      <button id="menuHistory">📜 History</button>
-      <button id="menuDefinition">📖 Definition</button>
-      <button id="menuChat">💬 Chat</button>
-      <button id="menuDarkMode">🌙 Dark Mode</button>
-      <button id="menuSound">🔈 Sound Off</button>
-      <button id="menuInfo">ℹ️ Info</button>
-    </div>
-
-    <!-- Game History Panel -->
-    <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
-      <button id="historyClose" class="close-btn">✖</button>
-      <h3 id="historyHeading">History</h3>
-      <ul id="historyList"></ul>
-    </div>
-
-    <!-- Leaderboard -->
-    <div id="leaderboard" role="region" aria-label="Leaderboard"></div>
-    <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
-      <button id="definitionClose" class="close-btn">✖</button>
-      <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
-      <div id="definitionText"></div>
-    </div>
-    <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
-      <button id="chatClose" class="close-btn" type="button">✖</button>
-      <h3 id="chatHeading" class="visually-hidden">Chat</h3>
-      <div id="chatMessages"></div>
-      <form id="chatForm">
-        <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
-        <button id="chatSend" type="submit">Send</button>
+  <header id="mainHeader">
+    <h1 id="logo">WWF</h1>
+    <button id="darkToggle" aria-label="Toggle dark mode"></button>
+    <nav>
+      <a href="help.html" id="helpLink">Help</a>
+      <a href="https://github.com/deveydtj/WWF" id="githubLink">GitHub</a>
+    </nav>
+  </header>
+  <main>
+    <section id="heroCard">
+      <button id="createBtn">Create Lobby</button>
+      <form id="joinForm">
+        <input id="joinCode" type="text" maxlength="6" autocomplete="off" aria-label="Lobby code">
+        <button id="joinBtn" type="submit">Join Lobby</button>
       </form>
-    </div>
-
-    <div id="titleBar">
-      <div id="resetWrapper">
-        <button id="holdReset">
-          <span id="holdResetText">Reset</span>
-          <span id="holdResetProgress"></span>
-        </button>
+      <button id="quickBtn" type="button">Quick Play</button>
+      <button id="rejoinChip" type="button" hidden>Re-join</button>
+    </section>
+    <section id="featureRow">
+      <div class="feature">Emoji avatars</div>
+      <div class="feature">Daily Double</div>
+      <div class="feature">Real-time chat</div>
+    </section>
+    <section id="howTo">
+      <button id="howToggle" aria-expanded="false">How to Play</button>
+      <div id="howContent" hidden>
+        <p>Guess the word with friends and chat in real time.</p>
       </div>
-      <h1>WordleWithFriends</h1>
-      <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
-    </div>
-
-    <!-- Board -->
-    <div id="boardArea">
-      <div id="board" role="grid" aria-label="Guess grid"></div>
-      <div id="stampContainer"></div>
-      <div id="hintTooltip" class="hint-tooltip" role="status"></div>
-      <button id="optionsToggle" title="More Options">⚙️</button>
-      <button id="chatNotify" title="Open Chat">💬</button>
-    </div>
-
-    <!-- Guess Input -->
-    <div id="inputArea">
-      <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
-      <button id="submitGuess">Guess</button>
-    </div>
-
-      <p id="message" role="status" aria-live="polite"></p>
-      <div id="messagePopup" role="status" aria-live="polite"></div>
-      <div id="ariaLive" aria-live="polite"></div>
-
-    <!-- Keyboard -->
-    <div id="keyboard" role="group" aria-label="On-screen keyboard">
-      <div class="keyboard-row">
-        <button class="key" data-key="q">Q</button>
-        <button class="key" data-key="w">W</button>
-        <button class="key" data-key="e">E</button>
-        <button class="key" data-key="r">R</button>
-        <button class="key" data-key="t">T</button>
-        <button class="key" data-key="y">Y</button>
-        <button class="key" data-key="u">U</button>
-        <button class="key" data-key="i">I</button>
-        <button class="key" data-key="o">O</button>
-        <button class="key" data-key="p">P</button>
-      </div>
-      <div class="keyboard-row">
-        <button class="key" data-key="a">A</button>
-        <button class="key" data-key="s">S</button>
-        <button class="key" data-key="d">D</button>
-        <button class="key" data-key="f">F</button>
-        <button class="key" data-key="g">G</button>
-        <button class="key" data-key="h">H</button>
-        <button class="key" data-key="j">J</button>
-        <button class="key" data-key="k">K</button>
-        <button class="key" data-key="l">L</button>
-      </div>
-      <div class="keyboard-row">
-        <button class="key wide" data-key="Enter">Enter</button>
-        <button class="key" data-key="z">Z</button>
-        <button class="key" data-key="x">X</button>
-        <button class="key" data-key="c">C</button>
-        <button class="key" data-key="v">V</button>
-        <button class="key" data-key="b">B</button>
-        <button class="key" data-key="n">N</button>
-        <button class="key" data-key="m">M</button>
-        <button class="key wide" data-key="Backspace">Bksp</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="static/js/main.js"></script>
+    </section>
+  </main>
+  <footer id="mainFooter">
+    <p>Not affiliated with Wordle. <a href="LICENSE">MIT License</a></p>
+  </footer>
+  <div id="ariaLive" aria-live="polite" class="visually-hidden"></div>
+  <script type="module" src="landing.js"></script>
 </body>
 </html>

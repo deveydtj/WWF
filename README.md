@@ -92,14 +92,15 @@ is required for the full suite to run successfully.
 ## Repository layout
 
 - `backend/server.py` – Flask backend
-- `frontend/index.html` – browser client (will become the landing page at `/`)
+- `frontend/index.html` – landing page served from `/`
+- `frontend/game.html` – main game client
 - `frontend/static/css/theme.css` – color theme styles
 - `frontend/static/css/layout.css` – layout and responsive rules
 - `sgb-words.txt` – word list used by the game
 - `frontend/static/js/` – modular JavaScript loaded by `index.html`
 - `offline_definitions.json` – fallback word definitions
 - `package.json` – Node settings used by frontend tests
-- `frontend/landing.js` and `frontend/landing.css` – planned assets for the new landing page
+- `frontend/landing.js` and `frontend/landing.css` – landing page assets
 
 ## Layout Modes
 
