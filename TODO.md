@@ -64,7 +64,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
 - [x] Add unit tests for lobby creation, join/rejoin flows, and SSE isolation per lobby.
 - [x] Add integration tests ensuring guesses and chat do not leak across lobbies.
-- [ ] Add Playwright end-to-end test covering lobby creation through auto-expiration.
+- [x] Add Playwright end-to-end test covering lobby creation through auto-expiration.
 
 ## Accessibility
 No outstanding tasks.
