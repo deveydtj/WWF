@@ -144,3 +144,11 @@ All pushes and pull requests trigger the **CI/CD** workflow under
 runs the Pytest suite and Cypress end-to-end tests, then builds the Docker image
 and pushes it to Amazon ECR. When changes land on `main` the workflow also
 invalidates the CloudFront cache so the latest frontend assets are served.
+
+## Infrastructure as Code
+
+Terraform templates in `infra/terraform` provision the AWS resources needed for
+a production deployment. These include an S3 bucket for the static frontend,
+CloudFront distribution with HTTPS via ACM, an Application Load Balancer, and an
+ECS Fargate service running the Flask API. Refer to the README in that directory
+for usage instructions.
