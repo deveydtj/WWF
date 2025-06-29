@@ -80,6 +80,10 @@ const chatNotify = document.getElementById('chatNotify');
 const infoPopup = document.getElementById('infoPopup');
 const infoClose = document.getElementById('infoClose');
 const menuInfo = document.getElementById('menuInfo');
+const shareModal = document.getElementById('shareModal');
+const shareLink = document.getElementById('shareLink');
+const shareCopy = document.getElementById('shareCopy');
+const shareClose = document.getElementById('shareClose');
 
 let chatWiggleTimer = null;
 
@@ -96,11 +100,32 @@ if (lobbyCodeEl && LOBBY_CODE) {
 
 if (copyLobbyLink && LOBBY_CODE) {
   copyLobbyLink.addEventListener('click', () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ url }).catch(() => {
+        shareLink.value = url;
+        shareModal.style.display = 'flex';
+        openDialog(shareModal);
+      });
+    } else {
+      shareLink.value = url;
+      shareModal.style.display = 'flex';
+      openDialog(shareModal);
+    }
+  });
+}
+
+if (shareCopy) {
+  shareCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(shareLink.value).then(() => {
       showMessage('Link copied!', { messageEl, messagePopup });
       announce('Lobby link copied');
     });
   });
+}
+
+if (shareClose) {
+  shareClose.addEventListener('click', () => { closeDialog(shareModal); });
 }
 
 if (leaveLobby && LOBBY_CODE) {
