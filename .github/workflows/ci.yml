@@ -59,6 +59,15 @@ jobs:
         run: npm run cypress
         continue-on-error: true
 
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Copy build to backend
+        run: |
+          rm -rf backend/static/*
+          cp -r frontend/dist/* backend/static/
+
       - name: Configure AWS credentials
         if: github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID
         uses: aws-actions/configure-aws-credentials@v2

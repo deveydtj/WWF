@@ -52,7 +52,8 @@ CORS(app)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = BASE_DIR / "frontend"
+DEV_FRONTEND_DIR = BASE_DIR / "frontend"
+STATIC_DIR = BASE_DIR / "backend" / "static"
 WORDS_FILE = BASE_DIR / "sgb-words.txt"
 GAME_FILE = BASE_DIR / "game_persist.json"
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
@@ -654,24 +655,28 @@ def reset_game():
 @app.route("/")
 def index():
     """Serve the landing page."""
-    return send_from_directory(str(FRONTEND_DIR), "index.html")
+    root = STATIC_DIR if (STATIC_DIR / "index.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "index.html")
 
 @app.route("/game")
 def game_page():
     """Serve the main game client."""
-    return send_from_directory(str(FRONTEND_DIR), "game.html")
+    root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "game.html")
 
 # Serve static JavaScript modules
 @app.route('/static/js/<path:filename>')
 @app.route('/js/<path:filename>')
 def js_files(filename):
-    return send_from_directory(str(FRONTEND_DIR / 'static' / 'js'), filename)
+    root = STATIC_DIR if (STATIC_DIR / 'static' / 'js').exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root / 'static' / 'js'), filename)
 
 # Serve CSS assets
 @app.route('/static/css/<path:filename>')
 @app.route('/css/<path:filename>')
 def css_files(filename):
-    return send_from_directory(str(FRONTEND_DIR / 'static' / 'css'), filename)
+    root = STATIC_DIR if (STATIC_DIR / 'static' / 'css').exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root / 'static' / 'css'), filename)
 
 if __name__ == "__main__":
     load_data()

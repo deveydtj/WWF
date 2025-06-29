@@ -128,9 +128,13 @@ The home page served at `/` is the starting point for all players. It mirrors th
 
 ## Docker
 
-Build and run the Flask API using Docker:
+Build and run the Flask API using Docker. The image expects the compiled
+frontend assets under `backend/static`, so make sure to build the frontend
+first:
 
 ```bash
+cd frontend && npm run build && cd ..
+cp -r frontend/dist/* backend/static/
 docker build -t wwf-api .
 docker run -p 5001:5001 wwf-api
 ```

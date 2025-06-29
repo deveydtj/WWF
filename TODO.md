@@ -56,7 +56,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 - [x] Move `package.json` and lockfile into `frontend/` and ensure Cypress and build tools are listed under dev dependencies. Run `npm ci` from that folder in the workflow.
 - [x] Create a minimal Cypress config that targets the Flask backend URL and add a smoke test verifying the page loads. Start the server in the workflow before launching Cypress.
 - [x] Harden the AWS deploy stage so it only runs on `main` when AWS secrets are present.
-- [ ] Execute the frontend build step prior to Docker and copy the `dist` output into the backend's static directory.
+- [x] Execute the frontend build step prior to Docker and copy the `dist` output into the backend's static directory.
 - [x] Add a `.dockerignore` excluding tests, workflow files, and `frontend/node_modules` to reduce image build context.
 - [x] Cache Python and Node dependencies in the workflow and temporarily allow the Cypress step to continue on error until the smoke test passes.
 
