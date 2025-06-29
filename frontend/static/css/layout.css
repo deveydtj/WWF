@@ -539,6 +539,18 @@
       text-align: center;
     }
 
+    #lobbyHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    #lobbyHeader button {
+      font-size: 0.9rem;
+    }
+
     /* ─── History Panel ─── */
     #historyBox {
       position: absolute;

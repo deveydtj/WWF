@@ -69,6 +69,10 @@ const closeCallPopup = document.getElementById('closeCallPopup');
 const closeCallText = document.getElementById('closeCallText');
 const closeCallOk = document.getElementById('closeCallOk');
 const titleHintBadge = document.getElementById('titleHintBadge');
+const lobbyCodeEl = document.getElementById('lobbyCode');
+const playerCountEl = document.getElementById('playerCount');
+const copyLobbyLink = document.getElementById('copyLobbyLink');
+const lobbyHeader = document.getElementById('lobbyHeader');
 // Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
 closeCallPopup.style.display = 'none';
 const chatNotify = document.getElementById('chatNotify');
@@ -77,6 +81,26 @@ const infoClose = document.getElementById('infoClose');
 const menuInfo = document.getElementById('menuInfo');
 
 let chatWiggleTimer = null;
+
+const LOBBY_CODE = (() => {
+  const m = window.location.pathname.match(/\/lobby\/([A-Za-z0-9]{6})/);
+  return m ? m[1] : null;
+})();
+
+if (lobbyCodeEl && LOBBY_CODE) {
+  lobbyCodeEl.textContent = LOBBY_CODE;
+} else if (lobbyHeader) {
+  lobbyHeader.style.display = 'none';
+}
+
+if (copyLobbyLink && LOBBY_CODE) {
+  copyLobbyLink.addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      showMessage('Link copied!', { messageEl, messagePopup });
+      announce('Lobby link copied');
+    });
+  });
+}
 
 const FAST_INTERVAL = 2000;
 const SLOW_INTERVAL = 15000;
@@ -381,6 +405,9 @@ function applyState(state) {
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
   dailyDoubleAvailable = !!state.daily_double_available;
+  if (playerCountEl) {
+    playerCountEl.textContent = `${activeEmojis.length} player${activeEmojis.length !== 1 ? 's' : ''}`;
+  }
   renderLeaderboard();
   updateHintBadge(titleHintBadge, dailyDoubleAvailable);
 

@@ -201,6 +201,17 @@ def test_hold_to_reset_elements_exist():
     assert '<span id="holdResetText"' in text
     assert '<span id="holdResetProgress"' in text
 
+def test_lobby_header_elements_exist():
+    text = GAME.read_text(encoding='utf-8')
+    assert '<div id="lobbyHeader"' in text
+    assert '<span id="lobbyCode"' in text
+    assert '<span id="playerCount"' in text
+    assert '<button id="copyLobbyLink"' in text
+
+def test_lobby_header_css_present():
+    css = read_css()
+    assert '#lobbyHeader {' in css
+
 
 def test_options_menu_has_dark_and_sound_buttons():
     text = GAME.read_text(encoding='utf-8')
