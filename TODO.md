@@ -99,18 +99,18 @@ No outstanding tasks.
 - [ ] Add unit tests for all lobby service helpers.
 
 ### Landing Page & Client Routing
-- [ ] Add `frontend/landing.html`, `landing.js` and `landing.css` implementing the hero panel and create/join flows.
+ - [x] Add `frontend/landing.html`, `landing.js` and `landing.css` implementing the hero panel and create/join flows.
 - [x] Provide a modal to copy the invite link and use the Web Share API on mobile if available.
 - [ ] Implement a lightweight hash router to swap between the landing page and lobby board.
-- [ ] Include a header bar inside the lobby view with lobby code, player count and host menu.
+ - [x] Include a header bar inside the lobby view with lobby code, player count and host menu.
 - [ ] Build a player sidebar component with emoji, score and AFK indicator plus kick controls.
-- [ ] Display a waiting-room overlay while the lobby state is `waiting`.
+ - [x] Display a waiting-room overlay while the lobby state is `waiting`.
 - [ ] Perform an accessibility pass covering focus management, ARIA labels and color contrast.
 
 ### Frontend Interaction with New API
-- [ ] Replace hard-coded `/state` and `/stream` calls with lobby-specific endpoints.
-- [ ] Hydrate the board via `GET /lobby/<id>/state` on load and subscribe to `/lobby/<id>/stream`.
-- [ ] Update emoji claim and rejoin logic to post to `/emoji` with the lobby id.
+ - [x] Replace hard-coded `/state` and `/stream` calls with lobby-specific endpoints.
+ - [x] Hydrate the board via `GET /lobby/<id>/state` on load and subscribe to `/lobby/<id>/stream`.
+ - [x] Update emoji claim and rejoin logic to post to `/emoji` with the lobby id.
 - [ ] Show toast notifications for full lobbies, kicks and expired sessions.
 
 ### Infrastructure & Terraform

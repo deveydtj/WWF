@@ -74,6 +74,7 @@ const playerCountEl = document.getElementById('playerCount');
 const copyLobbyLink = document.getElementById('copyLobbyLink');
 const leaveLobby = document.getElementById('leaveLobby');
 const lobbyHeader = document.getElementById('lobbyHeader');
+const waitingOverlay = document.getElementById('waitingOverlay');
 // Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
 closeCallPopup.style.display = 'none';
 const chatNotify = document.getElementById('chatNotify');
@@ -439,6 +440,9 @@ function applyState(state) {
   dailyDoubleAvailable = !!state.daily_double_available;
   if (playerCountEl) {
     playerCountEl.textContent = `${activeEmojis.length} player${activeEmojis.length !== 1 ? 's' : ''}`;
+  }
+  if (waitingOverlay) {
+    waitingOverlay.style.display = state.phase === 'waiting' ? 'flex' : 'none';
   }
   renderLeaderboard();
   updateHintBadge(titleHintBadge, dailyDoubleAvailable);

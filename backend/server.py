@@ -471,6 +471,7 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
         "active_emojis": list(s.leaderboard.keys()),
         "winner_emoji": s.winner_emoji,
         "max_rows": MAX_ROWS,
+        "phase": s.phase,
         "past_games": s.past_games,
         "definition": s.definition if s.is_over else None,
         "last_word": s.last_word,
