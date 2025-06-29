@@ -100,7 +100,7 @@ No outstanding tasks.
 
 ### Landing Page & Client Routing
 - [ ] Add `frontend/landing.html`, `landing.js` and `landing.css` implementing the hero panel and create/join flows.
-- [ ] Provide a modal to copy the invite link and use the Web Share API on mobile if available.
+- [x] Provide a modal to copy the invite link and use the Web Share API on mobile if available.
 - [ ] Implement a lightweight hash router to swap between the landing page and lobby board.
 - [ ] Include a header bar inside the lobby view with lobby code, player count and host menu.
 - [ ] Build a player sidebar component with emoji, score and AFK indicator plus kick controls.

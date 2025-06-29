@@ -144,7 +144,7 @@ def test_side_panels_centered_and_limited_in_medium_mode():
 
 def test_popups_fill_viewport():
     css = read_css()
-    for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup']:
+    for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup', '#shareModal']:
         assert f'{popup_id} {{' in css
         assert 'position: fixed;' in css
         for edge in ['top: 0', 'left: 0', 'right: 0', 'bottom: 0']:
@@ -240,6 +240,16 @@ def test_info_popup_elements_exist():
     text = GAME.read_text(encoding='utf-8')
     assert '<div id="infoPopup"' in text
     assert '<div id="infoBox"' in text
+
+def test_share_modal_elements_exist():
+    text = GAME.read_text(encoding='utf-8')
+    assert '<div id="shareModal"' in text
+    assert '<input id="shareLink"' in text
+    assert '<button id="shareCopy"' in text
+
+def test_main_uses_web_share_api():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'navigator.share' in text
 
 
 def test_message_containers_exist():
