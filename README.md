@@ -136,3 +136,11 @@ docker run -p 5001:5001 wwf-api
 ```
 
 The container exposes port **5001** and serves the game API and static files.
+
+## Continuous Integration
+
+All pushes and pull requests trigger the **CI/CD** workflow under
+`.github/workflows/ci.yml`. The workflow installs Python and Node dependencies,
+runs the Pytest suite and Cypress end-to-end tests, then builds the Docker image
+and pushes it to Amazon ECR. When changes land on `main` the workflow also
+invalidates the CloudFront cache so the latest frontend assets are served.

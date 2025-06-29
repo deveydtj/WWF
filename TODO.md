@@ -47,7 +47,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
  - [x] Containerize the Flask API and push images to ECR.
 - [ ] Provision S3, CloudFront, ACM, ALB, and an ECS service via infrastructure as code.
-- [ ] Configure GitHub Actions for CI/CD including Cypress tests and cache invalidation.
+- [x] Configure GitHub Actions for CI/CD including Cypress tests and cache invalidation.
 - [ ] Move persistence to Redis or DynamoDB when running multiple ECS tasks.
 
 ## Testing
