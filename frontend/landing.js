@@ -22,6 +22,14 @@ function announce(msg) {
   if (live) live.textContent = msg;
 }
 
+function showSavedEmoji() {
+  const el = document.getElementById('emojiDisplay');
+  if (el) {
+    const emoji = localStorage.getItem('myEmoji');
+    if (emoji) el.textContent = emoji;
+  }
+}
+
 function storeLastLobby(id) {
   localStorage.setItem('lastLobby', id);
 }
@@ -80,6 +88,7 @@ function initJoinForm() {
 export function init() {
   initDarkToggle();
   initJoinForm();
+  showSavedEmoji();
   document.getElementById('createBtn').addEventListener('click', createLobby);
   document.getElementById('quickBtn').addEventListener('click', quickPlay);
 }
