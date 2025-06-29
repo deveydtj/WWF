@@ -33,3 +33,9 @@ variable "api_image" {
   type        = string
 }
 
+variable "single_instance" {
+  description = "Run the API in single instance mode"
+  type        = bool
+  default     = true
+}
+

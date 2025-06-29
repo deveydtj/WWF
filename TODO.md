@@ -120,7 +120,7 @@ No outstanding tasks.
 
 ### Docker & ECS
 - [x] Expose port 5000 in the Dockerfile and run `gunicorn -k gevent --timeout 0` by default.
-- [ ] Pass environment variables such as `SINGLE_INSTANCE=true` in the task definition.
+- [x] Pass environment variables such as `SINGLE_INSTANCE=true` in the task definition.
 - [ ] Mount EFS when JSON persistence is enabled.
 
 ### CI/CD Secrets & Workflow
@@ -136,11 +136,11 @@ No outstanding tasks.
 
 ### Analytics, Logging & Monitoring
 - [x] Log structured JSON events for `lobby_created`, `lobby_joined` and `lobby_finished`.
-- [ ] Create CloudWatch metric filters alerting on error rates above five per minute.
+- [x] Create CloudWatch metric filters alerting on error rates above five per minute.
 - [ ] Schedule a daily CloudWatch Event or Lambda to trigger the idle-lobby cleanup if not using the in-process thread.
 
-### Docs & Deliverables
-- [ ] Update `ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
-- [ ] Replace the single-room explanation in `README.md` with the multi-lobby design.
+-### Docs & Deliverables
+- [x] Update `ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
+- [x] Replace the single-room explanation in `README.md` with the multi-lobby design.
 - [x] Ensure `LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
 - [x] Provide a `DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.
