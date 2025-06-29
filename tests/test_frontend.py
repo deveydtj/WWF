@@ -259,6 +259,11 @@ def test_message_containers_exist():
     assert '<div id="ariaLive"' in text
 
 
+def test_waiting_overlay_present():
+    text = GAME.read_text(encoding='utf-8')
+    assert '<div id="waitingOverlay"' in text
+
+
 def test_show_message_desktop_behavior():
     script = """
 import { showMessage } from './frontend/static/js/utils.js';

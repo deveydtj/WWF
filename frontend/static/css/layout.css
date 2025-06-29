@@ -291,6 +291,7 @@
 /* Initial layout states */
 #emojiModal,
 #closeCallPopup,
+#waitingOverlay,
 #infoPopup,
 #optionsMenu,
 #shareModal {
@@ -1226,6 +1227,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    #waitingOverlay {
+      background: rgba(0, 0, 0, 0.33);
+      position: fixed;
+      z-index: 100;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-color);
+      font-size: 1.2rem;
     }
 
     #closeCallBox {
