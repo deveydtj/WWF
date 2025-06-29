@@ -92,13 +92,14 @@ is required for the full suite to run successfully.
 ## Repository layout
 
 - `backend/server.py` – Flask backend
-- `frontend/index.html` – browser client
+- `frontend/index.html` – browser client (will become the landing page at `/`)
 - `frontend/static/css/theme.css` – color theme styles
 - `frontend/static/css/layout.css` – layout and responsive rules
 - `sgb-words.txt` – word list used by the game
 - `frontend/static/js/` – modular JavaScript loaded by `index.html`
 - `offline_definitions.json` – fallback word definitions
 - `package.json` – Node settings used by frontend tests
+- `frontend/landing.js` and `frontend/landing.css` – planned assets for the new landing page
 
 ## Layout Modes
 
@@ -109,3 +110,17 @@ The client adjusts its interface based on viewport width:
 - **Full Mode** – wider than **900px**. The game uses the largest tile and panel sizes and displays the richest interface.
 
 The mode updates automatically on window resize or device orientation changes.
+
+
+## Landing Page
+
+The home page served at `/` is the starting point for all players. It mirrors the neumorphic style of the game board and stores your dark-mode setting, chosen emoji, and most recent lobby code in `localStorage`. See `LANDING_PAGE_REQUIREMENTS.md` for the full specification. Key pieces include:
+
+- A sticky header with theme toggle plus Help and GitHub links.
+- A hero card with **Create Lobby**, **Join Lobby**, **Quick Play**, and a re-join chip when available.
+- Feature highlight cards for emoji avatars, Daily Double bonuses, and real-time chat.
+- A collapsible **How to Play** accordion.
+- A simple footer noting the project is not affiliated with Wordle.
+
+`landing.js` manages form validation, fetch calls, and preference storage while `landing.css` defines layout and neumorphic styling.
+
