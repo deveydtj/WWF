@@ -4,8 +4,9 @@
  * @param {string} [emoji] - Current player's emoji to include in the request.
  * @returns {Promise<Object>} Parsed JSON state payload.
  */
-export async function getState(emoji) {
-  const url = emoji ? `/state?emoji=${encodeURIComponent(emoji)}` : '/state';
+export async function getState(emoji, lobbyId) {
+  const base = lobbyId ? `/lobby/${lobbyId}/state` : '/state';
+  const url = emoji ? `${base}?emoji=${encodeURIComponent(emoji)}` : base;
   const r = await fetch(url);
   if (!r.ok) throw new Error('Network response was not OK');
   return r.json();
@@ -18,8 +19,9 @@ export async function getState(emoji) {
  * @param {string} emoji - Player identifier.
  * @returns {Promise<Object>} Guess response payload.
  */
-export async function sendGuess(guess, emoji) {
-  const r = await fetch('/guess', {
+export async function sendGuess(guess, emoji, lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/guess` : '/guess';
+  const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ guess, emoji })
@@ -30,8 +32,9 @@ export async function sendGuess(guess, emoji) {
 /**
  * Force a new round by resetting the current game.
  */
-export async function resetGame() {
-  const r = await fetch('/reset', { method: 'POST' });
+export async function resetGame(lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/reset` : '/reset';
+  const r = await fetch(url, { method: 'POST' });
   return r.json();
 }
 
@@ -41,8 +44,9 @@ export async function resetGame() {
  * @param {string} emoji - Emoji avatar.
  * @returns {Promise<Object>} Response payload.
  */
-export async function sendEmoji(emoji) {
-  const r = await fetch('/emoji', {
+export async function sendEmoji(emoji, lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/emoji` : '/emoji';
+  const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ emoji })
@@ -56,8 +60,9 @@ export async function sendEmoji(emoji) {
  * @param {string} emoji - Player identifier.
  * @returns {Promise<Response>} Raw fetch response.
  */
-export async function sendHeartbeat(emoji) {
-  return fetch('/state', {
+export async function sendHeartbeat(emoji, lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/state` : '/state';
+  return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ emoji })
@@ -71,8 +76,9 @@ export async function sendHeartbeat(emoji) {
  * @param {string} emoji - Player emoji.
  * @returns {Promise<Object>} Response payload.
  */
-export async function sendChatMessage(text, emoji) {
-  const r = await fetch('/chat', {
+export async function sendChatMessage(text, emoji, lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/chat` : '/chat';
+  const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, emoji })
@@ -85,8 +91,9 @@ export async function sendChatMessage(text, emoji) {
  *
  * @returns {Promise<Object>} Chat message payload.
  */
-export async function getChatMessages() {
-  const r = await fetch('/chat');
+export async function getChatMessages(lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/chat` : '/chat';
+  const r = await fetch(url);
   if (!r.ok) throw new Error('Network response was not OK');
   return r.json();
 }
@@ -98,8 +105,9 @@ export async function getChatMessages() {
  * @param {string} emoji - Player identifier.
  * @returns {Promise<Object>} Hint response payload.
  */
-export async function requestHint(col, emoji) {
-  const r = await fetch('/hint', {
+export async function requestHint(col, emoji, lobbyId) {
+  const url = lobbyId ? `/lobby/${lobbyId}/hint` : '/hint';
+  const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ col, emoji })
@@ -113,9 +121,10 @@ export async function requestHint(col, emoji) {
  * @param {(state:Object)=>void} onMessage - Callback for each update.
  * @returns {EventSource|null} EventSource handle or null when unsupported.
  */
-export function subscribeToUpdates(onMessage) {
+export function subscribeToUpdates(onMessage, lobbyId) {
   if (!window.EventSource) return null;
-  const es = new EventSource('/stream');
+  const url = lobbyId ? `/lobby/${lobbyId}/stream` : '/stream';
+  const es = new EventSource(url);
   es.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data);
