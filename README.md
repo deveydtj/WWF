@@ -119,7 +119,7 @@ The mode updates automatically on window resize or device orientation changes.
 
 ## Landing Page
 
-The home page served at `/` is the starting point for all players. It mirrors the neumorphic style of the game board and stores your dark-mode setting, chosen emoji, and most recent lobby code in `localStorage`. See `LANDING_PAGE_REQUIREMENTS.md` for the full specification. Key pieces include:
+The home page served at `/` is the starting point for all players. It mirrors the neumorphic style of the game board and stores your dark-mode setting, chosen emoji, and most recent lobby code in `localStorage`. See [LANDING_PAGE_REQUIREMENTS.md](LANDING_PAGE_REQUIREMENTS.md) for the full specification. Key pieces include:
 
 - A sticky header with theme toggle plus Help and GitHub links.
 - A hero card with **Create Lobby**, **Join Lobby**, **Quick Play**, and a re-join chip when available.
@@ -160,3 +160,9 @@ a production deployment. These include an S3 bucket for the static frontend,
 CloudFront distribution with HTTPS via ACM, an Application Load Balancer, and an
 ECS Fargate service running the Flask API. Refer to the README in that directory
 for usage instructions.
+
+## Repository Practices
+
+- Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
+- Pull requests must pass status checks for Pytest, Cypress, and `terraform plan` before merging to `main`.
+- See [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md) for details on configuring deployment secrets and running Terraform.

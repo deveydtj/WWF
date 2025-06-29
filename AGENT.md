@@ -43,3 +43,5 @@ Responsive Layout
 Testing
 • Encourage writing and running tests for any new or modified logic.
 • Suggest unit tests for isolated functions and integration tests for game flow.
+• Branch names should follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
+• Pull requests must pass Pytest, Cypress, and `terraform plan` status checks before merging to `main`.
