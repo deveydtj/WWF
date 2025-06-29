@@ -94,6 +94,7 @@ def server_env():
         'used_green': [],
         'last_active': 0,
     }
+    server.current_state.host_token = 'HOSTTOKEN'
     return server, request
 
 
@@ -840,6 +841,7 @@ def test_lobby_create_and_isolated_state(server_env):
 
     lobby_resp = server.lobby_create()
     code = lobby_resp['id']
+    assert 'host_token' in lobby_resp
     assert len(code) == 6
     assert code in server.LOBBIES
 
@@ -881,3 +883,71 @@ def test_sse_isolation_between_lobbies(server_env):
 
     assert not q1.empty()
     assert q2.empty()
+
+
+def test_lobby_guess_and_chat_isolation(server_env):
+    server, request = server_env
+
+    l1 = server.lobby_create()['id']
+    l2 = server.lobby_create()['id']
+    server.LOBBIES[l1].target_word = 'apple'
+    server.LOBBIES[l2].target_word = 'enter'
+
+    request.json = {'emoji': '😀'}
+    request.remote_addr = '1'
+    server.lobby_emoji(l1)
+    server.lobby_emoji(l2)
+
+    request.json = {'guess': 'apple', 'emoji': '😀'}
+    server.lobby_guess(l1)
+
+    assert server.LOBBIES[l2].guesses == []
+
+    request.method = 'POST'
+    request.json = {'text': 'hi', 'emoji': '😀'}
+    server.lobby_chat(l1)
+
+    assert server.LOBBIES[l2].chat_messages == []
+
+
+def test_lobby_reset_requires_token(server_env):
+    server, request = server_env
+
+    resp = server.lobby_create()
+    code = resp['id']
+    token = resp['host_token']
+
+    request.json = {'host_token': 'bad'}
+    bad = server.lobby_reset(code)
+    assert isinstance(bad, tuple)
+    assert bad[1] == 403
+
+    request.json = {'host_token': token}
+    good = server.lobby_reset(code)
+    assert good['status'] == 'ok'
+
+
+def test_lobby_create_rate_limit(server_env, monkeypatch):
+    server, request = server_env
+
+    t = [0]
+
+    def fake_time():
+        return t[0]
+
+    monkeypatch.setattr(server.time, 'time', fake_time)
+
+    for i in range(5):
+        t[0] = i
+        resp = server.lobby_create()
+        assert 'id' in resp
+
+    t[0] = 5
+    limited = server.lobby_create()
+    assert isinstance(limited, tuple)
+    data, status = limited
+    assert status == 429
+
+    t[0] = 70
+    resp2 = server.lobby_create()
+    assert 'id' in resp2
