@@ -121,18 +121,18 @@ No outstanding tasks.
 ### Docker & ECS
 - [x] Expose port 5000 in the Dockerfile and run `gunicorn -k gevent --timeout 0` by default.
 - [x] Pass environment variables such as `SINGLE_INSTANCE=true` in the task definition.
-- [ ] Mount EFS when JSON persistence is enabled.
+- [x] Mount EFS when JSON persistence is enabled.
 
 ### CI/CD Secrets & Workflow
 - [ ] Add repository secrets for `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `ECR_REPO`, `TF_VAR_domain` and `CF_DISTRIBUTION_ID`.
-- [ ] Update the GitHub Actions workflow to run `terraform fmt -check`, `terraform init`, `terraform plan` and apply only after tests succeed.
-- [ ] Trigger a CloudFront cache invalidation after successful deploys.
+- [x] Update the GitHub Actions workflow to run `terraform fmt -check`, `terraform init`, `terraform plan` and apply only after tests succeed.
+- [x] Trigger a CloudFront cache invalidation after successful deploys.
 
 ### Testing Suites
-- [ ] Write backend unit tests for lobby CRUD, rate limiting and id validation.
-- [ ] Add integration tests confirming events never cross between lobbies.
-- [ ] Implement Cypress or Playwright E2E tests covering lobby creation through game completion.
-- [ ] Include the new tests in the CI matrix (`pytest -q`, `cypress run --browser chrome`).
+- [x] Write backend unit tests for lobby CRUD, rate limiting and id validation.
+- [x] Add integration tests confirming events never cross between lobbies.
+- [x] Implement Cypress or Playwright E2E tests covering lobby creation through game completion.
+- [x] Include the new tests in the CI matrix (`pytest -q`, `cypress run --browser chrome`).
 
 ### Analytics, Logging & Monitoring
 - [x] Log structured JSON events for `lobby_created`, `lobby_joined` and `lobby_finished`.
