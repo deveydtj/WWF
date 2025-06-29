@@ -72,3 +72,75 @@ No outstanding tasks.
 ## Polish
 
 - [x] Keep this TODO list updated as new issues arise.
+
+## Upcoming Milestones
+
+### Project Hygiene
+- [ ] Establish a short branch naming convention such as `feat/lobby-backend` or `fix/landing-ui`.
+- [ ] Require GitHub status checks (pytest, Cypress, Terraform plan) before merging to `main`.
+- [ ] Rename all references to "Wordle With Friends" to the new game name throughout docs and code comments.
+
+### Backend Refactor to Multi-Lobby
+- [ ] Create `lobby.py` with a `Lobby` dataclass storing id, host token, state, players, chat and timestamps.
+- [ ] Maintain a global thread-safe `LOBBIES` dictionary and remove the single-room globals from `server.py`.
+- [ ] Implement REST endpoints:
+  - `POST /lobby`
+  - `GET /lobby/<id>/state`
+  - `POST /lobby/<id>/state` (heartbeat)
+  - `POST /lobby/<id>/emoji`
+  - `POST /lobby/<id>/guess`
+  - `POST /lobby/<id>/reset`
+  - `GET /lobby/<id>/stream`
+  - `GET /lobbies`
+- [ ] Scope SSE broadcasting to each lobby via `listeners[lobby_id]`.
+- [ ] Clean up idle lobbies every ten minutes when `last_active` is over thirty minutes old.
+- [ ] Add middleware for rate limiting (max five lobby creations per IP per minute) and lobby id validation.
+- [ ] Toggle persistence: JSON file in single-instance mode, stubs for Redis or DynamoDB otherwise.
+- [ ] Add unit tests for all lobby service helpers.
+
+### Landing Page & Client Routing
+- [ ] Add `frontend/landing.html`, `landing.js` and `landing.css` implementing the hero panel and create/join flows.
+- [ ] Provide a modal to copy the invite link and use the Web Share API on mobile if available.
+- [ ] Implement a lightweight hash router to swap between the landing page and lobby board.
+- [ ] Include a header bar inside the lobby view with lobby code, player count and host menu.
+- [ ] Build a player sidebar component with emoji, score and AFK indicator plus kick controls.
+- [ ] Display a waiting-room overlay while the lobby state is `waiting`.
+- [ ] Perform an accessibility pass covering focus management, ARIA labels and color contrast.
+
+### Frontend Interaction with New API
+- [ ] Replace hard-coded `/state` and `/stream` calls with lobby-specific endpoints.
+- [ ] Hydrate the board via `GET /lobby/<id>/state` on load and subscribe to `/lobby/<id>/stream`.
+- [ ] Update emoji claim and rejoin logic to post to `/emoji` with the lobby id.
+- [ ] Show toast notifications for full lobbies, kicks and expired sessions.
+
+### Infrastructure & Terraform
+- [ ] Create `infra/live/variables.tfvars` and configure a remote-state backend (S3 + DynamoDB lock).
+- [ ] Insert an ALB idle-timeout override of 3600 seconds and optionally include Redis/Dynamo modules.
+- [ ] Output the CloudFront domain and ALB DNS for CI consumption.
+
+### Docker & ECS
+- [ ] Expose port 5000 in the Dockerfile and run `gunicorn -k gevent --timeout 0` by default.
+- [ ] Pass environment variables such as `SINGLE_INSTANCE=true` in the task definition.
+- [ ] Mount EFS when JSON persistence is enabled.
+
+### CI/CD Secrets & Workflow
+- [ ] Add repository secrets for `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `ECR_REPO`, `TF_VAR_domain` and `CF_DISTRIBUTION_ID`.
+- [ ] Update the GitHub Actions workflow to run `terraform fmt -check`, `terraform init`, `terraform plan` and apply only after tests succeed.
+- [ ] Trigger a CloudFront cache invalidation after successful deploys.
+
+### Testing Suites
+- [ ] Write backend unit tests for lobby CRUD, rate limiting and id validation.
+- [ ] Add integration tests confirming events never cross between lobbies.
+- [ ] Implement Cypress or Playwright E2E tests covering lobby creation through game completion.
+- [ ] Include the new tests in the CI matrix (`pytest -q`, `cypress run --browser chrome`).
+
+### Analytics, Logging & Monitoring
+- [ ] Log structured JSON events for `lobby_created`, `lobby_joined` and `lobby_finished`.
+- [ ] Create CloudWatch metric filters alerting on error rates above five per minute.
+- [ ] Schedule a daily CloudWatch Event or Lambda to trigger the idle-lobby cleanup if not using the in-process thread.
+
+### Docs & Deliverables
+- [ ] Update `ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
+- [ ] Replace the single-room explanation in `README.md` with the multi-lobby design.
+- [ ] Ensure `LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
+- [ ] Provide a `DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.
