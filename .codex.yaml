@@ -1,4 +1,4 @@
-version 1
+version: 1
 setup:
   - apt-get update
   - |
@@ -14,6 +14,7 @@ setup:
 test:
   - python -m pytest -q
   - cd frontend && xvfb-run -a npx cypress run --browser electron --headless && cd ..
+  - cd frontend && npm run build && cd ..
   - cd infra/terraform && terraform fmt -check && terraform init -backend=false && terraform plan -input=false -lock=false -var-file=../live/variables.tfvars && cd ../..
 env:
   CYPRESS_CACHE_FOLDER: .cache/Cypress

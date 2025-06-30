@@ -81,9 +81,9 @@ No outstanding tasks.
 - [ ] Rename all references to "Wordle With Friends" to the new game name throughout docs and code comments.
 
 ### Backend Refactor to Multi-Lobby
-- [ ] Create `lobby.py` with a `Lobby` dataclass storing id, host token, state, players, chat and timestamps.
-- [ ] Maintain a global thread-safe `LOBBIES` dictionary and remove the single-room globals from `server.py`.
-- [ ] Implement REST endpoints:
+- [x] Create `lobby.py` with a `Lobby` dataclass storing id, host token, state, players, chat and timestamps.
+- [x] Maintain a global thread-safe `LOBBIES` dictionary and remove the single-room globals from `server.py`.
+- [x] Implement REST endpoints:
   - `POST /lobby`
   - `GET /lobby/<id>/state`
   - `POST /lobby/<id>/state` (heartbeat)
@@ -92,10 +92,10 @@ No outstanding tasks.
   - `POST /lobby/<id>/reset`
   - `GET /lobby/<id>/stream`
   - `GET /lobbies`
-- [ ] Scope SSE broadcasting to each lobby via `listeners[lobby_id]`.
- - [x] Clean up idle lobbies every ten minutes when `last_active` is over thirty minutes old.
-- [ ] Add middleware for rate limiting (max five lobby creations per IP per minute) and lobby id validation.
-- [ ] Toggle persistence: JSON file in single-instance mode, stubs for Redis or DynamoDB otherwise.
+- [x] Scope SSE broadcasting to each lobby via `listeners[lobby_id]`.
+- [x] Clean up idle lobbies every ten minutes when `last_active` is over thirty minutes old.
+- [x] Add middleware for rate limiting (max five lobby creations per IP per minute) and lobby id validation.
+- [x] Toggle persistence: JSON file in single-instance mode, stubs for Redis or DynamoDB otherwise.
 - [x] Add unit tests for all lobby service helpers.
 
 ### Landing Page & Client Routing
