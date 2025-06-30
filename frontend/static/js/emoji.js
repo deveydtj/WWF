@@ -32,7 +32,8 @@ export const allEmojis = [
  */
 export function showEmojiModal(takenEmojis, {
   onChosen,
-  skipAutoCloseRef
+  skipAutoCloseRef,
+  onError
 }) {
   const modal = document.getElementById('emojiModal');
   const choices = document.getElementById('emojiChoices');
@@ -47,16 +48,17 @@ export function showEmojiModal(takenEmojis, {
     btn.style.pointerEvents = takenEmojis.includes(e) ? 'none' : 'auto';
 
     btn.onclick = async () => {
-      const data = await sendEmoji(e);
-      if (data.status === 'ok') {
-        if (skipAutoCloseRef) skipAutoCloseRef.value = false;
-        setMyEmoji(e);
-        if (typeof onChosen === 'function') onChosen(e);
-        closeDialog(modal);
-      } else {
-        errorEl.textContent = data.msg || 'That emoji is taken.';
-      }
-    };
+    const data = await sendEmoji(e, window.LOBBY_CODE);
+    if (data.status === 'ok') {
+      if (skipAutoCloseRef) skipAutoCloseRef.value = false;
+      setMyEmoji(e);
+      if (typeof onChosen === 'function') onChosen(e);
+      closeDialog(modal);
+    } else {
+      errorEl.textContent = data.msg || 'That emoji is taken.';
+      if (typeof onError === 'function') onError(data.msg);
+    }
+  };
 
     choices.appendChild(btn);
   });

@@ -8,8 +8,14 @@ export async function getState(emoji, lobbyId) {
   const base = lobbyId ? `/lobby/${lobbyId}/state` : '/state';
   const url = emoji ? `${base}?emoji=${encodeURIComponent(emoji)}` : base;
   const r = await fetch(url);
-  if (!r.ok) throw new Error('Network response was not OK');
-  return r.json();
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const err = new Error('HTTP ' + r.status);
+    err.status = r.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
 }
 
 /**
