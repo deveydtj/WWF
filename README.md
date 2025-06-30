@@ -69,6 +69,7 @@ Each lobby exposes a set of REST endpoints under `/lobby/<id>`:
 - `POST /lobby/<id>/emoji` – claim or change an emoji
 - `POST /lobby/<id>/guess` – submit a word
 - `POST /lobby/<id>/reset` – start a new round (host token required)
+- `POST /lobby/<id>/kick` – remove a player from the lobby (host token required)
 - `GET /lobby/<id>/stream` – Server‑Sent Events channel
 
 The SSE stream pushes state updates in real time. The client falls back to
