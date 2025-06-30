@@ -944,6 +944,20 @@ def index():
     root = STATIC_DIR if (STATIC_DIR / "index.html").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root), "index.html")
 
+
+@app.route("/landing.css")
+def landing_css():
+    """Serve the landing page stylesheet."""
+    root = STATIC_DIR if (STATIC_DIR / "landing.css").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "landing.css")
+
+
+@app.route("/landing.js")
+def landing_js():
+    """Serve the landing page script."""
+    root = STATIC_DIR if (STATIC_DIR / "landing.js").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "landing.js")
+
 @app.route("/game")
 def game_page():
     """Serve the main game client."""
