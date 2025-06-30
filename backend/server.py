@@ -978,12 +978,21 @@ def js_files(filename):
     root = STATIC_DIR if (STATIC_DIR / 'static' / 'js').exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root / 'static' / 'js'), filename)
 
+# Support asset requests when game.html is served from /lobby/<code>
+@app.route('/lobby/static/js/<path:filename>')
+def lobby_js_files(filename):
+    return js_files(filename)
+
 # Serve CSS assets
 @app.route('/static/css/<path:filename>')
 @app.route('/css/<path:filename>')
 def css_files(filename):
     root = STATIC_DIR if (STATIC_DIR / 'static' / 'css').exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root / 'static' / 'css'), filename)
+
+@app.route('/lobby/static/css/<path:filename>')
+def lobby_css_files(filename):
+    return css_files(filename)
 
 if __name__ == "__main__":
     load_data()
