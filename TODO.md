@@ -109,9 +109,9 @@ No outstanding tasks.
 
 ### Frontend Interaction with New API
  - [x] Replace hard-coded `/state` and `/stream` calls with lobby-specific endpoints.
- - [x] Hydrate the board via `GET /lobby/<id>/state` on load and subscribe to `/lobby/<id>/stream`.
- - [x] Update emoji claim and rejoin logic to post to `/emoji` with the lobby id.
-- [ ] Show toast notifications for full lobbies, kicks and expired sessions.
+- [x] Hydrate the board via `GET /lobby/<id>/state` on load and subscribe to `/lobby/<id>/stream`.
+- [x] Update emoji claim and rejoin logic to post to `/emoji` with the lobby id.
+- [x] Show toast notifications for full lobbies, kicks and expired sessions.
 
 ### Infrastructure & Terraform
 - [x] Create `infra/live/variables.tfvars` and configure a remote-state backend (S3 + DynamoDB lock).

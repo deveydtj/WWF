@@ -11,6 +11,7 @@ import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
 
 let activeEmojis = [];
+let prevActiveEmojis = [];
 let leaderboard = [];
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
@@ -92,6 +93,7 @@ const LOBBY_CODE = (() => {
   const m = window.location.pathname.match(/\/lobby\/([A-Za-z0-9]{6})/);
   return m ? m[1] : null;
 })();
+window.LOBBY_CODE = LOBBY_CODE;
 
 if (lobbyCodeEl && LOBBY_CODE) {
   lobbyCodeEl.textContent = LOBBY_CODE;
@@ -315,7 +317,11 @@ function renderLeaderboard() {
       node.addEventListener('click', () => {
         skipAutoClose = true;
         const taken = activeEmojis.filter(e => e !== myEmoji);
-        showEmojiModal(taken, { onChosen: (e) => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); }, skipAutoCloseRef: { value: skipAutoClose } });
+        showEmojiModal(taken, {
+          onChosen: (e) => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
+          skipAutoCloseRef: { value: skipAutoClose },
+          onError: (msg) => showMessage(msg, { messageEl, messagePopup })
+        });
       });
       if (dailyDoubleAvailable) {
         const badge = document.createElement('span');
@@ -435,9 +441,13 @@ function applyState(state) {
   const prevGuessCount = latestState ? latestState.guesses.length : 0;
   const prevChatCount = latestState && latestState.chat_messages ? latestState.chat_messages.length : 0;
   latestState = state;
+  prevActiveEmojis = activeEmojis.slice();
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
   dailyDoubleAvailable = !!state.daily_double_available;
+  if (myEmoji && prevActiveEmojis.includes(myEmoji) && !activeEmojis.includes(myEmoji)) {
+    showMessage('You were removed from the lobby.', { messageEl, messagePopup });
+  }
   if (playerCountEl) {
     playerCountEl.textContent = `${activeEmojis.length} player${activeEmojis.length !== 1 ? 's' : ''}`;
   }
@@ -508,7 +518,8 @@ function applyState(state) {
   if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
     showEmojiModal(activeEmojis, {
       onChosen: e => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
-      skipAutoCloseRef: { value: skipAutoClose }
+      skipAutoCloseRef: { value: skipAutoClose },
+      onError: (msg) => showMessage(msg, { messageEl, messagePopup })
     });
     showEmojiModalOnNextFetch = false;
   } else if (!skipAutoClose) {
@@ -527,6 +538,11 @@ async function fetchState() {
     applyState(state);
   } catch (err) {
     console.error('fetchState error:', err);
+    if (err && err.status === 404) {
+      showMessage('This lobby has expired or was closed.', { messageEl, messagePopup });
+      setTimeout(() => { window.location.href = '/'; }, 3000);
+      return;
+    }
     if (!hadNetworkError) {
       showMessage('Connection lost. Retrying...', { messageEl, messagePopup });
       hadNetworkError = true;
