@@ -529,6 +529,11 @@ def log_lobby_finished(lobby_id: str, ip: str | None = None) -> None:
         data["ip"] = ip
     _log_event("lobby_finished", **data)
 
+
+def log_player_kicked(lobby_id: str, emoji: str) -> None:
+    """Log a player being kicked from ``lobby_id``."""
+    _log_event("player_kicked", lobby_id=lobby_id, emoji=emoji)
+
 # ---- API Routes ----
 
 @app.route("/stream")
@@ -886,6 +891,33 @@ def lobby_reset(code):
     if isinstance(resp, dict) and resp.get("status") == "ok":
         log_lobby_finished(code, get_client_ip())
     return resp
+
+
+def kick_player():
+    """Remove a player from the current lobby."""
+    data = request.get_json(silent=True) or {}
+    emoji = data.get("emoji")
+    token = data.get("host_token")
+    if not emoji:
+        return jsonify({"status": "error", "msg": "Missing emoji"}), 400
+    if token != current_state.host_token:
+        return jsonify({"status": "error", "msg": "Invalid host token"}), 403
+    if emoji not in current_state.leaderboard:
+        return jsonify({"status": "error", "msg": "No such player"}), 404
+    ip = current_state.leaderboard[emoji]["ip"]
+    current_state.leaderboard.pop(emoji, None)
+    current_state.ip_to_emoji.pop(ip, None)
+    current_state.daily_double_pending.pop(emoji, None)
+    if current_state.winner_emoji == emoji:
+        current_state.winner_emoji = None
+    broadcast_state()
+    log_player_kicked(_lobby_id(current_state), emoji)
+    return jsonify({"status": "ok"})
+
+
+@app.route("/lobby/<code>/kick", methods=["POST"])
+def lobby_kick(code):
+    return _with_lobby(code, kick_player)
 
 
 @app.route("/lobby/<code>/chat", methods=["GET", "POST"])

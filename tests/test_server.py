@@ -1079,3 +1079,41 @@ def test_with_lobby_rejects_invalid_code(server_env):
     assert status == 400
     assert data['status'] == 'error'
 
+
+def test_lobby_kick_removes_player(server_env):
+    server, request = server_env
+    resp = server.lobby_create()
+    code = resp['id']
+    token = resp['host_token']
+    server.LOBBIES[code].leaderboard['😎'] = {
+        'ip': '2', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    request.json = {'emoji': '😎', 'host_token': token}
+    resp = server.lobby_kick(code)
+    assert resp['status'] == 'ok'
+    assert '😎' not in server.LOBBIES[code].leaderboard
+
+
+def test_lobby_kick_requires_token(server_env):
+    server, request = server_env
+    resp = server.lobby_create()
+    code = resp['id']
+    server.LOBBIES[code].leaderboard['😀'] = {
+        'ip': '1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    request.json = {'emoji': '😀', 'host_token': 'BAD'}
+    resp = server.lobby_kick(code)
+    assert isinstance(resp, tuple)
+    assert resp[1] == 403
+
+
+def test_lobby_kick_missing_player(server_env):
+    server, request = server_env
+    resp = server.lobby_create()
+    code = resp['id']
+    token = resp['host_token']
+    request.json = {'emoji': '🤖', 'host_token': token}
+    resp = server.lobby_kick(code)
+    assert isinstance(resp, tuple)
+    assert resp[1] == 404
+

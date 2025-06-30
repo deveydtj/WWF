@@ -124,7 +124,7 @@ No outstanding tasks.
 - [x] Mount EFS when JSON persistence is enabled.
 
 ### CI/CD Secrets & Workflow
-- [ ] Add repository secrets for `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `ECR_REPO`, `TF_VAR_domain` and `CF_DISTRIBUTION_ID`.
+- [x] Add repository secrets for `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `ECR_REPO`, `TF_VAR_domain` and `CF_DISTRIBUTION_ID`.
 - [x] Update the GitHub Actions workflow to run `terraform fmt -check`, `terraform init`, `terraform plan` and apply only after tests succeed.
 - [x] Trigger a CloudFront cache invalidation after successful deploys.
 
