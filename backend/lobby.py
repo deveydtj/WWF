@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import time
 
+
 @dataclass
 class Lobby:
     """Container for per-lobby state and metadata."""

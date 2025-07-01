@@ -81,13 +81,13 @@ if REDIS_URL and redis is not None:
 
 # Standard Scrabble letter values used for scoring
 SCRABBLE_SCORES = {
-    **{l: 1 for l in "aeilnorstu"},
-    **{l: 2 for l in "dg"},
-    **{l: 3 for l in "bcmp"},
-    **{l: 4 for l in "fhvwy"},
+    **{letter: 1 for letter in "aeilnorstu"},
+    **{letter: 2 for letter in "dg"},
+    **{letter: 3 for letter in "bcmp"},
+    **{letter: 4 for letter in "fhvwy"},
     "k": 5,
-    **{l: 8 for l in "jx"},
-    **{l: 10 for l in "qz"},
+    **{letter: 8 for letter in "jx"},
+    **{letter: 10 for letter in "qz"},
 }
 
 # Lobby management constants
@@ -258,7 +258,7 @@ def save_data(s: GameState | None = None):
 
 
 def load_data(s: GameState | None = None):
-    global WORDS, current_state
+    global WORDS
     if s is None:
         s = current_state
 
@@ -467,11 +467,11 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
         s = current_state
     lb = [
         {
-            "emoji": emoji,
-            "score": s.leaderboard[emoji]["score"],
-            "last_active": s.leaderboard[emoji].get("last_active", 0),
+            "emoji": player,
+            "score": s.leaderboard[player]["score"],
+            "last_active": s.leaderboard[player].get("last_active", 0),
         }
-        for emoji in s.leaderboard
+        for player in s.leaderboard
     ]
     lb.sort(key=lambda e: e["score"], reverse=True)
 
