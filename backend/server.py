@@ -40,6 +40,7 @@ else:
 import logging
 import re
 from dataclasses import dataclass, field
+from typing import Any
 try:
     import redis  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
@@ -51,7 +52,8 @@ import threading
 import queue
 from pathlib import Path
 
-app = Flask(__name__)
+STATIC_PATH = Path(__file__).resolve().parent / "static"
+app = Flask(__name__, static_folder=str(STATIC_PATH), static_url_path="")
 app.secret_key = "a_wordle_secret"
 CORS(app)
 
@@ -936,6 +938,12 @@ def cleanup_lobbies():
     small status payload.
     """
     purge_lobbies()
+    return jsonify({"status": "ok"})
+
+
+@app.route("/health")
+def health() -> Any:
+    """Simple health check used by container orchestration."""
     return jsonify({"status": "ok"})
 
 @app.route("/")

@@ -37,8 +37,10 @@ def load_server():
         return kwargs
 
     class Flask:
-        def __init__(self, name):
+        def __init__(self, name, **kwargs):
             self.name = name
+            self.static_folder = kwargs.get('static_folder')
+            self.static_url_path = kwargs.get('static_url_path')
 
         def route(self, *a, **kw):
             def decorator(func):
