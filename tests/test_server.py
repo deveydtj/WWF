@@ -485,6 +485,22 @@ def test_fetch_definition_offline_fallback(monkeypatch, server_env):
     assert definition == 'a large bird or lifting machine'
 
 
+def test_definition_worker_broadcasts_specific_state(monkeypatch, server_env):
+    server, _ = server_env
+
+    captured = {}
+
+    def fake_broadcast(s=None):
+        captured['state'] = s
+
+    monkeypatch.setattr(server, 'broadcast_state', fake_broadcast)
+
+    state = server.GameState()
+    server._definition_worker('apple', state)
+
+    assert captured['state'] is state
+
+
 def test_definition_available_after_game_over(monkeypatch, server_env):
     server, request = server_env
 

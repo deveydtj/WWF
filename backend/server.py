@@ -388,7 +388,7 @@ def _definition_worker(word: str, s: GameState) -> None:
     s.last_word = word
     s.last_definition = s.definition
     save_data(s)
-    broadcast_state()
+    broadcast_state(s)
 
 
 def start_definition_lookup(word: str, s: GameState | None = None) -> threading.Thread:
