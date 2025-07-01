@@ -1,6 +1,10 @@
 version: 1
 setup:
   - apt-get update
+  - apt-get install -y gnupg software-properties-common curl
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+  - apt-get update
   - |
       apt-get install -y xvfb libgtk-3-0 libnss3 libgbm-dev libdrm2 libasound2 libatk-bridge2.0-0 gconf-service libxshmfence1 curl unzip
       if ! apt-get install -y terraform; then
@@ -14,7 +18,7 @@ setup:
 test:
   - python -m pytest -q
   - cd frontend && xvfb-run -a npx cypress run --browser electron --headless && cd ..
-  - cd frontend && npm run build && cd ..
+  - cd frontend && npm run build
   - cd infra/terraform && terraform fmt -check && terraform init -backend=false && terraform plan -input=false -lock=false -var-file=../live/variables.tfvars && cd ../..
 env:
   CYPRESS_CACHE_FOLDER: .cache/Cypress
