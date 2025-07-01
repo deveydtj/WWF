@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
-import subprocess, json
+import subprocess
+import json
 
 LANDING = Path('frontend/index.html')
 GAME = Path('frontend/game.html')

@@ -41,16 +41,16 @@ import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any
+import html
+import threading
+import queue
+from pathlib import Path
 try:
     import redis  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     redis = None
 
 CLOSE_CALL_WINDOW = 2.0  # seconds
-import html
-import threading
-import queue
-from pathlib import Path
 
 STATIC_PATH = Path(__file__).resolve().parent / "static"
 app = Flask(__name__, static_folder=str(STATIC_PATH), static_url_path="")
@@ -453,9 +453,10 @@ def validate_hard_mode(guess, s: GameState | None = None):
         if guess[idx] != ch:
             return False, f"Letter {ch.upper()} must be in position {idx+1}."
     if required_letters:
-        if not all(l in guess for l in required_letters):
-            missing = [l for l in required_letters if l not in guess]
-            return False, f"Guess must contain letter(s): {', '.join(m.upper() for m in missing)}."
+        if not all(letter in guess for letter in required_letters):
+            missing = [letter for letter in required_letters if letter not in guess]
+            missing_str = ', '.join(m.upper() for m in missing)
+            return False, f"Guess must contain letter(s): {missing_str}."
     return True, ""
 
 def build_state_payload(emoji: str | None = None, s: GameState | None = None):
@@ -645,8 +646,7 @@ def set_emoji():
 
 @app.route("/guess", methods=["POST"])
 def guess_word():
-    """Process a player's guess and update scores and game current_state."""
-    global current_state
+    """Process a player's guess and update scores and game state."""
     data = request.json or {}
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
@@ -685,7 +685,6 @@ def guess_word():
     row_index = len(current_state.guesses)
     result = result_for_guess(guess, current_state.target_word)
     new_entry = {"guess": guess, "result": result, "emoji": emoji, "ts": now}
-    already_guessed = any(g["guess"] == guess for g in current_state.guesses)
     current_state.guesses.append(new_entry)
 
     dd_award = False

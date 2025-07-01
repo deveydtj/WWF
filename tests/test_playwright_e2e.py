@@ -1,11 +1,13 @@
-import pytest, threading, time
+import pytest
+import threading
+import time
 from wsgiref.simple_server import make_server
 from importlib import reload
 
 pytest.importorskip("flask")
 playwright = pytest.importorskip("playwright.sync_api")
-import backend.server as server
-from playwright.sync_api import sync_playwright
+import backend.server as server  # noqa: E402
+from playwright.sync_api import sync_playwright  # noqa: E402
 
 
 @pytest.fixture(scope="module")

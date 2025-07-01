@@ -1080,7 +1080,7 @@ def test_lobby_id_returns_correct_code(server_env):
 def test_with_lobby_switches_and_restores(server_env):
     server, _ = server_env
     code = 'ROOM11'
-    lobby = server.get_lobby(code)
+    server.get_lobby(code)
     original = server.current_state
 
     def dummy():
