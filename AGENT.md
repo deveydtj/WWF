@@ -14,7 +14,8 @@ General Coding Guidance
 • Code Structure:
 • Use clear, modular code—separate UI, game logic, and server code into logical files/folders.
 • The repository now stores frontend assets in `frontend/` and backend code in
-  `backend/`. Update paths accordingly when adding new files.
+  `backend/`. Documentation lives under `docs/` and supporting data files in
+  `data/`. Update paths accordingly when adding new files.
 • Maintain consistency in variable naming and function signatures across the project.
 • Prefer functional, testable units over large, monolithic scripts.
 • Comments & Docs:

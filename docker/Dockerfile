@@ -19,7 +19,8 @@ COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend/ ./backend/
-COPY sgb-words.txt offline_definitions.json ./
+COPY data/sgb-words.txt ./sgb-words.txt
+COPY data/offline_definitions.json ./offline_definitions.json
 COPY --from=frontend-builder /app/frontend/dist/ ./backend/static/
 
 EXPOSE 5001

@@ -62,10 +62,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(mess
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
 STATIC_DIR = BASE_DIR / "backend" / "static"
-WORDS_FILE = BASE_DIR / "sgb-words.txt"
+DATA_DIR = BASE_DIR / "data"
+WORDS_FILE = DATA_DIR / "sgb-words.txt"
 GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json")))
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
-OFFLINE_DEFINITIONS_FILE = BASE_DIR / "offline_definitions.json"
+OFFLINE_DEFINITIONS_FILE = DATA_DIR / "offline_definitions.json"
 MAX_ROWS = 6
 
 # Optional Redis persistence for multi-instance deployments
