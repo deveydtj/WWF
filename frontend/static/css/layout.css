@@ -553,6 +553,10 @@
       font-size: 0.9rem;
     }
 
+    #playerToggle {
+      margin-left: 4px;
+    }
+
     #hostControls {
       display: flex;
       gap: 6px;
@@ -1348,10 +1352,45 @@
       -ms-user-select: none;
     }
 
-    #definitionBox,
-    #chatBox {
-      user-select: text;
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-    }
+#definitionBox,
+#chatBox {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+#playerSidebar {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translate(-100%, -50%);
+  background: var(--bg-color);
+  box-shadow: 2px 2px 8px var(--shadow-color-dark),
+              -2px -2px 8px var(--shadow-color-light);
+  padding: 8px;
+  border-radius: 8px;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+body.players-open #playerSidebar {
+  transform: translate(0, -50%);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.player-row.inactive {
+  opacity: 0.5;
+}

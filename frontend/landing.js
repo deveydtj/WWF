@@ -57,7 +57,10 @@ export async function createLobby() {
   const data = await resp.json();
   if (resp.ok && data.id) {
     storeLastLobby(data.id);
-    window.location.href = `/lobby/${data.id}`;
+    if (data.host_token) {
+      localStorage.setItem('hostToken', data.host_token);
+    }
+    window.location.hash = `#lobby/${data.id}`;
   } else {
     announce('Could not create lobby');
   }
@@ -67,7 +70,8 @@ export async function joinLobby(code) {
   const resp = await fetch(`/lobby/${code}/state`);
   if (resp.ok) {
     storeLastLobby(code);
-    window.location.href = `/lobby/${code}`;
+    localStorage.removeItem('hostToken');
+    window.location.hash = `#lobby/${code}`;
   } else {
     announce('Lobby not found');
   }
@@ -127,6 +131,27 @@ export function init() {
   showSavedEmoji();
   document.getElementById('createBtn').addEventListener('click', createLobby);
   document.getElementById('quickBtn').addEventListener('click', quickPlay);
+
+  handleHashChange();
+  window.addEventListener('hashchange', handleHashChange);
+}
+
+function handleHashChange() {
+  const match = window.location.hash.match(/^#lobby\/([A-Za-z0-9]{6})$/);
+  const landing = document.getElementById('landingView');
+  const lobby = document.getElementById('lobbyView');
+  if (!landing || !lobby) return;
+  if (match) {
+    landing.hidden = true;
+    lobby.hidden = false;
+    if (!lobby.dataset.code || lobby.dataset.code !== match[1]) {
+      lobby.dataset.code = match[1];
+      lobby.innerHTML = `<iframe src="/lobby/${match[1]}" title="Game lobby"></iframe>`;
+    }
+  } else {
+    lobby.hidden = true;
+    landing.hidden = false;
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
