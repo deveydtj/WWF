@@ -71,7 +71,9 @@ body {
 }
 
 #definitionBox,
-#chatBox {
+#chatBox,
+#shareBox,
+#shareLink {
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
