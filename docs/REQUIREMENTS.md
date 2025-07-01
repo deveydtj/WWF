@@ -140,7 +140,7 @@ overview and should be kept up to date as features evolve.
 
 ## 11. Documentation & Deliverables
 
-- `ARCHITECTURE.md` outlines the flow from landing page to lobby with SSE diagrams.
-- `README.md` explains the multi-lobby model and links to `LANDING_PAGE_REQUIREMENTS.md`.
-- `DEPLOY_GUIDE.md` documents the Terraform bootstrap process and secret configuration.
+- `docs/ARCHITECTURE.md` outlines the flow from landing page to lobby with SSE diagrams.
+- `README.md` explains the multi-lobby model and links to `docs/LANDING_PAGE_REQUIREMENTS.md`.
+- `docs/DEPLOY_GUIDE.md` documents the Terraform bootstrap process and secret configuration.
 

@@ -32,7 +32,7 @@ This file tracks outstanding tasks for "Wordle with Friends". Completed items ar
 
 ## Frontend
 
-- [x] Build new landing page served from `/` (see `LANDING_PAGE_REQUIREMENTS.md`).
+- [x] Build new landing page served from `/` (see `docs/LANDING_PAGE_REQUIREMENTS.md`).
 - [x] Implement hero card actions: create lobby, join validation, and Quick Play.
 - [x] Display a re-join chip using the last saved lobby code.
 - [x] Add a sticky header with theme toggle plus Help and GitHub links.
@@ -140,7 +140,7 @@ No outstanding tasks.
 - [x] Schedule a daily CloudWatch Event or Lambda to trigger the idle-lobby cleanup if not using the in-process thread.
 
 -### Docs & Deliverables
-- [x] Update `ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
+- [x] Update `docs/ARCHITECTURE.md` with diagrams showing the landing page, lobby flow and SSE connections.
 - [x] Replace the single-room explanation in `README.md` with the multi-lobby design.
-- [x] Ensure `LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
-- [x] Provide a `DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.
+- [x] Ensure `docs/LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
+- [x] Provide a `docs/DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.

@@ -4,7 +4,7 @@ A small multiplayer adaptation of Wordle. The frontend lives under the
 `frontend/` directory while `backend/server.py` provides a Flask API. The
 server supports **multiple lobbies**, each identified by a six character code.
 Every lobby maintains its own guesses, chat log and scoreboard while sharing
-the same application code. See [ARCHITECTURE.md](ARCHITECTURE.md) for a diagram
+the same application code. See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for a diagram
 of the overall flow.
 
 ## Game Features
@@ -54,14 +54,14 @@ python backend/server.py
 The server now locates its frontend and data files relative to `server.py`,
 so you can run it from any directory.
 
-The server loads its words from `sgb-words.txt` and stores state in
+The server loads its words from `data/sgb-words.txt` and stores state in
 `game_persist.json` by default. Set the `GAME_FILE` environment variable to
 override this path or configure `REDIS_URL` to persist state in Redis instead.
 It listens on port `5001`, so open
 `http://localhost:5001` in your browser to start playing.
 The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
 or the network is unavailable, definitions are loaded from
-`offline_definitions.json`.
+`data/offline_definitions.json`.
 
 Each lobby exposes a set of REST endpoints under `/lobby/<id>`:
 
@@ -113,9 +113,10 @@ expiration.
 - `frontend/game.html` – main game client
 - `frontend/static/css/theme.css` – color theme styles
 - `frontend/static/css/layout.css` – layout and responsive rules
-- `sgb-words.txt` – word list used by the game
+- `data/sgb-words.txt` – word list used by the game
 - `frontend/static/js/` – modular JavaScript loaded by `index.html`
-- `offline_definitions.json` – fallback word definitions
+- `data/offline_definitions.json` – fallback word definitions
+- `docs/` – project documentation including architecture and deployment guides
 - `package.json` – Node settings used by frontend tests
 - `frontend/landing.js` and `frontend/landing.css` – landing page assets
 
@@ -132,7 +133,7 @@ The mode updates automatically on window resize or device orientation changes.
 
 ## Landing Page
 
-The home page served at `/` is the starting point for all players. It mirrors the neumorphic style of the game board and stores your dark-mode setting, chosen emoji, and most recent lobby code in `localStorage`. See [LANDING_PAGE_REQUIREMENTS.md](LANDING_PAGE_REQUIREMENTS.md) for the full specification. Key pieces include:
+The home page served at `/` is the starting point for all players. It mirrors the neumorphic style of the game board and stores your dark-mode setting, chosen emoji, and most recent lobby code in `localStorage`. See [LANDING_PAGE_REQUIREMENTS.md](docs/LANDING_PAGE_REQUIREMENTS.md) for the full specification. Key pieces include:
 
 - A sticky header with theme toggle plus Help and GitHub links.
 - A hero card with **Create Lobby**, **Join Lobby**, **Quick Play**, and a re-join chip when available.
@@ -182,4 +183,4 @@ directory for usage instructions.
 
 - Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
 - Pull requests must pass status checks for Pytest, Cypress, and `terraform plan` before merging to `main`.
-- See [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md) for details on configuring deployment secrets and running Terraform. Further architectural details can be found in [ARCHITECTURE.md](ARCHITECTURE.md).
+- See [DEPLOY_GUIDE.md](docs/DEPLOY_GUIDE.md) for details on configuring deployment secrets and running Terraform. Further architectural details can be found in [ARCHITECTURE.md](docs/ARCHITECTURE.md).
