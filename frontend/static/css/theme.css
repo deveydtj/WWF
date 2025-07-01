@@ -89,3 +89,22 @@ body {
   white-space: nowrap;
   border: 0;
 }
+
+/* Neumorphic base style for buttons */
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.1s;
+}
+
+button:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+  transform: translateY(1px);
+}

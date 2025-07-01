@@ -38,9 +38,14 @@ export async function sendGuess(guess, emoji, lobbyId) {
 /**
  * Force a new round by resetting the current game.
  */
-export async function resetGame(lobbyId) {
+export async function resetGame(lobbyId, hostToken) {
   const url = lobbyId ? `/lobby/${lobbyId}/reset` : '/reset';
-  const r = await fetch(url, { method: 'POST' });
+  const body = hostToken ? { host_token: hostToken } : {};
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
   return r.json();
 }
 
@@ -117,6 +122,16 @@ export async function requestHint(col, emoji, lobbyId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ col, emoji })
+  });
+  return r.json();
+}
+
+export async function kickPlayerRequest(lobbyId, emoji, hostToken) {
+  const url = `/lobby/${lobbyId}/kick`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emoji, host_token: hostToken })
   });
   return r.json();
 }

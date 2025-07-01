@@ -1,7 +1,7 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
-import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint } from './api.js';
+import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint, kickPlayerRequest } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
@@ -23,6 +23,8 @@ let hadNetworkError = false;
 // Default to sound off unless user explicitly enabled it
 let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 let audioCtx = null;
+
+const HOST_TOKEN = localStorage.getItem('hostToken');
 
 let maxRows = 6;
 let requiredLetters = new Set();
@@ -86,6 +88,10 @@ const shareModal = document.getElementById('shareModal');
 const shareLink = document.getElementById('shareLink');
 const shareCopy = document.getElementById('shareCopy');
 const shareClose = document.getElementById('shareClose');
+const playerSidebar = document.getElementById('playerSidebar');
+const playerList = document.getElementById('playerList');
+const playerToggleBtn = document.getElementById('playerToggle');
+const playerCloseBtn = document.getElementById('playerClose');
 
 let chatWiggleTimer = null;
 
@@ -346,6 +352,30 @@ function renderLeaderboard() {
   };
 }
 
+function renderPlayerSidebar() {
+  const list = document.getElementById('playerList');
+  if (!list) return;
+  list.innerHTML = '';
+  const now = Date.now() / 1000;
+  leaderboard.forEach(entry => {
+    const li = document.createElement('li');
+    li.className = 'player-row';
+    if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
+      li.classList.add('inactive');
+    }
+    li.textContent = `${entry.emoji} ${entry.score}`;
+    if (HOST_TOKEN && entry.emoji !== myEmoji) {
+      const btn = document.createElement('button');
+      btn.textContent = 'Kick';
+      btn.addEventListener('click', () => {
+        kickPlayerRequest(LOBBY_CODE, entry.emoji, HOST_TOKEN).then(fetchState);
+      });
+      li.appendChild(btn);
+    }
+    list.appendChild(li);
+  });
+}
+
 // Display emoji markers beside each completed guess in medium mode
 function renderEmojiStamps(guesses) {
   stampContainer.innerHTML = '';
@@ -366,7 +396,7 @@ function renderEmojiStamps(guesses) {
 
 async function performReset() {
   await animateTilesOut(board);
-  await resetGame(LOBBY_CODE);
+  await resetGame(LOBBY_CODE, HOST_TOKEN);
   await fetchState();
   await animateTilesIn(board);
   showMessage('Game reset!', { messageEl, messagePopup });
@@ -455,6 +485,7 @@ function applyState(state) {
     waitingOverlay.style.display = state.phase === 'waiting' ? 'flex' : 'none';
   }
   renderLeaderboard();
+  renderPlayerSidebar();
   updateHintBadge(titleHintBadge, dailyDoubleAvailable);
 
   if (state.chat_messages) {
@@ -752,6 +783,19 @@ titleHintBadge.addEventListener('keydown', (e) => {
     toggleHintSelection();
   }
 });
+if (playerToggleBtn) {
+  playerToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('players-open');
+    if (document.body.classList.contains('players-open')) {
+      focusFirstElement(playerSidebar);
+    }
+  });
+}
+if (playerCloseBtn) {
+  playerCloseBtn.addEventListener('click', () => {
+    document.body.classList.remove('players-open');
+  });
+}
 
 applyDarkModePreference(menuDarkMode);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
