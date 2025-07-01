@@ -7,9 +7,10 @@ setup:
   - apt-get update
   - |
       apt-get install -y xvfb libgtk-3-0 libnss3 libgbm-dev libdrm2 libasound2 libatk-bridge2.0-0 gconf-service libxshmfence1 curl unzip
-      if ! apt-get install -y terraform; then
+      if ! terraform --version 2>/dev/null | grep -q "1.4.6"; then
         curl -Lo /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
         unzip -o /tmp/terraform.zip -d /usr/local/bin
+        chmod +x /usr/local/bin/terraform
       fi
   - curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
   - apt-get install -y nodejs
@@ -22,3 +23,4 @@ test:
   - cd infra/terraform && terraform fmt -check && terraform init -backend=false && terraform plan -input=false -lock=false -var-file=../live/variables.tfvars && cd ../..
 env:
   CYPRESS_CACHE_FOLDER: .cache/Cypress
+  TF_IN_AUTOMATION: "1"
