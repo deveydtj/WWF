@@ -32,7 +32,8 @@ of the overall flow.
 
 ## Requirements
 
-- Python 3.7 or newer
+- Python **3.12.x**
+- Node.js **20.x**
 - [Flask](https://flask.palletsprojects.com/)
 - [Flask-Cors](https://flask-cors.readthedocs.io/)
 
@@ -144,18 +145,21 @@ The home page served at `/` is the starting point for all players. It mirrors th
 
 ## Docker
 
-Build and run the Flask API using Docker. The image expects the compiled
-frontend assets under `backend/static`, so make sure to build the frontend
-first:
+Ensure [Docker Desktop](https://www.docker.com/products/docker-desktop) is installed.
+Build and start the full stack with:
 
 ```bash
-cd frontend && npm run build && cd ..
-cp -r frontend/dist/* backend/static/
-docker build -t wwf-api .
-docker run -p 5000:5000 wwf-api
+docker compose up --build
 ```
 
-The container exposes port **5000** and serves the game API and static files.
+Stop the containers with `docker compose down`.
+
+The compose file mounts your `backend/` directory so changes trigger a reload.
+If you run the optional frontend service it provides hot module reloading on
+port `3000`.
+
+Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
+compose file or a `.env` file.
 
 ## Continuous Integration
 
