@@ -65,6 +65,7 @@ STATIC_DIR = BASE_DIR / "backend" / "static"
 WORDS_FILE = BASE_DIR / "sgb-words.txt"
 GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json")))
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
+OFFLINE_DEFINITIONS_FILE = BASE_DIR / "offline_definitions.json"
 MAX_ROWS = 6
 
 # Optional Redis persistence for multi-instance deployments
@@ -324,7 +325,10 @@ def pick_new_word(s: GameState | None = None):
     s.found_yellows = set()
     s.definition = None
     s.win_timestamp = None
-    s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
+    if MAX_ROWS > 1:
+        s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
+    else:
+        s.daily_double_index = None
     s.daily_double_winners.clear()
     s.daily_double_pending.clear()
     s.phase = "waiting"
@@ -358,7 +362,7 @@ def fetch_definition(word):
     except requests.RequestException as e:
         logging.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
         try:
-            with open("offline_definitions.json") as f:
+            with open(OFFLINE_DEFINITIONS_FILE) as f:
                 offline = json.load(f)
             definition = offline.get(word)
             if definition:
