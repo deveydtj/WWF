@@ -179,9 +179,15 @@ def sanitize_definition(text: str) -> str:
 
 
 def _reset_state(s: GameState | None = None) -> GameState:
-    """Initialize all persistent in-memory structures to defaults."""
+    """Initialize all persistent in-memory structures to defaults.
+
+    When ``s`` is ``None``, reset :data:`current_state` in place rather than
+    creating a new ``GameState``.  The previous behaviour of returning a brand
+    new instance made it easy to accidentally discard the reset object and
+    leave the global state unchanged.
+    """
     if s is None:
-        s = GameState()
+        s = current_state
     else:
         host_token = s.host_token
         s.leaderboard.clear()
