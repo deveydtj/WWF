@@ -1321,6 +1321,14 @@
     #shareLink {
       width: 100%;
       margin-top: 8px;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      background-color: var(--bg-color);
+      box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+                  inset -3px -3px 6px var(--inset-shadow-light);
+      color: var(--text-color);
     }
 
     .emoji-choice {

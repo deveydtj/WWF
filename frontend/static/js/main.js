@@ -115,11 +115,15 @@ if (copyLobbyLink && LOBBY_CODE) {
         shareLink.value = url;
         shareModal.style.display = 'flex';
         openDialog(shareModal);
+        shareLink.focus();
+        shareLink.select();
       });
     } else {
       shareLink.value = url;
       shareModal.style.display = 'flex';
       openDialog(shareModal);
+      shareLink.focus();
+      shareLink.select();
     }
   });
 }
