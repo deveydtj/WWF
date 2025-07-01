@@ -827,10 +827,23 @@ def test_daily_double_awarded_only_once(server_env):
     assert first['daily_double'] is True
     assert server.current_state.daily_double_pending['😀'] == 1
 
+
+def test_daily_double_carries_over_on_win(server_env):
+    server, request = server_env
+    server.current_state.daily_double_index = 0
     request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
-    second = server.guess_word()
-    assert second['daily_double'] is False
-    assert server.current_state.daily_double_pending['😀'] == 1
+    request.remote_addr = '1'
+    resp = server.guess_word()
+    assert resp['daily_double'] is True
+    assert resp['over'] is True
+
+    server.reset_game()
+    assert server.current_state.daily_double_pending.get('😀') == 0
+
+    request.json = {'emoji': '😀', 'col': 0}
+    hint_resp = server.select_hint()
+    assert hint_resp['status'] == 'ok'
+    assert '😀' not in server.current_state.daily_double_pending
 
 
 def test_chat_empty_message_returns_400(server_env):

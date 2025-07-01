@@ -479,6 +479,15 @@ function applyState(state) {
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
   dailyDoubleAvailable = !!state.daily_double_available;
+  if (dailyDoubleAvailable && state.guesses.length === 0) {
+    dailyDoubleRow = 0;
+    dailyDoubleHint = null;
+    saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
+  } else if (!dailyDoubleAvailable && state.guesses.length === 0 && dailyDoubleRow !== null) {
+    dailyDoubleRow = null;
+    dailyDoubleHint = null;
+    saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
+  }
   if (myEmoji && prevActiveEmojis.includes(myEmoji) && !activeEmojis.includes(myEmoji)) {
     showMessage('You were removed from the lobby.', { messageEl, messagePopup });
   }

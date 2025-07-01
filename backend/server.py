@@ -337,7 +337,8 @@ def pick_new_word(s: GameState | None = None):
     else:
         s.daily_double_index = None
     s.daily_double_winners.clear()
-    s.daily_double_pending.clear()
+    for player in list(s.daily_double_pending.keys()):
+        s.daily_double_pending[player] = 0
     s.phase = "waiting"
     s.last_activity = time.time()
 
