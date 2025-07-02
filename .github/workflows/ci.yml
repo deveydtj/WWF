@@ -68,6 +68,16 @@ jobs:
           rm -rf backend/static/*
           cp -r frontend/dist/* backend/static/
 
+      - name: Build Docker image
+        run: docker build -t wwf:test -f docker/Dockerfile .
+
+      - name: Verify container health
+        run: |
+          docker run -d --name wwf_test wwf:test
+          sleep 5
+          curl -f http://localhost:5001/health
+          docker rm -f wwf_test
+
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.4.6

@@ -23,12 +23,16 @@ terraform apply \
   -var vpc_id=vpc-123456 \
   -var subnets="[subnet-abc,subnet-def]" \
   -var ecs_task_execution_role=arn:aws:iam::123456:role/ecsTaskExec \
-  -var api_image=123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest \
-  -var enable_efs=true
+-var api_image=123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest \
+-var enable_efs=true
 ```
 
 `enable_efs` provisions an EFS file system and mounts it at `/data`, setting the
 `GAME_FILE` path accordingly.
+
+If your word list or definitions cache are stored outside the image, override
+`WORD_LIST_PATH` and `DEFN_CACHE_PATH` in the ECS task definition. They default
+to the bundled files under `/app/data`.
 
 The configuration also builds a small Lambda function that hits the `/internal/purge`
 endpoint on the API each morning to clean up idle or finished lobbies. The ALB

@@ -163,6 +163,29 @@ port `3000`.
 Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
 compose file or a `.env` file.
 
+## Asset configuration
+
+Two additional environment variables control where the server loads its words
+and offline definition cache:
+
+- `WORD_LIST_PATH` – path to the text file containing the allowed five-letter
+  words. Defaults to `data/sgb-words.txt`.
+- `DEFN_CACHE_PATH` – path to the JSON file of offline definitions. Defaults to
+  `data/offline_definitions.json`.
+
+The paths are resolved at startup. If the word list cannot be read or is empty
+the server logs `Startup abort: word list '<path>' contains no words` and exits.
+Failure to parse the definitions file logs `Startup abort: could not parse
+definitions file '<path>': <error>`.
+
+Example override for staging:
+
+```bash
+docker run -e WORD_LIST_PATH=/opt/wwf/words.txt \
+           -e DEFN_CACHE_PATH=/opt/wwf/defs.json wwf-image
+```
+
+
 ## Local Development Modes
 
 Docker Compose defines two profiles:

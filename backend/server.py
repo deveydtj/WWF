@@ -63,10 +63,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
 STATIC_DIR = BASE_DIR / "backend" / "static"
 DATA_DIR = BASE_DIR / "data"
-WORDS_FILE = DATA_DIR / "sgb-words.txt"
-GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json")))
+
+# Resolve asset locations from environment variables allowing overrides at
+# deploy time while falling back to the bundled data files.
+WORD_LIST_PATH = os.environ.get("WORD_LIST_PATH", str(DATA_DIR / "sgb-words.txt"))
+DEFN_CACHE_PATH = os.environ.get(
+    "DEFN_CACHE_PATH", str(DATA_DIR / "offline_definitions.json")
+)
+
+WORDS_FILE = Path(WORD_LIST_PATH).resolve()
+GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json"))).resolve()
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
-OFFLINE_DEFINITIONS_FILE = DATA_DIR / "offline_definitions.json"
+OFFLINE_DEFINITIONS_FILE = Path(DEFN_CACHE_PATH).resolve()
 MAX_ROWS = 6
 
 # Optional Redis persistence for multi-instance deployments
@@ -99,7 +107,37 @@ LOBBY_CODE_RE = re.compile(r"^[A-Za-z0-9]{6}$")
 
 
 # ---- Globals ----
-WORDS = []
+WORDS: list[str] = []
+
+
+def _init_assets() -> None:
+    """Load the word list and validate the definitions cache."""
+    global WORDS
+    try:
+        with open(WORDS_FILE) as f:
+            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
+    except Exception as e:  # pragma: no cover - startup validation
+        logging.error(
+            "Startup abort: could not load word list '%s': %s", WORDS_FILE, e
+        )
+        raise SystemExit(1)
+    if not WORDS:
+        logging.error(
+            "Startup abort: word list '%s' contains no words", WORDS_FILE
+        )
+        raise SystemExit(1)
+    try:
+        with open(OFFLINE_DEFINITIONS_FILE) as f:
+            json.load(f)
+    except Exception as e:  # pragma: no cover - startup validation
+        logging.error(
+            "Startup abort: could not parse definitions file '%s': %s",
+            OFFLINE_DEFINITIONS_FILE,
+            e,
+        )
+        raise SystemExit(1)
+
+_init_assets()
 
 @dataclass
 class GameState:
@@ -954,7 +992,14 @@ def cleanup_lobbies():
 
 @app.route("/health")
 def health() -> Any:
-    """Simple health check used by container orchestration."""
+    """Health check ensuring required assets are loaded."""
+    missing = []
+    if not WORDS:
+        missing.append("word_list")
+    if not OFFLINE_DEFINITIONS_FILE.exists():
+        missing.append("definitions_cache")
+    if missing:
+        return jsonify({"status": "unhealthy", "missing": missing}), 503
     return jsonify({"status": "ok"})
 
 @app.route("/")

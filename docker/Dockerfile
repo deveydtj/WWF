@@ -11,19 +11,23 @@ RUN npm run build
 
 # Stage 2: run Python backend
 FROM python:3.12-slim
+ARG WORD_LIST_PATH=/app/data/sgb-words.txt
+ARG DEFN_CACHE_PATH=/app/data/offline_definitions.json
 ENV PYTHONUNBUFFERED=1 \
-    FLASK_APP=backend.server
+    FLASK_APP=backend.server \
+    WORD_LIST_PATH=${WORD_LIST_PATH} \
+    DEFN_CACHE_PATH=${DEFN_CACHE_PATH}
 
 # create non-root user
-RUN adduser --disabled-password --gecos '' appuser && mkdir -p /app
+RUN adduser --disabled-password --gecos '' appuser && mkdir -p /app/data
 WORKDIR /app
 
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend/ ./backend/
-COPY data/sgb-words.txt ./sgb-words.txt
-COPY data/offline_definitions.json ./offline_definitions.json
+COPY data/sgb-words.txt /app/data/sgb-words.txt
+COPY data/offline_definitions.json /app/data/offline_definitions.json
 COPY --from=frontend-builder /app/frontend/dist/ ./backend/static/
 
 EXPOSE 5001
