@@ -157,6 +157,8 @@ docker compose up --build
 Stop the containers with `docker compose down`.
 
 The compose file mounts your `backend/` directory so changes trigger a reload.
+It also mounts the `data/` folder read-only so the default word list and
+definitions cache are always available.
 If you run the optional frontend service it provides hot module reloading on
 port `3000`.
 
