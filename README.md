@@ -159,11 +159,23 @@ Stop the containers with `docker compose down`.
 The compose file mounts your `backend/` directory so changes trigger a reload.
 It also mounts the `data/` folder read-only so the default word list and
 definitions cache are always available.
-If you run the optional frontend service it provides hot module reloading on
-port `5173`.
 
 Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
 compose file or a `.env` file.
+
+### Building the frontend locally
+
+If you change the UI outside of Docker you must rebuild the assets and copy
+them into `backend/static` before starting Compose:
+
+```bash
+cd frontend && npm ci && npm run build && cd ..
+rm -rf backend/static/*
+cp -r frontend/dist/* backend/static/
+```
+
+The backend volume mount overrides the image's bundled assets, so copying the
+`dist` output ensures the container serves your latest build.
 
 ## Asset configuration
 
@@ -188,30 +200,16 @@ docker run -e WORD_LIST_PATH=/opt/wwf/words.txt \
 ```
 
 
-## Local Development Modes
+## Local Development
 
-Docker Compose defines two profiles:
+Run the Flask API with the built frontend assets using Docker Compose:
 
-- **prod (default)** – Runs just the Flask API with the already-built frontend
-  assets. Start it with:
+```bash
+docker compose up --build
+```
 
-  ```bash
-  docker compose up --build
-  ```
-
-  Visit <http://localhost:5001> to use the app.
-
-- **dev** – Adds a Node container running Vite so that frontend changes reload
-  instantly. Launch it with:
-
-  ```bash
-  docker compose --profile dev up --build
-  ```
-
-  This exposes the Vite dev server on <http://localhost:5173>. It depends on the
-  API container so the backend is ready when the dev UI starts.
-
-AWS deployments always use the production profile.
+Visit <http://localhost:5001> to use the app. AWS deployments use this same
+configuration.
 
 ## Continuous Integration
 
