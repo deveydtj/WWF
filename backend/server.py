@@ -52,8 +52,10 @@ except Exception:  # pragma: no cover - optional dependency
 
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
-STATIC_PATH = Path(__file__).resolve().parent / "static"
-app = Flask(__name__, static_folder=str(STATIC_PATH), static_url_path="/assets")
+STATIC_PATH = Path(__file__).resolve().parent / "static" / "assets"
+app = Flask(
+    __name__, static_folder=str(STATIC_PATH), static_url_path="/assets"
+)
 app.secret_key = "a_wordle_secret"
 CORS(app)
 
