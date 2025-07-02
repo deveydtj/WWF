@@ -74,6 +74,7 @@ DEFN_CACHE_PATH = os.environ.get(
 WORDS_FILE = Path(WORD_LIST_PATH).resolve()
 GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json"))).resolve()
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
+LOBBIES_FILE = Path(os.environ.get("LOBBIES_FILE", str(BASE_DIR / "lobbies.json"))).resolve()
 OFFLINE_DEFINITIONS_FILE = Path(DEFN_CACHE_PATH).resolve()
 MAX_ROWS = 6
 
@@ -177,7 +178,15 @@ current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
 
 def get_lobby(code: str) -> GameState:
     """Return the GameState for ``code``, creating it if needed."""
-    return LOBBIES.setdefault(code, _reset_state(GameState()))
+    lobby = LOBBIES.get(code)
+    if lobby is None:
+        lobby = _reset_state(GameState())
+        LOBBIES[code] = lobby
+        load_data(lobby)
+        if not lobby.target_word:
+            pick_new_word(lobby)
+            save_data(lobby)
+    return lobby
 
 
 def purge_lobbies() -> None:
@@ -294,6 +303,20 @@ def save_data(s: GameState | None = None):
     if code == DEFAULT_LOBBY:
         with open(GAME_FILE, "w") as f:
             json.dump(data, f)
+    else:
+        try:
+            all_data = {}
+            if LOBBIES_FILE.exists():
+                with open(LOBBIES_FILE) as f:
+                    all_data = json.load(f)
+        except Exception:
+            all_data = {}
+        all_data[code] = data
+        try:
+            with open(LOBBIES_FILE, "w") as f:
+                json.dump(all_data, f)
+        except Exception as e:  # pragma: no cover - persistence errors
+            logging.warning("Lobby save failed: %s", e)
 
 
 def load_data(s: GameState | None = None):
@@ -323,6 +346,13 @@ def load_data(s: GameState | None = None):
             except Exception:
                 _reset_state(s)
                 data = None
+    elif data is None and code != DEFAULT_LOBBY and os.path.exists(LOBBIES_FILE):
+        try:
+            with open(LOBBIES_FILE) as f:
+                data_all = json.load(f)
+            data = data_all.get(code)
+        except Exception:
+            data = None
 
     if not data:
         _reset_state(s)
@@ -894,6 +924,7 @@ def lobby_create():
     token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
     state.host_token = token
     LOBBIES[code] = state
+    save_data(state)
     log_lobby_created(code, ip)
     return jsonify({"id": code, "host_token": token})
 

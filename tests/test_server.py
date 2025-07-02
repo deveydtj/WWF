@@ -72,8 +72,9 @@ def load_server():
 
 
 @pytest.fixture
-def server_env():
+def server_env(tmp_path):
     server, request = load_server()
+    server.LOBBIES_FILE = tmp_path / 'lobbies.json'
     # basic game state
     server.WORDS = ['apple', 'enter', 'crane', 'crate', 'trace']
     server.current_state.target_word = 'apple'
@@ -1147,4 +1148,18 @@ def test_lobby_kick_missing_player(server_env):
     resp = server.lobby_kick(code)
     assert isinstance(resp, tuple)
     assert resp[1] == 404
+
+
+def test_create_lobby_then_get_state(server_env):
+    server, request = server_env
+
+    create_resp = server.lobby_create()
+    code = create_resp['id']
+
+    request.method = 'GET'
+    request.json = None
+    state = server.lobby_state(code)
+
+    assert state['phase'] == 'waiting'
+    assert code in server.LOBBIES
 
