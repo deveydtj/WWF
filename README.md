@@ -93,9 +93,10 @@ the options menu.
 
 ## Testing
 
-Run the unit tests from the repository root. Make sure Pytest and Node.js are
-installed (`pip install pytest` and `node --version` should succeed) and then
-run:
+Run the test suite from the repository root. Ensure Pytest and Node.js are
+installed (`pip install pytest` and `node --version` should succeed). Cypress
+requires an Xvfb display server when running headless and Terraform 1.4 or
+newer must also be available. Once these dependencies are installed, run:
 
 ```bash
 python -m pytest -v
