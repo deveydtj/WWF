@@ -5,6 +5,8 @@ COPY frontend/package.json frontend/package-lock.json ./
 # Install all dependencies so the Vite bundler is available
 RUN npm ci
 COPY frontend/ ./
+# Produce static assets under /frontend/dist. Only these files are copied
+# into the runtime stage so the final image stays slim.
 RUN npm run build
 
 # Stage 2: run Python backend

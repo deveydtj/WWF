@@ -163,6 +163,31 @@ port `3000`.
 Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
 compose file or a `.env` file.
 
+## Local Development Modes
+
+Docker Compose defines two profiles:
+
+- **prod (default)** – Runs just the Flask API with the already-built frontend
+  assets. Start it with:
+
+  ```bash
+  docker compose up --build
+  ```
+
+  Visit <http://localhost:5001> to use the app.
+
+- **dev** – Adds a Node container running Vite so that frontend changes reload
+  instantly. Launch it with:
+
+  ```bash
+  docker compose --profile dev up --build
+  ```
+
+  This exposes the Vite dev server on <http://localhost:3000>. It depends on the
+  API container so the backend is ready when the dev UI starts.
+
+AWS deployments always use the production profile.
+
 ## Continuous Integration
 
 All pushes and pull requests trigger the **CI/CD** workflow under
