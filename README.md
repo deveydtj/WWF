@@ -160,7 +160,7 @@ The compose file mounts your `backend/` directory so changes trigger a reload.
 It also mounts the `data/` folder read-only so the default word list and
 definitions cache are always available.
 If you run the optional frontend service it provides hot module reloading on
-port `3000`.
+port `5173`.
 
 Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
 compose file or a `.env` file.
@@ -208,7 +208,7 @@ Docker Compose defines two profiles:
   docker compose --profile dev up --build
   ```
 
-  This exposes the Vite dev server on <http://localhost:3000>. It depends on the
+  This exposes the Vite dev server on <http://localhost:5173>. It depends on the
   API container so the backend is ready when the dev UI starts.
 
 AWS deployments always use the production profile.
