@@ -157,8 +157,10 @@ docker compose up --build
 Stop the containers with `docker compose down`.
 
 The compose file mounts your `backend/` directory so changes trigger a reload.
-It also mounts the `data/` folder read-only so the default word list and
-definitions cache are always available.
+It also mounts the `frontend/` folder to `/app/frontend` so the server can
+fall back to unbuilt assets during development. The `data/` folder is mounted
+read-only so the default word list and definitions cache are always
+available.
 
 Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
 compose file or a `.env` file.
@@ -175,7 +177,9 @@ cp -r frontend/dist/* backend/static/
 ```
 
 The backend volume mount overrides the image's bundled assets, so copying the
-`dist` output ensures the container serves your latest build.
+`dist` output ensures the container serves your latest build. If `backend/static`
+is empty the server automatically falls back to the mounted `frontend/`
+directory, which is convenient for rapid development.
 
 ## Asset configuration
 

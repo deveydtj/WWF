@@ -13,6 +13,7 @@ services:
       - LOBBIES_FILE=/app/runtime/lobbies.json
     volumes:
       - ./backend:/app/backend
+      - ./frontend:/app/frontend        # allow fallback to dev assets
       - ./data:/app/data:ro
       - ./runtime:/app/runtime
 
