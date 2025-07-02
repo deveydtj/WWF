@@ -4,3 +4,5 @@ frontend/dist/
 .venv/
 game_persist.json
 analytics.log
+
+runtime/

@@ -9,10 +9,13 @@ services:
       - FLASK_ENV=development
       - FLASK_RUN_PORT=5001
       - FLASK_APP=backend.server
+      - GAME_FILE=/app/runtime/game_persist.json
+      - LOBBIES_FILE=/app/runtime/lobbies.json
     volumes:
       - ./backend:/app/backend
       - ./frontend/dist:/app/backend/static
       - ./data:/app/data:ro
+      - ./runtime:/app/runtime
   frontend:
     image: node:20-alpine
     working_dir: /app/frontend
