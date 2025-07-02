@@ -13,20 +13,6 @@ services:
       - LOBBIES_FILE=/app/runtime/lobbies.json
     volumes:
       - ./backend:/app/backend
-      - ./frontend/dist:/app/backend/static
       - ./data:/app/data:ro
       - ./runtime:/app/runtime
-  frontend:
-    image: node:20-alpine
-    working_dir: /app/frontend
-    command: sh -c "npm install && npm run dev -- --host --port 5173"
-    environment:
-      - VITE_API_URL=http://web:5001
-    depends_on:
-      - web
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app/frontend
-    profiles:
-      - dev
+
