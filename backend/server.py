@@ -1091,6 +1091,15 @@ def css_files(filename):
 def lobby_css_files(filename):
     return css_files(filename)
 
+
+@app.route('/<path:requested_path>')
+def spa_fallback_route(requested_path: str):
+    """Send index.html for client-side routes."""
+    if requested_path.startswith(('api/', 'static/', 'assets/')) or requested_path in ('favicon.ico', 'robots.txt'):
+        return '', 404
+    root = STATIC_DIR if (STATIC_DIR / 'index.html').exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), 'index.html')
+
 if __name__ == "__main__":
     load_data()
     if not current_state.target_word:
