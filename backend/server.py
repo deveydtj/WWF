@@ -62,7 +62,6 @@ CORS(app)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DEV_FRONTEND_DIR = BASE_DIR / "frontend"
 STATIC_DIR = BASE_DIR / "backend" / "static"
 DATA_DIR = BASE_DIR / "data"
 
@@ -1038,42 +1037,36 @@ def health() -> Any:
 @app.route("/")
 def index():
     """Serve the landing page."""
-    root = STATIC_DIR if (STATIC_DIR / "index.html").exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), "index.html")
+    return send_from_directory(str(STATIC_DIR), "index.html")
 
 
 @app.route("/landing.css")
 def landing_css():
     """Serve the landing page stylesheet."""
-    root = STATIC_DIR if (STATIC_DIR / "landing.css").exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), "landing.css")
+    return send_from_directory(str(STATIC_DIR), "landing.css")
 
 
 @app.route("/landing.js")
 def landing_js():
     """Serve the landing page script."""
-    root = STATIC_DIR if (STATIC_DIR / "landing.js").exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), "landing.js")
+    return send_from_directory(str(STATIC_DIR), "landing.js")
 
 @app.route("/game")
 def game_page():
     """Serve the main game client."""
-    root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), "game.html")
+    return send_from_directory(str(STATIC_DIR), "game.html")
 
 
 @app.route("/lobby/<code>")
 def lobby_page(code: str):
     """Serve the game client for a specific lobby."""
-    root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), "game.html")
+    return send_from_directory(str(STATIC_DIR), "game.html")
 
 # Serve static JavaScript modules
 @app.route('/static/js/<path:filename>')
 @app.route('/js/<path:filename>')
 def js_files(filename):
-    root = STATIC_DIR if (STATIC_DIR / 'static' / 'js').exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root / 'static' / 'js'), filename)
+    return send_from_directory(str(STATIC_DIR / 'static' / 'js'), filename)
 
 # Support asset requests when game.html is served from /lobby/<code>
 @app.route('/lobby/static/js/<path:filename>')
@@ -1084,8 +1077,7 @@ def lobby_js_files(filename):
 @app.route('/static/css/<path:filename>')
 @app.route('/css/<path:filename>')
 def css_files(filename):
-    root = STATIC_DIR if (STATIC_DIR / 'static' / 'css').exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root / 'static' / 'css'), filename)
+    return send_from_directory(str(STATIC_DIR / 'static' / 'css'), filename)
 
 @app.route('/lobby/static/css/<path:filename>')
 def lobby_css_files(filename):
@@ -1097,8 +1089,7 @@ def spa_fallback_route(requested_path: str):
     """Send index.html for client-side routes."""
     if requested_path.startswith(('api/', 'static/', 'assets/')) or requested_path in ('favicon.ico', 'robots.txt'):
         return '', 404
-    root = STATIC_DIR if (STATIC_DIR / 'index.html').exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), 'index.html')
+    return send_from_directory(str(STATIC_DIR), 'index.html')
 
 if __name__ == "__main__":
     load_data()
