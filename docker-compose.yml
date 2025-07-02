@@ -12,6 +12,7 @@ services:
     volumes:
       - ./backend:/app/backend
       - ./frontend/dist:/app/backend/static
+      - ./data:/app/data:ro
   frontend:
     image: node:20-alpine
     working_dir: /app/frontend
