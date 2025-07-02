@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite'
 
+const apiUrl = process.env.VITE_API_URL
+
 export default defineConfig({
   base: '',
   server: {
     proxy: {
       '/lobby': {
-        target: 'http://localhost:5001',
+        target: apiUrl,
         changeOrigin: true
       }
     }
