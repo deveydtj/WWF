@@ -30,6 +30,9 @@ COPY data/sgb-words.txt /app/data/sgb-words.txt
 COPY data/offline_definitions.json /app/data/offline_definitions.json
 COPY --from=frontend-builder /app/frontend/dist/ ./backend/static/
 
+# Ensure runtime directory exists and correct ownership for appuser
+RUN chown -R appuser:appuser /app && mkdir -p /app/runtime
+
 EXPOSE 5001
 USER appuser
 
