@@ -167,13 +167,12 @@ compose file or a `.env` file.
 
 ### Building the frontend locally
 
-If you change the UI outside of Docker you must rebuild the assets and copy
-them into `backend/static` before starting Compose:
+If you change the UI outside of Docker you must rebuild the assets before
+starting Compose. The postbuild script automatically copies the files into
+`backend/static`:
 
 ```bash
 cd frontend && npm ci && npm run build && cd ..
-rm -rf backend/static/*
-cp -r frontend/dist/* backend/static/
 ```
 
 The backend volume mount overrides the image's bundled assets, so copying the

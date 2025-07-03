@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "rm -rf ../backend/static/* && cp -r dist/* ../backend/static/",
     "cypress": "cypress run --headless"
   }
 }
+
