@@ -85,6 +85,7 @@ def server_env(tmp_path):
     server.current_state.leaderboard.clear()
     server.current_state.leaderboard['😀'] = {
         'ip': '1',
+        'player_id': 'p1',
         'score': 0,
         'used_yellow': [],
         'used_green': [],
@@ -92,11 +93,13 @@ def server_env(tmp_path):
     }
     server.current_state.leaderboard['😎'] = {
         'ip': '2',
+        'player_id': 'p2',
         'score': 3,
         'used_yellow': [],
         'used_green': [],
         'last_active': 0,
     }
+    server.current_state.player_map = {'p1': '😀', 'p2': '😎'}
     server.current_state.host_token = 'HOSTTOKEN'
     return server, request
 
@@ -110,7 +113,7 @@ def test_result_for_guess(server_env):
 def test_duplicate_guess_and_sorted_leaderboard(server_env):
     server, request = server_env
 
-    request.json = {'guess': 'enter', 'emoji': '😀'}
+    request.json = {'guess': 'enter', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     first = server.guess_word()
 
@@ -118,7 +121,7 @@ def test_duplicate_guess_and_sorted_leaderboard(server_env):
     scores = [e['score'] for e in lb]
     assert scores == sorted(scores, reverse=True)
 
-    request.json = {'guess': 'enter', 'emoji': '😀'}
+    request.json = {'guess': 'enter', 'emoji': '😀', 'player_id': 'p1'}
     duplicate = server.guess_word()
     assert isinstance(duplicate, tuple)
     data, status = duplicate
@@ -132,7 +135,7 @@ def test_validate_hard_mode_missing_letter(server_env):
 
     # Prior guess finds a yellow 'E'
     result = server.result_for_guess('enter', server.current_state.target_word)
-    server.current_state.guesses.append({'guess': 'enter', 'result': result, 'emoji': '😀'})
+    server.current_state.guesses.append({'guess': 'enter', 'result': result, 'emoji': '😀', 'player_id': 'p1'})
 
     ok, msg = server.validate_hard_mode('crank')
     assert not ok
@@ -144,7 +147,7 @@ def test_validate_hard_mode_wrong_green_position(server_env):
 
     # Prior guess reveals 'E' is green in position 5
     result = server.result_for_guess('crane', server.current_state.target_word)
-    server.current_state.guesses.append({'guess': 'crane', 'result': result, 'emoji': '😀'})
+    server.current_state.guesses.append({'guess': 'crane', 'result': result, 'emoji': '😀', 'player_id': 'p1'})
 
     ok, msg = server.validate_hard_mode('enter')
     assert not ok
@@ -156,9 +159,9 @@ def test_validate_hard_mode_valid_guess(server_env):
 
     # Multiple prior guesses accumulating constraints
     r1 = server.result_for_guess('enter', server.current_state.target_word)
-    server.current_state.guesses.append({'guess': 'enter', 'result': r1, 'emoji': '😀'})
+    server.current_state.guesses.append({'guess': 'enter', 'result': r1, 'emoji': '😀', 'player_id': 'p1'})
     r2 = server.result_for_guess('crane', server.current_state.target_word)
-    server.current_state.guesses.append({'guess': 'crane', 'result': r2, 'emoji': '😀'})
+    server.current_state.guesses.append({'guess': 'crane', 'result': r2, 'emoji': '😀', 'player_id': 'p1'})
 
     ok, msg = server.validate_hard_mode('trace')
     assert ok
@@ -181,19 +184,21 @@ def test_get_client_ip_x_forwarded_for(server_env):
 def test_set_emoji_registers_and_maps(server_env):
     server, request = server_env
 
-    request.json = {'emoji': '🤖'}
+    request.json = {'emoji': '🤖', 'player_id': 'p1'}
     request.remote_addr = '3'
     resp = server.set_emoji()
 
     assert resp['status'] == 'ok'
     assert server.current_state.leaderboard['🤖']['ip'] == '3'
-    assert server.current_state.ip_to_emoji['3'] == '🤖'
+    assert server.current_state.leaderboard['🤖']['player_id']
+    pid = server.current_state.leaderboard['🤖']['player_id']
+    assert server.current_state.player_map[pid] == '🤖'
 
 
 def test_set_emoji_duplicate_different_ip(server_env):
     server, request = server_env
 
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p3'}
     request.remote_addr = '3'
     resp = server.set_emoji()
 
@@ -202,7 +207,7 @@ def test_set_emoji_duplicate_different_ip(server_env):
     assert status == 409
     assert data['status'] == 'error'
     assert 'taken' in data['msg']
-    assert '3' not in server.current_state.ip_to_emoji
+    assert 'p3' not in server.current_state.player_map
 
 
 def test_set_emoji_changes_migrate_score(server_env):
@@ -210,21 +215,42 @@ def test_set_emoji_changes_migrate_score(server_env):
 
     # establish initial mapping for ip '1'
     server.current_state.leaderboard['😀']['score'] = 5
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp1 = server.set_emoji()
     assert resp1['status'] == 'ok'
-    assert server.current_state.ip_to_emoji['1'] == '😀'
+    pid1 = server.current_state.leaderboard['😀']['player_id']
+    assert server.current_state.player_map[pid1] == '😀'
 
     # change to a new emoji
-    request.json = {'emoji': '🥳'}
+    request.json = {'emoji': '🥳', 'player_id': 'p1'}
     resp2 = server.set_emoji()
 
     assert resp2['status'] == 'ok'
-    assert server.current_state.ip_to_emoji['1'] == '🥳'
+    pid_new = server.current_state.leaderboard['🥳']['player_id']
+    assert server.current_state.player_map[pid_new] == '🥳'
     assert '🥳' in server.current_state.leaderboard
     assert '😀' not in server.current_state.leaderboard
     assert server.current_state.leaderboard['🥳']['score'] == 5
+
+
+def test_two_players_same_ip_do_not_override(server_env):
+    server, request = server_env
+    server.current_state.leaderboard.clear()
+    server.current_state.player_map.clear()
+
+    request.json = {'emoji': '🤖', 'player_id': 'p1'}
+    request.remote_addr = '1'
+    resp1 = server.set_emoji()
+    assert resp1['status'] == 'ok'
+
+    request.json = {'emoji': '😀', 'player_id': 'p2'}
+    request.remote_addr = '1'
+    resp2 = server.set_emoji()
+    assert resp2['status'] == 'ok'
+
+    assert server.current_state.leaderboard['🤖']['player_id'] == 'p1'
+    assert server.current_state.leaderboard['😀']['player_id'] == 'p2'
 
 
 def test_state_get_returns_sorted_leaderboard(server_env):
@@ -249,7 +275,7 @@ def test_state_post_updates_last_active_and_persists(tmp_path, server_env):
 
     before = server.current_state.leaderboard['😀']['last_active']
     request.method = 'POST'
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     server.state()
 
     assert server.current_state.leaderboard['😀']['last_active'] > before
@@ -265,7 +291,7 @@ def test_guess_word_correct_word_wins_game(server_env, monkeypatch):
 
     monkeypatch.setattr(server, 'fetch_definition', lambda w: 'def')
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -294,7 +320,7 @@ def test_guess_word_correct_word_wins_game(server_env, monkeypatch):
 def test_guess_word_invalid_word_returns_400(server_env, word):
     server, request = server_env
 
-    request.json = {'guess': word, 'emoji': '😀'}
+    request.json = {'guess': word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -307,11 +333,11 @@ def test_guess_word_invalid_word_returns_400(server_env, word):
 def test_guess_word_invalid_word_duplicate_returns_400(server_env):
     server, request = server_env
 
-    request.json = {'guess': 'zzzzz', 'emoji': '😀'}
+    request.json = {'guess': 'zzzzz', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
-    request.json = {'guess': 'zzzzz', 'emoji': '😀'}
+    request.json = {'guess': 'zzzzz', 'emoji': '😀', 'player_id': 'p1'}
     dup = server.guess_word()
 
     assert isinstance(dup, tuple)
@@ -324,7 +350,7 @@ def test_guess_word_after_game_over_returns_403(server_env):
     server, request = server_env
 
     server.current_state.is_over = True
-    request.json = {'guess': 'crate', 'emoji': '😀'}
+    request.json = {'guess': 'crate', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -337,7 +363,7 @@ def test_guess_word_after_game_over_returns_403(server_env):
 def test_guess_word_points_for_new_letters_and_penalties(server_env):
     server, request = server_env
 
-    request.json = {'guess': 'crane', 'emoji': '😀'}
+    request.json = {'guess': 'crane', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     first = server.guess_word()
 
@@ -346,7 +372,7 @@ def test_guess_word_points_for_new_letters_and_penalties(server_env):
     assert server.current_state.found_greens == {'e'}
     assert server.current_state.found_yellows == {'a'}
 
-    request.json = {'guess': 'trace', 'emoji': '😀'}
+    request.json = {'guess': 'trace', 'emoji': '😀', 'player_id': 'p1'}
     second = server.guess_word()
 
     assert second['pointsDelta'] == -1
@@ -355,7 +381,7 @@ def test_guess_word_points_for_new_letters_and_penalties(server_env):
 def test_pick_new_word_resets_state(server_env, monkeypatch):
     server, _ = server_env
     # Set up some non-empty state that should be cleared
-    server.current_state.guesses.append({'guess': 'apple', 'result': [], 'emoji': '😀'})
+    server.current_state.guesses.append({'guess': 'apple', 'result': [], 'emoji': '😀', 'player_id': 'p1'})
     server.current_state.is_over = True
     server.current_state.winner_emoji = '😎'
     server.current_state.found_greens = {'a'}
@@ -507,7 +533,7 @@ def test_definition_available_after_game_over(monkeypatch, server_env):
 
     monkeypatch.setattr(server, 'fetch_definition', lambda w: 'a fruit')
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -529,7 +555,7 @@ def test_definition_fetched_on_loss(monkeypatch, server_env):
     monkeypatch.setattr(server, 'fetch_definition', lambda w: 'a fruit')
     monkeypatch.setattr(server, 'MAX_ROWS', 1)
 
-    request.json = {'guess': 'enter', 'emoji': '😀'}
+    request.json = {'guess': 'enter', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -555,6 +581,7 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
     server.current_state.leaderboard = {
         '🤖': {
             'ip': '1',
+            'player_id': 'p1',
             'score': 99,
             'used_yellow': ['y'],
             'used_green': ['g'],
@@ -562,13 +589,14 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
         }
     }
     server.current_state.ip_to_emoji = {'1': '🤖'}
+    server.current_state.player_map = {'p1': '🤖'}
     server.current_state.winner_emoji = '🤖'
     server.current_state.target_word = 'enter'
     server.current_state.guesses = [{'guess': 'enter', 'result': ['correct'] * 5, 'emoji': '🤖'}]
     server.current_state.is_over = True
     server.current_state.found_greens = {'e'}
     server.current_state.found_yellows = {'n', 't'}
-    server.current_state.past_games = [[{'guess': 'apple', 'result': [], 'emoji': '😀'}]]
+    server.current_state.past_games = [[{'guess': 'apple', 'result': [], 'emoji': '😀', 'player_id': 'p1'}]]
     server.current_state.definition = 'def'
     server.current_state.last_word = 'apple'
     server.current_state.last_definition = 'fruit'
@@ -576,6 +604,7 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
     expected = {
         'leaderboard': dict(server.current_state.leaderboard),
         'ip_to_emoji': dict(server.current_state.ip_to_emoji),
+        'player_map': dict(server.current_state.player_map),
         'winner_emoji': server.current_state.winner_emoji,
         'target_word': server.current_state.target_word,
         'guesses': list(server.current_state.guesses),
@@ -592,6 +621,7 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
 
     server.current_state.leaderboard = {}
     server.current_state.ip_to_emoji = {}
+    server.current_state.player_map = {}
     server.current_state.winner_emoji = None
     server.current_state.target_word = ''
     server.current_state.guesses = []
@@ -607,6 +637,7 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
 
     assert server.current_state.leaderboard == expected['leaderboard']
     assert server.current_state.ip_to_emoji == expected['ip_to_emoji']
+    assert server.current_state.player_map == expected['player_map']
     assert server.current_state.winner_emoji == expected['winner_emoji']
     assert server.current_state.target_word == expected['target_word']
     assert server.current_state.guesses == expected['guesses']
@@ -623,13 +654,13 @@ def test_close_call_trigger(monkeypatch, server_env):
     server, request = server_env
 
     monkeypatch.setattr(server.time, 'time', lambda: 1.0)
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     win = server.guess_word()
     assert win['won'] is True
 
     monkeypatch.setattr(server.time, 'time', lambda: 1.5)
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😎'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😎', 'player_id': 'p2'}
     request.remote_addr = '2'
     resp = server.guess_word()
 
@@ -644,12 +675,12 @@ def test_close_call_not_triggered(monkeypatch, server_env):
     server, request = server_env
 
     monkeypatch.setattr(server.time, 'time', lambda: 1.0)
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
     monkeypatch.setattr(server.time, 'time', lambda: 3.5)
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😎'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😎', 'player_id': 'p2'}
     request.remote_addr = '2'
     resp = server.guess_word()
 
@@ -664,7 +695,7 @@ def test_daily_double_awarded(monkeypatch, server_env):
     server.current_state.daily_double_index = 0
 
     monkeypatch.setattr(server.time, 'time', lambda: 1.0)
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -676,7 +707,7 @@ def test_daily_double_not_awarded(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 5  # row 1 first tile
 
-    request.json = {'guess': 'enter', 'emoji': '😀'}
+    request.json = {'guess': 'enter', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
 
@@ -687,11 +718,11 @@ def test_hint_selection_for_daily_double_winner(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
-    request.json = {'emoji': '😀', 'col': 2}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 2}
     resp = server.select_hint()
 
     assert resp['status'] == 'ok'
@@ -705,11 +736,11 @@ def test_hint_selection_invalid_player(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
-    request.json = {'emoji': '😎', 'col': 2}
+    request.json = {'emoji': '😎', 'player_id': 'p2', 'col': 2}
     request.remote_addr = '2'
     resp = server.select_hint()
 
@@ -722,16 +753,16 @@ def test_hint_cannot_be_used_twice(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
-    request.json = {'emoji': '😀', 'col': 2}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 2}
     request.remote_addr = '1'
     first = server.select_hint()
     assert first['status'] == 'ok'
 
-    request.json = {'emoji': '😀', 'col': 1}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 1}
     second = server.select_hint()
     assert isinstance(second, tuple)
     data, status = second
@@ -742,20 +773,20 @@ def test_state_reports_daily_double_available(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
     request.method = 'POST'
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     state = server.state()
-    assert state['daily_double_available'] is True
+    assert state.get('daily_double_available') is True
 
-    request.json = {'emoji': '😀', 'col': 2}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 2}
     request.remote_addr = '1'
     server.select_hint()
 
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     state2 = server.state()
     assert state2['daily_double_available'] is False
 
@@ -764,7 +795,7 @@ def test_chat_post_and_get(server_env):
     server, request = server_env
 
     request.method = 'POST'
-    request.json = {'text': 'hello', 'emoji': '😀'}
+    request.json = {'text': 'hello', 'emoji': '😀', 'player_id': 'p1'}
     resp = server.chat()
     assert resp['status'] == 'ok'
     assert server.current_state.chat_messages[-1]['text'] == 'hello'
@@ -781,11 +812,11 @@ def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
     log_file = tmp_path / 'analytics.log'
     monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
-    request.json = {'emoji': '😀', 'col': 2}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 2}
     request.remote_addr = '1'
     resp = server.select_hint()
     assert resp['status'] == 'ok'
@@ -804,7 +835,7 @@ def test_reconnect_with_active_daily_double(tmp_path, server_env, monkeypatch):
     game_file = tmp_path / 'game.json'
     monkeypatch.setattr(server, 'GAME_FILE', str(game_file))
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
@@ -813,7 +844,7 @@ def test_reconnect_with_active_daily_double(tmp_path, server_env, monkeypatch):
     server.load_data()
 
     request.method = 'POST'
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     state = server.state()
     assert state['daily_double_available'] is True
 
@@ -822,7 +853,7 @@ def test_daily_double_awarded_only_once(server_env):
     server, request = server_env
     server.WORDS.append('ample')
     server.current_state.daily_double_index = 0
-    request.json = {'guess': 'ample', 'emoji': '😀'}
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     first = server.guess_word()
     assert first['daily_double'] is True
@@ -832,7 +863,7 @@ def test_daily_double_awarded_only_once(server_env):
 def test_daily_double_carries_over_on_win(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀'}
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     resp = server.guess_word()
     assert resp['daily_double'] is True
@@ -841,7 +872,7 @@ def test_daily_double_carries_over_on_win(server_env):
     server.reset_game()
     assert server.current_state.daily_double_pending.get('😀') == 0
 
-    request.json = {'emoji': '😀', 'col': 0}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 0}
     hint_resp = server.select_hint()
     assert hint_resp['status'] == 'ok'
     assert '😀' not in server.current_state.daily_double_pending
@@ -850,7 +881,7 @@ def test_daily_double_carries_over_on_win(server_env):
 def test_chat_empty_message_returns_400(server_env):
     server, request = server_env
     request.method = 'POST'
-    request.json = {'text': '   ', 'emoji': '😀'}
+    request.json = {'text': '   ', 'emoji': '😀', 'player_id': 'p1'}
     resp = server.chat()
     assert isinstance(resp, tuple)
     data, status = resp
@@ -879,14 +910,14 @@ def test_lobby_create_and_isolated_state(server_env):
 
     server.LOBBIES[code].target_word = 'apple'
 
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.lobby_emoji(code)
 
     q = server.queue.Queue()
     server.LOBBIES[code].listeners.add(q)
 
-    request.json = {'guess': 'apple', 'emoji': '😀'}
+    request.json = {'guess': 'apple', 'emoji': '😀', 'player_id': 'p1'}
     server.lobby_guess(code)
 
     assert not q.empty()
@@ -900,7 +931,7 @@ def test_sse_isolation_between_lobbies(server_env):
     server.LOBBIES[l1].target_word = 'apple'
     server.LOBBIES[l2].target_word = 'apple'
 
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.lobby_emoji(l1)
     server.lobby_emoji(l2)
@@ -910,7 +941,7 @@ def test_sse_isolation_between_lobbies(server_env):
     server.LOBBIES[l1].listeners.add(q1)
     server.LOBBIES[l2].listeners.add(q2)
 
-    request.json = {'guess': 'apple', 'emoji': '😀'}
+    request.json = {'guess': 'apple', 'emoji': '😀', 'player_id': 'p1'}
     server.lobby_guess(l1)
 
     assert not q1.empty()
@@ -925,18 +956,18 @@ def test_lobby_guess_and_chat_isolation(server_env):
     server.LOBBIES[l1].target_word = 'apple'
     server.LOBBIES[l2].target_word = 'enter'
 
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.lobby_emoji(l1)
     server.lobby_emoji(l2)
 
-    request.json = {'guess': 'apple', 'emoji': '😀'}
+    request.json = {'guess': 'apple', 'emoji': '😀', 'player_id': 'p1'}
     server.lobby_guess(l1)
 
     assert server.LOBBIES[l2].guesses == []
 
     request.method = 'POST'
-    request.json = {'text': 'hi', 'emoji': '😀'}
+    request.json = {'text': 'hi', 'emoji': '😀', 'player_id': 'p1'}
     server.lobby_chat(l1)
 
     assert server.LOBBIES[l2].chat_messages == []
@@ -1010,7 +1041,7 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     assert entry['lobby_id'] == code
     assert entry['ip'] == '1'
 
-    request.json = {'emoji': '😀'}
+    request.json = {'emoji': '😀', 'player_id': 'p1'}
     server.lobby_emoji(code)
 
     with open(log_file) as f:
@@ -1020,7 +1051,7 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     assert join['lobby_id'] == code
     assert join['emoji'] == '😀'
 
-    request.json = {'guess': server.LOBBIES[code].target_word, 'emoji': '😀'}
+    request.json = {'guess': server.LOBBIES[code].target_word, 'emoji': '😀', 'player_id': 'p1'}
     server.lobby_guess(code)
 
     request.json = {'host_token': resp['host_token']}
@@ -1120,7 +1151,7 @@ def test_lobby_kick_removes_player(server_env):
     server.LOBBIES[code].leaderboard['😎'] = {
         'ip': '2', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
     }
-    request.json = {'emoji': '😎', 'host_token': token}
+    request.json = {'emoji': '😎', 'player_id': 'p2', 'host_token': token}
     resp = server.lobby_kick(code)
     assert resp['status'] == 'ok'
     assert '😎' not in server.LOBBIES[code].leaderboard
@@ -1133,7 +1164,7 @@ def test_lobby_kick_requires_token(server_env):
     server.LOBBIES[code].leaderboard['😀'] = {
         'ip': '1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
     }
-    request.json = {'emoji': '😀', 'host_token': 'BAD'}
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'host_token': 'BAD'}
     resp = server.lobby_kick(code)
     assert isinstance(resp, tuple)
     assert resp[1] == 403

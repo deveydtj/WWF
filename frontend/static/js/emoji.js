@@ -10,6 +10,10 @@ export function getMyEmoji() {
   return localStorage.getItem('myEmoji') || null;
 }
 
+export function getMyPlayerId() {
+  return localStorage.getItem('playerId') || null;
+}
+
 /**
  * Persist the player's chosen emoji locally.
  *
@@ -17,6 +21,10 @@ export function getMyEmoji() {
  */
 export function setMyEmoji(e) {
   localStorage.setItem('myEmoji', e);
+}
+
+export function setMyPlayerId(pid) {
+  if (pid) localStorage.setItem('playerId', pid);
 }
 
 export const allEmojis = [
@@ -48,8 +56,9 @@ export function showEmojiModal(takenEmojis, {
     btn.style.pointerEvents = takenEmojis.includes(e) ? 'none' : 'auto';
 
     btn.onclick = async () => {
-    const data = await sendEmoji(e, window.LOBBY_CODE);
+    const data = await sendEmoji(e, getMyPlayerId(), window.LOBBY_CODE);
     if (data.status === 'ok') {
+      if (data.player_id) setMyPlayerId(data.player_id);
       if (skipAutoCloseRef) skipAutoCloseRef.value = false;
       setMyEmoji(e);
       if (typeof onChosen === 'function') onChosen(e);
