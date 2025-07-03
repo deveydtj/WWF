@@ -175,7 +175,6 @@ No outstanding tasks.
   - Monitor asset loading, state changes, and errors.
 - [ ] User Feedback Enhancements
   - [x] Add prompts for key input.
-  - Add pause screen overlays.
   - Add transition animations or effects.
 - [ ] Automated Regression Testing
   - Create unit tests for core logic (collision, scoring, state transitions).
