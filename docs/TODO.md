@@ -174,7 +174,7 @@ No outstanding tasks.
   - Replace print statements with logger calls.
   - Monitor asset loading, state changes, and errors.
 - [ ] User Feedback Enhancements
-  - Add prompts for key input.
+  - [x] Add prompts for key input.
   - Add pause screen overlays.
   - Add transition animations or effects.
 - [ ] Automated Regression Testing
