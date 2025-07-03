@@ -7,6 +7,7 @@ RUN npm ci
 COPY frontend/ ./
 # Produce static assets under /frontend/dist. Only these files are copied
 # into the runtime stage so the final image stays slim.
+RUN mkdir -p /app/backend/static
 RUN npm run build
 
 # Stage 2: run Python backend
