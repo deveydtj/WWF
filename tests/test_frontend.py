@@ -264,6 +264,11 @@ def test_waiting_overlay_present():
     text = GAME.read_text(encoding='utf-8')
     assert '<div id="waitingOverlay"' in text
 
+def test_waiting_overlay_pointer_events_none():
+    css = read_css()
+    rules = [m.group(0) for m in re.finditer(r'#waitingOverlay\s*{[^}]*}', css)]
+    assert any('pointer-events: none' in r for r in rules)
+
 
 def test_show_message_desktop_behavior():
     script = """
