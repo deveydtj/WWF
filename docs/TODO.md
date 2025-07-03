@@ -157,9 +157,9 @@ No outstanding tasks.
 - [ ] Rendering Pipeline Correction
   - Ensure consistent asset draw order.
   - Implement a game clock and enforce a target FPS.
-- [ ] State Management Framework
-  - Refactor game states (MENU, PLAYING, PAUSED, GAME_OVER) into a state manager.
-  - Ensure clear transitions and no lingering/ghost states.
+  - [x] State Management Framework
+    - Refactor game states (MENU, PLAYING, PAUSED, GAME_OVER) into a state manager.
+    - Ensure clear transitions and no lingering/ghost states.
 - [ ] Collision & Scoring Fixes
   - Use correct collision detection methods for all sprites.
   - Monitor health/score types to prevent underflow or overflow.

@@ -10,6 +10,10 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
 
+import { StateManager, STATES } from './stateManager.js';
+
+const gameState = new StateManager();
+
 let activeEmojis = [];
 let prevActiveEmojis = [];
 let leaderboard = [];
@@ -53,7 +57,6 @@ const HOST_TOKEN = localStorage.getItem('hostToken');
 let maxRows = 6;
 let requiredLetters = new Set();
 let greenPositions = {};
-let gameOver = false;
 let latestState = null;
 let dailyDoubleRow = null;
 let dailyDoubleHint = null;
@@ -456,7 +459,7 @@ async function quickResetHandler() {
 }
 
 function updateResetButton() {
-  if (gameOver) {
+  if (gameState.is(STATES.GAME_OVER)) {
     holdResetText.textContent = 'Reset';
     holdResetProgress.style.width = '0%';
     holdResetProgress.style.opacity = '0';
@@ -559,12 +562,12 @@ function applyState(state) {
 
   maxRows = state.max_rows || 6;
   const animateRow = state.guesses.length > prevGuessCount ? state.guesses.length - 1 : -1;
-  updateBoard(board, state, guessInput, maxRows, gameOver, animateRow, dailyDoubleHint, dailyDoubleRow);
+  updateBoard(board, state, guessInput, maxRows, gameState.is(STATES.GAME_OVER), animateRow, dailyDoubleHint, dailyDoubleRow);
   if (dailyDoubleRow !== null && state.guesses.length > dailyDoubleRow) {
     dailyDoubleRow = null;
     dailyDoubleHint = null;
     hideHintTooltip();
-    setGameInputDisabled(gameOver);
+    setGameInputDisabled(gameState.is(STATES.GAME_OVER));
     saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
   }
   if (dailyDoubleHint && state.guesses.length > dailyDoubleHint.row) {
@@ -582,9 +585,13 @@ function applyState(state) {
   const constraints = updateHardModeConstraints(state.guesses);
   requiredLetters = constraints.requiredLetters;
   greenPositions = constraints.greenPositions;
-  const prevGameOver = gameOver;
-  gameOver = state.is_over;
-  setGameInputDisabled(gameOver || dailyDoubleRow !== null);
+  const prevGameOver = gameState.is(STATES.GAME_OVER);
+  if (state.is_over) {
+    gameState.transition(STATES.GAME_OVER);
+  } else if (gameState.is(STATES.GAME_OVER)) {
+    gameState.transition(STATES.PLAYING);
+  }
+  setGameInputDisabled(gameState.is(STATES.GAME_OVER) || dailyDoubleRow !== null);
   updateResetButton();
 
   if (state.is_over) {
@@ -638,7 +645,7 @@ async function fetchState() {
 
 // Handle guess submission from input or keyboard
 async function submitGuessHandler() {
-  if (gameOver) return;
+  if (gameState.is(STATES.GAME_OVER)) return;
   const guess = guessInput.value.trim().toLowerCase();
   if (guess.length !== 5) {
     shakeInput(guessInput);
@@ -751,7 +758,7 @@ setupTypingListeners({
   guessInput,
   submitButton,
   submitGuessHandler,
-  updateBoardFromTyping: () => updateBoardFromTyping(board, latestState, guessInput, maxRows, gameOver, dailyDoubleHint, dailyDoubleRow),
+  updateBoardFromTyping: () => updateBoardFromTyping(board, latestState, guessInput, maxRows, gameState.is(STATES.GAME_OVER), dailyDoubleHint, dailyDoubleRow),
   isAnimating: () => false
 });
 
@@ -905,7 +912,7 @@ async function selectHint(col) {
     dailyDoubleRow = null;
     document.body.classList.remove('hint-selecting');
     Array.from(board.children).forEach(t => (t.tabIndex = -1));
-    setGameInputDisabled(gameOver);
+    setGameInputDisabled(gameState.is(STATES.GAME_OVER));
     saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
     hideHintTooltip();
     showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });

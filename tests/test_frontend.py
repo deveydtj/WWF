@@ -19,6 +19,7 @@ EXPECTED_MODULES = [
     'history.js',
     'keyboard.js',
     'hintState.js',
+    'stateManager.js',
     'main.js',
     'utils.js'
 ]
@@ -106,6 +107,27 @@ def test_main_js_imports_modules():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
     for mod in ['board.js', 'history.js', 'emoji.js', 'api.js', 'keyboard.js', 'utils.js']:
         assert f"./{mod}" in text, f"main.js should import {mod}"
+
+
+def test_state_manager_transitions():
+    script = """
+import { StateManager, STATES } from './frontend/static/js/stateManager.js';
+const sm = new StateManager();
+const out = [];
+out.push(sm.get());
+out.push(sm.transition(STATES.PLAYING));
+out.push(sm.get());
+out.push(sm.transition(STATES.PAUSED));
+out.push(sm.get());
+out.push(sm.transition(STATES.MENU));
+console.log(JSON.stringify(out));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data == ['menu', True, 'playing', True, 'paused', False]
 
 
 def test_definition_panel_elements_exist():
