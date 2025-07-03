@@ -1246,6 +1246,7 @@
       justify-content: center;
       color: var(--text-color);
       font-size: 1.2rem;
+      pointer-events: none;
     }
 
     #closeCallBox {
