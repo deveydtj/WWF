@@ -1080,10 +1080,29 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     server.lobby_reset(code)
 
     with open(log_file) as f:
-        final = json.loads(f.readlines()[-1])
-    assert final['event'] == 'lobby_finished'
+        entries = [json.loads(line) for line in f.readlines()]
+    finished = [e for e in entries if e['event'] == 'lobby_finished']
+    assert len(finished) == 1
+    final = finished[0]
     assert final['lobby_id'] == code
     assert final['ip'] == '1'
+
+# Ensure only one lobby_finished entry is logged for default lobby resets
+def test_reset_game_logs_finished(tmp_path, server_env, monkeypatch):
+    server, _ = server_env
+    log_file = tmp_path / 'analytics.log'
+    monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
+
+    server.reset_game()
+
+    with open(log_file) as f:
+        entries = [json.loads(line) for line in f.readlines()]
+
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry['event'] == 'lobby_finished'
+    assert entry['lobby_id'] == server.DEFAULT_LOBBY
+    assert entry['ip'] == '127.0.0.1'
 
 # Add new tests for lobby code generation and purge
 
