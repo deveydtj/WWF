@@ -410,10 +410,17 @@ function renderEmojiStamps(guesses) {
 
 async function performReset() {
   await animateTilesOut(board);
-  await resetGame(LOBBY_CODE, HOST_TOKEN);
+  const resp = await resetGame(LOBBY_CODE, HOST_TOKEN);
+  if (!resp || resp.status !== 'ok') {
+    if (resp && resp.msg) {
+      showMessage(resp.msg, { messageEl, messagePopup });
+    }
+    return resp;
+  }
   await fetchState();
   await animateTilesIn(board);
   showMessage('Game reset!', { messageEl, messagePopup });
+  return resp;
 }
 
 async function quickResetHandler() {
@@ -424,7 +431,7 @@ async function quickResetHandler() {
     showMessage('Board already reset.', { messageEl, messagePopup });
     return;
   }
-  await performReset();
+  return await performReset();
 }
 
 function updateResetButton() {
