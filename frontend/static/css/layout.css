@@ -1201,7 +1201,7 @@
     #emojiModal {
       background: rgba(0, 0, 0, 0.33);
       position: fixed;
-      z-index: 99;
+      z-index: 102;
       top: 0;
       left: 0;
       right: 0;
