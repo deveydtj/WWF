@@ -360,6 +360,28 @@ def test_guess_word_after_game_over_returns_403(server_env):
     assert 'over' in data['msg'].lower()
 
 
+def test_guess_without_player_id_reregisters(server_env):
+    server, request = server_env
+
+    request.json = {'guess': 'enter', 'emoji': '🤖', 'player_id': None}
+    request.remote_addr = '3'
+    resp = server.guess_word()
+
+    assert isinstance(resp, tuple)
+    assert resp[1] == 403
+
+    # Frontend would re-register the player and retry the guess
+    request.json = {'emoji': '🤖', 'player_id': None}
+    reg = server.set_emoji()
+    pid = reg['player_id']
+
+    request.json = {'guess': 'enter', 'emoji': '🤖', 'player_id': pid}
+    request.remote_addr = '3'
+    success = server.guess_word()
+
+    assert success['status'] == 'ok'
+
+
 def test_guess_word_points_for_new_letters_and_penalties(server_env):
     server, request = server_env
 
