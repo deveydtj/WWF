@@ -79,6 +79,15 @@ const copyLobbyLink = document.getElementById('copyLobbyLink');
 const leaveLobby = document.getElementById('leaveLobby');
 const lobbyHeader = document.getElementById('lobbyHeader');
 const waitingOverlay = document.getElementById('waitingOverlay');
+let waitingOverlayDismissed = false;
+if (waitingOverlay) {
+  document.addEventListener('click', () => {
+    if (waitingOverlay.style.display !== 'none') {
+      waitingOverlayDismissed = true;
+      waitingOverlay.style.display = 'none';
+    }
+  });
+}
 // Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
 closeCallPopup.style.display = 'none';
 const chatNotify = document.getElementById('chatNotify');
@@ -496,7 +505,11 @@ function applyState(state) {
     playerCountEl.textContent = `${activeEmojis.length} player${activeEmojis.length !== 1 ? 's' : ''}`;
   }
   if (waitingOverlay) {
-    waitingOverlay.style.display = state.phase === 'waiting' ? 'flex' : 'none';
+    if (state.phase !== 'waiting') {
+      waitingOverlayDismissed = false;
+    }
+    waitingOverlay.style.display =
+      state.phase === 'waiting' && !waitingOverlayDismissed ? 'flex' : 'none';
   }
   renderLeaderboard();
   renderPlayerSidebar();

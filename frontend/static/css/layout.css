@@ -213,6 +213,26 @@
       }
     }
 
+    @media (max-width: 400px) {
+      #board {
+        grid-template-columns: repeat(5, 42px);
+        grid-gap: 4px;
+        max-width: 226px;
+      }
+
+      .tile {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+      }
+
+      .key {
+        min-width: 28px;
+        height: 40px;
+        font-size: 14px;
+      }
+    }
+
     /* ─────────────────────────────────────────────
        C) Medium mode adjustments
        ───────────────────────────────────────────── */
