@@ -101,11 +101,11 @@ No outstanding tasks.
 ### Landing Page & Client Routing
  - [x] Add `frontend/landing.html`, `landing.js` and `landing.css` implementing the hero panel and create/join flows.
 - [x] Provide a modal to copy the invite link and use the Web Share API on mobile if available.
-- [ ] Implement a lightweight hash router to swap between the landing page and lobby board.
+ - [x] Implement a lightweight hash router to swap between the landing page and lobby board.
  - [x] Include a header bar inside the lobby view with lobby code, player count and host menu.
-- [ ] Build a player sidebar component with emoji, score and AFK indicator plus kick controls.
+ - [x] Build a player sidebar component with emoji, score and AFK indicator plus kick controls.
  - [x] Display a waiting-room overlay while the lobby state is `waiting`.
-- [ ] Perform an accessibility pass covering focus management, ARIA labels and color contrast.
+ - [x] Perform an accessibility pass covering focus management, ARIA labels and color contrast.
 
 ### Frontend Interaction with New API
  - [x] Replace hard-coded `/state` and `/stream` calls with lobby-specific endpoints.
@@ -163,7 +163,7 @@ No outstanding tasks.
 - [ ] Collision & Scoring Fixes
   - Use correct collision detection methods for all sprites.
   - Monitor health/score types to prevent underflow or overflow.
-- [ ] Sound Resilience
+- [x] Sound Resilience
   - Wrap audio loads in try/except blocks with a fallback plan.
   - Add mute and stop all functions on state changes.
 - [ ] Resource Proper Disposal
