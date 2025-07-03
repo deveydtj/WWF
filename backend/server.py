@@ -5,6 +5,7 @@ import string
 import json
 import os
 import time
+
 try:
     import requests as _requests
 except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
@@ -38,6 +39,8 @@ except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
 else:
     requests = _requests
 import logging
+
+logger = logging.getLogger(__name__)
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -46,6 +49,7 @@ import threading
 import queue
 from pathlib import Path
 import uuid
+
 try:
     import redis  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
@@ -54,9 +58,7 @@ except Exception:  # pragma: no cover - optional dependency
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
 STATIC_PATH = Path(__file__).resolve().parent / "static" / "assets"
-app = Flask(
-    __name__, static_folder=str(STATIC_PATH), static_url_path="/assets"
-)
+app = Flask(__name__, static_folder=str(STATIC_PATH), static_url_path="/assets")
 app.secret_key = "a_wordle_secret"
 CORS(app)
 
@@ -75,9 +77,13 @@ DEFN_CACHE_PATH = os.environ.get(
 )
 
 WORDS_FILE = Path(WORD_LIST_PATH).resolve()
-GAME_FILE = Path(os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json"))).resolve()
+GAME_FILE = Path(
+    os.environ.get("GAME_FILE", str(BASE_DIR / "game_persist.json"))
+).resolve()
 ANALYTICS_FILE = BASE_DIR / "analytics.log"
-LOBBIES_FILE = Path(os.environ.get("LOBBIES_FILE", str(BASE_DIR / "lobbies.json"))).resolve()
+LOBBIES_FILE = Path(
+    os.environ.get("LOBBIES_FILE", str(BASE_DIR / "lobbies.json"))
+).resolve()
 OFFLINE_DEFINITIONS_FILE = Path(DEFN_CACHE_PATH).resolve()
 MAX_ROWS = 6
 
@@ -89,7 +95,7 @@ if REDIS_URL and redis is not None:
         redis_client = redis.from_url(REDIS_URL)
         redis_client.ping()
     except Exception as e:  # pragma: no cover - runtime check
-        logging.warning("Redis connection failed: %s", e)
+        logger.warning("Redis connection failed: %s", e)
         redis_client = None
 
 # Standard Scrabble letter values used for scoring
@@ -118,34 +124,30 @@ def _init_assets() -> None:
     """Load the word list and validate the definitions cache."""
     global WORDS
     if not STATIC_PATH.exists():
-        logging.error(
-            "Missing static asset directory '%s'", STATIC_PATH
-        )
+        logger.error("Missing static asset directory '%s'", STATIC_PATH)
     try:
         with open(WORDS_FILE) as f:
             WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
     except Exception as e:  # pragma: no cover - startup validation
-        logging.error(
-            "Startup abort: could not load word list '%s': %s", WORDS_FILE, e
-        )
+        logger.error("Startup abort: could not load word list '%s': %s", WORDS_FILE, e)
         raise SystemExit(1)
     if not WORDS:
-        logging.error(
-            "Startup abort: word list '%s' contains no words", WORDS_FILE
-        )
+        logger.error("Startup abort: word list '%s' contains no words", WORDS_FILE)
         raise SystemExit(1)
     try:
         with open(OFFLINE_DEFINITIONS_FILE) as f:
             json.load(f)
     except Exception as e:  # pragma: no cover - startup validation
-        logging.error(
+        logger.error(
             "Startup abort: could not parse definitions file '%s': %s",
             OFFLINE_DEFINITIONS_FILE,
             e,
         )
         raise SystemExit(1)
 
+
 _init_assets()
+
 
 @dataclass
 class GameState:
@@ -309,7 +311,7 @@ def save_data(s: GameState | None = None):
         try:
             redis_client.set(f"wwf:{code}", json.dumps(data))
         except Exception as e:  # pragma: no cover - redis failures
-            logging.warning("Redis save failed: %s", e)
+            logger.warning("Redis save failed: %s", e)
     if code == DEFAULT_LOBBY:
         with open(GAME_FILE, "w") as f:
             json.dump(data, f)
@@ -326,7 +328,7 @@ def save_data(s: GameState | None = None):
             with open(LOBBIES_FILE, "w") as f:
                 json.dump(all_data, f)
         except Exception as e:  # pragma: no cover - persistence errors
-            logging.warning("Lobby save failed: %s", e)
+            logger.warning("Lobby save failed: %s", e)
 
 
 def load_data(s: GameState | None = None):
@@ -347,7 +349,7 @@ def load_data(s: GameState | None = None):
             if blob:
                 data = json.loads(blob)
         except Exception as e:  # pragma: no cover - redis failures
-            logging.warning("Redis load failed: %s", e)
+            logger.warning("Redis load failed: %s", e)
 
     if data is None and code == DEFAULT_LOBBY and os.path.exists(GAME_FILE):
         with open(GAME_FILE) as f:
@@ -393,12 +395,16 @@ def load_data(s: GameState | None = None):
     except Exception:
         _reset_state(s)
 
+
 # ---- Game Logic ----
+
 
 def generate_lobby_code() -> str:
     """Return a random six-character lobby code."""
     alphabet = string.ascii_uppercase + string.digits
     return "".join(random.choices(alphabet, k=6))
+
+
 def pick_new_word(s: GameState | None = None):
     """Choose a new target word and reset all in-memory game current_state."""
     if s is None:
@@ -421,6 +427,7 @@ def pick_new_word(s: GameState | None = None):
     s.phase = "waiting"
     s.last_activity = time.time()
 
+
 def fetch_definition(word):
     """Look up a word's definition online with an offline JSON fallback."""
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
@@ -430,9 +437,9 @@ def fetch_definition(word):
             "Gecko/20100101 Firefox/109.0"
         )
     }
-    logging.info(f"Fetching definition for '{word}'")
+    logger.info(f"Fetching definition for '{word}'")
     try:
-        logging.info(f"Trying online dictionary API for '{word}'")
+        logger.info(f"Trying online dictionary API for '{word}'")
         resp = requests.get(url, headers=headers, timeout=5)
         resp.raise_for_status()
         data = resp.json()
@@ -444,34 +451,32 @@ def fetch_definition(word):
                     definition = defs[0].get("definition")
                     if definition:
                         definition = sanitize_definition(definition)
-                    logging.info(f"Online definition for '{word}': {definition}")
+                    logger.info(f"Online definition for '{word}': {definition}")
                     return definition
     except requests.RequestException as e:
-        logging.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
+        logger.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
         try:
             with open(OFFLINE_DEFINITIONS_FILE) as f:
                 offline = json.load(f)
             definition = offline.get(word)
             if definition:
                 definition = sanitize_definition(definition)
-                logging.info(f"Offline definition for '{word}': {definition}")
+                logger.info(f"Offline definition for '{word}': {definition}")
             else:
-                logging.info(f"No offline definition found for '{word}'")
+                logger.info(f"No offline definition found for '{word}'")
             return definition
         except Exception as e2:
-            logging.info(f"Offline lookup failed for '{word}': {e2}")
+            logger.info(f"Offline lookup failed for '{word}': {e2}")
     except Exception as e:
-        logging.info(f"Unexpected error fetching definition for '{word}': {e}")
-    logging.info(f"No definition found for '{word}'")
+        logger.info(f"Unexpected error fetching definition for '{word}': {e}")
+    logger.info(f"No definition found for '{word}'")
     return None
 
 
 def _definition_worker(word: str, s: GameState) -> None:
     """Background task to fetch a word's definition and persist it."""
     s.definition = fetch_definition(word)
-    logging.info(
-        f"Definition lookup complete for '{word}': {s.definition or 'None'}"
-    )
+    logger.info(f"Definition lookup complete for '{word}': {s.definition or 'None'}")
     s.last_word = word
     s.last_definition = s.definition
     save_data(s)
@@ -487,11 +492,13 @@ def start_definition_lookup(word: str, s: GameState | None = None) -> threading.
     t.start()
     return t
 
+
 def get_client_ip():
     """Return the client's IP address, accounting for proxies."""
     if request.headers.getlist("X-Forwarded-For"):
-        return request.headers.getlist("X-Forwarded-For")[0].split(',')[0]
+        return request.headers.getlist("X-Forwarded-For")[0].split(",")[0]
     return request.remote_addr or "unknown"
+
 
 def result_for_guess(guess, target):
     """Return Wordle-style feedback comparing a guess to the target."""
@@ -509,6 +516,7 @@ def result_for_guess(guess, target):
             target_letters[target_letters.index(guess[i])] = None
     return result
 
+
 def get_required_letters_and_positions(s: GameState | None = None):
     """Aggregate hard mode constraints from prior guesses."""
     if s is None:
@@ -524,6 +532,7 @@ def get_required_letters_and_positions(s: GameState | None = None):
                 required_letters.add(g["guess"][i])
     return required_letters, green_positions
 
+
 def validate_hard_mode(guess, s: GameState | None = None):
     """Check a guess against hard mode constraints."""
     if s is None:
@@ -535,9 +544,10 @@ def validate_hard_mode(guess, s: GameState | None = None):
     if required_letters:
         if not all(letter in guess for letter in required_letters):
             missing = [letter for letter in required_letters if letter not in guess]
-            missing_str = ', '.join(m.upper() for m in missing)
+            missing_str = ", ".join(m.upper() for m in missing)
             return False, f"Guess must contain letter(s): {missing_str}."
     return True, ""
+
 
 def build_state_payload(emoji: str | None = None, s: GameState | None = None):
     """Assemble the full game current_state dictionary returned to clients.
@@ -598,7 +608,7 @@ def _log_event(event: str, **fields) -> None:
         with open(ANALYTICS_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
     except Exception as e:  # pragma: no cover - logging failures shouldn't break API
-        logging.info(f"Failed to log analytics event: {e}")
+        logger.info(f"Failed to log analytics event: {e}")
 
 
 def log_daily_double_used(emoji: str, ip: str) -> None:
@@ -628,7 +638,9 @@ def log_player_kicked(lobby_id: str, emoji: str) -> None:
     """Log a player being kicked from ``lobby_id``."""
     _log_event("player_kicked", lobby_id=lobby_id, emoji=emoji)
 
+
 # ---- API Routes ----
+
 
 @app.route("/stream")
 def stream():
@@ -647,6 +659,7 @@ def stream():
             current_state.listeners.discard(q)
 
     return Response(gen(), mimetype="text/event-stream")
+
 
 @app.route("/state", methods=["GET", "POST"])
 def state():
@@ -675,6 +688,7 @@ def state():
     # Build and return current game state
     return jsonify(build_state_payload(emoji))
 
+
 @app.route("/emoji", methods=["POST"])
 def set_emoji():
     """Register or change the player's emoji avatar."""
@@ -690,6 +704,7 @@ def set_emoji():
     if not player_id:
         player_id = uuid.uuid4().hex
     new_player = player_id not in current_state.player_map
+    logger.info("Emoji request: %s player=%s ip=%s", emoji, player_id, ip)
 
     with emoji_lock:
         if (
@@ -735,10 +750,18 @@ def set_emoji():
         current_state.player_map[player_id] = emoji
         current_state.last_activity = now
         save_data()
+    logger.info(
+        "Emoji %s mapped to player %s (ip %s) new=%s",
+        emoji,
+        player_id,
+        ip,
+        new_player,
+    )
     broadcast_state()
     if new_player:
         log_lobby_joined(_lobby_id(current_state), emoji, ip)
     return jsonify({"status": "ok", "player_id": player_id})
+
 
 @app.route("/guess", methods=["POST"])
 def guess_word():
@@ -750,6 +773,9 @@ def guess_word():
     player_id = data.get("player_id")
     ip = get_client_ip()
     points_delta = 0
+    logger.info(
+        "Guess attempt '%s' by %s (player=%s ip=%s)", guess, emoji, player_id, ip
+    )
     now = time.time()
 
     current_state.last_activity = now
@@ -757,10 +783,17 @@ def guess_word():
         current_state.phase = "active"
     if current_state.is_over:
         close_call = None
-        if guess == current_state.target_word and current_state.win_timestamp and emoji != current_state.winner_emoji:
+        if (
+            guess == current_state.target_word
+            and current_state.win_timestamp
+            and emoji != current_state.winner_emoji
+        ):
             diff = now - current_state.win_timestamp
             if diff <= CLOSE_CALL_WINDOW:
-                close_call = {"delta_ms": int(diff * 1000), "winner": current_state.winner_emoji}
+                close_call = {
+                    "delta_ms": int(diff * 1000),
+                    "winner": current_state.winner_emoji,
+                }
         resp = {"status": "error", "msg": "Game is over. Please reset."}
         if close_call:
             resp["close_call"] = close_call
@@ -774,7 +807,10 @@ def guess_word():
         emoji not in current_state.leaderboard
         or current_state.leaderboard[emoji].get("player_id") != player_id
     ):
-        return jsonify({"status": "error", "msg": "Please pick an emoji before playing."}), 403
+        return (
+            jsonify({"status": "error", "msg": "Please pick an emoji before playing."}),
+            403,
+        )
 
     current_state.leaderboard[emoji]["last_active"] = now
 
@@ -793,7 +829,11 @@ def guess_word():
     if current_state.daily_double_index is not None:
         dd_row = current_state.daily_double_index // 5
         dd_col = current_state.daily_double_index % 5
-        if row_index == dd_row and result[dd_col] == "correct" and emoji not in current_state.daily_double_winners:
+        if (
+            row_index == dd_row
+            and result[dd_col] == "correct"
+            and emoji not in current_state.daily_double_winners
+        ):
             current_state.daily_double_winners.add(emoji)
             current_state.daily_double_pending[emoji] = row_index + 1
             dd_award = True
@@ -807,7 +847,10 @@ def guess_word():
         value = SCRABBLE_SCORES.get(letter, 1)
         if r == "correct":
             # if we've never scored this letter as green *this game*:
-            if letter not in current_state.found_greens and letter not in global_found_this_turn:
+            if (
+                letter not in current_state.found_greens
+                and letter not in global_found_this_turn
+            ):
                 if letter in current_state.found_yellows:
                     # yellow previously discovered → award remaining half
                     points_delta += value / 2
@@ -818,7 +861,11 @@ def guess_word():
                 current_state.found_greens.add(letter)
                 global_found_this_turn.add(letter)
         elif r == "present":
-            if letter not in current_state.found_greens and letter not in current_state.found_yellows and letter not in global_found_this_turn:
+            if (
+                letter not in current_state.found_greens
+                and letter not in current_state.found_yellows
+                and letter not in global_found_this_turn
+            ):
                 # yellow discovery → half value
                 points_delta += value / 2
                 current_state.found_yellows.add(letter)
@@ -855,6 +902,15 @@ def guess_word():
 
     resp_state = build_state_payload(emoji)
     broadcast_state()
+
+    logger.info(
+        "Guess result '%s' by %s points=%s won=%s over=%s",
+        guess,
+        emoji,
+        points_delta,
+        won,
+        over,
+    )
 
     resp = {
         "status": "ok",
@@ -900,13 +956,16 @@ def select_hint():
     letter = current_state.target_word[col]
     save_data()
     log_daily_double_used(emoji, ip)
-    return jsonify({
-        "status": "ok",
-        "row": row,
-        "col": col,
-        "letter": letter,
-        "daily_double_available": False,
-    })
+    return jsonify(
+        {
+            "status": "ok",
+            "row": row,
+            "col": col,
+            "letter": letter,
+            "daily_double_available": False,
+        }
+    )
+
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
@@ -922,26 +981,33 @@ def chat():
             or current_state.leaderboard[emoji].get("player_id") != player_id
         ):
             return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
-        current_state.chat_messages.append({"emoji": emoji, "text": text, "ts": time.time()})
+        current_state.chat_messages.append(
+            {"emoji": emoji, "text": text, "ts": time.time()}
+        )
         current_state.last_activity = time.time()
         save_data()
         broadcast_state()
         return jsonify({"status": "ok"})
     return jsonify({"messages": current_state.chat_messages})
 
+
 @app.route("/reset", methods=["POST"])
 def reset_game():
     """Archive the current game and start a fresh one."""
     # Save the just-finished game into history
+    logger.info("Resetting lobby %s", _lobby_id(current_state))
     current_state.past_games.append(list(current_state.guesses))
     pick_new_word(current_state)
     current_state.last_activity = time.time()
     save_data()
     broadcast_state()
     log_lobby_finished(_lobby_id(current_state), get_client_ip())
+    logger.info("Lobby %s reset complete", _lobby_id(current_state))
     return jsonify({"status": "ok"})
 
+
 # ---- Lobby-aware Routes ----
+
 
 @app.route("/lobby", methods=["POST"])
 def lobby_create():
@@ -955,6 +1021,8 @@ def lobby_create():
         return jsonify({"status": "error", "msg": "Rate limit"}), 429
     times.append(now)
 
+    logger.info("Lobby create request from %s", ip)
+
     code = generate_lobby_code()
     while code in LOBBIES:
         code = generate_lobby_code()
@@ -965,6 +1033,7 @@ def lobby_create():
     LOBBIES[code] = state
     save_data(state)
     log_lobby_created(code, ip)
+    logger.info("Lobby %s created host=%s", code, ip)
     return jsonify({"id": code, "host_token": token})
 
 
@@ -1049,6 +1118,7 @@ def lobby_chat(code):
 
 # ---- Maintenance ----
 
+
 @app.route("/internal/purge", methods=["POST"])
 def cleanup_lobbies():
     """Purge idle or finished lobbies.
@@ -1073,6 +1143,7 @@ def health() -> Any:
         return jsonify({"status": "unhealthy", "missing": missing}), 503
     return jsonify({"status": "ok"})
 
+
 @app.route("/")
 def index():
     """Serve the landing page."""
@@ -1093,6 +1164,7 @@ def landing_js():
     root = STATIC_DIR if (STATIC_DIR / "landing.js").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root), "landing.js")
 
+
 @app.route("/game")
 def game_page():
     """Serve the main game client."""
@@ -1106,43 +1178,52 @@ def lobby_page(code: str):
     root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root), "game.html")
 
+
 # Serve static JavaScript modules
-@app.route('/static/js/<path:filename>')
-@app.route('/js/<path:filename>')
+@app.route("/static/js/<path:filename>")
+@app.route("/js/<path:filename>")
 def js_files(filename):
-    root = STATIC_DIR if (STATIC_DIR / 'static' / 'js').exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root / 'static' / 'js'), filename)
+    root = STATIC_DIR if (STATIC_DIR / "static" / "js").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root / "static" / "js"), filename)
+
 
 # Support asset requests when game.html is served from /lobby/<code>
-@app.route('/lobby/static/js/<path:filename>')
+@app.route("/lobby/static/js/<path:filename>")
 def lobby_js_files(filename):
     return js_files(filename)
 
-# Serve CSS assets
-@app.route('/static/css/<path:filename>')
-@app.route('/css/<path:filename>')
-def css_files(filename):
-    root = STATIC_DIR if (STATIC_DIR / 'static' / 'css').exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root / 'static' / 'css'), filename)
 
-@app.route('/lobby/static/css/<path:filename>')
+# Serve CSS assets
+@app.route("/static/css/<path:filename>")
+@app.route("/css/<path:filename>")
+def css_files(filename):
+    root = STATIC_DIR if (STATIC_DIR / "static" / "css").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root / "static" / "css"), filename)
+
+
+@app.route("/lobby/static/css/<path:filename>")
 def lobby_css_files(filename):
     return css_files(filename)
 
 
-@app.route('/<path:requested_path>')
+@app.route("/<path:requested_path>")
 def spa_fallback_route(requested_path: str):
     """Send index.html for client-side routes."""
-    if requested_path.startswith(('api/', 'static/', 'assets/')) or requested_path in ('favicon.ico', 'robots.txt'):
-        return '', 404
-    root = STATIC_DIR if (STATIC_DIR / 'index.html').exists() else DEV_FRONTEND_DIR
-    return send_from_directory(str(root), 'index.html')
+    if requested_path.startswith(("api/", "static/", "assets/")) or requested_path in (
+        "favicon.ico",
+        "robots.txt",
+    ):
+        return "", 404
+    root = STATIC_DIR if (STATIC_DIR / "index.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "index.html")
+
 
 if __name__ == "__main__":
     load_data()
     if not current_state.target_word:
         pick_new_word(current_state)
         save_data()
+
     # Launch a background thread that periodically purges idle lobbies
     def _purge_loop() -> None:
         while True:
@@ -1150,8 +1231,8 @@ if __name__ == "__main__":
             try:
                 purge_lobbies()
             except Exception as e:  # pragma: no cover - best effort cleanup
-                logging.warning("Purge thread error: %s", e)
+                logger.warning("Purge thread error: %s", e)
 
     t = threading.Thread(target=_purge_loop, daemon=True)
     t.start()
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host="0.0.0.0", port=5001)
