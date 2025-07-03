@@ -18,6 +18,8 @@ of the overall flow.
 - **Word definition popup** when a game ends so everyone can learn the meaning of the
   solution.
 - **In-game chat box** so players can talk while solving the puzzle together.
+- **Unique player IDs** allow multiple devices on the same IP to join without
+  overwriting each other's emoji.
 - **Dark mode toggle** and responsive layout for small screens.
 - **Hold‑to‑reset button** (or instant reset once the game is over).
 - **Inactive player detection** – entries on the leaderboard fade if a player has not
@@ -72,6 +74,10 @@ Each lobby exposes a set of REST endpoints under `/lobby/<id>`:
 - `POST /lobby/<id>/reset` – start a new round (host token required)
 - `POST /lobby/<id>/kick` – remove a player from the lobby (host token required)
 - `GET /lobby/<id>/stream` – Server‑Sent Events channel
+
+`POST /emoji` responds with a `player_id` that uniquely identifies the browser.
+Include this id with all subsequent requests so multiple players on the same IP
+can join concurrently.
 
 The SSE stream pushes state updates in real time. The client falls back to
 polling these endpoints if the stream disconnects.

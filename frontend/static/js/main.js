@@ -1,6 +1,6 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
-import { getMyEmoji, setMyEmoji, showEmojiModal } from './emoji.js';
+import { getMyEmoji, setMyEmoji, showEmojiModal, getMyPlayerId, setMyPlayerId } from './emoji.js';
 import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint, kickPlayerRequest } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
@@ -15,6 +15,7 @@ let prevActiveEmojis = [];
 let leaderboard = [];
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
+let myPlayerId = getMyPlayerId();
 let showEmojiModalOnNextFetch = false;
 let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
@@ -328,7 +329,7 @@ function renderLeaderboard() {
         skipAutoClose = true;
         const taken = activeEmojis.filter(e => e !== myEmoji);
         showEmojiModal(taken, {
-          onChosen: (e) => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
+          onChosen: (e) => { myEmoji = e; myPlayerId = getMyPlayerId(); ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
           skipAutoCloseRef: { value: skipAutoClose },
           onError: (msg) => showMessage(msg, { messageEl, messagePopup })
         });
@@ -561,7 +562,7 @@ function applyState(state) {
   const haveMy = activeEmojis.includes(myEmoji);
   if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
     showEmojiModal(activeEmojis, {
-      onChosen: e => { myEmoji = e; ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
+      onChosen: e => { myEmoji = e; myPlayerId = getMyPlayerId(); ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
       skipAutoCloseRef: { value: skipAutoClose },
       onError: (msg) => showMessage(msg, { messageEl, messagePopup })
     });
@@ -607,7 +608,7 @@ async function submitGuessHandler() {
     shakeInput(guessInput);
     return;
   }
-  const resp = await sendGuess(guess, myEmoji, LOBBY_CODE);
+  const resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
   guessInput.value = '';
     if (resp.status === 'ok') {
       applyState(resp.state);
@@ -651,7 +652,7 @@ async function submitGuessHandler() {
 function onActivity() {
   lastActivity = Date.now();
   if (!eventSource && currentInterval !== FAST_INTERVAL) startPolling(FAST_INTERVAL);
-  sendHeartbeat(myEmoji, LOBBY_CODE);
+  sendHeartbeat(myEmoji, myPlayerId, LOBBY_CODE);
   fetchState();
 }
 
@@ -819,7 +820,9 @@ positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
 if (myEmoji) {
   // Reclaim previously selected emoji on reload
-  sendEmoji(myEmoji, LOBBY_CODE).catch(() => {});
+  sendEmoji(myEmoji, myPlayerId, LOBBY_CODE).then((d) => {
+    if (d.player_id) { myPlayerId = d.player_id; setMyPlayerId(d.player_id); }
+  }).catch(() => {});
 }
 if (window.innerWidth > 900) {
   document.body.classList.add('history-open');
@@ -843,7 +846,7 @@ window.addEventListener('resize', updateVH);
 
 async function selectHint(col) {
   hideHintTooltip();
-  const resp = await requestHint(col, myEmoji, LOBBY_CODE);
+  const resp = await requestHint(col, myEmoji, myPlayerId, LOBBY_CODE);
   if (resp.status === 'ok') {
     dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
     dailyDoubleRow = null;
@@ -899,7 +902,7 @@ chatForm.addEventListener('submit', async (e) => {
   const text = chatInput.value.trim();
   if (!text) return;
   chatInput.value = '';
-  await sendChatMessage(text, myEmoji, LOBBY_CODE);
+  await sendChatMessage(text, myEmoji, myPlayerId, LOBBY_CODE);
   fetchState();
 });
 

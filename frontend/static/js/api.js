@@ -25,12 +25,12 @@ export async function getState(emoji, lobbyId) {
  * @param {string} emoji - Player identifier.
  * @returns {Promise<Object>} Guess response payload.
  */
-export async function sendGuess(guess, emoji, lobbyId) {
+export async function sendGuess(guess, emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/guess` : '/guess';
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ guess, emoji })
+    body: JSON.stringify({ guess, emoji, player_id: playerId })
   });
   return r.json();
 }
@@ -55,12 +55,12 @@ export async function resetGame(lobbyId, hostToken) {
  * @param {string} emoji - Emoji avatar.
  * @returns {Promise<Object>} Response payload.
  */
-export async function sendEmoji(emoji, lobbyId) {
+export async function sendEmoji(emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/emoji` : '/emoji';
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ emoji })
+    body: JSON.stringify({ emoji, player_id: playerId })
   });
   return r.json();
 }
@@ -71,12 +71,12 @@ export async function sendEmoji(emoji, lobbyId) {
  * @param {string} emoji - Player identifier.
  * @returns {Promise<Response>} Raw fetch response.
  */
-export async function sendHeartbeat(emoji, lobbyId) {
+export async function sendHeartbeat(emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/state` : '/state';
   return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ emoji })
+    body: JSON.stringify({ emoji, player_id: playerId })
   });
 }
 
@@ -87,12 +87,12 @@ export async function sendHeartbeat(emoji, lobbyId) {
  * @param {string} emoji - Player emoji.
  * @returns {Promise<Object>} Response payload.
  */
-export async function sendChatMessage(text, emoji, lobbyId) {
+export async function sendChatMessage(text, emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/chat` : '/chat';
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, emoji })
+    body: JSON.stringify({ text, emoji, player_id: playerId })
   });
   return r.json();
 }
@@ -116,12 +116,12 @@ export async function getChatMessages(lobbyId) {
  * @param {string} emoji - Player identifier.
  * @returns {Promise<Object>} Hint response payload.
  */
-export async function requestHint(col, emoji, lobbyId) {
+export async function requestHint(col, emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/hint` : '/hint';
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ col, emoji })
+    body: JSON.stringify({ col, emoji, player_id: playerId })
   });
   return r.json();
 }

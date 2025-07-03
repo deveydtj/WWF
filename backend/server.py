@@ -45,6 +45,7 @@ import html
 import threading
 import queue
 from pathlib import Path
+import uuid
 try:
     import redis  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
@@ -146,6 +147,7 @@ _init_assets()
 class GameState:
     leaderboard: dict = field(default_factory=dict)
     ip_to_emoji: dict = field(default_factory=dict)
+    player_map: dict = field(default_factory=dict)  # player_id -> emoji mapping
     winner_emoji: str | None = None
     target_word: str = ""
     guesses: list = field(default_factory=list)
@@ -242,6 +244,7 @@ def _reset_state(s: GameState | None = None) -> GameState:
         host_token = s.host_token
         s.leaderboard.clear()
         s.ip_to_emoji.clear()
+        s.player_map.clear()
         s.guesses.clear()
         s.found_greens.clear()
         s.found_yellows.clear()
@@ -278,6 +281,7 @@ def save_data(s: GameState | None = None):
     data = {
         "leaderboard": s.leaderboard,
         "ip_to_emoji": s.ip_to_emoji,
+        "player_map": s.player_map,
         "winner_emoji": s.winner_emoji,
         "target_word": s.target_word,
         "guesses": s.guesses,
@@ -363,6 +367,7 @@ def load_data(s: GameState | None = None):
     try:
         s.leaderboard = data.get("leaderboard", {})
         s.ip_to_emoji = data.get("ip_to_emoji", {})
+        s.player_map = data.get("player_map", {})
         s.winner_emoji = data.get("winner_emoji")
         s.target_word = data.get("target_word", "")
         s.guesses[:] = data.get("guesses", [])
@@ -646,7 +651,13 @@ def state():
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         e = data.get("emoji")
-        if e and e in current_state.leaderboard:
+        pid = data.get("player_id")
+        if (
+            e
+            and pid
+            and e in current_state.leaderboard
+            and current_state.leaderboard[e].get("player_id") == pid
+        ):
             current_state.leaderboard[e]["last_active"] = time.time()
             current_state.last_activity = time.time()
             save_data()
@@ -665,28 +676,35 @@ def set_emoji():
     """Register or change the player's emoji avatar."""
     data = request.json or {}
     emoji = data.get("emoji")
+    player_id = data.get("player_id")
     ip = get_client_ip()
     now = time.time()
 
     if not emoji or not isinstance(emoji, str):
         return jsonify({"status": "error", "msg": "Invalid emoji."}), 400
 
-    new_player = ip not in current_state.ip_to_emoji
+    if not player_id:
+        player_id = uuid.uuid4().hex
+    new_player = player_id not in current_state.player_map
 
     with emoji_lock:
-        if emoji in current_state.leaderboard and current_state.leaderboard[emoji]["ip"] != ip:
+        if (
+            emoji in current_state.leaderboard
+            and current_state.leaderboard[emoji].get("player_id") != player_id
+        ):
             return (
                 jsonify({"status": "error", "msg": "That emoji is taken!"}),
                 409,
             )
 
-        prev_emoji = current_state.ip_to_emoji.get(ip)
+        prev_emoji = current_state.player_map.get(player_id)
         if prev_emoji and prev_emoji != emoji:
             # Move existing entry so score and history persist
             entry = current_state.leaderboard.pop(
                 prev_emoji,
                 {
                     "ip": ip,
+                    "player_id": player_id,
                     "score": 0,
                     "used_yellow": [],
                     "used_green": [],
@@ -699,6 +717,7 @@ def set_emoji():
                 emoji,
                 {
                     "ip": ip,
+                    "player_id": player_id,
                     "score": 0,
                     "used_yellow": [],
                     "used_green": [],
@@ -706,14 +725,16 @@ def set_emoji():
                 },
             )
         current_state.leaderboard[emoji]["ip"] = ip
+        current_state.leaderboard[emoji]["player_id"] = player_id
         current_state.leaderboard[emoji]["last_active"] = now
         current_state.ip_to_emoji[ip] = emoji
+        current_state.player_map[player_id] = emoji
         current_state.last_activity = now
         save_data()
     broadcast_state()
     if new_player:
         log_lobby_joined(_lobby_id(current_state), emoji, ip)
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "player_id": player_id})
 
 @app.route("/guess", methods=["POST"])
 def guess_word():
@@ -722,6 +743,7 @@ def guess_word():
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
     emoji = data.get("emoji")
+    player_id = data.get("player_id")
     ip = get_client_ip()
     points_delta = 0
     now = time.time()
@@ -744,7 +766,10 @@ def guess_word():
     existing = [g["guess"] for g in current_state.guesses]
     if guess in existing:
         return jsonify(status="error", msg="You’ve already guessed that word."), 400
-    if emoji not in current_state.leaderboard or current_state.leaderboard[emoji]["ip"] != ip:
+    if (
+        emoji not in current_state.leaderboard
+        or current_state.leaderboard[emoji].get("player_id") != player_id
+    ):
         return jsonify({"status": "error", "msg": "Please pick an emoji before playing."}), 403
 
     current_state.leaderboard[emoji]["last_active"] = now
@@ -846,10 +871,14 @@ def select_hint():
     """Allow a Daily Double winner to reveal a letter in the next row."""
     data = request.get_json(silent=True) or {}
     emoji = data.get("emoji")
+    player_id = data.get("player_id")
     col = data.get("col")
     ip = get_client_ip()
 
-    if emoji not in current_state.leaderboard or current_state.leaderboard[emoji]["ip"] != ip:
+    if (
+        emoji not in current_state.leaderboard
+        or current_state.leaderboard[emoji].get("player_id") != player_id
+    ):
         return jsonify({"status": "error", "msg": "Invalid player."}), 403
 
     if emoji not in current_state.daily_double_pending:
@@ -881,9 +910,13 @@ def chat():
         data = request.get_json(silent=True) or {}
         text = (data.get("text") or "").strip()
         emoji = data.get("emoji")
+        player_id = data.get("player_id")
         if not text:
             return jsonify({"status": "error", "msg": "Empty message."}), 400
-        if emoji not in current_state.leaderboard:
+        if (
+            emoji not in current_state.leaderboard
+            or current_state.leaderboard[emoji].get("player_id") != player_id
+        ):
             return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
         current_state.chat_messages.append({"emoji": emoji, "text": text, "ts": time.time()})
         current_state.last_activity = time.time()
@@ -989,8 +1022,11 @@ def kick_player():
     if emoji not in current_state.leaderboard:
         return jsonify({"status": "error", "msg": "No such player"}), 404
     ip = current_state.leaderboard[emoji]["ip"]
+    pid = current_state.leaderboard[emoji].get("player_id")
     current_state.leaderboard.pop(emoji, None)
     current_state.ip_to_emoji.pop(ip, None)
+    if pid:
+        current_state.player_map.pop(pid, None)
     current_state.daily_double_pending.pop(emoji, None)
     if current_state.winner_emoji == emoji:
         current_state.winner_emoji = None
