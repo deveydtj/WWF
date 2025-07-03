@@ -25,6 +25,29 @@ let hadNetworkError = false;
 let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 let audioCtx = null;
 
+function ensureAudioContext() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (err) {
+      console.error('Failed to init audio context:', err);
+      soundEnabled = false;
+      if (menuSound) menuSound.textContent = '🔈 Sound Off';
+      return null;
+    }
+  }
+  return audioCtx;
+}
+
+function stopAllSounds() {
+  if (audioCtx) {
+    try {
+      audioCtx.close();
+    } catch {}
+    audioCtx = null;
+  }
+}
+
 const HOST_TOKEN = localStorage.getItem('hostToken');
 
 let maxRows = 6;
@@ -153,6 +176,7 @@ if (shareClose) {
 
 if (leaveLobby && LOBBY_CODE) {
   leaveLobby.addEventListener('click', () => {
+    stopAllSounds();
     window.location.href = '/';
   });
 }
@@ -248,9 +272,7 @@ function burstConfetti(row, col) {
 
 function playClick() {
   if (!soundEnabled) return;
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!ensureAudioContext()) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = 'square';
@@ -264,9 +286,7 @@ function playClick() {
 
 function playJingle() {
   if (!soundEnabled) return;
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!ensureAudioContext()) return;
   const notes = [523.25, 659.25, 783.99];
   notes.forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
@@ -409,6 +429,7 @@ function renderEmojiStamps(guesses) {
 }
 
 async function performReset() {
+  if (typeof stopAllSounds === 'function') stopAllSounds();
   await animateTilesOut(board);
   const resp = await resetGame(LOBBY_CODE, HOST_TOKEN);
   if (!resp || resp.status !== 'ok') {
@@ -744,6 +765,9 @@ function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem('soundEnabled', soundEnabled);
   menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
+  if (!soundEnabled) {
+    stopAllSounds();
+  }
 }
 
 function toggleHistory() {
@@ -935,3 +959,4 @@ chatForm.addEventListener('submit', async (e) => {
   fetchState();
 });
 
+window.addEventListener('beforeunload', stopAllSounds);
