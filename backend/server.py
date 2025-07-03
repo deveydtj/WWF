@@ -934,7 +934,7 @@ def reset_game():
     current_state.last_activity = time.time()
     save_data()
     broadcast_state()
-    log_lobby_finished(DEFAULT_LOBBY, get_client_ip())
+    log_lobby_finished(_lobby_id(current_state), get_client_ip())
     return jsonify({"status": "ok"})
 
 # ---- Lobby-aware Routes ----
@@ -1005,8 +1005,6 @@ def lobby_reset(code):
     if token != state.host_token:
         return jsonify({"status": "error", "msg": "Invalid host token"}), 403
     resp = _with_lobby(code, reset_game)
-    if isinstance(resp, dict) and resp.get("status") == "ok":
-        log_lobby_finished(code, get_client_ip())
     return resp
 
 
