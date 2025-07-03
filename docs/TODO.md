@@ -169,7 +169,7 @@ No outstanding tasks.
 - [ ] Resource Proper Disposal
   - Close files and surfaces correctly.
   - Call `pygame.quit()` in every exit pathway.
-- [ ] Add Logging
+- [x] Add Logging
   - Integrate Python logging.
   - Replace print statements with logger calls.
   - Monitor asset loading, state changes, and errors.
