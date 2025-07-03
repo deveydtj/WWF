@@ -269,6 +269,16 @@ def test_waiting_overlay_pointer_events_none():
     rules = [m.group(0) for m in re.finditer(r'#waitingOverlay\s*{[^}]*}', css)]
     assert any('pointer-events: none' in r for r in rules)
 
+def test_waiting_overlay_dismiss_logic_present():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert 'waitingOverlayDismissed' in text
+    assert 'document.addEventListener' in text
+
+def test_extra_small_mobile_rules_present():
+    css = read_css()
+    assert '@media (max-width: 400px)' in css
+    assert 'grid-template-columns: repeat(5, 42px)' in css
+
 
 def test_show_message_desktop_behavior():
     script = """
