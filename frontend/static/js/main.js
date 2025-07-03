@@ -608,6 +608,15 @@ async function submitGuessHandler() {
     shakeInput(guessInput);
     return;
   }
+  if (!myPlayerId) {
+    try {
+      const d = await sendEmoji(myEmoji, null, LOBBY_CODE);
+      if (d && d.player_id) {
+        myPlayerId = d.player_id;
+        setMyPlayerId(d.player_id);
+      }
+    } catch {}
+  }
   const resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
   guessInput.value = '';
     if (resp.status === 'ok') {
