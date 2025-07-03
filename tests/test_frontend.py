@@ -653,3 +653,34 @@ console.log(JSON.stringify(out));
     assert data['row'] == 1
     assert data['hint']['col'] == 2
     assert data['hint']['letter'] == 'a'
+
+
+def test_perform_reset_error_does_not_update_board():
+    script = r"""
+const fs = require('fs');
+const code = fs.readFileSync('./frontend/static/js/main.js', 'utf8');
+const m = code.match(/async function performReset\(\) {([\s\S]*?)^}/m);
+const body = m[1];
+const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+const performReset = new AsyncFunction('animateTilesOut','board','resetGame','LOBBY_CODE','HOST_TOKEN','fetchState','animateTilesIn','showMessage','messageEl','messagePopup', body);
+
+let shown = null;
+const board = { state: 'orig' };
+async function animateTilesOut(){}
+async function resetGame(){ return { status: 'error', msg: 'fail' }; }
+async function fetchState(){ board.state = 'changed'; }
+async function animateTilesIn(){ board.state = 'animated'; }
+function showMessage(msg){ shown = msg; }
+
+(async () => {
+  await performReset(animateTilesOut, board, resetGame, null, null, fetchState, animateTilesIn, showMessage, {}, {});
+  console.log(JSON.stringify({ state: board.state, msg: shown }));
+})();
+"""
+    result = subprocess.run(
+        ['node', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['state'] == 'orig'
+    assert data['msg'] == 'fail'
