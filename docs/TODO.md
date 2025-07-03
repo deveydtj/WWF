@@ -144,3 +144,39 @@ No outstanding tasks.
 - [x] Replace the single-room explanation in `README.md` with the multi-lobby design.
 - [x] Ensure `docs/LANDING_PAGE_REQUIREMENTS.md` is linked from the main documentation.
 - [x] Provide a `docs/DEPLOY_GUIDE.md` detailing Terraform bootstrap steps and secret configuration.
+
+### To-Do List Workflow for WWF
+
+- [x] Setup Validation
+  - Write a `setup.sh` or documentation to check Python version and dependencies.
+  - Log missing asset errors during startup.
+- [ ] Event Loop Cleanup
+  - Centralize the main game loop.
+  - Handle all Pygame/Arcade event types properly.
+  - Reset key flags after use.
+- [ ] Rendering Pipeline Correction
+  - Ensure consistent asset draw order.
+  - Implement a game clock and enforce a target FPS.
+- [ ] State Management Framework
+  - Refactor game states (MENU, PLAYING, PAUSED, GAME_OVER) into a state manager.
+  - Ensure clear transitions and no lingering/ghost states.
+- [ ] Collision & Scoring Fixes
+  - Use correct collision detection methods for all sprites.
+  - Monitor health/score types to prevent underflow or overflow.
+- [ ] Sound Resilience
+  - Wrap audio loads in try/except blocks with a fallback plan.
+  - Add mute and stop all functions on state changes.
+- [ ] Resource Proper Disposal
+  - Close files and surfaces correctly.
+  - Call `pygame.quit()` in every exit pathway.
+- [ ] Add Logging
+  - Integrate Python logging.
+  - Replace print statements with logger calls.
+  - Monitor asset loading, state changes, and errors.
+- [ ] User Feedback Enhancements
+  - Add prompts for key input.
+  - Add pause screen overlays.
+  - Add transition animations or effects.
+- [ ] Automated Regression Testing
+  - Create unit tests for core logic (collision, scoring, state transitions).
+  - Use mocks or simulations of the event loop for automated testing.

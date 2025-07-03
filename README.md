@@ -45,6 +45,9 @@ Install the dependencies with pip:
 pip install Flask Flask-Cors
 ```
 
+Run `./setup.sh` to verify that Python, Node.js and required assets are present
+before starting development.
+
 ## Running the server
 
 From the project root, run:

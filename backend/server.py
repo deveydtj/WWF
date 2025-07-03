@@ -117,6 +117,10 @@ WORDS: list[str] = []
 def _init_assets() -> None:
     """Load the word list and validate the definitions cache."""
     global WORDS
+    if not STATIC_PATH.exists():
+        logging.error(
+            "Missing static asset directory '%s'", STATIC_PATH
+        )
     try:
         with open(WORDS_FILE) as f:
             WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
