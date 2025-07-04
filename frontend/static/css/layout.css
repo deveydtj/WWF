@@ -1092,6 +1092,12 @@
       100% { opacity: 0; transform: translateY(-10px); }
     }
 
+    /* ─── Overlay Fade-Out Animation ─── */
+    @keyframes fadeOutOverlay {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
     @keyframes tileResetOut {
       to {
         box-shadow: 0 0 0 var(--shadow-color-dark),
@@ -1277,6 +1283,10 @@
       color: var(--text-color);
       font-size: 1.2rem;
       pointer-events: none;
+    }
+
+    #waitingOverlay.fade-out {
+      animation: fadeOutOverlay 0.3s forwards;
     }
 
     #closeCallBox {

@@ -110,7 +110,15 @@ if (waitingOverlay) {
   document.addEventListener('click', () => {
     if (waitingOverlay.style.display !== 'none') {
       waitingOverlayDismissed = true;
-      waitingOverlay.style.display = 'none';
+      waitingOverlay.classList.add('fade-out');
+      waitingOverlay.addEventListener(
+        'animationend',
+        () => {
+          waitingOverlay.style.display = 'none';
+          waitingOverlay.classList.remove('fade-out');
+        },
+        { once: true }
+      );
     }
   });
 }
@@ -543,8 +551,12 @@ function applyState(state) {
     if (state.phase !== 'waiting') {
       waitingOverlayDismissed = false;
     }
-    waitingOverlay.style.display =
-      state.phase === 'waiting' && !waitingOverlayDismissed ? 'flex' : 'none';
+    if (state.phase === 'waiting' && !waitingOverlayDismissed) {
+      waitingOverlay.classList.remove('fade-out');
+      waitingOverlay.style.display = 'flex';
+    } else if (!waitingOverlay.classList.contains('fade-out')) {
+      waitingOverlay.style.display = 'none';
+    }
   }
   renderLeaderboard();
   renderPlayerSidebar();

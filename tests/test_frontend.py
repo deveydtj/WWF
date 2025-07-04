@@ -296,6 +296,14 @@ def test_waiting_overlay_dismiss_logic_present():
     assert 'waitingOverlayDismissed' in text
     assert 'document.addEventListener' in text
 
+
+def test_waiting_overlay_fade_out_animation():
+    css = read_css()
+    assert '@keyframes fadeOutOverlay' in css
+    assert '#waitingOverlay.fade-out' in css
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert "waitingOverlay.classList.add('fade-out')" in text
+
 def test_extra_small_mobile_rules_present():
     css = read_css()
     assert '@media (max-width: 400px)' in css
