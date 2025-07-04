@@ -347,6 +347,7 @@ function renderLeaderboard() {
   leaderboard.forEach(entry => {
     const node = document.createElement('span');
     node.className = 'leaderboard-entry' + (myEmoji === entry.emoji ? ' me' : '');
+    node.classList.add('flash');
     if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
       node.classList.add('inactive');
     }
@@ -375,6 +376,9 @@ function renderLeaderboard() {
     }
 
     lb.appendChild(node);
+    node.addEventListener('animationend', () => {
+      node.classList.remove('flash');
+    }, { once: true });
   });
 
   centerLeaderboardOnMe();

@@ -1193,6 +1193,16 @@
       margin: 0 5px;
       font-size: 1.25em;
       min-width: 50px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .leaderboard-entry.flash {
+      animation: lb-flash 0.4s ease;
+    }
+
+    @keyframes lb-flash {
+      from { transform: scale(0.8); opacity: 0.3; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     .hint-badge {
