@@ -187,6 +187,10 @@ if (shareClose) {
 
 if (leaveLobby && LOBBY_CODE) {
   leaveLobby.addEventListener('click', () => {
+    if (eventSource) {
+      try { eventSource.close(); } catch {}
+      eventSource = null;
+    }
     stopAllSounds();
     window.location.href = '/';
   });
@@ -982,4 +986,10 @@ chatForm.addEventListener('submit', async (e) => {
   fetchState();
 });
 
-window.addEventListener('beforeunload', stopAllSounds);
+window.addEventListener('beforeunload', () => {
+  if (eventSource) {
+    try { eventSource.close(); } catch {}
+    eventSource = null;
+  }
+  stopAllSounds();
+});

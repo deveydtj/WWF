@@ -169,6 +169,7 @@ No outstanding tasks.
 - [ ] Resource Proper Disposal
   - Close files and surfaces correctly.
   - Call `pygame.quit()` in every exit pathway.
+  - [x] Close SSE connections on page unload and lobby exit.
 - [x] Add Logging
   - Integrate Python logging.
   - Replace print statements with logger calls.
