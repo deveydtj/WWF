@@ -714,3 +714,14 @@ function showMessage(msg){ shown = msg; }
     data = json.loads(result.stdout.strip())
     assert data['state'] == 'orig'
     assert data['msg'] == 'fail'
+
+
+def test_beforeunload_closes_event_source():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    assert re.search(r"beforeunload[^{]*\{[^\}]*eventSource\.close", text, re.DOTALL)
+
+
+def test_leave_lobby_closes_event_source():
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    m = re.search(r"leaveLobby\.addEventListener\('click',\s*\(\)\s*=>\s*\{([^}]*)\}", text)
+    assert m and 'eventSource.close' in m.group(1)
