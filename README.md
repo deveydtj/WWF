@@ -55,6 +55,8 @@ From the project root, run:
 ```bash
 python backend/server.py
 ```
+Detailed steps for verifying dependencies and running the server are provided in
+[LOCAL_SERVER_SETUP.md](docs/LOCAL_SERVER_SETUP.md).
 
 The server now locates its frontend and data files relative to `server.py`,
 so you can run it from any directory.
