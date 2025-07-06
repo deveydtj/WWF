@@ -926,6 +926,12 @@ window.addEventListener('resize', updateVH);
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', updateVH);
 }
+window.addEventListener('orientationchange', () => {
+  updateVH();
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  applyLayoutMode();
+  if (latestState) renderEmojiStamps(latestState.guesses);
+});
 
 async function selectHint(col) {
   hideHintTooltip();
