@@ -923,6 +923,9 @@ window.addEventListener('resize', () => {
 });
 updateVH();
 window.addEventListener('resize', updateVH);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateVH);
+}
 
 async function selectHint(col) {
   hideHintTooltip();

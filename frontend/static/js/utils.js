@@ -149,11 +149,12 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
  * Update the CSS `--vh` custom property to handle mobile browser chrome.
  */
 export function updateVH() {
-  const vh = window.innerHeight * 0.01;
+  const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const vh = height * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);
   const container = document.getElementById('appContainer');
   if (container) {
-    container.style.height = `${window.innerHeight}px`;
+    container.style.height = `${height}px`;
   }
 }
 
