@@ -151,6 +151,10 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
 export function updateVH() {
   const vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);
+  const container = document.getElementById('appContainer');
+  if (container) {
+    container.style.height = `${window.innerHeight}px`;
+  }
 }
 
 /**
