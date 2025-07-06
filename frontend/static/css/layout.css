@@ -137,17 +137,20 @@
         line-height: 20px;
       }
 
+      :root {
+        --tile-size: min(14vmin, 50px);
+      }
+
       #board {
-        grid-template-columns: repeat(5, 50px);
-        grid-gap: 5px;
-        max-width: 260px;
+        grid-template-columns: repeat(5, var(--tile-size));
+        grid-gap: var(--tile-gap);
         margin: 0;
       }
 
       .tile {
-        width: 50px;
-        height: 50px;
-        font-size: 22px;
+        width: var(--tile-size);
+        height: var(--tile-size);
+        font-size: calc(var(--tile-size) * 0.44);
         border-radius: 4px;
         box-shadow: 3px 3px 6px var(--shadow-color-dark),
                     -3px -3px 6px var(--shadow-color-light);
@@ -164,10 +167,10 @@
       }
 
       .key {
-        min-width: 32px;
-        height: 48px;
-        margin: 2px;
-        font-size: 16px;
+        min-width: calc(var(--tile-size) * 0.58);
+        height: calc(var(--tile-size) * 0.83);
+        margin: calc(var(--tile-gap) / 2);
+        font-size: calc(var(--tile-size) * 0.27);
         padding: 0 5px;
         box-shadow: 3px 3px 6px var(--shadow-color-dark),
                     -3px -3px 6px var(--shadow-color-light);
@@ -214,22 +217,8 @@
     }
 
     @media (max-width: 400px) {
-      #board {
-        grid-template-columns: repeat(5, 42px);
-        grid-gap: 4px;
-        max-width: 226px;
-      }
-
-      .tile {
-        width: 42px;
-        height: 42px;
-        font-size: 20px;
-      }
-
-      .key {
-        min-width: 28px;
-        height: 40px;
-        font-size: 14px;
+      :root {
+        --tile-size: min(16vmin, 42px);
       }
     }
 
@@ -291,20 +280,8 @@
         pointer-events: none;
       }
 
-      #board {
-        grid-template-columns: repeat(5, 55px);
-        grid-gap: 8px;
-        max-width: 307px;
-      }
-
-      .tile {
-        width: 55px;
-        height: 55px;
-      }
-
-      .key {
-        min-width: 34px;
-        height: 50px;
+      :root {
+        --tile-size: min(11vmin, 55px);
       }
     }
 
@@ -320,7 +297,7 @@
 #chatNotify { display: block; }
 #chatForm { display: flex; margin-top: 6px; }
 #chatInput { flex: 1; }
-.key.wide { min-width: 60px; }
+.key.wide { min-width: calc(var(--tile-size) * 1.2); }
     /* ─────────────────────────────────────────────
        A) Base styles
        ───────────────────────────────────────────── */
@@ -345,6 +322,8 @@
       --absent-shadow-dark: #666a6c;
       --absent-shadow-light: #8a8e90;
       --border-color: transparent;
+      --tile-size: min(12vmin, 60px);
+      --tile-gap: calc(var(--tile-size) / 6);
     }
 
     body.dark-mode {
@@ -772,9 +751,9 @@
     #board {
       margin: 0;
       display: grid;
-      grid-template-columns: repeat(5, 60px);
-      grid-gap: 10px;
-      max-width: 340px;
+      grid-template-columns: repeat(5, var(--tile-size));
+      grid-gap: var(--tile-gap);
+      max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
     }
 
     #boardArea {
@@ -825,13 +804,13 @@
     }
 
     .tile {
-      width: 60px;
-      height: 60px;
+      width: var(--tile-size);
+      height: var(--tile-size);
       border: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: calc(var(--tile-size) * 0.46);
       font-weight: bold;
       text-transform: uppercase;
       background-color: var(--tile-bg);
@@ -1022,24 +1001,24 @@
     #keyboard {
       display: inline-block;
       margin-top: 5px;
-      flex: 0 1 30%; /* allow shrinking when space is tight */
-      min-height: 150px; /* maintain usability on small screens */
+      flex: 0 1 auto;
+      min-height: calc(var(--tile-size) * 2.7);
     }
 
     .keyboard-row {
       display: flex;
       justify-content: center;
-      margin-bottom: 8px;
+      margin-bottom: calc(var(--tile-gap) * 1.2);
     }
 
     .key {
-      min-width: 35px;
-      height: 50px;
-      margin: 3px;
+      min-width: calc(var(--tile-size) * 0.58);
+      height: calc(var(--tile-size) * 0.83);
+      margin: calc(var(--tile-gap) / 2);
       border: none;
       background-color: var(--key-bg);
       border-radius: 8px;
-      font-size: 16px;
+      font-size: calc(var(--tile-size) * 0.27);
       font-weight: 500;
       text-transform: uppercase;
       cursor: pointer;
