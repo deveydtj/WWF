@@ -307,7 +307,7 @@ def test_waiting_overlay_fade_out_animation():
 def test_extra_small_mobile_rules_present():
     css = read_css()
     assert '@media (max-width: 400px)' in css
-    assert 'grid-template-columns: repeat(5, 42px)' in css
+    assert '--tile-size: min(16vmin, 42px)' in css
 
 
 def test_show_message_desktop_behavior():

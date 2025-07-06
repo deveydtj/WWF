@@ -1,3 +1,5 @@
+import { updateVH } from './static/js/utils.js';
+
 function applyDarkMode() {
   const enabled = localStorage.getItem('dark') === 'true';
   document.body.classList.toggle('dark-mode', enabled);
@@ -129,6 +131,12 @@ export function init() {
   initJoinForm();
   initHowTo();
   showSavedEmoji();
+  updateVH();
+  window.addEventListener('resize', updateVH);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateVH);
+  }
+  window.addEventListener('orientationchange', updateVH);
   document.getElementById('createBtn').addEventListener('click', createLobby);
   document.getElementById('quickBtn').addEventListener('click', quickPlay);
 
