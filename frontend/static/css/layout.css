@@ -785,6 +785,7 @@
       width: max-content;
       position: relative;
       flex: 1 1 auto;
+      min-height: 0; /* let the board shrink if needed */
     }
 
     #stampContainer {
@@ -1021,7 +1022,8 @@
     #keyboard {
       display: inline-block;
       margin-top: 5px;
-      flex: 0 0 30%;
+      flex: 0 1 30%; /* allow shrinking when space is tight */
+      min-height: 150px; /* maintain usability on small screens */
     }
 
     .keyboard-row {
