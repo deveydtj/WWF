@@ -17,6 +17,7 @@ const gameState = new StateManager();
 let activeEmojis = [];
 let prevActiveEmojis = [];
 let leaderboard = [];
+let prevLeaderboard = {};
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
 let myPlayerId = getMyPlayerId();
@@ -359,7 +360,13 @@ function renderLeaderboard() {
   leaderboard.forEach(entry => {
     const node = document.createElement('span');
     node.className = 'leaderboard-entry' + (myEmoji === entry.emoji ? ' me' : '');
-    node.classList.add('flash');
+    const prevScore = prevLeaderboard[entry.emoji];
+    if (prevScore === undefined || prevScore !== entry.score) {
+      node.classList.add('flash');
+      node.addEventListener('animationend', () => {
+        node.classList.remove('flash');
+      }, { once: true });
+    }
     if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
       node.classList.add('inactive');
     }
@@ -388,9 +395,6 @@ function renderLeaderboard() {
     }
 
     lb.appendChild(node);
-    node.addEventListener('animationend', () => {
-      node.classList.remove('flash');
-    }, { once: true });
   });
 
   centerLeaderboardOnMe();
@@ -533,6 +537,7 @@ function applyState(state) {
   const prevChatCount = latestState && latestState.chat_messages ? latestState.chat_messages.length : 0;
   latestState = state;
   prevActiveEmojis = activeEmojis.slice();
+  prevLeaderboard = Object.fromEntries(leaderboard.map(e => [e.emoji, e.score]));
   activeEmojis = state.active_emojis || [];
   leaderboard = state.leaderboard || [];
   dailyDoubleAvailable = !!state.daily_double_available;
