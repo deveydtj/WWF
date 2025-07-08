@@ -222,6 +222,7 @@ export function fitBoardToContainer(rows = 6) {
   const size = Math.min(maxSize, sizeByWidth, sizeByHeight);
 
   document.documentElement.style.setProperty('--tile-size', `${size}px`);
+  document.documentElement.style.setProperty('--ui-scale', `${size / maxSize}`);
 }
 
 /**

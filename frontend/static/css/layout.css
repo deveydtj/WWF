@@ -182,9 +182,9 @@
         margin-left: 0;
       }
       #holdReset {
-        width: clamp(4rem, 20vw, 4.5rem);
-        height: 2rem;
-        font-size: 0.875rem;
+        width: calc(clamp(4rem, 20vw, 4.5rem) * var(--ui-scale));
+        height: calc(2rem * var(--ui-scale));
+        font-size: calc(0.875rem * var(--ui-scale));
         border-radius: 8px;
         box-shadow: 3px 3px 6px var(--shadow-color-dark),
                     -3px -3px 6px var(--shadow-color-light);
@@ -194,20 +194,20 @@
       }
 
       .leaderboard-entry {
-        font-size: 1em;
-        padding: 5px 10px;
+        font-size: calc(1em * var(--ui-scale));
+        padding: calc(5px * var(--ui-scale)) calc(10px * var(--ui-scale));
         margin: 0 3px;
-        min-width: 40px;
+        min-width: calc(40px * var(--ui-scale));
       }
 
       .hint-badge {
         margin-left: 4px;
-        font-size: 0.7em;
+        font-size: calc(0.7em * var(--ui-scale));
         animation: hint-pulse 4s ease-in-out infinite;
       }
 
       h1 {
-        font-size: 1.5em;
+        font-size: calc(1.5em * var(--ui-scale));
         margin-bottom: 2px;
       }
       #message {
@@ -324,6 +324,7 @@
       --border-color: transparent;
       --tile-size: min(12vmin, 60px);
       --tile-gap: calc(var(--tile-size) / 6);
+      --ui-scale: 1;
     }
 
     body.dark-mode {
@@ -530,13 +531,14 @@
       color: var(--text-color-light);
       margin-bottom: 5px;
       font-weight: 600;
+      font-size: calc(2rem * var(--ui-scale));
     }
 
     #titleBar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: calc(10px * var(--ui-scale));
     }
 
     #titleBar h1 {
@@ -1118,11 +1120,11 @@
     }
 
     #holdReset {
-      width: clamp(5rem, 18vw, 6.25rem);
-      height: clamp(2.25rem, 6vh, 2.8rem);
+      width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
+      height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
       border: none;
       border-radius: 12px;
-      font-size: 18px;
+      font-size: calc(18px * var(--ui-scale));
       font-weight: 500;
       background: var(--bg-color);
       color: var(--text-color);
@@ -1167,9 +1169,9 @@
       display: flex;
       flex-direction: row;
       justify-content: center;
-      margin-bottom: 18px;
-      gap: 18px;
-      padding: 0 0 8px 0;
+      margin-bottom: calc(18px * var(--ui-scale));
+      gap: calc(18px * var(--ui-scale));
+      padding: 0 0 calc(8px * var(--ui-scale)) 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
@@ -1183,10 +1185,10 @@
       box-shadow: 2px 2px 8px var(--shadow-color-dark),
                   -2px -2px 8px var(--shadow-color-light);
       border-radius: 10px;
-      padding: 7px 15px;
+      padding: calc(7px * var(--ui-scale)) calc(15px * var(--ui-scale));
       margin: 0 5px;
-      font-size: 1.25em;
-      min-width: 50px;
+      font-size: calc(1.25em * var(--ui-scale));
+      min-width: calc(50px * var(--ui-scale));
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
@@ -1201,7 +1203,7 @@
 
     .hint-badge {
       margin-left: 6px;
-      font-size: 0.75em;
+      font-size: calc(0.75em * var(--ui-scale));
       animation: hint-pulse 4s ease-in-out infinite;
     }
 
