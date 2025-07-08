@@ -191,6 +191,40 @@ export function applyLayoutMode() {
 }
 
 /**
+ * Calculate a tile size that fits the board within the viewport.
+ * Prevents overlap with the header and leaderboard in full mode.
+ *
+ * @param {number} rows - Number of board rows
+ */
+export function fitBoardToContainer(rows = 6) {
+  const boardArea = document.getElementById('boardArea');
+  if (!boardArea) return;
+  const titleBar = document.getElementById('titleBar');
+  const leaderboard = document.getElementById('leaderboard');
+  const inputArea = document.getElementById('inputArea');
+  const keyboard = document.getElementById('keyboard');
+
+  const style = getComputedStyle(document.documentElement);
+  const gap = parseFloat(style.getPropertyValue('--tile-gap')) || 10;
+  const maxSize = 60; // keep in sync with layout.css
+  const width = boardArea.clientWidth;
+
+  const availHeight =
+    document.documentElement.clientHeight -
+    (titleBar ? titleBar.offsetHeight : 0) -
+    (leaderboard ? leaderboard.offsetHeight : 0) -
+    (inputArea ? inputArea.offsetHeight : 0) -
+    (keyboard ? keyboard.offsetHeight : 0) -
+    20; // account for margins
+
+  const sizeByWidth = (width - gap * 4) / 5;
+  const sizeByHeight = (availHeight - gap * (rows - 1)) / rows;
+  const size = Math.min(maxSize, sizeByWidth, sizeByHeight);
+
+  document.documentElement.style.setProperty('--tile-size', `${size}px`);
+}
+
+/**
  * Place a popup near an anchor element while clamping to the viewport.
  *
  * @param {HTMLElement} popup

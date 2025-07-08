@@ -5,7 +5,7 @@ import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessa
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
-         positionSidePanels, updateVH, applyLayoutMode, isMobile, showPopup,
+         positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
@@ -900,6 +900,7 @@ applyDarkModePreference(menuDarkMode);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
+fitBoardToContainer(maxRows);
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
@@ -924,6 +925,7 @@ window.addEventListener('resize', repositionResetButton);
 window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
+  fitBoardToContainer(maxRows);
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 updateVH();
@@ -935,6 +937,7 @@ window.addEventListener('orientationchange', () => {
   updateVH();
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
+  fitBoardToContainer(maxRows);
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 
