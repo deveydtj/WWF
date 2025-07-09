@@ -6,7 +6,7 @@ import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, showPopup,
-         openDialog, closeDialog, focusFirstElement, setGameInputDisabled } from './utils.js';
+         openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
 
@@ -137,6 +137,10 @@ const playerSidebar = document.getElementById('playerSidebar');
 const playerList = document.getElementById('playerList');
 const playerToggleBtn = document.getElementById('playerToggle');
 const playerCloseBtn = document.getElementById('playerClose');
+
+enableClickOffDismiss(closeCallPopup);
+enableClickOffDismiss(infoPopup);
+enableClickOffDismiss(shareModal);
 
 let chatWiggleTimer = null;
 

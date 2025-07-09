@@ -1226,6 +1226,7 @@
 
     #emojiModal {
       background: rgba(0, 0, 0, 0.33);
+      backdrop-filter: blur(4px);
       position: fixed;
       z-index: 102;
       top: 0;
@@ -1248,6 +1249,7 @@
 
     #closeCallPopup {
       background: rgba(0, 0, 0, 0.33);
+      backdrop-filter: blur(4px);
       position: fixed;
       z-index: 101;
       top: 0;
@@ -1295,6 +1297,7 @@
 
     #infoPopup {
       background: rgba(0, 0, 0, 0.33);
+      backdrop-filter: blur(4px);
       position: fixed;
       z-index: 101;
       top: 0;
@@ -1321,6 +1324,7 @@
 
     #shareModal {
       background: rgba(0, 0, 0, 0.33);
+      backdrop-filter: blur(4px);
       position: fixed;
       z-index: 101;
       top: 0;

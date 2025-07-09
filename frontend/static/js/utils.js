@@ -324,6 +324,21 @@ export function closeDialog(dialog) {
 }
 
 /**
+ * Enable click-off dismissal for a dialog by closing it when the
+ * background overlay is clicked.
+ *
+ * @param {HTMLElement} dialog
+ */
+export function enableClickOffDismiss(dialog) {
+  if (!dialog) return;
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) {
+      closeDialog(dialog);
+    }
+  });
+}
+
+/**
  * Focus the first focusable element within a container.
  *
  * @param {HTMLElement} container

@@ -1,5 +1,8 @@
 import { sendEmoji } from './api.js';
-import { openDialog, closeDialog } from './utils.js';
+import { openDialog, closeDialog, enableClickOffDismiss } from './utils.js';
+
+const emojiModal = typeof document !== 'undefined' ? document.getElementById('emojiModal') : null;
+enableClickOffDismiss(emojiModal);
 
 /**
  * Retrieve the player's stored emoji identifier.
