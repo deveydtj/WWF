@@ -1,7 +1,7 @@
-# Wordle With Friends Requirements
+# WordSquad Requirements
 
 This document summarizes the functional, UI/UX, and technical requirements for the
-browser-based "Wordle with Friends" project. It is derived from the project
+browser-based WordSquad project. It is derived from the project
 overview and should be kept up to date as features evolve.
 
 ## 1. Game Play

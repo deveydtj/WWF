@@ -1,6 +1,6 @@
-# Wordle With Friends (WWF)
+# WordSquad
 
-A small multiplayer adaptation of Wordle. The frontend lives under the
+WordSquad is a small multiplayer adaptation of Wordle. The frontend lives under the
 `frontend/` directory while `backend/server.py` provides a Flask API. The
 server supports **multiple lobbies**, each identified by a six character code.
 Every lobby maintains its own guesses, chat log and scoreboard while sharing
