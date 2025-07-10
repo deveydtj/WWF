@@ -9,6 +9,7 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
+import { GAME_NAME } from './config.js';
 
 import { StateManager, STATES } from './stateManager.js';
 
@@ -77,6 +78,8 @@ const chatMessagesEl = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const historyClose = document.getElementById('historyClose');
+const gameTitle = document.getElementById('gameTitle');
+if (gameTitle) gameTitle.textContent = GAME_NAME;
 const definitionClose = document.getElementById('definitionClose');
 const chatClose = document.getElementById('chatClose');
 const optionsToggle = document.getElementById('optionsToggle');
