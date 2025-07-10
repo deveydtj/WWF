@@ -4,7 +4,7 @@ This document outlines the specifications for the planned landing page at `/`. I
 
 ## 1. Purpose
 
-The landing page introduces new and returning players to Wordle With Friends. It directs visitors into a lobby quickly while highlighting the game's features. The page must remember dark‑mode preference, chosen emoji, and the last lobby code using `localStorage`.
+The landing page introduces new and returning players to WordSquad. It directs visitors into a lobby quickly while highlighting the game's features. The page must remember dark‑mode preference, chosen emoji, and the last lobby code using `localStorage`.
 
 ## 2. Information Architecture
 

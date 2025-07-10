@@ -1,6 +1,6 @@
 # Local Server Setup
 
-This guide explains how to start the development server for Wordle With Friends on your machine.
+This guide explains how to start the development server for WordSquad on your machine.
 
 1. **Verify prerequisites**
    - Python 3.11 or newer

@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide outlines the steps to deploy the Wordle With Friends infrastructure and API using Terraform and GitHub Actions.
+This guide outlines the steps to deploy the WordSquad infrastructure and API using Terraform and GitHub Actions.
 
 ## Prerequisites
 

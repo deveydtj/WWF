@@ -1,6 +1,6 @@
 Purpose
 
-This file documents recommended practices, agent instructions, and prompt guidelines for contributors using AI assistants (such as GitHub Copilot, ChatGPT, or Codex) to enhance and maintain the Wordle With Friends codebase.
+This file documents recommended practices, agent instructions, and prompt guidelines for contributors using AI assistants (such as GitHub Copilot, ChatGPT, or Codex) to enhance and maintain the WordSquad codebase.
 
 Project Context
 • Repo: deveydtj/WWF

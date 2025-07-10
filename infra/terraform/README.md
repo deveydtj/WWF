@@ -1,7 +1,7 @@
 # Infrastructure Setup
 
 This Terraform configuration provisions the AWS resources required to host
-Wordle With Friends in production. It creates:
+WordSquad in production. It creates:
 
 - An S3 bucket for the static frontend assets
 - A CloudFront distribution backed by the bucket with HTTPS

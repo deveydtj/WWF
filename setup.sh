@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Simple environment validation for WWF development
+# Simple environment validation for WordSquad development
 
 check_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then

@@ -1,6 +1,6 @@
 # Development TODOs
 
-This file tracks outstanding tasks for "Wordle with Friends". Completed items are checked off. Remaining work is grouped by focus area.
+This file tracks outstanding tasks for WordSquad. Completed items are checked off. Remaining work is grouped by focus area.
 
 ## Completed
 
@@ -124,7 +124,7 @@ No outstanding tasks.
 ## Upcoming Milestones
 
 ### Project Hygiene
-- [ ] Rename all references to "Wordle With Friends" to the new game name throughout docs and code comments.
+- [ ] Rename all references to "Wordle With Friends" to the new game name "WordSquad" throughout docs and code comments.
 
 ### Backend Refactor to Multi-Lobby
   - `POST /lobby`
@@ -152,7 +152,7 @@ No outstanding tasks.
 
 ### Docs & Deliverables
 
-### To-Do List Workflow for WWF
+### To-Do List Workflow for WordSquad
 
   - Write a `setup.sh` or documentation to check Python version and dependencies.
   - Log missing asset errors during startup.
