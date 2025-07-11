@@ -138,7 +138,8 @@
       }
 
       :root {
-        --tile-size: min(14vmin, 50px);
+        /* allow smaller tiles on narrow screens */
+        --tile-size: min(12vmin, 50px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
 
@@ -219,7 +220,8 @@
 
     @media (max-width: 400px) {
       :root {
-        --tile-size: min(16vmin, 42px);
+        /* extra small devices */
+        --tile-size: min(12vmin, 36px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
@@ -283,7 +285,8 @@
       }
 
       :root {
-        --tile-size: min(11vmin, 55px);
+        /* medium screens scale slightly smaller */
+        --tile-size: min(10vmin, 50px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
@@ -325,7 +328,8 @@
       --absent-shadow-dark: #666a6c;
       --absent-shadow-light: #8a8e90;
       --border-color: transparent;
-      --tile-size: min(12vmin, 60px);
+      /* default maximum tile size */
+      --tile-size: min(11vmin, 60px);
       --tile-gap: calc(var(--tile-size) / 6);
       --ui-scale: 1;
       --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
@@ -1009,7 +1013,8 @@
       display: inline-block;
       margin-top: 5px;
       flex: 0 1 auto;
-      min-height: calc(var(--tile-size) * 2.7);
+      /* shrink keyboard height slightly for cramped screens */
+      min-height: calc(var(--tile-size) * 2.4);
     }
 
     .keyboard-row {
