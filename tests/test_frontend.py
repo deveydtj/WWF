@@ -725,3 +725,34 @@ def test_leave_lobby_closes_event_source():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
     m = re.search(r"leaveLobby\.addEventListener\('click',\s*\(\)\s*=>\s*\{([^}]*)\}", text)
     assert m and 'eventSource.close' in m.group(1)
+
+
+def test_fit_board_to_container_returns_sizes():
+    script = """
+import { fitBoardToContainer } from './frontend/static/js/utils.js';
+const mapping = {
+  boardArea: { clientWidth: 200 },
+  titleBar: { offsetHeight: 30 },
+  leaderboard: { offsetHeight: 20 },
+  inputArea: { offsetHeight: 20 },
+  keyboard: { offsetHeight: 80 }
+};
+const docEl = { clientHeight: 400, style: { setProperty(k,v){ this[k]=v; } } };
+global.document = {
+  getElementById(id){ return mapping[id] || null; },
+  documentElement: docEl
+};
+global.document.documentElement = docEl;
+global.getComputedStyle = () => ({ getPropertyValue: () => '10' });
+const out = fitBoardToContainer(6);
+console.log(JSON.stringify({ out, css: docEl.style }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['out']['tile'] == 30
+    assert data['out']['board'] == 190
+    assert data['css']['--tile-size'] == '30px'
+    assert data['css']['--board-width'] == '190px'

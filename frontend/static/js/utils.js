@@ -202,10 +202,11 @@ export function applyLayoutMode() {
  * Prevents overlap with the header and leaderboard in full mode.
  *
  * @param {number} rows - Number of board rows
+ * @returns {{ tile: number, board: number }} Size in pixels
  */
 export function fitBoardToContainer(rows = 6) {
   const boardArea = document.getElementById('boardArea');
-  if (!boardArea) return;
+  if (!boardArea) return { tile: 0, board: 0 };
   const titleBar = document.getElementById('titleBar');
   const leaderboard = document.getElementById('leaderboard');
   const inputArea = document.getElementById('inputArea');
@@ -232,6 +233,7 @@ export function fitBoardToContainer(rows = 6) {
   document.documentElement.style.setProperty('--ui-scale', `${size / maxSize}`);
   const boardWidth = size * 5 + gap * 4;
   document.documentElement.style.setProperty('--board-width', `${boardWidth}px`);
+  return { tile: size, board: boardWidth };
 }
 
 /**

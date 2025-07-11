@@ -142,6 +142,10 @@ The client adjusts its interface based on viewport width:
 
 The mode updates automatically on window resize or device orientation changes.
 
+The board is scaled by `fitBoardToContainer`, which calculates a tile size that
+fits within the available window height and width. The function also returns the
+computed tile and board dimensions for testing and layout logic.
+
 
 ## Landing Page
 
