@@ -767,12 +767,11 @@
     #boardArea {
       display: flex;
       justify-content: center;
-      align-items: flex-end;
+      align-items: flex-start;
       margin: 10px auto 0;
       width: 100%;
       position: relative;
-      flex: 1 1 auto;
-      min-height: 0; /* let the board shrink if needed */
+      flex: 0 0 auto;
     }
 
     #stampContainer {
