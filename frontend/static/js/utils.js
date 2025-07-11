@@ -207,32 +207,52 @@ export function applyLayoutMode() {
 export function fitBoardToContainer(rows = 6) {
   const boardArea = document.getElementById('boardArea');
   if (!boardArea) return { tile: 0, board: 0 };
-  const titleBar = document.getElementById('titleBar');
-  const leaderboard = document.getElementById('leaderboard');
-  const inputArea = document.getElementById('inputArea');
-  const keyboard = document.getElementById('keyboard');
-
-  const style = getComputedStyle(document.documentElement);
+  const root = document.documentElement;
+  const style = getComputedStyle(root);
   const gap = parseFloat(style.getPropertyValue('--tile-gap')) || 10;
   const maxSize = 60; // keep in sync with layout.css
   const width = boardArea.clientWidth;
 
-  const availHeight =
-    document.documentElement.clientHeight -
-    (titleBar ? titleBar.offsetHeight : 0) -
-    (leaderboard ? leaderboard.offsetHeight : 0) -
-    (inputArea ? inputArea.offsetHeight : 0) -
-    (keyboard ? keyboard.offsetHeight : 0) -
-    20; // account for margins
+  const getHeights = () => {
+    const titleBar = document.getElementById('titleBar');
+    const leaderboard = document.getElementById('leaderboard');
+    const inputArea = document.getElementById('inputArea');
+    const keyboard = document.getElementById('keyboard');
+    return {
+      title: titleBar ? titleBar.offsetHeight : 0,
+      leaderboard: leaderboard ? leaderboard.offsetHeight : 0,
+      input: inputArea ? inputArea.offsetHeight : 0,
+      keyboard: keyboard ? keyboard.offsetHeight : 0
+    };
+  };
 
-  const sizeByWidth = (width - gap * 4) / 5;
-  const sizeByHeight = (availHeight - gap * (rows - 1)) / rows;
-  const size = Math.min(maxSize, sizeByWidth, sizeByHeight);
+  const applySize = (s) => {
+    root.style.setProperty('--tile-size', `${s}px`);
+    root.style.setProperty('--ui-scale', `${s / maxSize}`);
+  };
 
-  document.documentElement.style.setProperty('--tile-size', `${size}px`);
-  document.documentElement.style.setProperty('--ui-scale', `${size / maxSize}`);
+  let size = maxSize;
+  applySize(size);
+
+  for (let i = 0; i < 3; i++) {
+    const h = getHeights();
+    const availHeight =
+      root.clientHeight - h.title - h.leaderboard - h.input - h.keyboard - 20;
+
+    const sizeByWidth = (width - gap * 4) / 5;
+    const sizeByHeight = (availHeight - gap * (rows - 1)) / rows;
+    const newSize = Math.min(maxSize, sizeByWidth, sizeByHeight);
+    if (Math.abs(newSize - size) < 0.1) {
+      size = newSize;
+      break;
+    }
+    size = newSize;
+    applySize(size);
+  }
+
+  applySize(size);
   const boardWidth = size * 5 + gap * 4;
-  document.documentElement.style.setProperty('--board-width', `${boardWidth}px`);
+  root.style.setProperty('--board-width', `${boardWidth}px`);
   return { tile: size, board: boardWidth };
 }
 
