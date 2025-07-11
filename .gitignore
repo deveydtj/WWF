@@ -6,3 +6,4 @@ game_persist.json
 analytics.log
 
 runtime/
+.terraform/
