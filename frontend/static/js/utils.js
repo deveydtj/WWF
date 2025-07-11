@@ -210,7 +210,16 @@ export function fitBoardToContainer(rows = 6) {
   const root = document.documentElement;
   const style = getComputedStyle(root);
   const gap = parseFloat(style.getPropertyValue('--tile-gap')) || 10;
-  const maxSize = 60; // keep in sync with layout.css
+  // Use CSS --tile-size as an upper bound so media queries can limit scaling.
+  // Fallback to 60 if the computed value appears invalid (e.g. same as gap).
+  let cssLimit = parseFloat(style.getPropertyValue('--tile-size'));
+  if (isNaN(cssLimit)) {
+    cssLimit = 60;
+  } else {
+    const gapVal = parseFloat(style.getPropertyValue('--tile-gap')) || 0;
+    if (cssLimit <= gapVal + 1) cssLimit = 60;
+  }
+  const maxSize = Math.min(60, cssLimit); // keep 60 as absolute max
   const width = boardArea.clientWidth;
 
   const getHeights = () => {

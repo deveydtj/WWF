@@ -226,6 +226,14 @@
       }
     }
 
+    @media (max-width: 350px) {
+      :root {
+        /* very small devices */
+        --tile-size: min(8vmin, 28px);
+        --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+      }
+    }
+
     /* ─────────────────────────────────────────────
        C) Medium mode adjustments
        ───────────────────────────────────────────── */
