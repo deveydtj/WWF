@@ -156,6 +156,13 @@ export function updateVH() {
   if (container) {
     container.style.height = `${height}px`;
   }
+  const board = document.getElementById('board');
+  if (board) {
+    const rows = Math.max(1, Math.floor(board.children.length / 5));
+    fitBoardToContainer(rows);
+  } else {
+    fitBoardToContainer();
+  }
 }
 
 /**
