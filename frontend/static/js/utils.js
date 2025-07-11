@@ -223,6 +223,8 @@ export function fitBoardToContainer(rows = 6) {
 
   document.documentElement.style.setProperty('--tile-size', `${size}px`);
   document.documentElement.style.setProperty('--ui-scale', `${size / maxSize}`);
+  const boardWidth = size * 5 + gap * 4;
+  document.documentElement.style.setProperty('--board-width', `${boardWidth}px`);
 }
 
 /**

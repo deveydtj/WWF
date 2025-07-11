@@ -139,6 +139,7 @@
 
       :root {
         --tile-size: min(14vmin, 50px);
+        --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
 
       #board {
@@ -219,6 +220,7 @@
     @media (max-width: 400px) {
       :root {
         --tile-size: min(16vmin, 42px);
+        --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
 
@@ -282,6 +284,7 @@
 
       :root {
         --tile-size: min(11vmin, 55px);
+        --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
 
@@ -325,6 +328,7 @@
       --tile-size: min(12vmin, 60px);
       --tile-gap: calc(var(--tile-size) / 6);
       --ui-scale: 1;
+      --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
     }
 
     body.dark-mode {
@@ -392,7 +396,7 @@
       line-height: 1;
       position: absolute;
       top: 0;
-      left: calc(100% + 10px);
+      left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
     }
 
     #chatNotify {
@@ -406,7 +410,7 @@
       line-height: 1;
       position: absolute;
       top: 36px;
-      left: calc(100% + 10px);
+      left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
       opacity: 1;
       transform: scale(1);
       transition: opacity 0.3s, transform 0.3s;
@@ -539,6 +543,8 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: calc(10px * var(--ui-scale));
+      position: relative;
+      z-index: 10;
     }
 
     #titleBar h1 {
