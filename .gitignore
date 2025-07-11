@@ -6,3 +6,6 @@ game_persist.json
 analytics.log
 
 runtime/
+
+# Terraform state
+.terraform/
