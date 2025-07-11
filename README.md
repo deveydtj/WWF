@@ -167,6 +167,13 @@ docker compose up --build
 
 Stop the containers with `docker compose down`.
 
+Alternatively run `start_docker.sh` to reset your local repository and
+launch Docker Compose in one step:
+
+```bash
+./start_docker.sh
+```
+
 The compose file mounts your `backend/` directory so changes trigger a reload.
 It also mounts the `frontend/` folder to `/app/frontend` so the server can
 fall back to unbuilt assets during development. The `data/` folder is mounted
