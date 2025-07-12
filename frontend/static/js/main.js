@@ -913,11 +913,7 @@ applyLayoutMode();
 createBoard(board, maxRows);
 
 // Use enhanced container measurement and scaling
-const scalingSuccess = applyOptimalScaling(maxRows);
-if (!scalingSuccess) {
-  // Fallback to original method if enhanced scaling fails
-  fitBoardToContainer(maxRows);
-}
+applyOptimalScaling(maxRows);
 
 // Verify all elements fit and log any issues
 const verification = verifyElementsFitInViewport(maxRows);
@@ -953,11 +949,8 @@ window.addEventListener('resize', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
   
-  // Use enhanced scaling with verification
-  const scalingSuccess = applyOptimalScaling(maxRows);
-  if (!scalingSuccess) {
-    fitBoardToContainer(maxRows);
-  }
+  // Use enhanced scaling
+  applyOptimalScaling(maxRows);
   
   adjustKeyboardForViewport();
   if (latestState) renderEmojiStamps(latestState.guesses);
@@ -975,11 +968,8 @@ window.addEventListener('orientationchange', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
   
-  // Use enhanced scaling with verification
-  const scalingSuccess = applyOptimalScaling(maxRows);
-  if (!scalingSuccess) {
-    fitBoardToContainer(maxRows);
-  }
+  // Use enhanced scaling
+  applyOptimalScaling(maxRows);
   
   adjustKeyboardForViewport();
   if (latestState) renderEmojiStamps(latestState.guesses);
@@ -992,11 +982,8 @@ window.addEventListener('orientationchange', () => {
   orientationTimeout = setTimeout(() => {
     updateVH();
     
-    // Use enhanced scaling with verification
-    const scalingSuccess = applyOptimalScaling(maxRows);
-    if (!scalingSuccess) {
-      fitBoardToContainer(maxRows);
-    }
+    // Use enhanced scaling
+    applyOptimalScaling(maxRows);
     
     adjustKeyboardForViewport();
   }, 300);

@@ -1521,6 +1521,8 @@ body.players-open #playerSidebar {
   flex: 1 1 auto;
   width: 100%;
   align-items: center;
+  max-height: 100vh; /* Prevent exceeding viewport height */
+  max-height: calc(var(--vh, 1vh) * 100); /* Use custom vh for mobile */
 }
 
 /* Make sure the board area doesn't grow too large */

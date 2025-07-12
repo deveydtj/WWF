@@ -163,9 +163,9 @@ export function updateVH() {
   const board = document.getElementById('board');
   if (board) {
     const rows = Math.max(1, Math.floor(board.children.length / 5));
-    fitBoardToContainer(rows);
+    applyOptimalScaling(rows);
   } else {
-    fitBoardToContainer();
+    applyOptimalScaling();
   }
 }
 
