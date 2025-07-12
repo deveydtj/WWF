@@ -97,7 +97,6 @@
 
       body.definition-open #definitionBox {
         display: block;
-        max-height: 40vh;
         max-width: calc(98% - 20px);
         padding: 8px;
         overflow-y: auto;
@@ -791,7 +790,7 @@
       margin: 10px auto 0;
       width: 100%;
       position: relative;
-      flex: 0 0 auto;
+      flex: 1 1 auto;
     }
 
     #stampContainer {
@@ -1026,9 +1025,9 @@
 
     /* ─── Keyboard ─── */
     #keyboard {
-      display: inline-block;
-      margin-top: 5px;
-      flex: 0 1 auto;
+  display: inline-block;
+  margin-top: auto;
+      flex: 0 0 auto;
       /* shrink keyboard height slightly for cramped screens */
       min-height: calc(var(--tile-size) * 2.4);
     }
@@ -1523,14 +1522,13 @@ body.players-open #playerSidebar {
   margin: 10px auto 0;
   width: 100%;
   position: relative;
-  flex: 0 0 auto; /* Don't grow */
-  max-height: 60vh; /* Prevent board from taking all space */
+  flex: 1 1 auto; /* Don't grow */
 }
 
 /* Ensure keyboard gets adequate space */
 #keyboard {
   display: inline-block;
-  margin-top: 5px;
+    margin-top: auto;
   flex: 0 0 auto; /* Don't shrink */
   min-height: calc(var(--tile-size) * 2.4);
   width: 100%;
@@ -1544,16 +1542,10 @@ body.players-open #playerSidebar {
     min-height: 100vh;
     min-height: calc(var(--vh, 1vh) * 100);
   }
-
-  /* Reduce board area max height on mobile */
-  #boardArea {
-    max-height: 45vh;
-  }
-
   /* Ensure keyboard visibility on mobile */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
-    margin-top: 8px;
+    margin-top: auto;
   }
 
   /* Better tile scaling for very small screens */
@@ -1577,10 +1569,6 @@ body.players-open #playerSidebar {
 
 /* Medium screen adjustments */
 @media (min-width: 601px) and (max-width: 900px) {
-  #boardArea {
-    max-height: 55vh;
-  }
-
   #keyboard {
     min-height: calc(var(--tile-size) * 2.3);
   }
@@ -1593,10 +1581,6 @@ body.players-open #playerSidebar {
 
 /* Large screen adjustments */
 @media (min-width: 901px) {
-  #boardArea {
-    max-height: 65vh;
-  }
-
   #keyboard {
     min-height: calc(var(--tile-size) * 2.5);
   }
@@ -1630,11 +1614,6 @@ body.players-open #playerSidebar {
   :root {
     --tile-size: min(10vmin, 36px);
   }
-
-  #boardArea {
-    max-height: 40vh;
-  }
-
   #keyboard {
     min-height: calc(var(--tile-size) * 2.0);
   }
@@ -1649,22 +1628,12 @@ body.players-open #playerSidebar {
 @media (max-width: 350px) {
   :root {
     --tile-size: min(8vmin, 28px);
-  }
-
-  #boardArea {
-    max-height: 35vh;
-  }
-}
+  }}
 
 @media (max-width: 300px) {
   :root {
     --tile-size: min(7vmin, 24px);
   }
-
-  #boardArea {
-    max-height: 30vh;
-  }
-
   .key {
     min-width: calc(var(--tile-size) * 0.5);
     height: calc(var(--tile-size) * 0.7);
