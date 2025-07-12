@@ -109,43 +109,44 @@
 
     <div id="waitingOverlay" role="alert" aria-live="polite">Waiting for players… start by guessing!</div>
 
-    <div id="titleBar">
-      <div id="resetWrapper">
-        <button id="holdReset">
-          <span id="holdResetText">Reset</span>
-          <span id="holdResetProgress"></span>
-        </button>
+    <div id="gameColumn">
+      <div id="titleBar">
+        <div id="resetWrapper">
+          <button id="holdReset">
+            <span id="holdResetText">Reset</span>
+            <span id="holdResetProgress"></span>
+          </button>
+        </div>
+        <h1 id="gameTitle"></h1>
+        <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
       </div>
-      <h1 id="gameTitle"></h1>
-      <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
-    </div>
 
-    <!-- Board -->
-    <div id="boardArea">
-      <div id="board" role="grid" aria-label="Guess grid"></div>
-      <div id="stampContainer"></div>
-      <div id="hintTooltip" class="hint-tooltip" role="status"></div>
-      <button id="optionsToggle" title="More Options">⚙️</button>
-      <button id="chatNotify" title="Open Chat">💬</button>
-    </div>
+      <!-- Board -->
+      <div id="boardArea">
+        <div id="board" role="grid" aria-label="Guess grid"></div>
+        <div id="stampContainer"></div>
+        <div id="hintTooltip" class="hint-tooltip" role="status"></div>
+        <button id="optionsToggle" title="More Options">⚙️</button>
+        <button id="chatNotify" title="Open Chat">💬</button>
+      </div>
 
-    <!-- Guess Input -->
-    <div id="inputArea">
-      <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
-      <button id="submitGuess">Guess</button>
-    </div>
+      <!-- Guess Input -->
+      <div id="inputArea">
+        <input type="text" id="guessInput" maxlength="5" autocomplete="off" autofocus>
+        <button id="submitGuess">Guess</button>
+      </div>
 
       <p id="message" role="status" aria-live="polite"></p>
       <div id="messagePopup" role="status" aria-live="polite"></div>
       <div id="ariaLive" aria-live="polite"></div>
 
-    <!-- Keyboard -->
-    <div id="keyboard" role="group" aria-label="On-screen keyboard">
-      <div class="keyboard-row">
-        <button class="key" data-key="q">Q</button>
-        <button class="key" data-key="w">W</button>
-        <button class="key" data-key="e">E</button>
-        <button class="key" data-key="r">R</button>
+      <!-- Keyboard -->
+      <div id="keyboard" role="group" aria-label="On-screen keyboard">
+        <div class="keyboard-row">
+          <button class="key" data-key="q">Q</button>
+          <button class="key" data-key="w">W</button>
+          <button class="key" data-key="e">E</button>
+          <button class="key" data-key="r">R</button>
         <button class="key" data-key="t">T</button>
         <button class="key" data-key="y">Y</button>
         <button class="key" data-key="u">U</button>
@@ -175,7 +176,8 @@
         <button class="key" data-key="m">M</button>
         <button class="key wide" data-key="Backspace">Bksp</button>
       </div>
-    </div>
+      </div> <!-- end keyboard -->
+    </div> <!-- end gameColumn -->
   </div>
 
   <script type="module" src="static/js/main.js"></script>
