@@ -1469,12 +1469,12 @@ body.players-open #playerSidebar {
   }
   #board {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.5rem;
   }
   .tile {
-    width: calc((100vw - 2rem) / 6);
-    height: calc((100vw - 2rem) / 6);
+    width: calc((100vw - 2rem) / 5);
+    height: calc((100vw - 2rem) / 5);
     margin: 0.25rem;
   }
   #titleBar {
