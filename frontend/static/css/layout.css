@@ -302,7 +302,7 @@
 
       :root {
         /* medium screens scale slightly smaller */
-        --tile-size: min(10vmin, 50px);
+        --tile-size: min(9vmin, 46px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
