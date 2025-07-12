@@ -137,8 +137,8 @@
       }
 
       :root {
-        /* allow smaller tiles on narrow screens */
-        --tile-size: min(12vmin, 50px);
+        /* Mobile devices - smaller tiles for better balance */
+        --tile-size: min(10vmin, 38px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
 
@@ -220,7 +220,7 @@
     @media (max-width: 400px) {
       :root {
         /* extra small devices */
-        --tile-size: min(12vmin, 36px);
+        --tile-size: min(9vmin, 34px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
@@ -228,7 +228,7 @@
     @media (max-width: 350px) {
       :root {
         /* very small devices */
-        --tile-size: min(8vmin, 28px);
+        --tile-size: min(8vmin, 30px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
@@ -236,7 +236,7 @@
     @media (max-width: 300px) {
       :root {
         /* ultra small devices */
-        --tile-size: min(6vmin, 24px);
+        --tile-size: min(7vmin, 26px);
         --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
       }
     }
@@ -1551,28 +1551,30 @@ body.players-open #playerSidebar {
     min-height: 100vh;
     min-height: calc(var(--vh, 1vh) * 100);
   }
-  /* Ensure keyboard visibility on mobile */
-  #keyboard {
-    min-height: calc(var(--tile-size) * 2.2);
-    margin-top: auto;
-  }
-
-  /* Better tile scaling for very small screens */
+  
+  /* Better tile scaling for mobile - smaller tiles to leave room for keyboard */
   :root {
-    --tile-size: min(12vmin, 50px);
+    --tile-size: min(10vmin, 38px);
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
+  /* Ensure keyboard gets adequate space and visibility */
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.5);
+    margin-top: auto;
+    margin-bottom: 5px;
+  }
+
   .key {
-    min-width: calc(var(--tile-size) * 0.6);
-    height: calc(var(--tile-size) * 0.8);
+    min-width: calc(var(--tile-size) * 0.65);
+    height: calc(var(--tile-size) * 0.85);
     margin: calc(var(--tile-gap) / 3);
-    font-size: calc(var(--tile-size) * 0.25);
+    font-size: calc(var(--tile-size) * 0.28);
     padding: 0 3px;
   }
 
   .key.wide {
-    min-width: calc(var(--tile-size) * 1.1);
+    min-width: calc(var(--tile-size) * 1.2);
   }
 }
 
@@ -1621,32 +1623,33 @@ body.players-open #playerSidebar {
 /* Very small devices - extra constraints */
 @media (max-width: 400px) {
   :root {
-    --tile-size: min(10vmin, 36px);
+    --tile-size: min(9vmin, 34px);
   }
   #keyboard {
-    min-height: calc(var(--tile-size) * 2.0);
+    min-height: calc(var(--tile-size) * 2.3);
   }
 
   .key {
-    min-width: calc(var(--tile-size) * 0.55);
-    height: calc(var(--tile-size) * 0.75);
-    font-size: calc(var(--tile-size) * 0.22);
+    min-width: calc(var(--tile-size) * 0.6);
+    height: calc(var(--tile-size) * 0.8);
+    font-size: calc(var(--tile-size) * 0.26);
   }
 }
 
 @media (max-width: 350px) {
   :root {
-    --tile-size: min(8vmin, 28px);
-  }}
+    --tile-size: min(8vmin, 30px);
+  }
+}
 
 @media (max-width: 300px) {
   :root {
-    --tile-size: min(7vmin, 24px);
+    --tile-size: min(7vmin, 26px);
   }
   .key {
-    min-width: calc(var(--tile-size) * 0.5);
-    height: calc(var(--tile-size) * 0.7);
-    font-size: calc(var(--tile-size) * 0.2);
+    min-width: calc(var(--tile-size) * 0.55);
+    height: calc(var(--tile-size) * 0.75);
+    font-size: calc(var(--tile-size) * 0.24);
     margin: 1px;
   }
 }
