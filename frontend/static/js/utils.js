@@ -169,25 +169,6 @@ export function updateVH() {
   }
 }
 
-// Add this helper function for keyboard adjustments
-export function adjustKeyboardForViewport() {
-  const keyboard = document.getElementById('keyboard');
-  if (!keyboard) return;
-
-  const viewportHeight = window.visualViewport ?
-    window.visualViewport.height : window.innerHeight;
-  const keyboardBottom = keyboard.getBoundingClientRect().bottom;
-
-  // If keyboard is cut off, scale it down
-  if (keyboardBottom > viewportHeight) {
-    const overflow = keyboardBottom - viewportHeight + 10; // 10px buffer
-    const currentHeight = keyboard.offsetHeight;
-    const scale = Math.max(0.7, (currentHeight - overflow) / currentHeight);
-
-    keyboard.style.transform = `scale(${scale})`;
-    keyboard.style.transformOrigin = 'center bottom';
-  }
-}
 
 /**
  * Set the layout mode (light/medium/full) based on viewport width.

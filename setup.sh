@@ -36,8 +36,8 @@ echo "Checking Node.js..."
 check_cmd node
 node_version=$(node --version | tr -d 'v')
 node_major=${node_version%%.*}
-if [ "$node_major" -lt 20 ]; then
-  echo "Node.js 20+ required (found $node_version)" >&2
+if [ "$node_major" -lt 18 ]; then
+  echo "Node.js 18+ required (found $node_version)" >&2
   exit 1
 fi
 
