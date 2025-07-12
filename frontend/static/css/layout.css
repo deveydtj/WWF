@@ -1463,3 +1463,40 @@ body.players-open #playerSidebar {
 .player-row.inactive {
   opacity: 0.5;
 }
+/* --- Additional responsive tweaks --- */
+@media (max-width: 600px) {
+  #appContainer {
+    min-height: 100vh;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.5rem;
+  }
+  .tile {
+    width: calc((100vw - 2rem) / 6);
+    height: calc((100vw - 2rem) / 6);
+    margin: 0.25rem;
+  }
+  #titleBar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+@media (max-width: 480px) {
+  #titleBar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  #titleBar h1 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  #leaderboard {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+

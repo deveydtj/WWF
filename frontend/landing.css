@@ -75,3 +75,26 @@ a:focus {
   height: 100vh;
   border: none;
 }
+
+/* Responsive header tweaks */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+@media (max-width: 480px) {
+  header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.5rem;
+  }
+  header img,
+  .scores img {
+    width: 24px;
+    height: 24px;
+  }
+}
+
