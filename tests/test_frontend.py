@@ -730,33 +730,36 @@ def test_leave_lobby_closes_event_source():
 def test_fit_board_to_container_returns_sizes():
     script = """
 import { fitBoardToContainer } from './frontend/static/js/utils.js';
+const boardArea = { clientWidth: 200, style: { marginTop:'10px', marginBottom:'0' }, parentElement: { clientHeight: 400 } };
 const mapping = {
-  boardArea: { clientWidth: 200, style: { marginTop:'10px', marginBottom:'0' } },
+  boardArea,
   titleBar: { offsetHeight: 30 },
   leaderboard: { offsetHeight: 20 },
   inputArea: { offsetHeight: 20 },
   keyboard: { offsetHeight: 80, style: { marginTop:'5px', marginBottom:'0' } }
 };
-const docEl = { clientHeight: 400, style: { setProperty(k,v){ this[k]=v; } } };
+const docEl = { style: { setProperty(k,v){ this[k]=v; } } };
 global.document = {
   getElementById(id){ return mapping[id] || null; },
   documentElement: docEl
 };
-global.document.documentElement = docEl;
 global.getComputedStyle = (el) => ({
   marginTop: el.style?.marginTop || '0',
   marginBottom: el.style?.marginBottom || '0',
   getPropertyValue: () => '10'
 });
-const out = fitBoardToContainer(6);
-console.log(JSON.stringify({ out, css: docEl.style }));
+const out1 = fitBoardToContainer(6);
+boardArea.parentElement.clientHeight = 250;
+const out2 = fitBoardToContainer(6);
+console.log(JSON.stringify({ out1, out2, css: docEl.style }));
 """
     result = subprocess.run(
         ['node', '--input-type=module', '-e', script],
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert round(data['out']['tile'], 2) == 25
-    assert round(data['out']['board'], 2) == 165
-    assert data['css']['--tile-size'].startswith('25')
-    assert data['css']['--board-width'].startswith('165')
+    assert round(data['out1']['tile'], 2) == 27.5
+    assert round(data['out1']['board'], 2) == 177.5
+    assert data['out2']['tile'] < data['out1']['tile']
+    assert data['css']['--tile-size'].startswith('20')
+    assert data['css']['--board-width'].startswith('140')
