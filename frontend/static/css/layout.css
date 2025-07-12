@@ -1500,3 +1500,175 @@ body.players-open #playerSidebar {
   }
 }
 
+/* Responsive layout refinements */
+
+/* Ensure the app container uses flexbox properly */
+#appContainer {
+  box-sizing: border-box;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 100vh; /* Fallback */
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Make sure the board area doesn't grow too large */
+#boardArea {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 10px auto 0;
+  width: 100%;
+  position: relative;
+  flex: 0 0 auto; /* Don't grow */
+  max-height: 60vh; /* Prevent board from taking all space */
+}
+
+/* Ensure keyboard gets adequate space */
+#keyboard {
+  display: inline-block;
+  margin-top: 5px;
+  flex: 0 0 auto; /* Don't shrink */
+  min-height: calc(var(--tile-size) * 2.4);
+  width: 100%;
+  max-width: 500px; /* Prevent keyboard from getting too wide */
+}
+
+/* Improved mobile scaling */
+@media (max-width: 600px) {
+  #appContainer {
+    padding: 10px;
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+
+  /* Reduce board area max height on mobile */
+  #boardArea {
+    max-height: 45vh;
+  }
+
+  /* Ensure keyboard visibility on mobile */
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.2);
+    margin-top: 8px;
+  }
+
+  /* Better tile scaling for very small screens */
+  :root {
+    --tile-size: min(12vmin, 50px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+
+  .key {
+    min-width: calc(var(--tile-size) * 0.6);
+    height: calc(var(--tile-size) * 0.8);
+    margin: calc(var(--tile-gap) / 3);
+    font-size: calc(var(--tile-size) * 0.25);
+    padding: 0 3px;
+  }
+
+  .key.wide {
+    min-width: calc(var(--tile-size) * 1.1);
+  }
+}
+
+/* Medium screen adjustments */
+@media (min-width: 601px) and (max-width: 900px) {
+  #boardArea {
+    max-height: 55vh;
+  }
+
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.3);
+  }
+
+  :root {
+    --tile-size: min(9vmin, 46px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+}
+
+/* Large screen adjustments */
+@media (min-width: 901px) {
+  #boardArea {
+    max-height: 65vh;
+  }
+
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.5);
+  }
+}
+
+/* Add better flex container management */
+#titleBar {
+  flex: 0 0 auto;
+}
+
+#leaderboard {
+  flex: 0 0 auto;
+  max-height: 80px; /* Prevent leaderboard from growing too much */
+  overflow-x: auto;
+}
+
+#inputArea {
+  flex: 0 0 auto;
+  margin: 10px auto;
+}
+
+/* Ensure message areas don't interfere */
+#message,
+#messagePopup {
+  flex: 0 0 auto;
+  margin: 5px 0;
+}
+
+/* Very small devices - extra constraints */
+@media (max-width: 400px) {
+  :root {
+    --tile-size: min(10vmin, 36px);
+  }
+
+  #boardArea {
+    max-height: 40vh;
+  }
+
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.0);
+  }
+
+  .key {
+    min-width: calc(var(--tile-size) * 0.55);
+    height: calc(var(--tile-size) * 0.75);
+    font-size: calc(var(--tile-size) * 0.22);
+  }
+}
+
+@media (max-width: 350px) {
+  :root {
+    --tile-size: min(8vmin, 28px);
+  }
+
+  #boardArea {
+    max-height: 35vh;
+  }
+}
+
+@media (max-width: 300px) {
+  :root {
+    --tile-size: min(7vmin, 24px);
+  }
+
+  #boardArea {
+    max-height: 30vh;
+  }
+
+  .key {
+    min-width: calc(var(--tile-size) * 0.5);
+    height: calc(var(--tile-size) * 0.7);
+    font-size: calc(var(--tile-size) * 0.2);
+    margin: 1px;
+  }
+}
