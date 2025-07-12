@@ -756,7 +756,7 @@ console.log(JSON.stringify({ out, css: docEl.style }));
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert round(data['out']['tile'], 2) == 29.17
-    assert round(data['out']['board'], 2) == 185.83
-    assert data['css']['--tile-size'].startswith('29.16')
-    assert data['css']['--board-width'].startswith('185.83')
+    assert round(data['out']['tile'], 2) == 25
+    assert round(data['out']['board'], 2) == 165
+    assert data['css']['--tile-size'].startswith('25')
+    assert data['css']['--board-width'].startswith('165')

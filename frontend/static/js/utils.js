@@ -152,16 +152,40 @@ export function updateVH() {
   const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const vh = height * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);
+
   const container = document.getElementById('appContainer');
   if (container) {
+    // Use the visual viewport height for better mobile experience
     container.style.height = `${height}px`;
+    container.style.minHeight = `${height}px`;
   }
+
   const board = document.getElementById('board');
   if (board) {
     const rows = Math.max(1, Math.floor(board.children.length / 5));
     fitBoardToContainer(rows);
   } else {
     fitBoardToContainer();
+  }
+}
+
+// Add this helper function for keyboard adjustments
+export function adjustKeyboardForViewport() {
+  const keyboard = document.getElementById('keyboard');
+  if (!keyboard) return;
+
+  const viewportHeight = window.visualViewport ?
+    window.visualViewport.height : window.innerHeight;
+  const keyboardBottom = keyboard.getBoundingClientRect().bottom;
+
+  // If keyboard is cut off, scale it down
+  if (keyboardBottom > viewportHeight) {
+    const overflow = keyboardBottom - viewportHeight + 10; // 10px buffer
+    const currentHeight = keyboard.offsetHeight;
+    const scale = Math.max(0.7, (currentHeight - overflow) / currentHeight);
+
+    keyboard.style.transform = `scale(${scale})`;
+    keyboard.style.transformOrigin = 'center bottom';
   }
 }
 
@@ -207,11 +231,12 @@ export function applyLayoutMode() {
 export function fitBoardToContainer(rows = 6) {
   const boardArea = document.getElementById('boardArea');
   if (!boardArea) return { tile: 0, board: 0 };
+
   const root = document.documentElement;
   const style = getComputedStyle(root);
   const gap = parseFloat(style.getPropertyValue('--tile-gap')) || 10;
+
   // Use CSS --tile-size as an upper bound so media queries can limit scaling.
-  // Fallback to 60 if the computed value appears invalid (e.g. same as gap).
   let cssLimit = parseFloat(style.getPropertyValue('--tile-size'));
   if (isNaN(cssLimit)) {
     cssLimit = 60;
@@ -219,7 +244,8 @@ export function fitBoardToContainer(rows = 6) {
     const gapVal = parseFloat(style.getPropertyValue('--tile-gap')) || 0;
     if (cssLimit <= gapVal + 1) cssLimit = 60;
   }
-  const maxSize = Math.min(60, cssLimit); // keep 60 as absolute max
+
+  const maxSize = Math.min(60, cssLimit);
   let width = boardArea.clientWidth;
 
   const getHeights = () => {
@@ -227,11 +253,16 @@ export function fitBoardToContainer(rows = 6) {
     const leaderboard = document.getElementById('leaderboard');
     const inputArea = document.getElementById('inputArea');
     const keyboard = document.getElementById('keyboard');
+    const lobbyHeader = document.getElementById('lobbyHeader');
+    const messageEl = document.getElementById('message');
+
     return {
       title: titleBar ? titleBar.offsetHeight : 0,
+      lobby: lobbyHeader ? lobbyHeader.offsetHeight : 0,
       leaderboard: leaderboard ? leaderboard.offsetHeight : 0,
       input: inputArea ? inputArea.offsetHeight : 0,
-      keyboard: keyboard ? keyboard.offsetHeight : 0
+      keyboard: keyboard ? keyboard.offsetHeight : 0,
+      message: messageEl ? 25 : 0 // Reserve space for messages
     };
   };
 
@@ -243,32 +274,70 @@ export function fitBoardToContainer(rows = 6) {
   let size = maxSize;
   applySize(size);
 
-  for (let i = 0; i < 3; i++) {
+  // Multiple iterations to converge on correct size
+  for (let i = 0; i < 5; i++) {
     width = boardArea.clientWidth;
     const h = getHeights();
-    const boardMargins = parseFloat(getComputedStyle(boardArea).marginTop) +
-      parseFloat(getComputedStyle(boardArea).marginBottom);
+
+    // Calculate margins and padding
+    const boardAreaStyle = getComputedStyle(boardArea);
+    const boardMargins = parseFloat(boardAreaStyle.marginTop) +
+                        parseFloat(boardAreaStyle.marginBottom);
+
     const kb = document.getElementById('keyboard');
     const kbStyle = kb ? getComputedStyle(kb) : null;
     const kbMargins = kbStyle ?
       parseFloat(kbStyle.marginTop) + parseFloat(kbStyle.marginBottom) : 0;
-    const availHeight =
-      root.clientHeight - h.title - h.leaderboard - h.input - h.keyboard - boardMargins - kbMargins - 10;
 
-    const sizeByWidth = (width - gap * 4) / 5;
-    const sizeByHeight = (availHeight - gap * (rows - 1)) / rows;
+    // Reserve extra space for keyboard - this is the key fix
+    const keyboardReserve = isMobile ?
+      Math.max(120, h.keyboard * 1.2) :
+      Math.max(100, h.keyboard * 1.1);
+
+    // Calculate available height with better keyboard spacing
+    const totalUsedHeight = h.title + h.lobby + h.leaderboard + h.input +
+                           keyboardReserve + boardMargins + kbMargins + h.message;
+
+    const availHeight = Math.max(200, root.clientHeight - totalUsedHeight - 20);
+
+    // Size constraints
+    const sizeByWidth = Math.max(20, (width - gap * 4) / 5);
+    const sizeByHeight = Math.max(20, (availHeight - gap * (rows - 1)) / rows);
+
     const newSize = Math.min(maxSize, sizeByWidth, sizeByHeight);
-    if (Math.abs(newSize - size) < 0.1) {
-      size = newSize;
+
+    // Convergence check
+    if (Math.abs(newSize - size) < 0.5) {
+      size = Math.max(20, newSize);
       break;
     }
-    size = newSize;
+
+    size = Math.max(20, newSize);
     applySize(size);
   }
 
+  // Apply final size and board width
   applySize(size);
   const boardWidth = size * 5 + gap * 4;
   root.style.setProperty('--board-width', `${boardWidth}px`);
+
+  // Additional mobile-specific adjustments
+  if (isMobile && size < 35) {
+    // On very small screens, make keyboard even more compact
+    const keyboard = document.getElementById('keyboard');
+    if (keyboard) {
+      keyboard.style.transform = `scale(${Math.max(0.8, size / 35)})`;
+      keyboard.style.transformOrigin = 'center bottom';
+    }
+  } else {
+    // Reset any scaling on larger screens
+    const keyboard = document.getElementById('keyboard');
+    if (keyboard) {
+      keyboard.style.transform = '';
+      keyboard.style.transformOrigin = '';
+    }
+  }
+
   return { tile: size, board: boardWidth };
 }
 
