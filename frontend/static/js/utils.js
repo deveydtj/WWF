@@ -220,7 +220,7 @@ export function fitBoardToContainer(rows = 6) {
     if (cssLimit <= gapVal + 1) cssLimit = 60;
   }
   const maxSize = Math.min(60, cssLimit); // keep 60 as absolute max
-  const width = boardArea.clientWidth;
+  let width = boardArea.clientWidth;
 
   const getHeights = () => {
     const titleBar = document.getElementById('titleBar');
@@ -244,9 +244,16 @@ export function fitBoardToContainer(rows = 6) {
   applySize(size);
 
   for (let i = 0; i < 3; i++) {
+    width = boardArea.clientWidth;
     const h = getHeights();
+    const boardMargins = parseFloat(getComputedStyle(boardArea).marginTop) +
+      parseFloat(getComputedStyle(boardArea).marginBottom);
+    const kb = document.getElementById('keyboard');
+    const kbStyle = kb ? getComputedStyle(kb) : null;
+    const kbMargins = kbStyle ?
+      parseFloat(kbStyle.marginTop) + parseFloat(kbStyle.marginBottom) : 0;
     const availHeight =
-      root.clientHeight - h.title - h.leaderboard - h.input - h.keyboard - 20;
+      root.clientHeight - h.title - h.leaderboard - h.input - h.keyboard - boardMargins - kbMargins - 10;
 
     const sizeByWidth = (width - gap * 4) / 5;
     const sizeByHeight = (availHeight - gap * (rows - 1)) / rows;

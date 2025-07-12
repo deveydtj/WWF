@@ -731,11 +731,11 @@ def test_fit_board_to_container_returns_sizes():
     script = """
 import { fitBoardToContainer } from './frontend/static/js/utils.js';
 const mapping = {
-  boardArea: { clientWidth: 200 },
+  boardArea: { clientWidth: 200, style: { marginTop:'10px', marginBottom:'0' } },
   titleBar: { offsetHeight: 30 },
   leaderboard: { offsetHeight: 20 },
   inputArea: { offsetHeight: 20 },
-  keyboard: { offsetHeight: 80 }
+  keyboard: { offsetHeight: 80, style: { marginTop:'5px', marginBottom:'0' } }
 };
 const docEl = { clientHeight: 400, style: { setProperty(k,v){ this[k]=v; } } };
 global.document = {
@@ -743,7 +743,11 @@ global.document = {
   documentElement: docEl
 };
 global.document.documentElement = docEl;
-global.getComputedStyle = () => ({ getPropertyValue: () => '10' });
+global.getComputedStyle = (el) => ({
+  marginTop: el.style?.marginTop || '0',
+  marginBottom: el.style?.marginBottom || '0',
+  getPropertyValue: () => '10'
+});
 const out = fitBoardToContainer(6);
 console.log(JSON.stringify({ out, css: docEl.style }));
 """
@@ -752,7 +756,7 @@ console.log(JSON.stringify({ out, css: docEl.style }));
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert data['out']['tile'] == 30
-    assert data['out']['board'] == 190
-    assert data['css']['--tile-size'] == '30px'
-    assert data['css']['--board-width'] == '190px'
+    assert round(data['out']['tile'], 2) == 29.17
+    assert round(data['out']['board'], 2) == 185.83
+    assert data['css']['--tile-size'].startswith('29.16')
+    assert data['css']['--board-width'].startswith('185.83')
