@@ -274,8 +274,15 @@ export function fitBoardToContainer(rows = 6) {
     const totalUsedHeight = h.title + h.lobby + h.leaderboard + h.input +
                            boardMargins + kbMargins + h.message;
 
-    const containerHeight = boardArea.parentElement ?
-      boardArea.parentElement.clientHeight : root.clientHeight;
+    let containerHeight = root.clientHeight;
+    if (!containerHeight && typeof window !== 'undefined') {
+      containerHeight = window.innerHeight;
+    }
+    if (boardArea.parentElement && boardArea.parentElement.clientHeight) {
+      containerHeight = containerHeight
+        ? Math.min(boardArea.parentElement.clientHeight, containerHeight)
+        : boardArea.parentElement.clientHeight;
+    }
 
     // Calculate available height based on container minus keyboard height
     const availHeight = Math.max(0,
