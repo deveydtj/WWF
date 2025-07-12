@@ -1,0 +1,77 @@
+/* ─────────────────────────────────────────────
+   Keyboard - Virtual keyboard styling
+   ───────────────────────────────────────────── */
+
+#keyboard {
+  display: inline-block;
+  margin-top: auto;
+  flex: 0 0 auto; /* Don't shrink */
+  /* shrink keyboard height slightly for cramped screens */
+  min-height: calc(var(--tile-size) * 2.4);
+  width: 100%;
+  max-width: 500px; /* Prevent keyboard from getting too wide */
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: calc(var(--tile-gap) * 1.2);
+}
+
+.key {
+  min-width: calc(var(--tile-size) * 0.58);
+  height: calc(var(--tile-size) * 0.83);
+  margin: calc(var(--tile-gap) / 2);
+  border: none;
+  background-color: var(--key-bg);
+  border-radius: 8px;
+  font-size: calc(var(--tile-size) * 0.27);
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--key-text);
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+.key.wide { 
+  min-width: calc(var(--tile-size) * 1.2); 
+}
+
+.key:active,
+.key.active-key-press {
+  box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+              inset -2px -2px 5px var(--inset-shadow-light);
+  font-size: 15px;
+  transform: scale(0.95);
+}
+
+.key.correct,
+.key.present,
+.key.absent {
+  color: white;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.key.correct {
+  background-color: var(--correct-bg);
+  box-shadow: 3px 3px 6px var(--correct-shadow-dark),
+              -3px -3px 6px var(--correct-shadow-light);
+}
+
+.key.present {
+  background-color: var(--present-bg);
+  box-shadow: 3px 3px 6px var(--present-shadow-dark),
+              -3px -3px 6px var(--present-shadow-light);
+}
+
+.key.absent {
+  background-color: var(--absent-bg);
+  box-shadow: 3px 3px 6px var(--absent-shadow-dark),
+              -3px -3px 6px var(--absent-shadow-light);
+}

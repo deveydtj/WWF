@@ -1,0 +1,374 @@
+/* ─────────────────────────────────────────────
+   Responsive Design - Mobile and screen size adaptations
+   ───────────────────────────────────────────── */
+
+/* Mobile devices (max-width: 600px) */
+@media (max-width: 600px) {
+  #appContainer {
+    padding: 10px;
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+
+  #optionsMenu {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  #optionsToggle {
+    display: block;
+    left: auto;
+    right: 0;
+  }
+  
+  #chatNotify {
+    display: block;
+    left: auto;
+    right: 0;
+  }
+
+  /* Panel positioning for mobile */
+  #historyBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 0;
+    overflow-y: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  #definitionBox {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 0;
+    overflow-y: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  #chatBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+
+  /* Open states for mobile panels */
+  body.history-open #historyBox {
+    max-height: 50vh;
+    max-width: calc(98% - 20px);
+    padding: 8px;
+    overflow-y: auto;
+    border-radius: 0;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light);
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: auto;
+  }
+
+  body.definition-open #definitionBox {
+    display: block;
+    max-width: calc(98% - 20px);
+    padding: 8px;
+    overflow-y: auto;
+    border-radius: 0;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light);
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: auto;
+  }
+
+  body.chat-open #chatBox {
+    display: flex;
+    max-height: 40vh;
+    max-width: calc(98% - 20px);
+    padding: 36px 8px 8px;
+    overflow: hidden;
+    border-radius: 0;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light);
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    flex-direction: column;
+    pointer-events: auto;
+  }
+
+  #historyBox h3 {
+    display: none;
+  }
+
+  .history-item .history-guess-tiles .tile {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  /* Mobile tile and layout sizing */
+  :root {
+    /* Mobile devices - smaller tiles to ensure keyboard visibility */
+    --tile-size: min(8vmin, 32px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+
+  #board {
+    grid-template-columns: repeat(5, var(--tile-size));
+    grid-gap: var(--tile-gap);
+    margin: 0;
+  }
+
+  .tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    font-size: calc(var(--tile-size) * 0.44);
+    border-radius: 4px;
+    box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                -3px -3px 6px var(--shadow-color-light);
+  }
+
+  #guessInput,
+  #submitGuess,
+  #message {
+    display: none;
+  }
+
+  #messagePopup {
+    font-size: 16px;
+  }
+
+  /* Mobile keyboard adjustments */
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.2);
+    margin-top: auto;
+    margin-bottom: 5px;
+  }
+
+  .key {
+    min-width: calc(var(--tile-size) * 0.58);
+    height: calc(var(--tile-size) * 0.83);
+    margin: calc(var(--tile-gap) / 2);
+    font-size: calc(var(--tile-size) * 0.27);
+    padding: 0 5px;
+    box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                -3px -3px 6px var(--shadow-color-light);
+    border-radius: 6px;
+  }
+
+  .key.wide {
+    min-width: calc(var(--tile-size) * 1.2);
+  }
+
+  /* Mobile reset button */
+  #resetWrapper {
+    margin-left: 0;
+  }
+  
+  #holdReset {
+    width: calc(clamp(4rem, 20vw, 4.5rem) * var(--ui-scale));
+    height: calc(2rem * var(--ui-scale));
+    font-size: calc(0.875rem * var(--ui-scale));
+    border-radius: 8px;
+    box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                -3px -3px 6px var(--shadow-color-light);
+  }
+  
+  #holdResetProgress {
+    border-radius: 8px;
+  }
+
+  .leaderboard-entry {
+    font-size: calc(1em * var(--ui-scale));
+    padding: calc(5px * var(--ui-scale)) calc(10px * var(--ui-scale));
+    margin: 0 3px;
+    min-width: calc(40px * var(--ui-scale));
+  }
+
+  .hint-badge {
+    margin-left: 4px;
+    font-size: calc(0.7em * var(--ui-scale));
+    animation: hint-pulse 4s ease-in-out infinite;
+  }
+
+  h1 {
+    font-size: calc(1.5em * var(--ui-scale));
+    margin-bottom: 2px;
+  }
+  
+  #message {
+    font-size: 16px;
+    margin-top: 12px;
+  }
+
+  /* Additional mobile layout fixes */
+  #titleBar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  #titleBar h1 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  
+  #leaderboard {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 400px) {
+  :root {
+    --tile-size: min(9vmin, 34px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+  
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.0);
+  }
+
+  .key {
+    min-width: calc(var(--tile-size) * 0.58);
+    height: calc(var(--tile-size) * 0.75);
+    font-size: calc(var(--tile-size) * 0.24);
+    margin: 1px;
+  }
+}
+
+/* Very small devices */
+@media (max-width: 350px) {
+  :root {
+    --tile-size: min(8vmin, 30px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+}
+
+/* Ultra small devices */
+@media (max-width: 300px) {
+  :root {
+    --tile-size: min(7vmin, 26px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+  
+  .key {
+    min-width: calc(var(--tile-size) * 0.52);
+    height: calc(var(--tile-size) * 0.7);
+    font-size: calc(var(--tile-size) * 0.22);
+    margin: 1px;
+  }
+}
+
+/* Medium screens (601px - 900px) */
+@media (min-width: 601px) and (max-width: 900px) {
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    width: clamp(14rem, 30vw, 17rem);
+  }
+
+  #optionsToggle {
+    display: block;
+    left: auto;
+    right: 0;
+  }
+  
+  #chatNotify {
+    left: auto;
+    right: 0;
+  }
+
+  body[data-mode='medium'] #historyClose,
+  body[data-mode='medium'] #definitionClose,
+  body[data-mode='medium'] #chatClose {
+    display: block;
+  }
+
+  body[data-mode='medium'] #historyBox,
+  body[data-mode='medium'] #definitionBox,
+  body[data-mode='medium'] #chatBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 80;
+  }
+
+  body[data-mode='medium'] #chatBox {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body[data-mode='medium'] #historyBox,
+  body[data-mode='medium'] #definitionBox,
+  body[data-mode='medium'] #chatBox {
+    transform-origin: center center;
+  }
+  
+  body[data-mode='medium']:not(.history-open) #historyBox,
+  body[data-mode='medium']:not(.definition-open) #definitionBox,
+  body[data-mode='medium']:not(.chat-open) #chatBox {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  :root {
+    /* medium screens scale slightly smaller */
+    --tile-size: min(9vmin, 46px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+  
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.3);
+  }
+}
+
+/* Large screens (min-width: 901px) */
+@media (min-width: 901px) {
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.5);
+  }
+}
