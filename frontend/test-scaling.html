@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Board Scaling Test Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f0f0f0;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .warning { background: #fff3cd; color: #856404; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+    
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0056b3; }
+    
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .device-card {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    .device-card h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    
+    pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Board Scaling Verification Tests</h1>
+  <p>This page tests the enhanced board container measurement and scaling system.</p>
+
+  <div class="test-section">
+    <h2>Quick Tests</h2>
+    <button onclick="runBasicTests()">Run Basic Tests</button>
+    <button onclick="runDeviceTests()">Test All Devices</button>
+    <button onclick="runCurrentViewportTest()">Test Current Viewport</button>
+    <button onclick="showDebugInfo()">Show Debug Info</button>
+    <button onclick="toggleVisualIndicators()">Toggle Visual Indicators</button>
+    
+    <div id="testResults"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Current Viewport Info</h2>
+    <div id="viewportInfo"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Device Test Results</h2>
+    <div id="deviceResults"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Debug Output</h2>
+    <pre id="debugOutput"></pre>
+  </div>
+
+  <!-- Import the board scaling utilities -->
+  <script type="module" src="/static/js/boardContainer.js"></script>
+  <script type="module" src="/static/js/boardScalingTests.js"></script>
+
+  <script type="module">
+    import { 
+      getBoardContainerInfo, 
+      verifyElementsFitInViewport, 
+      testBoardScalingAcrossDevices,
+      calculateOptimalTileSize 
+    } from '/static/js/boardContainer.js';
+
+    // Make functions available globally
+    window.boardScalingUtils = {
+      getBoardContainerInfo,
+      verifyElementsFitInViewport,
+      testBoardScalingAcrossDevices,
+      calculateOptimalTileSize
+    };
+
+    // Update viewport info on load and resize
+    function updateViewportInfo() {
+      const info = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio || 1,
+        visualViewport: window.visualViewport ? {
+          width: window.visualViewport.width,
+          height: window.visualViewport.height
+        } : 'Not available'
+      };
+      
+      document.getElementById('viewportInfo').innerHTML = `
+        <strong>Viewport:</strong> ${info.width} × ${info.height}<br>
+        <strong>Device Pixel Ratio:</strong> ${info.devicePixelRatio}<br>
+        <strong>Visual Viewport:</strong> ${typeof info.visualViewport === 'object' ? 
+          `${info.visualViewport.width} × ${info.visualViewport.height}` : info.visualViewport}
+      `;
+    }
+
+    window.runBasicTests = function() {
+      const results = document.getElementById('testResults');
+      results.innerHTML = '<h3>Running Basic Tests...</h3>';
+      
+      try {
+        // Test 1: Check if utilities are available
+        if (window.boardScalingUtils) {
+          results.innerHTML += '<div class="test-result success">✅ Board scaling utilities loaded</div>';
+        } else {
+          results.innerHTML += '<div class="test-result error">❌ Board scaling utilities not found</div>';
+          return;
+        }
+
+        // Test 2: Test current viewport
+        const verification = window.boardScalingUtils.verifyElementsFitInViewport();
+        if (verification && verification.success) {
+          results.innerHTML += '<div class="test-result success">✅ Current viewport verification passed</div>';
+        } else {
+          results.innerHTML += '<div class="test-result warning">⚠️ Current viewport verification failed</div>';
+          if (verification && verification.recommendations) {
+            results.innerHTML += `<div class="test-result info">Recommendations: ${verification.recommendations.length} suggestions</div>`;
+          }
+        }
+
+        // Test 3: Test container info
+        const containerInfo = window.boardScalingUtils.getBoardContainerInfo();
+        if (containerInfo) {
+          results.innerHTML += '<div class="test-result success">✅ Container info calculation works</div>';
+          results.innerHTML += `<div class="test-result info">Available space: ${Math.round(containerInfo.availableSpace.width)} × ${Math.round(containerInfo.availableSpace.height)}</div>`;
+        } else {
+          results.innerHTML += '<div class="test-result error">❌ Container info calculation failed</div>';
+        }
+
+        // Test 4: Test optimal sizing
+        if (containerInfo) {
+          const optimal = window.boardScalingUtils.calculateOptimalTileSize(containerInfo);
+          if (optimal) {
+            results.innerHTML += '<div class="test-result success">✅ Optimal sizing calculation works</div>';
+            results.innerHTML += `<div class="test-result info">Optimal tile size: ${optimal.tileSize}px, Scale factor: ${optimal.scaleFactor.toFixed(2)}</div>`;
+          } else {
+            results.innerHTML += '<div class="test-result error">❌ Optimal sizing calculation failed</div>';
+          }
+        }
+
+      } catch (error) {
+        results.innerHTML += `<div class="test-result error">❌ Error running tests: ${error.message}</div>`;
+      }
+    };
+
+    window.runDeviceTests = function() {
+      const resultsDiv = document.getElementById('deviceResults');
+      resultsDiv.innerHTML = '<h3>Running Device Tests...</h3>';
+      
+      try {
+        const testResults = window.boardScalingUtils.testBoardScalingAcrossDevices();
+        
+        resultsDiv.innerHTML = `
+          <div class="test-result success">
+            <strong>Device Testing Complete!</strong><br>
+            Total devices tested: ${testResults.summary.total}<br>
+            Success rate: ${testResults.summary.successRate}<br>
+            Failed devices: ${testResults.summary.failedDevices.join(', ') || 'None'}
+          </div>
+        `;
+
+        const deviceGrid = document.createElement('div');
+        deviceGrid.className = 'device-grid';
+        
+        testResults.testResults.forEach(result => {
+          const card = document.createElement('div');
+          card.className = 'device-card';
+          card.innerHTML = `
+            <h4>${result.device} (${result.dimensions.width}×${result.dimensions.height})</h4>
+            <div class="test-result ${result.success ? 'success' : 'warning'}">
+              ${result.success ? '✅ Passes' : '⚠️ Issues detected'}
+            </div>
+            <div><strong>Tile Size:</strong> ${result.tileSize}px</div>
+            <div><strong>Scale Factor:</strong> ${result.scaleFactor.toFixed(2)}</div>
+            <div><strong>Fits Width:</strong> ${result.fitsWidth ? 'Yes' : 'No'}</div>
+            <div><strong>Fits Height:</strong> ${result.fitsHeight ? 'Yes' : 'No'}</div>
+            ${result.recommendations.length > 0 ? 
+              `<div><strong>Recommendations:</strong> ${result.recommendations.length}</div>` : ''}
+          `;
+          deviceGrid.appendChild(card);
+        });
+        
+        resultsDiv.appendChild(deviceGrid);
+        
+      } catch (error) {
+        resultsDiv.innerHTML += `<div class="test-result error">❌ Error running device tests: ${error.message}</div>`;
+      }
+    };
+
+    window.runCurrentViewportTest = function() {
+      try {
+        const verification = window.boardScalingUtils.verifyElementsFitInViewport();
+        const debugOutput = document.getElementById('debugOutput');
+        debugOutput.textContent = JSON.stringify(verification, null, 2);
+      } catch (error) {
+        console.error('Error running viewport test:', error);
+      }
+    };
+
+    window.showDebugInfo = function() {
+      try {
+        const containerInfo = window.boardScalingUtils.getBoardContainerInfo();
+        const debugOutput = document.getElementById('debugOutput');
+        debugOutput.textContent = JSON.stringify(containerInfo, null, 2);
+      } catch (error) {
+        console.error('Error showing debug info:', error);
+      }
+    };
+
+    let visualIndicatorsVisible = false;
+    window.toggleVisualIndicators = function() {
+      if (window.boardScalingTests) {
+        if (visualIndicatorsVisible) {
+          window.boardScalingTests.removeVisualDebugIndicators();
+          visualIndicatorsVisible = false;
+        } else {
+          window.boardScalingTests.addVisualDebugIndicators();
+          visualIndicatorsVisible = true;
+        }
+      }
+    };
+
+    // Initialize
+    updateViewportInfo();
+    window.addEventListener('resize', updateViewportInfo);
+    
+    // Run basic tests on load
+    setTimeout(runBasicTests, 500);
+  </script>
+</body>
+</html>

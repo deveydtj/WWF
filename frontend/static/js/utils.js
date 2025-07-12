@@ -205,11 +205,34 @@ export function applyLayoutMode() {
 /**
  * Calculate a tile size that fits the board within the viewport.
  * Prevents overlap with the header and leaderboard in full mode.
+ * Enhanced version with improved container measurement.
  *
  * @param {number} rows - Number of board rows
  * @returns {{ tile: number, board: number }} Size in pixels
  */
 export function fitBoardToContainer(rows = 6) {
+  // First try the enhanced scaling system if available
+  if (typeof window !== 'undefined' && window.boardScalingTests) {
+    try {
+      const containerInfo = window.boardScalingTests.getBoardContainerInfo(rows);
+      if (containerInfo) {
+        const verification = window.boardScalingTests.verifyElementsFitInViewport(rows);
+        if (verification.success && verification.optimalSizing) {
+          const { tileSize, gap, boardWidth } = verification.optimalSizing;
+          const root = document.documentElement;
+          root.style.setProperty('--tile-size', `${tileSize}px`);
+          root.style.setProperty('--tile-gap', `${gap}px`);
+          root.style.setProperty('--board-width', `${boardWidth}px`);
+          root.style.setProperty('--ui-scale', `${tileSize / 60}`);
+          return { tile: tileSize, board: boardWidth };
+        }
+      }
+    } catch (error) {
+      console.warn('Enhanced scaling failed, falling back to original method:', error);
+    }
+  }
+
+  // Fallback to original implementation
   const boardArea = document.getElementById('boardArea');
   if (!boardArea) return { tile: 0, board: 0 };
 
@@ -482,3 +505,12 @@ export function adjustKeyboardForViewport() {
     keyboard.style.transform = '';
   }
 }
+
+// Re-export enhanced board container functions for backward compatibility
+export { 
+  verifyElementsFitInViewport, 
+  applyOptimalScaling,
+  testBoardScalingAcrossDevices,
+  getBoardContainerInfo,
+  calculateOptimalTileSize
+} from './boardContainer.js';
