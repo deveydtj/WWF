@@ -271,15 +271,15 @@ export function fitBoardToContainer(rows = 6) {
       parseFloat(kbStyle.marginTop) + parseFloat(kbStyle.marginBottom) : 0;
 
     // Reserve extra space for keyboard - this is the key fix
-    const keyboardReserve = isMobile ?
-      Math.max(120, h.keyboard * 1.2) :
-      Math.max(100, h.keyboard * 1.1);
-
-    // Calculate available height with better keyboard spacing
     const totalUsedHeight = h.title + h.lobby + h.leaderboard + h.input +
-                           keyboardReserve + boardMargins + kbMargins + h.message;
+                           boardMargins + kbMargins + h.message;
 
-    const availHeight = Math.max(200, root.clientHeight - totalUsedHeight - 20);
+    const containerHeight = boardArea.parentElement ?
+      boardArea.parentElement.clientHeight : root.clientHeight;
+
+    // Calculate available height based on container minus keyboard height
+    const availHeight = Math.max(0,
+      containerHeight - h.keyboard - totalUsedHeight - 20);
 
     // Size constraints
     const sizeByWidth = Math.max(20, (width - gap * 4) / 5);
