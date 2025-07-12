@@ -1,0 +1,54 @@
+/* ─────────────────────────────────────────────
+   Leaderboard - Player scoring and status display
+   ───────────────────────────────────────────── */
+
+#leaderboard {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-bottom: calc(18px * var(--ui-scale));
+  gap: calc(18px * var(--ui-scale));
+  padding: 0 0 calc(8px * var(--ui-scale)) 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  width: 100%;
+  flex: 0 0 auto;
+  max-height: 80px; /* Prevent leaderboard from growing too much */
+  overflow-x: auto;
+}
+
+.leaderboard-entry {
+  display: flex;
+  align-items: center;
+  background: var(--bg-color);
+  box-shadow: 2px 2px 8px var(--shadow-color-dark),
+              -2px -2px 8px var(--shadow-color-light);
+  border-radius: 10px;
+  padding: calc(7px * var(--ui-scale)) calc(15px * var(--ui-scale));
+  margin: 0 5px;
+  font-size: calc(1.25em * var(--ui-scale));
+  min-width: calc(50px * var(--ui-scale));
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.leaderboard-entry.flash {
+  animation: lb-flash 0.4s ease;
+}
+
+.leaderboard-entry.me {
+  border: 2px solid var(--correct-bg);
+  box-shadow: 0 0 0 2px var(--correct-shadow-light);
+}
+
+.leaderboard-entry.inactive {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+  transition: opacity 0.4s, filter 0.4s;
+}
+
+.hint-badge {
+  margin-left: 6px;
+  font-size: calc(0.75em * var(--ui-scale));
+  animation: hint-pulse 4s ease-in-out infinite;
+}

@@ -1,0 +1,221 @@
+/* ─────────────────────────────────────────────
+   Board and Tiles - Game board layout and tile styles
+   ───────────────────────────────────────────── */
+
+/* Board area container */
+#boardArea {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 10px auto 0;
+  width: 100%;
+  position: relative;
+  flex: 1 1 auto;
+}
+
+/* Game board grid */
+#board {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(5, var(--tile-size));
+  grid-gap: var(--tile-gap);
+  max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+}
+
+/* Board stamps and confetti */
+#stampContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 5;
+  display: none;
+}
+
+body[data-mode='medium'] #stampContainer {
+  display: block;
+}
+
+.board-stamp {
+  position: absolute;
+  left: 0;
+  transform: translate(-110%, -50%);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.confetti-container {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+}
+
+/* Individual tiles */
+.tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--tile-size) * 0.46);
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: var(--tile-bg);
+  border-radius: 8px;
+  box-shadow: 5px 5px 10px var(--shadow-color-dark),
+              -5px -5px 10px var(--shadow-color-light);
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s,
+              transform 0.1s, opacity 0.1s;
+  color: var(--text-color);
+}
+
+.tile.backspace-effect {
+  transform: scale(0.85);
+  opacity: 0.6;
+}
+
+.tile.ghost {
+  opacity: 0.4;
+  border: 2px dashed var(--text-color);
+  outline: 2px solid var(--text-color);
+  outline-offset: -2px;
+  color: var(--text-color);
+}
+
+.tile.hint-target {
+  border: 2px dashed var(--present-bg);
+  cursor: pointer;
+}
+
+body.hint-selecting .tile:not(.hint-target) {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Tile states */
+.tile.correct,
+.tile.present,
+.tile.absent {
+  color: white;
+  border-color: transparent;
+  transform: rotateX(360deg);
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s,
+              transform 0.6s, border-color 0.3s;
+}
+
+.tile.correct {
+  background-color: var(--correct-bg);
+  box-shadow: inset 3px 3px 6px var(--correct-shadow-dark),
+              inset -3px -3px 6px var(--correct-shadow-light);
+}
+
+.tile.present {
+  background-color: var(--present-bg);
+  box-shadow: inset 3px 3px 6px var(--present-shadow-dark),
+              inset -3px -3px 6px var(--present-shadow-light);
+}
+
+.tile.absent {
+  background-color: var(--absent-bg);
+  box-shadow: inset 3px 3px 6px var(--absent-shadow-dark),
+              inset -3px -3px 6px var(--absent-shadow-light);
+}
+
+.tile.reset-out {
+  animation: tileResetOut 0.25s forwards;
+}
+
+.tile.reset-in {
+  animation: tileResetIn 0.25s forwards;
+}
+
+/* Input area */
+#inputArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px auto;
+  width: max-content;
+  flex: 0 0 auto;
+  margin: 10px auto;
+}
+
+#guessInput,
+#submitGuess {
+  border: none;
+  padding: 12px 15px;
+  font-size: 18px;
+  border-radius: 10px;
+  background-color: var(--bg-color);
+  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+              inset -3px -3px 6px var(--inset-shadow-light);
+  color: var(--text-color);
+  outline: none;
+  transition: box-shadow 0.2s, background-color 0.3s, color 0.3s;
+}
+
+#guessInput {
+  width: clamp(10rem, 40vw, 11.25rem);
+  margin-right: 0.625rem;
+  text-transform: uppercase;
+}
+
+#submitGuess {
+  cursor: pointer;
+  font-weight: 500;
+  box-shadow: 5px 5px 10px var(--shadow-color-dark),
+              -5px -5px 10px var(--shadow-color-light);
+}
+
+#submitGuess:active {
+  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+              inset -3px -3px 6px var(--inset-shadow-light);
+  color: var(--text-color-light);
+}
+
+#submitGuess:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+              inset -3px -3px 6px var(--inset-shadow-light);
+}
+
+/* Hint tooltip */
+#hintTooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 6px 10px;
+  border-radius: 6px;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 0.9em;
+}
+
+#hintTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--bg-color);
+  transform: translateX(-50%);
+}

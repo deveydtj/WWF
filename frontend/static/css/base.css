@@ -1,0 +1,206 @@
+/* ─────────────────────────────────────────────
+   Base Styles - CSS Variables, Typography, Global Layout
+   ───────────────────────────────────────────── */
+
+:root {
+  --bg-color: #e0e5ec;
+  --text-color: #3d4a5a;
+  --text-color-light: #5a677a;
+  --shadow-color-dark: #bec3c9;
+  --shadow-color-light: #ffffff;
+  --inset-shadow-dark: #bec3c9;
+  --inset-shadow-light: #ffffff;
+  --tile-bg: #e0e5ec;
+  --key-bg: #e0e5ec;
+  --key-text: #5a677a;
+  --correct-bg: #6aaa64;
+  --present-bg: #c9b458;
+  --absent-bg: #787c7e;
+  --correct-shadow-dark: #5a9354;
+  --correct-shadow-light: #7ccc74;
+  --present-shadow-dark: #b09d4d;
+  --present-shadow-light: #e2cb63;
+  --absent-shadow-dark: #666a6c;
+  --absent-shadow-light: #8a8e90;
+  --border-color: transparent;
+  /* default maximum tile size */
+  --tile-size: min(11vmin, 60px);
+  --tile-gap: calc(var(--tile-size) / 6);
+  --ui-scale: 1;
+  --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+}
+
+body.dark-mode {
+  --bg-color: #2c303a;
+  --text-color: #d1d1d1;
+  --text-color-light: #b0b8c4;
+  --shadow-color-dark: #1f2229;
+  --shadow-color-light: #393e4b;
+  --inset-shadow-dark: #1f2229;
+  --inset-shadow-light: #393e4b;
+  --tile-bg: #2c303a;
+  --key-bg: #4f5564;
+  --absent-bg: #3a3a3c;
+  --key-text: #e1e1e1;
+  --correct-bg: #538d4e;
+  --present-bg: #b59f3b;
+  --correct-shadow-dark: #416d3e;
+  --correct-shadow-light: #65ab5e;
+  --present-shadow-dark: #8f7c2d;
+  --present-shadow-light: #dbc249;
+  --absent-shadow-dark: #2e2e30;
+  --absent-shadow-light: #464648;
+  --border-color: #4a4a4f;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  height: calc(var(--vh, 1vh) * 100);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  touch-action: manipulation; /* prevent double-tap zoom */
+}
+
+#appContainer {
+  box-sizing: border-box;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 100vh; /* Fallback */
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Stack core game UI vertically */
+#gameColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  align-items: center;
+}
+
+h1 {
+  color: var(--text-color-light);
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: calc(2rem * var(--ui-scale));
+}
+
+#titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(10px * var(--ui-scale));
+  position: relative;
+  z-index: 10;
+  flex: 0 0 auto;
+}
+
+#titleBar h1 {
+  flex: 1;
+  margin: 0 10px;
+  text-align: center;
+}
+
+#lobbyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+#lobbyHeader button {
+  font-size: 0.9rem;
+}
+
+#playerToggle {
+  margin-left: 4px;
+}
+
+#hostControls {
+  display: flex;
+  gap: 6px;
+}
+
+/* User selection controls */
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+#definitionBox,
+#chatBox {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Message areas */
+#message {
+  font-size: 18px;
+  margin: 10px 0 0 0;
+  min-height: 0;
+  color: var(--text-color);
+  font-weight: 500;
+  transition: color 0.3s;
+  visibility: hidden;
+  flex: 0 0 auto;
+  margin: 5px 0;
+}
+
+#messagePopup {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+  z-index: 100;
+  pointer-events: none;
+  flex: 0 0 auto;
+  margin: 5px 0;
+}
+
+#ariaLive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+}
+
+#message.positive {
+  color: var(--correct-bg);
+}
+
+#message.negative {
+  color: #ba1c1c;
+}

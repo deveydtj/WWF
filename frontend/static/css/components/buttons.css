@@ -1,0 +1,71 @@
+/* ─────────────────────────────────────────────
+   Buttons - Button styles and reset functionality
+   ───────────────────────────────────────────── */
+
+/* Hold-to-Reset Neumorphic Button */
+#resetWrapper {
+  display: inline-block;
+  position: relative;
+  margin-left: 10px;
+}
+
+#holdReset {
+  width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
+  height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
+  border: none;
+  border-radius: 12px;
+  font-size: calc(18px * var(--ui-scale));
+  font-weight: 500;
+  background: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: 5px 5px 14px var(--shadow-color-dark),
+              -5px -5px 14px var(--shadow-color-light);
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.2s;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  user-select: none;
+}
+
+#holdReset:active {
+  box-shadow: inset 3px 3px 7px var(--inset-shadow-dark),
+              inset -3px -3px 7px var(--inset-shadow-light);
+  color: var(--text-color-light);
+  transform: scale(0.95);
+}
+
+#holdResetProgress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--absent-shadow-light);
+  opacity: 0.9;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+  transition: width 0.1s linear;
+}
+
+#holdResetText {
+  position: relative;
+  z-index: 2;
+}
+
+/* Emoji choice buttons */
+.emoji-choice {
+  font-size: 2.1em;
+  margin: 12px;
+  cursor: pointer;
+  filter: drop-shadow(1px 2px 1px var(--shadow-color-dark));
+  border: 2px solid transparent;
+  border-radius: 50%;
+  transition: border 0.2s;
+}
+
+.emoji-choice:hover {
+  border: 2px solid var(--correct-bg);
+}
