@@ -6,7 +6,8 @@ import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, showPopup,
-         openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss } from './utils.js';
+         openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
+         adjustKeyboardForViewport } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
 import { GAME_NAME } from './config.js';
@@ -928,24 +929,40 @@ initEventStream();
 setInterval(checkInactivity, 5000);
 document.addEventListener('keydown', onActivity);
 document.addEventListener('click', onActivity);
-window.addEventListener('resize', repositionResetButton);
 window.addEventListener('resize', () => {
+  repositionResetButton();
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
   fitBoardToContainer(maxRows);
+  adjustKeyboardForViewport();
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 updateVH();
 window.addEventListener('resize', updateVH);
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', updateVH);
+  window.visualViewport.addEventListener('resize', () => {
+    updateVH();
+    adjustKeyboardForViewport();
+  });
 }
 window.addEventListener('orientationchange', () => {
   updateVH();
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
   fitBoardToContainer(maxRows);
+  adjustKeyboardForViewport();
   if (latestState) renderEmojiStamps(latestState.guesses);
+});
+
+// Add a timeout for orientation change to handle delayed layout updates
+let orientationTimeout;
+window.addEventListener('orientationchange', () => {
+  clearTimeout(orientationTimeout);
+  orientationTimeout = setTimeout(() => {
+    updateVH();
+    fitBoardToContainer(maxRows);
+    adjustKeyboardForViewport();
+  }, 300);
 });
 
 async function selectHint(col) {

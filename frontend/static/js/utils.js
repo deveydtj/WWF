@@ -480,3 +480,17 @@ export function showPopup(popup, anchor) {
   positionPopup(popup, anchor);
   openDialog(popup);
 }
+
+/**
+ * Adjust the on-screen keyboard position when the visual viewport changes.
+ */
+export function adjustKeyboardForViewport() {
+  const keyboard = document.getElementById('keyboard');
+  if (!keyboard) return;
+  if (window.visualViewport) {
+    const offset = Math.max(0, window.innerHeight - window.visualViewport.height);
+    keyboard.style.transform = `translateY(-${offset}px)`;
+  } else {
+    keyboard.style.transform = '';
+  }
+}
