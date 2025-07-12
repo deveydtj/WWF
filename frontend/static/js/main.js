@@ -7,12 +7,15 @@ import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
-         adjustKeyboardForViewport } from './utils.js';
+         adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
 import { GAME_NAME } from './config.js';
 
 import { StateManager, STATES } from './stateManager.js';
+
+// Import board scaling test utilities for debugging
+import './boardScalingTests.js';
 
 const gameState = new StateManager();
 
@@ -908,7 +911,23 @@ applyDarkModePreference(menuDarkMode);
 menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
-fitBoardToContainer(maxRows);
+
+// Use enhanced container measurement and scaling
+const scalingSuccess = applyOptimalScaling(maxRows);
+if (!scalingSuccess) {
+  // Fallback to original method if enhanced scaling fails
+  fitBoardToContainer(maxRows);
+}
+
+// Verify all elements fit and log any issues
+const verification = verifyElementsFitInViewport(maxRows);
+if (!verification.success) {
+  console.warn('Board scaling verification failed:', verification);
+  if (verification.recommendations?.length > 0) {
+    console.info('Scaling recommendations:', verification.recommendations);
+  }
+}
+
 repositionResetButton();
 positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 renderEmojiStamps([]);
@@ -933,7 +952,13 @@ window.addEventListener('resize', () => {
   repositionResetButton();
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
-  fitBoardToContainer(maxRows);
+  
+  // Use enhanced scaling with verification
+  const scalingSuccess = applyOptimalScaling(maxRows);
+  if (!scalingSuccess) {
+    fitBoardToContainer(maxRows);
+  }
+  
   adjustKeyboardForViewport();
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
@@ -949,7 +974,13 @@ window.addEventListener('orientationchange', () => {
   updateVH();
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
-  fitBoardToContainer(maxRows);
+  
+  // Use enhanced scaling with verification
+  const scalingSuccess = applyOptimalScaling(maxRows);
+  if (!scalingSuccess) {
+    fitBoardToContainer(maxRows);
+  }
+  
   adjustKeyboardForViewport();
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
@@ -960,7 +991,13 @@ window.addEventListener('orientationchange', () => {
   clearTimeout(orientationTimeout);
   orientationTimeout = setTimeout(() => {
     updateVH();
-    fitBoardToContainer(maxRows);
+    
+    // Use enhanced scaling with verification
+    const scalingSuccess = applyOptimalScaling(maxRows);
+    if (!scalingSuccess) {
+      fitBoardToContainer(maxRows);
+    }
+    
     adjustKeyboardForViewport();
   }, 300);
 });
