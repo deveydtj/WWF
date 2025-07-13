@@ -1045,6 +1045,71 @@ def lobby_list():
     return jsonify({"lobbies": data})
 
 
+@app.route("/lobbies/network", methods=["GET"])
+def lobby_network_list():
+    """Return a list of active lobbies from the same network as the client."""
+    client_ip = get_client_ip()
+    data = []
+    
+    for cid, s in LOBBIES.items():
+        if cid == DEFAULT_LOBBY:
+            continue
+            
+        # Check if the client's IP has players in this lobby
+        if client_ip in s.ip_to_emoji:
+            data.append({
+                "id": cid,
+                "players": len(s.leaderboard),
+                "your_emoji": s.ip_to_emoji.get(client_ip)
+            })
+        # Also include lobbies where any player shares the same network segment
+        # (for local networks, we can check if IP starts with same prefix)
+        else:
+            # Simple network detection: same IP or same local network (192.168.x.x, 10.x.x.x, etc.)
+            for lobby_ip in s.ip_to_emoji.keys():
+                if _is_same_network(client_ip, lobby_ip):
+                    data.append({
+                        "id": cid,
+                        "players": len(s.leaderboard)
+                    })
+                    break
+    
+    return jsonify({"lobbies": data})
+
+
+def _is_same_network(ip1, ip2):
+    """Check if two IP addresses are likely on the same local network."""
+    if ip1 == ip2:
+        return True
+    
+    # Handle localhost/loopback
+    if ip1 in ["127.0.0.1", "localhost"] or ip2 in ["127.0.0.1", "localhost"]:
+        return ip1 == ip2
+    
+    # For simplicity, check if they share the same first 3 octets for private networks
+    try:
+        parts1 = ip1.split('.')
+        parts2 = ip2.split('.')
+        
+        if len(parts1) == 4 and len(parts2) == 4:
+            # Check for common private network prefixes
+            if (parts1[0] == '192' and parts1[1] == '168' and 
+                parts2[0] == '192' and parts2[1] == '168' and 
+                parts1[2] == parts2[2]):
+                return True
+            elif (parts1[0] == '10' and parts2[0] == '10' and 
+                  parts1[1] == parts2[1] and parts1[2] == parts2[2]):
+                return True
+            elif (parts1[0] == '172' and parts2[0] == '172' and 
+                  16 <= int(parts1[1]) <= 31 and 16 <= int(parts2[1]) <= 31 and
+                  parts1[1] == parts2[1] and parts1[2] == parts2[2]):
+                return True
+    except (ValueError, IndexError):
+        pass
+    
+    return False
+
+
 @app.route("/lobby/<code>/stream")
 def lobby_stream(code):
     return _with_lobby(code, stream)
