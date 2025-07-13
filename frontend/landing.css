@@ -11,12 +11,13 @@ header {
   position: sticky;
   top: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 0.5rem 1rem;
   background: var(--bg-color);
   box-shadow: inset 0 -2px 4px var(--shadow-color-dark),
               inset 0 2px 4px var(--shadow-color-light);
+  position: relative;
 }
 
 #heroCard {
@@ -230,9 +231,9 @@ header {
 
 #emojiDisplay,
 #darkToggle {
+  position: absolute;
   font-size: 1.5rem;
   padding: 0.5rem;
-  margin: 0 0.5rem;
   border: none;
   border-radius: 8px;
   background: var(--bg-color);
@@ -241,6 +242,16 @@ header {
   box-shadow: 3px 3px 6px var(--shadow-color-dark),
               -3px -3px 6px var(--shadow-color-light);
   transition: all 0.1s ease;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#emojiDisplay {
+  left: calc(50% - min(45vw, 12.5rem) + 1.5rem);
+}
+
+#darkToggle {
+  right: calc(50% - min(45vw, 12.5rem) + 1.5rem);
 }
 
 #emojiDisplay:hover,
@@ -337,6 +348,14 @@ header {
   .scores img {
     width: 24px;
     height: 24px;
+  }
+  
+  #emojiDisplay {
+    left: calc(50% - min(45vw, 10rem) + 1rem);
+  }
+  
+  #darkToggle {
+    right: calc(50% - min(45vw, 10rem) + 1rem);
   }
   
   #heroCard {
