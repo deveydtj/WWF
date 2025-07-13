@@ -240,7 +240,7 @@
 
   /* Additional mobile layout fixes */
   #titleBar {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
   }
   
