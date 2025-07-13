@@ -202,12 +202,12 @@ def test_set_emoji_duplicate_different_ip(server_env):
     request.remote_addr = '3'
     resp = server.set_emoji()
 
-    assert isinstance(resp, tuple)
-    data, status = resp
-    assert status == 409
-    assert data['status'] == 'error'
-    assert 'taken' in data['msg']
-    assert 'p3' not in server.current_state.player_map
+    # Now with emoji variants, duplicates should succeed with a variant
+    assert isinstance(resp, dict)  # Should return success dict, not error tuple
+    assert resp['status'] == 'ok'
+    assert resp['emoji'] == '😀-red'  # Should get first variant
+    assert resp['base_emoji'] == '😀'
+    assert 'p3' in server.current_state.player_map
 
 
 def test_set_emoji_changes_migrate_score(server_env):

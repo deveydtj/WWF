@@ -775,8 +775,16 @@ def set_emoji():
         # Check if player already has an emoji assigned
         prev_emoji = current_state.player_map.get(player_id)
         
-        # Get a unique emoji variant for this base emoji
-        emoji_variant = get_emoji_variant(base_emoji, set(current_state.leaderboard.keys()))
+        # If player is requesting the same base emoji they already have (any variant), keep their current emoji
+        if prev_emoji and get_base_emoji(prev_emoji) == base_emoji:
+            emoji_variant = prev_emoji
+        else:
+            # Player is changing to a different base emoji or is new
+            # Get a unique emoji variant for this base emoji, excluding their current emoji if changing
+            existing_emojis = set(current_state.leaderboard.keys())
+            if prev_emoji and prev_emoji in existing_emojis:
+                existing_emojis.remove(prev_emoji)
+            emoji_variant = get_emoji_variant(base_emoji, existing_emojis)
         
         # If player had a different emoji before, remove the old entry
         if prev_emoji and prev_emoji != emoji_variant:

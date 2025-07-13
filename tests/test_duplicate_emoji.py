@@ -1,104 +1,66 @@
 """Tests for duplicate emoji handling functionality."""
 
-import json
-import sys
-import types
-import importlib
-import importlib.util
-from pathlib import Path
+import requests
+import pytest
 
 
-def create_mock_flask():
-    """Create a mock Flask module for testing."""
-    flask_stub = types.ModuleType('flask')
-    
-    class DummyRequest:
-        def __init__(self):
-            self.headers = {}
-            self.remote_addr = "127.0.0.1"
-            self.json = None
-        
-        def get_json(self, silent=False):
-            return self.json
-    
-    def jsonify(*args, **kwargs):
-        if args:
-            d = dict(args[0])
-            d.update(kwargs)
-            return d
-        return kwargs
-    
-    class Flask:
-        def __init__(self, name, **kwargs):
-            self.name = name
-            self.static_folder = kwargs.get('static_folder')
-            self.static_url_path = kwargs.get('static_url_path')
-        
-        def route(self, *a, **kw):
-            def decorator(func):
-                return func
-            return decorator
-        
-        def before_request(self, func):
-            return func
-    
-    class CORS:
-        def __init__(self, app):
-            self.app = app
-    
-    flask_stub.request = DummyRequest()
-    flask_stub.jsonify = jsonify
-    flask_stub.Flask = Flask
-    flask_stub.send_from_directory = lambda *a, **kw: ""
-    
-    # Mock Flask-Cors
-    flask_cors_stub = types.ModuleType('flask_cors')
-    flask_cors_stub.CORS = CORS
-    
-    return flask_stub, flask_cors_stub
-
-
-def test_duplicate_emoji_rejection():
-    """Test current behavior - duplicate emoji selection is rejected."""
-    # Mock flask before importing server
-    flask_stub, flask_cors_stub = create_mock_flask()
-    sys.modules['flask'] = flask_stub
-    sys.modules['flask_cors'] = flask_cors_stub
-    
+def test_duplicate_emoji_variants_integration():
+    """Test that duplicate emoji selection now assigns variants instead of rejecting."""
+    # This is an integration test that requires the server to be running
+    # Skip if server is not available
     try:
-        # Import server module after mocking
-        spec = importlib.util.spec_from_file_location(
-            "server", 
-            Path(__file__).parent.parent / "backend" / "server.py"
-        )
-        server_module = importlib.util.module_from_spec(spec)
+        base_url = 'http://localhost:5001'
         
-        # Set up the request for first player
-        flask_stub.request.json = {'emoji': '🐶', 'player_id': 'player1'}
+        # Create a lobby
+        resp = requests.post(f'{base_url}/lobby', json={}, timeout=2)
+        if resp.status_code != 200:
+            pytest.skip("Server not available for integration test")
         
-        # Import and execute the server module to set up initial state
-        spec.loader.exec_module(server_module)
+        lobby_data = resp.json()
+        lobby_code = lobby_data['id']
         
-        # Call set_emoji for first player
-        result1 = server_module.set_emoji()
+        # First player selects an emoji
+        resp1 = requests.post(f'{base_url}/lobby/{lobby_code}/emoji', json={
+            'emoji': '🐶',
+            'player_id': 'test_player1'
+        }, timeout=2)
+        assert resp1.status_code == 200
+        data1 = resp1.json()
+        assert data1['status'] == 'ok'
+        assert data1['emoji'] == '🐶'  # First player gets base emoji
         
-        # Verify first player succeeded
-        assert result1['status'] == 'ok'
+        # Second player tries same emoji - should get variant
+        resp2 = requests.post(f'{base_url}/lobby/{lobby_code}/emoji', json={
+            'emoji': '🐶',
+            'player_id': 'test_player2'
+        }, timeout=2)
+        assert resp2.status_code == 200
+        data2 = resp2.json()
+        assert data2['status'] == 'ok'
+        assert data2['emoji'] == '🐶-red'  # Second player gets red variant
+        assert data2['base_emoji'] == '🐶'
         
-        # Set up request for second player with same emoji
-        flask_stub.request.json = {'emoji': '🐶', 'player_id': 'player2'}
+        # Third player tries same emoji - should get different variant
+        resp3 = requests.post(f'{base_url}/lobby/{lobby_code}/emoji', json={
+            'emoji': '🐶',
+            'player_id': 'test_player3'
+        }, timeout=2)
+        assert resp3.status_code == 200
+        data3 = resp3.json()
+        assert data3['status'] == 'ok'
+        assert data3['emoji'] == '🐶-blue'  # Third player gets blue variant
+        assert data3['base_emoji'] == '🐶'
         
-        # Call set_emoji for second player
-        result2 = server_module.set_emoji()
+        # Verify lobby state shows all variants
+        resp4 = requests.get(f'{base_url}/lobby/{lobby_code}/state', timeout=2)
+        assert resp4.status_code == 200
+        state = resp4.json()
         
-        # Verify second player was rejected
-        assert result2[0]['status'] == 'error'
-        assert 'taken' in result2[0]['msg'].lower()
-        assert result2[1] == 409  # Conflict status code
+        active_emojis = state.get('active_emojis', [])
+        assert '🐶' in active_emojis
+        assert '🐶-red' in active_emojis
+        assert '🐶-blue' in active_emojis
+        assert len([e for e in active_emojis if e.startswith('🐶')]) == 3
         
-    finally:
-        # Clean up modules
-        if 'flask' in sys.modules:
-            del sys.modules['flask']
-        if 'flask_cors' in sys.modules:
-            del sys.modules['flask_cors']
+    except requests.exceptions.RequestException:
+        pytest.skip("Server not available for integration test")
