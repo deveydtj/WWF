@@ -8,5 +8,9 @@ lobbies.json
 
 runtime/
 
+# Generated assets
+backend/static/assets/
+backend/static/*.html
+
 # Terraform state
 .terraform/
