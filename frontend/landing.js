@@ -175,7 +175,21 @@ export function getLastLobby() {
   return localStorage.getItem('lastLobby');
 }
 
+function checkEmojiSelected() {
+  const emoji = localStorage.getItem('myEmoji');
+  if (!emoji) {
+    announce('Please select an emoji first');
+    showEmojiPicker();
+    return false;
+  }
+  return true;
+}
+
 export async function createLobby() {
+  if (!checkEmojiSelected()) {
+    return;
+  }
+  
   const resp = await fetch('/lobby', { method: 'POST' });
   const data = await resp.json();
   if (resp.ok && data.id) {
@@ -192,6 +206,10 @@ export async function createLobby() {
 }
 
 export async function joinLobby(code) {
+  if (!checkEmojiSelected()) {
+    return;
+  }
+  
   const resp = await fetch(`/lobby/${code}/state`);
   if (resp.ok) {
     storeLastLobby(code);
@@ -203,6 +221,10 @@ export async function joinLobby(code) {
 }
 
 export async function quickPlay() {
+  if (!checkEmojiSelected()) {
+    return;
+  }
+  
   await createLobby();
 }
 

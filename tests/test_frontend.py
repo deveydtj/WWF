@@ -78,6 +78,12 @@ console.log(el.textContent);
     )
     assert result.stdout.strip() == '🐶'
 
+def test_emoji_validation_function_exists():
+    """Test that emoji validation function exists in landing.js"""
+    text = Path('frontend/landing.js').read_text(encoding='utf-8')
+    assert 'checkEmojiSelected' in text
+    assert 'Please select an emoji first' in text
+
 def test_join_code_regex_present():
     text = Path('frontend/landing.js').read_text(encoding='utf-8')
     assert '^[A-Za-z0-9]{6}$' in text
