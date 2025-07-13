@@ -21,31 +21,93 @@ header {
 
 #heroCard {
   margin: 2rem auto;
-  padding: 1rem;
+  padding: 2rem 1.5rem;
   width: min(90vw, 25rem);
   text-align: center;
   border-radius: 12px;
   box-shadow: 4px 4px 8px var(--shadow-color-dark),
               -4px -4px 8px var(--shadow-color-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
 }
 
 #heroCard input {
   text-transform: uppercase;
-  padding: 0.5rem;
-  margin-right: 0.5rem;
+  padding: 0.75rem 1rem;
   border: none;
   border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 1rem;
+  text-align: center;
+  min-width: 120px;
   box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
               inset -2px -2px 4px var(--inset-shadow-light);
 }
 
-.feature {
-  display: inline-block;
-  margin: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+#heroCard input::placeholder {
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+#joinForm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 280px;
+}
+
+#heroCard button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
   box-shadow: 3px 3px 6px var(--shadow-color-dark),
               -3px -3px 6px var(--shadow-color-light);
+  min-width: 120px;
+}
+
+#heroCard button:hover {
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+}
+
+#heroCard button:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+  transform: scale(0.98);
+}
+
+#featureRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  padding: 0 1rem;
+}
+
+.feature {
+  padding: 0.75rem 1.25rem;
+  border-radius: 20px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  white-space: nowrap;
 }
 
 .visually-hidden {
@@ -277,6 +339,32 @@ header {
     height: 24px;
   }
   
+  #heroCard {
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+  }
+  
+  #joinForm {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  #heroCard button,
+  #heroCard input {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  #featureRow {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .feature {
+    min-width: 150px;
+    text-align: center;
+  }
+  
   #emojiModalBox {
     padding: 1.5rem;
   }
@@ -289,5 +377,71 @@ header {
     font-size: 1.5rem;
     padding: 0.4rem;
   }
+}
+
+/* Main content layout */
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+  padding: 1rem;
+}
+
+/* How to Play section */
+#howTo {
+  margin: 2rem auto;
+  text-align: center;
+  max-width: 600px;
+}
+
+#howToggle {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  transition: all 0.2s ease;
+}
+
+#howToggle:hover {
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+}
+
+#howToggle:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+}
+
+#howContent {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--bg-color);
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+}
+
+/* Footer improvements */
+#mainFooter {
+  margin-top: auto;
+  padding: 2rem 1rem 1rem;
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+#mainFooter a {
+  color: var(--present-bg);
+  text-decoration: none;
+}
+
+#mainFooter a:hover {
+  text-decoration: underline;
 }
 
