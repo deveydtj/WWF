@@ -511,11 +511,7 @@ async function quickResetHandler() {
 }
 
 function updateResetButton() {
-  // Enable quick reset if game is over OR if player has a Daily Double hint available
-  const hasDailyDoubleHint = dailyDoubleRow !== null;
-  const enableQuickReset = gameState.is(STATES.GAME_OVER) || hasDailyDoubleHint;
-  
-  if (enableQuickReset) {
+  if (gameState.is(STATES.GAME_OVER)) {
     holdResetText.textContent = 'Reset';
     holdResetProgress.style.width = '0%';
     holdResetProgress.style.opacity = '0';
