@@ -1,7 +1,7 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal, getMyPlayerId, setMyPlayerId } from './emoji.js';
-import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint, kickPlayerRequest } from './api.js';
+import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint, kickPlayerRequest, leaveLobbyRequest } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
@@ -196,7 +196,18 @@ if (shareClose) {
 }
 
 if (leaveLobby && LOBBY_CODE) {
-  leaveLobby.addEventListener('click', () => {
+  leaveLobby.addEventListener('click', async () => {
+    // Only call the API if we have player info and are in a lobby
+    if (myEmoji && myPlayerId) {
+      try {
+        await leaveLobbyRequest(LOBBY_CODE, myEmoji, myPlayerId);
+      } catch (err) {
+        console.error('Failed to leave lobby:', err);
+        // Still redirect even if the API call fails
+      }
+    }
+    
+    // Close event source and redirect to home
     if (eventSource) {
       try { eventSource.close(); } catch {}
       eventSource = null;

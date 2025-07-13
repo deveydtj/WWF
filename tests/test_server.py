@@ -1285,6 +1285,164 @@ def test_lobby_kick_requires_token(server_env):
     assert resp[1] == 403
 
 
+def test_lobby_leave_removes_player(server_env):
+    """Test that a player can leave a lobby and is removed from it."""
+    server, request = server_env
+    
+    # Create a lobby
+    resp = server.lobby_create()
+    code = resp['id']
+    
+    # Add two players to the lobby
+    server.LOBBIES[code].leaderboard['🐶'] = {
+        'ip': '127.0.0.1', 'player_id': 'player1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[code].leaderboard['🐸'] = {
+        'ip': '192.168.1.2', 'player_id': 'player2', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[code].ip_to_emoji['127.0.0.1'] = '🐶'
+    server.LOBBIES[code].ip_to_emoji['192.168.1.2'] = '🐸'
+    server.LOBBIES[code].player_map['player1'] = '🐶'
+    server.LOBBIES[code].player_map['player2'] = '🐸'
+    
+    # Verify lobby has two players
+    assert len(server.LOBBIES[code].leaderboard) == 2
+    
+    # Have one player leave
+    request.json = {"emoji": "🐶", "player_id": "player1"}
+    resp = server.lobby_leave(code)
+    
+    # Verify the leave was successful
+    assert resp["status"] == "ok"
+    assert "lobby_removed" not in resp  # Lobby should still exist with remaining player
+    
+    # Verify lobby still exists with one player
+    assert code in server.LOBBIES
+    assert len(server.LOBBIES[code].leaderboard) == 1
+    assert "🐸" in server.LOBBIES[code].leaderboard
+    assert "🐶" not in server.LOBBIES[code].leaderboard
+    
+    # Verify ip_to_emoji and player_map were cleaned up
+    assert '127.0.0.1' not in server.LOBBIES[code].ip_to_emoji
+    assert 'player1' not in server.LOBBIES[code].player_map
+    assert '192.168.1.2' in server.LOBBIES[code].ip_to_emoji
+    assert 'player2' in server.LOBBIES[code].player_map
+
+
+def test_lobby_leave_last_player_removes_lobby(server_env):
+    """Test that a lobby is removed immediately when last player leaves."""
+    server, request = server_env
+    
+    # Create a lobby
+    resp = server.lobby_create()
+    code = resp['id']
+    
+    # Add one player to the lobby
+    server.LOBBIES[code].leaderboard['🐶'] = {
+        'ip': '127.0.0.1', 'player_id': 'player1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[code].ip_to_emoji['127.0.0.1'] = '🐶'
+    server.LOBBIES[code].player_map['player1'] = '🐶'
+    
+    # Verify lobby exists and has one player
+    assert code in server.LOBBIES
+    assert len(server.LOBBIES[code].leaderboard) == 1
+    assert "🐶" in server.LOBBIES[code].leaderboard
+    
+    # Have the only player leave
+    request.json = {"emoji": "🐶", "player_id": "player1"}
+    resp = server.lobby_leave(code)
+    
+    # Verify the leave was successful
+    assert resp["status"] == "ok"
+    assert resp.get("lobby_removed") == True
+    
+    # Verify lobby is immediately removed (not waiting for TTL)
+    assert code not in server.LOBBIES
+
+
+def test_lobby_leave_requires_valid_player(server_env):
+    """Test that leaving requires a valid player in the lobby."""
+    server, request = server_env
+    
+    # Create a lobby
+    resp = server.lobby_create()
+    code = resp['id']
+    
+    # Add one player to the lobby
+    server.LOBBIES[code].leaderboard['🐶'] = {
+        'ip': '127.0.0.1', 'player_id': 'player1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    
+    # Try to leave with invalid emoji
+    request.json = {"emoji": "🐸", "player_id": "player1"}
+    resp = server.lobby_leave(code)
+    
+    assert isinstance(resp, tuple)
+    assert resp[1] == 404
+    assert resp[0]["status"] == "error"
+    assert resp[0]["msg"] == "Player not in lobby"
+    
+    # Try to leave with invalid player_id
+    request.json = {"emoji": "🐶", "player_id": "wrong_player"}
+    resp = server.lobby_leave(code)
+    
+    assert isinstance(resp, tuple)
+    assert resp[1] == 403
+    assert resp[0]["status"] == "error"
+    assert resp[0]["msg"] == "Invalid player credentials"
+    
+    # Try to leave with missing emoji
+    request.json = {"player_id": "player1"}
+    resp = server.lobby_leave(code)
+    
+    assert isinstance(resp, tuple)
+    assert resp[1] == 400
+    assert resp[0]["status"] == "error"
+    assert resp[0]["msg"] == "Missing emoji"
+    
+    # Try to leave with missing player_id
+    request.json = {"emoji": "🐶"}
+    resp = server.lobby_leave(code)
+    
+    assert isinstance(resp, tuple)
+    assert resp[1] == 400
+    assert resp[0]["status"] == "error"
+    assert resp[0]["msg"] == "Missing player_id"
+
+
+def test_lobby_leave_does_not_affect_default_lobby(server_env):
+    """Test that leaving the default lobby doesn't remove it even if empty."""
+    server, request = server_env
+    
+    # Clear the default lobby first to ensure clean state
+    server.LOBBIES[server.DEFAULT_LOBBY].leaderboard.clear()
+    server.LOBBIES[server.DEFAULT_LOBBY].ip_to_emoji.clear()
+    server.LOBBIES[server.DEFAULT_LOBBY].player_map.clear()
+    
+    # Add a player to the default lobby
+    server.LOBBIES[server.DEFAULT_LOBBY].leaderboard['🐶'] = {
+        'ip': '127.0.0.1', 'player_id': 'player1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[server.DEFAULT_LOBBY].ip_to_emoji['127.0.0.1'] = '🐶'
+    server.LOBBIES[server.DEFAULT_LOBBY].player_map['player1'] = '🐶'
+    
+    # Set current_state to the default lobby
+    server.current_state = server.LOBBIES[server.DEFAULT_LOBBY]
+    
+    # Have the player leave
+    request.json = {"emoji": "🐶", "player_id": "player1"}
+    resp = server.leave_lobby()  # Call the function directly since we're using DEFAULT_LOBBY
+    
+    # Verify the leave was successful but lobby was not removed
+    assert resp["status"] == "ok"
+    assert "lobby_removed" not in resp
+    
+    # Verify default lobby still exists even though it's empty
+    assert server.DEFAULT_LOBBY in server.LOBBIES
+    assert len(server.LOBBIES[server.DEFAULT_LOBBY].leaderboard) == 0
+
+
 def test_lobby_kick_missing_player(server_env):
     server, request = server_env
     resp = server.lobby_create()

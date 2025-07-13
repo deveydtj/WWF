@@ -136,6 +136,16 @@ export async function kickPlayerRequest(lobbyId, emoji, hostToken) {
   return r.json();
 }
 
+export async function leaveLobbyRequest(lobbyId, emoji, playerId) {
+  const url = `/lobby/${lobbyId}/leave`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emoji, player_id: playerId })
+  });
+  return r.json();
+}
+
 /**
  * Listen for server-sent game state updates.
  *
