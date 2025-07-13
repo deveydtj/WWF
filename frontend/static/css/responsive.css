@@ -29,6 +29,11 @@
     right: 0;
   }
 
+  /* Hide player count in mobile/light mode to save space */
+  #playerCount {
+    display: none;
+  }
+
   /* Panel positioning for mobile */
   #historyBox {
     position: fixed;

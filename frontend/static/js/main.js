@@ -569,13 +569,7 @@ async function performReset() {
 }
 
 async function quickResetHandler() {
-  // Ensure our view is up to date before attempting a one-click reset.
-  await fetchState();
-  if (!latestState.is_over) {
-    // Another player already started a new round; switch to hold-to-reset mode.
-    showMessage('Board already reset.', { messageEl, messagePopup });
-    return;
-  }
+  // Quick reset is only enabled when the game is over, so proceed directly
   return await performReset();
 }
 
