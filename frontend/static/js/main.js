@@ -166,29 +166,27 @@ if (lobbyCodeEl && LOBBY_CODE) {
 if (copyLobbyLink && LOBBY_CODE) {
   copyLobbyLink.addEventListener('click', () => {
     const url = window.location.href;
-    if (navigator.share) {
-      navigator.share({ url }).catch(() => {
-        shareLink.value = url;
-        shareModal.style.display = 'flex';
-        openDialog(shareModal);
-        shareLink.focus();
-        shareLink.select();
-      });
-    } else {
-      shareLink.value = url;
-      shareModal.style.display = 'flex';
-      openDialog(shareModal);
-      shareLink.focus();
-      shareLink.select();
-    }
+    // Always show the modal instead of trying native share first
+    shareLink.value = url;
+    shareModal.style.display = 'flex';
+    openDialog(shareModal);
+    shareLink.focus();
+    shareLink.select();
   });
 }
 
 if (shareCopy) {
   shareCopy.addEventListener('click', () => {
+    if (!shareLink.value) {
+      showMessage('No link to copy!', { messageEl, messagePopup });
+      return;
+    }
     navigator.clipboard.writeText(shareLink.value).then(() => {
       showMessage('Link copied!', { messageEl, messagePopup });
       announce('Lobby link copied');
+    }).catch((err) => {
+      console.error('Failed to copy:', err);
+      showMessage('Failed to copy link. Try selecting and copying manually.', { messageEl, messagePopup });
     });
   });
 }
@@ -944,6 +942,22 @@ if (window.innerWidth > 900) {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 }
 fetchState();
+
+// Check if we should auto-show the invite popup for newly created lobbies
+if (LOBBY_CODE) {
+  const showInviteFor = localStorage.getItem('showInvitePopup');
+  if (showInviteFor === LOBBY_CODE) {
+    // Remove the flag so it only shows once
+    localStorage.removeItem('showInvitePopup');
+    // Auto-show the invite popup after a brief delay to let the page load
+    setTimeout(() => {
+      if (copyLobbyLink) {
+        copyLobbyLink.click();
+      }
+    }, 1000);
+  }
+}
+
 initEventStream();
 setInterval(checkInactivity, 5000);
 document.addEventListener('keydown', onActivity);

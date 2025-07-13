@@ -1268,10 +1268,22 @@ def lobby_css_files(filename):
     return css_files(filename)
 
 
+# Serve Vite-generated assets
+@app.route("/assets/<path:filename>")
+def asset_files(filename):
+    root = STATIC_DIR if (STATIC_DIR / "assets").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root / "assets"), filename)
+
+
+@app.route("/lobby/assets/<path:filename>")
+def lobby_asset_files(filename):
+    return asset_files(filename)
+
+
 @app.route("/<path:requested_path>")
 def spa_fallback_route(requested_path: str):
     """Send index.html for client-side routes."""
-    if requested_path.startswith(("api/", "static/")) or requested_path in (
+    if requested_path.startswith(("api/", "static/", "assets/")) or requested_path in (
         "favicon.ico",
         "robots.txt",
     ):
