@@ -577,7 +577,9 @@ function applyState(state) {
     dailyDoubleRow = 0;
     dailyDoubleHint = null;
     saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
-  } else if (!dailyDoubleAvailable && state.guesses.length === 0 && dailyDoubleRow !== null) {
+  } else if (!dailyDoubleAvailable && (dailyDoubleRow !== null || dailyDoubleHint !== null)) {
+    // Clear hint state if server says no daily double available
+    // This handles cases where user switches lobbies and has stale localStorage state
     dailyDoubleRow = null;
     dailyDoubleHint = null;
     saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
