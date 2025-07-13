@@ -359,6 +359,7 @@ function handleHashChange() {
   } else {
     lobby.hidden = true;
     landing.hidden = false;
+    fetchNetworkLobbies(); // Refresh network lobbies when returning to landing page
   }
 }
 
