@@ -166,12 +166,28 @@ if (lobbyCodeEl && LOBBY_CODE) {
 if (copyLobbyLink && LOBBY_CODE) {
   copyLobbyLink.addEventListener('click', () => {
     const url = window.location.href;
-    // Always show the modal instead of trying native share first
-    shareLink.value = url;
-    shareModal.style.display = 'flex';
-    openDialog(shareModal);
-    shareLink.focus();
-    shareLink.select();
+    // Check if Web Share API is available
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join my WordSquad game',
+        text: 'Come play WordSquad with me!',
+        url: url
+      }).catch(() => {
+        // Fallback to custom modal if sharing fails
+        shareLink.value = url;
+        shareModal.style.display = 'flex';
+        openDialog(shareModal);
+        shareLink.focus();
+        shareLink.select();
+      });
+    } else {
+      // Fallback for browsers without Web Share API
+      shareLink.value = url;
+      shareModal.style.display = 'flex';
+      openDialog(shareModal);
+      shareLink.focus();
+      shareLink.select();
+    }
   });
 }
 

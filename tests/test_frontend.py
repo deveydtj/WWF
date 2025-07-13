@@ -36,7 +36,7 @@ def test_landing_page_elements_exist():
 
 def test_set_dark_mode_stores_preference():
     script = """
-global.document = { addEventListener(){}, body: { classList: { toggle(){}, contains(){return false;} } } };
+global.document = { addEventListener(){}, body: { classList: { toggle(){}, contains(){return false;} } }, getElementById() { return null; } };
 global.localStorage = { data: {}, setItem(k,v){ this.data[k]=v; }, getItem(k){return this.data[k];} };
 const mod = await import('./frontend/landing.js');
 mod.setDarkMode(true);
@@ -65,7 +65,7 @@ console.log(mod.getLastLobby());
 
 def test_show_saved_emoji_populates_element():
     script = """
-const el = { textContent: '' };
+const el = { textContent: '', setAttribute(){} };
 global.document = { addEventListener(){}, getElementById(id){ return id==='emojiDisplay' ? el : null; }, body:{} };
 global.localStorage = { data: { myEmoji: '🐶' }, getItem(k){ return this.data[k]; } };
 const mod = await import('./frontend/landing.js');

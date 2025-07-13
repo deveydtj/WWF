@@ -309,7 +309,7 @@ export function fitBoardToContainer(rows = 6) {
 
     // Calculate available height based on container minus keyboard height
     // Add extra buffer for mobile keyboards to ensure they're fully visible
-    const mobileKeyboardBuffer = window.innerWidth <= 600 ? 20 : 0;
+    const mobileKeyboardBuffer = (typeof window !== 'undefined' && window.innerWidth <= 600) ? 20 : 0;
     const availHeight = Math.max(0,
       containerHeight - h.keyboard - totalUsedHeight - 20 - mobileKeyboardBuffer);
 
