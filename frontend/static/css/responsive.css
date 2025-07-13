@@ -239,10 +239,7 @@
   }
 
   /* Additional mobile layout fixes */
-  #titleBar {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+  /* Keep titleBar horizontal on mobile - removed flex-direction: column to fix vertical stacking issue */
   
   #titleBar h1 {
     font-size: 1.5rem;
