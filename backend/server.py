@@ -57,8 +57,7 @@ except Exception:  # pragma: no cover - optional dependency
 
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
-STATIC_PATH = Path(__file__).resolve().parent / "static" / "assets"
-app = Flask(__name__, static_folder=str(STATIC_PATH), static_url_path="/assets")
+app = Flask(__name__)
 app.secret_key = "a_wordle_secret"
 CORS(app)
 
@@ -123,8 +122,6 @@ WORDS: list[str] = []
 def _init_assets() -> None:
     """Load the word list and validate the definitions cache."""
     global WORDS
-    if not STATIC_PATH.exists():
-        logger.error("Missing static asset directory '%s'", STATIC_PATH)
     try:
         with open(WORDS_FILE) as f:
             WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
@@ -1209,7 +1206,7 @@ def lobby_css_files(filename):
 @app.route("/<path:requested_path>")
 def spa_fallback_route(requested_path: str):
     """Send index.html for client-side routes."""
-    if requested_path.startswith(("api/", "static/", "assets/")) or requested_path in (
+    if requested_path.startswith(("api/", "static/")) or requested_path in (
         "favicon.ico",
         "robots.txt",
     ):
