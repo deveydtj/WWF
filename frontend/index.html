@@ -9,10 +9,21 @@
 </head>
 <body>
 <div id="landingView">
+  <!-- Emoji Picker Modal -->
+  <div id="emojiModal" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading" style="display: none;">
+    <div id="emojiModalBox">
+      <div id="emojiModalHeading">
+        Pick your emoji:
+      </div>
+      <div id="emojiChoices"></div>
+      <div id="emojiModalError"></div>
+    </div>
+  </div>
+
   <header id="mainHeader">
     <h1 id="logo">WordSquad</h1>
-    <span id="emojiDisplay" aria-label="Selected emoji"></span>
-    <button id="darkToggle" aria-label="Toggle dark mode"></button>
+    <button id="emojiDisplay" aria-label="Select your emoji" title="Click to select your emoji">👤</button>
+    <button id="darkToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     <nav>
       <a href="help.html" id="helpLink">Help</a>
       <a href="https://github.com/deveydtj/WWF" id="githubLink">GitHub</a>
