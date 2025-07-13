@@ -207,6 +207,9 @@ if (leaveLobby && LOBBY_CODE) {
       }
     }
     
+    // Clear stored lobby info when user explicitly leaves
+    localStorage.removeItem('lastLobby');
+    
     // Close event source and redirect to home
     if (eventSource) {
       try { eventSource.close(); } catch {}
