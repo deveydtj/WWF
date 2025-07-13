@@ -240,8 +240,9 @@
 
   /* Additional mobile layout fixes */
   #titleBar {
-    flex-direction: row;
+    flex-direction: column;
     gap: 0.5rem;
+    align-items: center;
   }
   
   #titleBar h1 {
@@ -249,9 +250,65 @@
     margin: 0;
   }
   
-  #leaderboard {
-    flex-wrap: wrap;
-    justify-content: center;
+  /* Mobile leaderboard inline with title */
+  #titleBar .mobile-title-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  #titleBar .mobile-title-row h1 {
+    flex: 1;
+    margin: 0 8px;
+    text-align: center;
+  }
+  
+  #titleBar .mobile-leaderboard-container {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    max-width: 200px;
+  }
+  
+  #titleBar .mobile-leaderboard-container #leaderboard {
+    margin: 0;
+    padding: 0;
+    gap: 8px;
+    max-height: 50px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+  }
+  
+  #titleBar .mobile-leaderboard-container #leaderboard::-webkit-scrollbar {
+    display: none;
+  }
+  
+  #titleBar .mobile-leaderboard-container #leaderboard {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Hide the separate leaderboard on mobile when it's moved inline */
+  body:has(.mobile-leaderboard-container #leaderboard) > #appContainer > #leaderboard:not(.mobile-inline) {
+    display: none;
+  }
+  
+  /* Ensure leaderboard entries are appropriately sized for mobile inline */
+  #titleBar .mobile-leaderboard-container .leaderboard-entry {
+    font-size: calc(0.9em * var(--ui-scale));
+    padding: calc(4px * var(--ui-scale)) calc(8px * var(--ui-scale));
+    margin: 0 2px;
+    min-width: calc(35px * var(--ui-scale));
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 }
 
