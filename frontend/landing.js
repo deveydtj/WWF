@@ -6,9 +6,26 @@ const allEmojis = [
   "🐯", "🐨", "🐻", "🦖", "🦕", "🐝", "🐳", "🦋", "🐢", "🐬"
 ];
 
+function updateDarkToggleIcon() {
+  const btn = document.getElementById('darkToggle');
+  if (!btn) return;
+  
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  if (isDarkMode) {
+    btn.textContent = '☀️';
+    btn.setAttribute('aria-label', 'Switch to light mode');
+    btn.setAttribute('title', 'Switch to light mode');
+  } else {
+    btn.textContent = '🌙';
+    btn.setAttribute('aria-label', 'Switch to dark mode');
+    btn.setAttribute('title', 'Switch to dark mode');
+  }
+}
+
 function applyDarkMode() {
   const enabled = localStorage.getItem('dark') === 'true';
   document.body.classList.toggle('dark-mode', enabled);
+  updateDarkToggleIcon();
 }
 
 export function setDarkMode(enabled) {
@@ -18,6 +35,8 @@ export function setDarkMode(enabled) {
 
 function initDarkToggle() {
   const btn = document.getElementById('darkToggle');
+  if (!btn) return;
+  
   applyDarkMode();
   btn.addEventListener('click', () => {
     const on = !document.body.classList.contains('dark-mode');

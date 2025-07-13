@@ -166,7 +166,8 @@ header {
   justify-content: space-between;
 }
 
-#emojiDisplay {
+#emojiDisplay,
+#darkToggle {
   font-size: 1.5rem;
   padding: 0.5rem;
   margin: 0 0.5rem;
@@ -180,12 +181,14 @@ header {
   transition: all 0.1s ease;
 }
 
-#emojiDisplay:hover {
+#emojiDisplay:hover,
+#darkToggle:hover {
   box-shadow: 2px 2px 4px var(--shadow-color-dark),
               -2px -2px 4px var(--shadow-color-light);
 }
 
-#emojiDisplay:active {
+#emojiDisplay:active,
+#darkToggle:active {
   box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
               inset -2px -2px 4px var(--inset-shadow-light);
   transform: scale(0.98);
