@@ -322,31 +322,42 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
 }
 
-/* Waiting overlay */
-.waiting-overlay {
-  pointer-events: none;
-  opacity: 0.8;
-  transition: opacity 0.3s ease-out;
+/* Extra small mobile adjustments */
+@media (max-width: 400px) {
+  :root {
+    --tile-size: min(12vmin, 36px);
+  }
+  
+  body {
+    font-size: 14px;
+  }
+  
+  #appContainer {
+    padding: 5px;
+  }
 }
 
-.waiting-overlay.fade-out {
-  opacity: 0;
-  animation: fade-out 0.5s ease-out;
+@media (max-width: 350px) {
+  body {
+    font-size: 14px;
+  }
+  
+  #appContainer {
+    padding: 5px;
+  }
 }
 
-@keyframes fade-out {
-  from { opacity: 0.8; }
-  to { opacity: 0; }
+/* Lobby header styles */
+#lobbyHeader {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-color);
 }
 
-/* Ghost tile outline for hint selection */
-.ghost-tile {
-  outline: 3px solid var(--present-bg);
-  outline-offset: -3px;
-}
-
-/* Hint tooltip positioning */
-.hint-tooltip {
+/* Hint tooltip element styles */
+#hintTooltip {
   position: absolute;
   background: var(--bg-color);
   color: var(--text-color);
@@ -362,18 +373,43 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   transition: opacity 0.2s, transform 0.2s;
 }
 
-.hint-tooltip.visible {
+#hintTooltip.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Extra small mobile adjustments */
-@media (max-width: 350px) {
-  body {
-    font-size: 14px;
-  }
-  
-  #appContainer {
-    padding: 5px;
-  }
+/* Ghost tile styling */
+.tile.ghost {
+  opacity: 0.4;
+  border: 2px dashed var(--text-color);
+  outline: 2px dashed var(--text-color);
+  outline-offset: -2px;
+}
+
+/* Waiting overlay with pointer events */
+#waitingOverlay {
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.3s ease-out;
+}
+
+#waitingOverlay.fade-out {
+  opacity: 0;
+  animation: fadeOutOverlay 0.5s ease-out;
+}
+
+.waiting-overlay {
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.3s ease-out;
+}
+
+.waiting-overlay.fade-out {
+  opacity: 0;
+  animation: fadeOutOverlay 0.5s ease-out;
+}
+
+@keyframes fadeOutOverlay {
+  from { opacity: 0.8; }
+  to { opacity: 0; }
 }
