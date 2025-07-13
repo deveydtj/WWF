@@ -76,6 +76,88 @@ a:focus {
   border: none;
 }
 
+/* Network Lobbies Section */
+#networkLobbies {
+  margin: 2rem auto;
+  padding: 1rem;
+  width: min(90vw, 25rem);
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+}
+
+#networkLobbies h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+#networkLobbies p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+.network-lobby-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+}
+
+.lobby-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.lobby-code {
+  font-weight: bold;
+  font-family: monospace;
+  color: var(--text-color);
+}
+
+.player-count {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.your-emoji {
+  font-size: 1.2rem;
+  margin-left: auto;
+}
+
+.join-network-lobby-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  transition: all 0.1s ease;
+}
+
+.join-network-lobby-btn:hover {
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+}
+
+.join-network-lobby-btn:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+  transform: scale(0.98);
+}
+
 /* Responsive header tweaks */
 header {
   display: flex;

@@ -126,11 +126,77 @@ function initHowTo() {
   });
 }
 
+export async function fetchNetworkLobbies() {
+  try {
+    const resp = await fetch('/lobbies/network');
+    if (resp.ok) {
+      const data = await resp.json();
+      displayNetworkLobbies(data.lobbies);
+    } else {
+      console.warn('Failed to fetch network lobbies');
+    }
+  } catch (error) {
+    console.warn('Error fetching network lobbies:', error);
+  }
+}
+
+export function displayNetworkLobbies(lobbies) {
+  const section = document.getElementById('networkLobbies');
+  const list = document.getElementById('networkLobbyList');
+  
+  if (!section || !list) return;
+  
+  if (lobbies.length === 0) {
+    section.hidden = true;
+    return;
+  }
+  
+  section.hidden = false;
+  list.innerHTML = '';
+  
+  lobbies.forEach(lobby => {
+    const lobbyItem = document.createElement('div');
+    lobbyItem.className = 'network-lobby-item';
+    
+    const lobbyInfo = document.createElement('div');
+    lobbyInfo.className = 'lobby-info';
+    
+    const lobbyCode = document.createElement('span');
+    lobbyCode.className = 'lobby-code';
+    lobbyCode.textContent = lobby.id;
+    
+    const playerCount = document.createElement('span');
+    playerCount.className = 'player-count';
+    playerCount.textContent = `${lobby.players} player${lobby.players !== 1 ? 's' : ''}`;
+    
+    lobbyInfo.appendChild(lobbyCode);
+    lobbyInfo.appendChild(playerCount);
+    
+    if (lobby.your_emoji) {
+      const yourEmoji = document.createElement('span');
+      yourEmoji.className = 'your-emoji';
+      yourEmoji.textContent = lobby.your_emoji;
+      yourEmoji.setAttribute('aria-label', 'Your emoji in this lobby');
+      lobbyInfo.appendChild(yourEmoji);
+    }
+    
+    const joinButton = document.createElement('button');
+    joinButton.className = 'join-network-lobby-btn';
+    joinButton.textContent = 'Join';
+    joinButton.addEventListener('click', () => joinLobby(lobby.id));
+    
+    lobbyItem.appendChild(lobbyInfo);
+    lobbyItem.appendChild(joinButton);
+    list.appendChild(lobbyItem);
+  });
+}
+
 export function init() {
   initDarkToggle();
   initJoinForm();
   initHowTo();
   showSavedEmoji();
+  fetchNetworkLobbies();
   updateVH();
   window.addEventListener('resize', updateVH);
   if (window.visualViewport) {
