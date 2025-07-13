@@ -723,8 +723,20 @@ def test_beforeunload_closes_event_source():
 
 def test_leave_lobby_closes_event_source():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    m = re.search(r"leaveLobby\.addEventListener\('click',\s*\(\)\s*=>\s*\{([^}]*)\}", text)
-    assert m and 'eventSource.close' in m.group(1)
+    # Updated to handle async function
+    m = re.search(r"leaveLobby\.addEventListener\('click',\s*async\s*\(\)\s*=>\s*\{.*?eventSource\.close", text, re.DOTALL)
+    assert m, "eventSource.close not found in leaveLobby event listener"
+
+
+def test_leave_lobby_clears_stored_lobby():
+    """Test that leaving via door icon clears lastLobby from localStorage."""
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    # Look for the line that clears localStorage in the leave lobby handler
+    assert "localStorage.removeItem('lastLobby')" in text, "localStorage.removeItem('lastLobby') not found in main.js"
+    
+    # Also verify it's within the leave lobby event handler context
+    m = re.search(r"leaveLobby\.addEventListener.*?localStorage\.removeItem\('lastLobby'\)", text, re.DOTALL)
+    assert m, "localStorage.removeItem('lastLobby') not found within leaveLobby event listener"
 
 
 def test_fit_board_to_container_returns_sizes():
