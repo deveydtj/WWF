@@ -7,10 +7,11 @@ const allEmojis = [
 ];
 
 function updateDarkToggleIcon() {
-  const btn = document.getElementById('darkToggle');
+  if (typeof document === 'undefined') return;
+  const btn = document.getElementById && document.getElementById('darkToggle');
   if (!btn) return;
   
-  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isDarkMode = document.body && document.body.classList.contains('dark-mode');
   if (isDarkMode) {
     btn.textContent = '☀️';
     btn.setAttribute('aria-label', 'Switch to light mode');
@@ -24,7 +25,9 @@ function updateDarkToggleIcon() {
 
 function applyDarkMode() {
   const enabled = localStorage.getItem('dark') === 'true';
-  document.body.classList.toggle('dark-mode', enabled);
+  if (document.body) {
+    document.body.classList.toggle('dark-mode', enabled);
+  }
   updateDarkToggleIcon();
 }
 

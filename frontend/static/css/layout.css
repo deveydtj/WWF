@@ -1,0 +1,379 @@
+/* ─────────────────────────────────────────────
+   Layout - Responsive positioning and panel layouts
+   ───────────────────────────────────────────── */
+
+/* Panel positioning and layout */
+#historyBox {
+  position: absolute;
+  top: 10px;
+  left: calc(50% - var(--board-width) / 2 - 280px);
+  width: 260px;
+  max-height: calc(100vh - 160px);
+  background: var(--bg-color);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    inset 4px 4px 8px var(--inset-shadow-dark),
+    inset -4px -4px 8px var(--inset-shadow-light),
+    8px 8px 16px var(--shadow-color-dark),
+    -8px -8px 16px var(--shadow-color-light);
+  overflow-y: auto;
+  z-index: 40;
+  opacity: 0;
+  transform-origin: top left;
+  transform: scale(0);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+
+#definitionBox {
+  position: absolute;
+  top: 10px;
+  right: calc(50% - var(--board-width) / 2 - 280px);
+  width: 260px;
+  max-height: calc(100vh - 160px);
+  background: var(--bg-color);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    inset 4px 4px 8px var(--inset-shadow-dark),
+    inset -4px -4px 8px var(--inset-shadow-light),
+    8px 8px 16px var(--shadow-color-dark),
+    -8px -8px 16px var(--shadow-color-light);
+  overflow-y: auto;
+  z-index: 40;
+  opacity: 0;
+  transform-origin: top right;
+  transform: scale(0);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+
+#chatBox {
+  position: absolute;
+  top: 10px;
+  right: calc(50% - var(--board-width) / 2 - 280px);
+  width: 260px;
+  height: calc(100vh - 160px);
+  background: var(--bg-color);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    inset 4px 4px 8px var(--inset-shadow-dark),
+    inset -4px -4px 8px var(--inset-shadow-light),
+    8px 8px 16px var(--shadow-color-dark),
+    -8px -8px 16px var(--shadow-color-light);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 40;
+  opacity: 0;
+  transform-origin: top right;
+  transform: scale(0);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+
+/* Panel visibility states */
+body:not(.history-open) #historyBox {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+body:not(.definition-open) #definitionBox {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+body:not(.chat-open) #chatBox {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+body.history-open #historyBox {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+body.definition-open #definitionBox {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+body.chat-open #chatBox {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* Popup modals that fill the viewport */
+#emojiModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#closeCallPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#infoPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#shareModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+/* Mobile devices (max-width: 600px) */
+@media (max-width: 600px) {
+  #historyBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 0;
+    overflow-y: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  #definitionBox {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 0;
+    overflow-y: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  #chatBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+  }
+}
+
+/* Medium mode (tablet size) */
+body[data-mode='medium'] #historyBox,
+body[data-mode='medium'] #definitionBox,
+body[data-mode='medium'] #chatBox {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 80;
+}
+
+body[data-mode='medium'] #chatBox {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-mode='medium'] #historyBox,
+body[data-mode='medium'] #definitionBox,
+body[data-mode='medium'] #chatBox {
+  transform-origin: center center;
+}
+
+body[data-mode='medium']:not(.history-open) #historyBox,
+body[data-mode='medium']:not(.definition-open) #definitionBox,
+body[data-mode='medium']:not(.chat-open) #chatBox {
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Chat notification styles */
+#chatNotify {
+  display: block;
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-color-light);
+  line-height: 1;
+  position: absolute;
+  top: 36px;
+  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 60;
+}
+
+#chatNotify.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#chatNotify.wiggle {
+  animation: wiggle 0.6s;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  50% { transform: scale(1) rotate(5deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
+}
+
+/* Options toggle positioning */
+#optionsToggle {
+  display: block;
+  font-size: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-color-light);
+  line-height: 1;
+  position: absolute;
+  top: 0;
+  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+}
+
+/* Waiting overlay */
+.waiting-overlay {
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.3s ease-out;
+}
+
+.waiting-overlay.fade-out {
+  opacity: 0;
+  animation: fade-out 0.5s ease-out;
+}
+
+@keyframes fade-out {
+  from { opacity: 0.8; }
+  to { opacity: 0; }
+}
+
+/* Ghost tile outline for hint selection */
+.ghost-tile {
+  outline: 3px solid var(--present-bg);
+  outline-offset: -3px;
+}
+
+/* Hint tooltip positioning */
+.hint-tooltip {
+  position: absolute;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.hint-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Extra small mobile adjustments */
+@media (max-width: 350px) {
+  body {
+    font-size: 14px;
+  }
+  
+  #appContainer {
+    padding: 5px;
+  }
+}
