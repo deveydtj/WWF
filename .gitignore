@@ -4,6 +4,7 @@ frontend/dist/
 .venv/
 game_persist.json
 analytics.log
+lobbies.json
 
 runtime/
 
