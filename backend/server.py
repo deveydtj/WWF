@@ -178,27 +178,28 @@ emoji_lock = threading.Lock()  # guard emoji selection operations
 # Color variants for duplicate emojis
 EMOJI_VARIANTS = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"]
 
+
 def get_emoji_variant(base_emoji: str, existing_emojis: set) -> str:
     """
     Generate a variant of the base emoji if duplicates exist.
-    
+
     Args:
         base_emoji: The base emoji string (e.g., "🐶")
         existing_emojis: Set of existing emoji keys in the leaderboard
-    
+
     Returns:
         A unique emoji variant string (e.g., "🐶-red", "🐶-blue")
     """
     # If base emoji is not taken, return it as-is
     if base_emoji not in existing_emojis:
         return base_emoji
-    
+
     # Try each color variant until we find an available one
     for variant in EMOJI_VARIANTS:
         variant_emoji = f"{base_emoji}-{variant}"
         if variant_emoji not in existing_emojis:
             return variant_emoji
-    
+
     # If all predefined variants are taken, use numbered variants
     counter = len(EMOJI_VARIANTS) + 1
     while True:
@@ -207,19 +208,21 @@ def get_emoji_variant(base_emoji: str, existing_emojis: set) -> str:
             return variant_emoji
         counter += 1
 
+
 def get_base_emoji(emoji_variant: str) -> str:
     """
     Extract the base emoji from a variant.
-    
+
     Args:
         emoji_variant: Either a base emoji or variant (e.g., "🐶" or "🐶-red")
-    
+
     Returns:
         The base emoji string (e.g., "🐶")
     """
     if "-" in emoji_variant:
         return emoji_variant.split("-")[0]
     return emoji_variant
+
 
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
@@ -241,9 +244,10 @@ def get_lobby(code: str) -> GameState:
         # Check if this lobby was recently removed due to being empty
         removal_time = RECENTLY_REMOVED_LOBBIES.get(code)
         if removal_time and (time.time() - removal_time) < REMOVAL_COOLDOWN:
-            # Lobby was recently removed, return None to indicate it shouldn't be recreated
+            # Lobby was recently removed, return None to indicate it shouldn't
+            # be recreated
             return None
-        
+
         lobby = _reset_state(GameState())
         LOBBIES[code] = lobby
         load_data(lobby)
@@ -266,11 +270,12 @@ def purge_lobbies() -> None:
             expired.append(cid)
     for cid in expired:
         LOBBIES.pop(cid, None)
-    
+
     # Clean up old entries from recently removed lobbies tracking
     expired_removals = []
     for lobby_code, removal_time in RECENTLY_REMOVED_LOBBIES.items():
-        if now - removal_time > REMOVAL_COOLDOWN * 2:  # Keep entries for twice the cooldown period
+        if now - removal_time > REMOVAL_COOLDOWN * 2:
+            # Keep entries for twice the cooldown period
             expired_removals.append(lobby_code)
     for lobby_code in expired_removals:
         RECENTLY_REMOVED_LOBBIES.pop(lobby_code, None)
@@ -605,7 +610,7 @@ def validate_hard_mode(guess, s: GameState | None = None):
     required_letters, green_positions = get_required_letters_and_positions(s)
     for idx, ch in green_positions.items():
         if guess[idx] != ch:
-            return False, f"Letter {ch.upper()} must be in position {idx+1}."
+            return False, f"Letter {ch.upper()} must be in position {idx + 1}."
     if required_letters:
         if not all(letter in guess for letter in required_letters):
             missing = [letter for letter in required_letters if letter not in guess]
@@ -769,23 +774,27 @@ def set_emoji():
     if not player_id:
         player_id = uuid.uuid4().hex
     new_player = player_id not in current_state.player_map
-    logger.info("Emoji request: %s player=%s ip=%s", base_emoji, player_id, ip)
+    logger.info(
+        "Emoji request: %s player=%s ip=%s", base_emoji, player_id, ip
+    )
 
     with emoji_lock:
         # Check if player already has an emoji assigned
         prev_emoji = current_state.player_map.get(player_id)
-        
-        # If player is requesting the same base emoji they already have (any variant), keep their current emoji
+
+        # If player is requesting the same base emoji they already have
+        # (any variant), keep their current emoji
         if prev_emoji and get_base_emoji(prev_emoji) == base_emoji:
             emoji_variant = prev_emoji
         else:
             # Player is changing to a different base emoji or is new
-            # Get a unique emoji variant for this base emoji, excluding their current emoji if changing
+            # Get a unique emoji variant for this base emoji, excluding their
+            # current emoji if changing
             existing_emojis = set(current_state.leaderboard.keys())
             if prev_emoji and prev_emoji in existing_emojis:
                 existing_emojis.remove(prev_emoji)
             emoji_variant = get_emoji_variant(base_emoji, existing_emojis)
-        
+
         # If player had a different emoji before, remove the old entry
         if prev_emoji and prev_emoji != emoji_variant:
             # Move existing entry so score and history persist
@@ -814,7 +823,7 @@ def set_emoji():
                     "last_active": now,
                 },
             )
-        
+
         # Update player mappings
         current_state.leaderboard[emoji_variant]["ip"] = ip
         current_state.leaderboard[emoji_variant]["player_id"] = player_id
@@ -823,7 +832,7 @@ def set_emoji():
         current_state.player_map[player_id] = emoji_variant
         current_state.last_activity = now
         save_data()
-    
+
     logger.info(
         "Emoji %s (variant: %s) mapped to player %s (ip %s) new=%s",
         base_emoji,
@@ -835,10 +844,10 @@ def set_emoji():
     broadcast_state()
     if new_player:
         log_lobby_joined(_lobby_id(current_state), emoji_variant, ip)
-    
+
     # Return the variant that was assigned
     return jsonify({
-        "status": "ok", 
+        "status": "ok",
         "player_id": player_id,
         "emoji": emoji_variant,
         "base_emoji": base_emoji
@@ -1135,11 +1144,11 @@ def lobby_network_list():
     """Return a list of active lobbies from the same network as the client."""
     client_ip = get_client_ip()
     data = []
-    
+
     for cid, s in LOBBIES.items():
         if cid == DEFAULT_LOBBY:
             continue
-            
+
         # Check if the client's IP has players in this lobby
         if client_ip in s.ip_to_emoji:
             data.append({
@@ -1150,7 +1159,8 @@ def lobby_network_list():
         # Also include lobbies where any player shares the same network segment
         # (for local networks, we can check if IP starts with same prefix)
         else:
-            # Simple network detection: same IP or same local network (192.168.x.x, 10.x.x.x, etc.)
+            # Simple network detection: same IP or same local network
+            # (192.168.x.x, 10.x.x.x, etc.)
             for lobby_ip in s.ip_to_emoji.keys():
                 if _is_same_network(client_ip, lobby_ip):
                     data.append({
@@ -1158,7 +1168,7 @@ def lobby_network_list():
                         "players": len(s.leaderboard)
                     })
                     break
-    
+
     return jsonify({"lobbies": data})
 
 
@@ -1166,32 +1176,34 @@ def _is_same_network(ip1, ip2):
     """Check if two IP addresses are likely on the same local network."""
     if ip1 == ip2:
         return True
-    
+
     # Handle localhost/loopback
     if ip1 in ["127.0.0.1", "localhost"] or ip2 in ["127.0.0.1", "localhost"]:
         return ip1 == ip2
-    
-    # For simplicity, check if they share the same first 3 octets for private networks
+
+    # For simplicity, check if they share the same first 3 octets for
+    # private networks
     try:
         parts1 = ip1.split('.')
         parts2 = ip2.split('.')
-        
+
         if len(parts1) == 4 and len(parts2) == 4:
             # Check for common private network prefixes
-            if (parts1[0] == '192' and parts1[1] == '168' and 
-                parts2[0] == '192' and parts2[1] == '168' and 
-                parts1[2] == parts2[2]):
+            if (parts1[0] == '192' and parts1[1] == '168' and
+                    parts2[0] == '192' and parts2[1] == '168' and
+                    parts1[2] == parts2[2]):
                 return True
-            elif (parts1[0] == '10' and parts2[0] == '10' and 
+            elif (parts1[0] == '10' and parts2[0] == '10' and
                   parts1[1] == parts2[1] and parts1[2] == parts2[2]):
                 return True
-            elif (parts1[0] == '172' and parts2[0] == '172' and 
-                  16 <= int(parts1[1]) <= 31 and 16 <= int(parts2[1]) <= 31 and
+            elif (parts1[0] == '172' and parts2[0] == '172' and
+                  16 <= int(parts1[1]) <= 31 and
+                  16 <= int(parts2[1]) <= 31 and
                   parts1[1] == parts2[1] and parts1[2] == parts2[2]):
                 return True
     except (ValueError, IndexError):
         pass
-    
+
     return False
 
 
@@ -1248,7 +1260,7 @@ def kick_player():
     current_state.daily_double_pending.pop(emoji, None)
     if current_state.winner_emoji == emoji:
         current_state.winner_emoji = None
-    
+
     # Check if lobby is now empty and remove it immediately
     lobby_code = _lobby_id(current_state)
     if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
@@ -1258,7 +1270,7 @@ def kick_player():
         RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
         logger.info(f"Removed empty lobby {lobby_code}")
         return jsonify({"status": "ok", "lobby_removed": True})
-    
+
     broadcast_state()
     log_player_kicked(lobby_code, emoji)
     return jsonify({"status": "ok"})
@@ -1268,7 +1280,7 @@ def remove_empty_lobby(lobby_code: str) -> bool:
     """Remove a lobby if it has no players. Returns True if removed."""
     if lobby_code == DEFAULT_LOBBY:
         return False
-    
+
     lobby = LOBBIES.get(lobby_code)
     if lobby and not lobby.leaderboard:
         LOBBIES.pop(lobby_code, None)
@@ -1284,21 +1296,21 @@ def leave_lobby():
     data = request.get_json(silent=True) or {}
     emoji = data.get("emoji")
     player_id = data.get("player_id")
-    
+
     if not emoji:
         return jsonify({"status": "error", "msg": "Missing emoji"}), 400
     if not player_id:
         return jsonify({"status": "error", "msg": "Missing player_id"}), 400
-    
+
     # Verify the player exists in the lobby
     if emoji not in current_state.leaderboard:
         return jsonify({"status": "error", "msg": "Player not in lobby"}), 404
-    
+
     # Verify player_id matches
     stored_player_id = current_state.leaderboard[emoji].get("player_id")
     if stored_player_id != player_id:
         return jsonify({"status": "error", "msg": "Invalid player credentials"}), 403
-    
+
     # Remove the player from the lobby
     ip = current_state.leaderboard[emoji]["ip"]
     current_state.leaderboard.pop(emoji, None)
@@ -1307,7 +1319,7 @@ def leave_lobby():
     current_state.daily_double_pending.pop(emoji, None)
     if current_state.winner_emoji == emoji:
         current_state.winner_emoji = None
-    
+
     # Check if lobby is now empty and remove it immediately
     lobby_code = _lobby_id(current_state)
     if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
@@ -1317,12 +1329,12 @@ def leave_lobby():
         RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
         logger.info(f"Removed empty lobby {lobby_code} after player {emoji} left")
         return jsonify({"status": "ok", "lobby_removed": True})
-    
+
     # Save state and broadcast changes
     current_state.last_activity = time.time()
     save_data()
     broadcast_state()
-    
+
     return jsonify({"status": "ok"})
 
 
