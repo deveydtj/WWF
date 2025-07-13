@@ -650,7 +650,7 @@ function applyState(state) {
   } else if (gameState.is(STATES.GAME_OVER)) {
     gameState.transition(STATES.PLAYING);
   }
-  setGameInputDisabled(gameState.is(STATES.GAME_OVER) || dailyDoubleRow !== null);
+  setGameInputDisabled(gameState.is(STATES.GAME_OVER));
   updateResetButton();
 
   if (state.is_over) {
@@ -734,7 +734,8 @@ async function submitGuessHandler() {
         }
         dailyDoubleRow = resp.state.guesses.length;
         dailyDoubleHint = null;
-        setGameInputDisabled(true);
+        // Don't disable input - allow players to continue guessing while having Daily Double
+        // setGameInputDisabled(true);
         saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
       showMessage('Daily Double! Tap a tile in the next row for a hint.', { messageEl, messagePopup });
       showHintTooltip('Tap a tile in the next row to reveal a letter!');
