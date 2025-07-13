@@ -1163,14 +1163,86 @@ def kick_player():
     current_state.daily_double_pending.pop(emoji, None)
     if current_state.winner_emoji == emoji:
         current_state.winner_emoji = None
+    
+    # Check if lobby is now empty and remove it immediately
+    lobby_code = _lobby_id(current_state)
+    if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
+        # Lobby is empty, remove it immediately
+        LOBBIES.pop(lobby_code, None)
+        logger.info(f"Removed empty lobby {lobby_code}")
+        return jsonify({"status": "ok", "lobby_removed": True})
+    
     broadcast_state()
-    log_player_kicked(_lobby_id(current_state), emoji)
+    log_player_kicked(lobby_code, emoji)
+    return jsonify({"status": "ok"})
+
+
+def remove_empty_lobby(lobby_code: str) -> bool:
+    """Remove a lobby if it has no players. Returns True if removed."""
+    if lobby_code == DEFAULT_LOBBY:
+        return False
+    
+    lobby = LOBBIES.get(lobby_code)
+    if lobby and not lobby.leaderboard:
+        LOBBIES.pop(lobby_code, None)
+        logger.info(f"Removed empty lobby {lobby_code}")
+        return True
+    return False
+
+
+def leave_lobby():
+    """Remove the calling player from the current lobby."""
+    data = request.get_json(silent=True) or {}
+    emoji = data.get("emoji")
+    player_id = data.get("player_id")
+    
+    if not emoji:
+        return jsonify({"status": "error", "msg": "Missing emoji"}), 400
+    if not player_id:
+        return jsonify({"status": "error", "msg": "Missing player_id"}), 400
+    
+    # Verify the player exists in the lobby
+    if emoji not in current_state.leaderboard:
+        return jsonify({"status": "error", "msg": "Player not in lobby"}), 404
+    
+    # Verify player_id matches
+    stored_player_id = current_state.leaderboard[emoji].get("player_id")
+    if stored_player_id != player_id:
+        return jsonify({"status": "error", "msg": "Invalid player credentials"}), 403
+    
+    # Remove the player from the lobby
+    ip = current_state.leaderboard[emoji]["ip"]
+    current_state.leaderboard.pop(emoji, None)
+    current_state.ip_to_emoji.pop(ip, None)
+    current_state.player_map.pop(player_id, None)
+    current_state.daily_double_pending.pop(emoji, None)
+    if current_state.winner_emoji == emoji:
+        current_state.winner_emoji = None
+    
+    # Check if lobby is now empty and remove it immediately
+    lobby_code = _lobby_id(current_state)
+    if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
+        # Lobby is empty, remove it immediately
+        LOBBIES.pop(lobby_code, None)
+        logger.info(f"Removed empty lobby {lobby_code} after player {emoji} left")
+        return jsonify({"status": "ok", "lobby_removed": True})
+    
+    # Save state and broadcast changes
+    current_state.last_activity = time.time()
+    save_data()
+    broadcast_state()
+    
     return jsonify({"status": "ok"})
 
 
 @app.route("/lobby/<code>/kick", methods=["POST"])
 def lobby_kick(code):
     return _with_lobby(code, kick_player)
+
+
+@app.route("/lobby/<code>/leave", methods=["POST"])
+def lobby_leave(code):
+    return _with_lobby(code, leave_lobby)
 
 
 @app.route("/lobby/<code>/chat", methods=["GET", "POST"])
