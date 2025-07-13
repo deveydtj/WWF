@@ -178,6 +178,10 @@ emoji_lock = threading.Lock()  # guard emoji selection operations
 LOBBIES: dict[str, GameState] = {}
 CREATION_TIMES: dict[str, list[float]] = {}
 
+# Track recently removed lobbies to prevent immediate recreation
+RECENTLY_REMOVED_LOBBIES: dict[str, float] = {}
+REMOVAL_COOLDOWN = 30.0  # seconds to prevent recreation after removal
+
 # Current active lobby used by legacy routes
 DEFAULT_LOBBY = "DEFAULT"
 current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
@@ -187,6 +191,12 @@ def get_lobby(code: str) -> GameState:
     """Return the GameState for ``code``, creating it if needed."""
     lobby = LOBBIES.get(code)
     if lobby is None:
+        # Check if this lobby was recently removed due to being empty
+        removal_time = RECENTLY_REMOVED_LOBBIES.get(code)
+        if removal_time and (time.time() - removal_time) < REMOVAL_COOLDOWN:
+            # Lobby was recently removed, return None to indicate it shouldn't be recreated
+            return None
+        
         lobby = _reset_state(GameState())
         LOBBIES[code] = lobby
         load_data(lobby)
@@ -209,6 +219,14 @@ def purge_lobbies() -> None:
             expired.append(cid)
     for cid in expired:
         LOBBIES.pop(cid, None)
+    
+    # Clean up old entries from recently removed lobbies tracking
+    expired_removals = []
+    for lobby_code, removal_time in RECENTLY_REMOVED_LOBBIES.items():
+        if now - removal_time > REMOVAL_COOLDOWN * 2:  # Keep entries for twice the cooldown period
+            expired_removals.append(lobby_code)
+    for lobby_code in expired_removals:
+        RECENTLY_REMOVED_LOBBIES.pop(lobby_code, None)
 
 
 def _with_lobby(code: str, func):
@@ -218,6 +236,9 @@ def _with_lobby(code: str, func):
     purge_lobbies()
     global current_state
     state = get_lobby(code)
+    if state is None:
+        # Lobby was recently removed and shouldn't be recreated
+        return jsonify({"status": "error", "msg": "Lobby no longer exists"}), 404
     prev = current_state
     current_state = state
     try:
@@ -1169,6 +1190,8 @@ def kick_player():
     if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
         # Lobby is empty, remove it immediately
         LOBBIES.pop(lobby_code, None)
+        # Track the removal time to prevent immediate recreation
+        RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
         logger.info(f"Removed empty lobby {lobby_code}")
         return jsonify({"status": "ok", "lobby_removed": True})
     
@@ -1185,6 +1208,8 @@ def remove_empty_lobby(lobby_code: str) -> bool:
     lobby = LOBBIES.get(lobby_code)
     if lobby and not lobby.leaderboard:
         LOBBIES.pop(lobby_code, None)
+        # Track the removal time to prevent immediate recreation
+        RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
         logger.info(f"Removed empty lobby {lobby_code}")
         return True
     return False
@@ -1224,6 +1249,8 @@ def leave_lobby():
     if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
         # Lobby is empty, remove it immediately
         LOBBIES.pop(lobby_code, None)
+        # Track the removal time to prevent immediate recreation
+        RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
         logger.info(f"Removed empty lobby {lobby_code} after player {emoji} left")
         return jsonify({"status": "ok", "lobby_removed": True})
     
