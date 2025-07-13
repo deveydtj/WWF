@@ -45,15 +45,50 @@
       <p>Games from your network:</p>
       <div id="networkLobbyList"></div>
     </section>
-    <section id="featureRow">
-      <div class="feature">Emoji avatars</div>
-      <div class="feature">Daily Double</div>
-      <div class="feature">Real-time chat</div>
-    </section>
+
     <section id="howTo">
       <button id="howToggle" aria-expanded="false">How to Play</button>
       <div id="howContent" hidden>
-        <p>Guess the word with friends and chat in real time.</p>
+        <div class="how-section">
+          <h3>Game Objective</h3>
+          <p>Guess the hidden five-letter word in six tries or fewer. Work together with other players in real-time!</p>
+        </div>
+        
+        <div class="how-section">
+          <h3>How It Works</h3>
+          <p>After each guess, tiles change color to give you clues:</p>
+          <div class="tile-examples">
+            <div class="tile-example">
+              <div class="example-tile correct">W</div>
+              <span><strong>Green:</strong> Letter is correct and in the right position</span>
+            </div>
+            <div class="tile-example">
+              <div class="example-tile present">O</div>
+              <span><strong>Yellow:</strong> Letter is in the word but wrong position</span>
+            </div>
+            <div class="tile-example">
+              <div class="example-tile absent">R</div>
+              <span><strong>Gray:</strong> Letter is not in the word</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="how-section">
+          <h3>Scoring System</h3>
+          <p>Points are based on Scrabble letter values. <strong>Green letters</strong> earn full points, <strong>yellow letters</strong> earn half points (with the remaining half awarded when they turn green).</p>
+          <ul>
+            <li><strong>+3 bonus</strong> for guessing the correct word</li>
+            <li><strong>-3 penalty</strong> if your final guess is wrong</li>
+            <li><strong>-1 penalty</strong> for repeat guesses with no new letters</li>
+          </ul>
+        </div>
+
+        <div class="how-section">
+          <h3>Special Features</h3>
+          <p><strong>Daily Double:</strong> Random tiles may hide bonuses. When revealed, you get a 🔍 hint to preview any letter in the next row.</p>
+          <p><strong>Hard Mode:</strong> Every guess must include all previously discovered letters in their known positions.</p>
+          <p><strong>Multiplayer:</strong> Chat with other players, see their progress, and compete on the emoji leaderboard!</p>
+        </div>
       </div>
     </section>
   </main>
