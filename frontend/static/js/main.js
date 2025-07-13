@@ -31,6 +31,11 @@ let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
 let hadNetworkError = false;
 
+// Chat spam control
+let lastChatTime = 0;
+const CHAT_COOLDOWN_MS = 1000; // 1 second cooldown between messages
+const MAX_CHAT_LENGTH = 140; // Already enforced in HTML, but double-check
+
 // Default to sound off unless user explicitly enabled it
 let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 let audioCtx = null;
@@ -133,6 +138,7 @@ if (waitingOverlay) {
 // Ensure the close-call popup starts hidden even if CSS hasn't loaded yet
 closeCallPopup.style.display = 'none';
 const chatNotify = document.getElementById('chatNotify');
+const chatMessagePopup = document.getElementById('chatMessagePopup');
 const infoPopup = document.getElementById('infoPopup');
 const infoClose = document.getElementById('infoClose');
 const menuInfo = document.getElementById('menuInfo');
@@ -378,6 +384,46 @@ function showChatNotify() {
       }, { once: true });
     }
   }, 2000);
+}
+
+function showChatMessagePopup(message) {
+  if (!message || !chatNotify || !chatMessagePopup) return;
+  
+  // Position popup relative to chat notify button
+  const chatRect = chatNotify.getBoundingClientRect();
+  const boardArea = document.getElementById('boardArea');
+  const boardRect = boardArea.getBoundingClientRect();
+  
+  // Calculate position relative to board area
+  const left = chatRect.left - boardRect.left + chatRect.width / 2;
+  const top = chatRect.top - boardRect.top + chatRect.height / 2;
+  
+  chatMessagePopup.style.left = left + 'px';
+  chatMessagePopup.style.top = top + 'px';
+  
+  // Limit popup text to a couple of words to prevent long paragraphs
+  const POPUP_CHAR_LIMIT = 30;
+  let displayText = message.text;
+  if (displayText.length > POPUP_CHAR_LIMIT) {
+    displayText = displayText.substring(0, POPUP_CHAR_LIMIT).trim() + '...';
+  }
+  
+  // Set content
+  chatMessagePopup.innerHTML = `
+    <span class="chat-emoji">${message.emoji}</span>
+    <span class="chat-text">${displayText}</span>
+  `;
+  
+  // Show popup with animation
+  chatMessagePopup.classList.remove('show');
+  requestAnimationFrame(() => {
+    chatMessagePopup.classList.add('show');
+  });
+  
+  // Remove animation class after animation completes
+  setTimeout(() => {
+    chatMessagePopup.classList.remove('show');
+  }, 3000);
 }
 
 function hideChatNotify() {
@@ -672,6 +718,11 @@ function applyState(state) {
     renderChat(chatMessagesEl, state.chat_messages);
     if (state.chat_messages.length > prevChatCount && !document.body.classList.contains('chat-open')) {
       showChatNotify();
+      // Show popup with the latest message
+      const latestMessage = state.chat_messages[state.chat_messages.length - 1];
+      if (latestMessage) {
+        showChatMessagePopup(latestMessage);
+      }
     }
   }
 
@@ -1165,6 +1216,23 @@ chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = chatInput.value.trim();
   if (!text) return;
+  
+  // Spam control: Check cooldown
+  const now = Date.now();
+  if (now - lastChatTime < CHAT_COOLDOWN_MS) {
+    shakeInput(chatInput);
+    showMessage(`Please wait ${Math.ceil((CHAT_COOLDOWN_MS - (now - lastChatTime)) / 1000)} second(s) before sending another message.`, { messageEl, messagePopup });
+    return;
+  }
+  
+  // Check message length
+  if (text.length > MAX_CHAT_LENGTH) {
+    shakeInput(chatInput);
+    showMessage(`Message too long. Maximum ${MAX_CHAT_LENGTH} characters allowed.`, { messageEl, messagePopup });
+    return;
+  }
+  
+  lastChatTime = now;
   chatInput.value = '';
   await sendChatMessage(text, myEmoji, myPlayerId, LOBBY_CODE);
   fetchState();
