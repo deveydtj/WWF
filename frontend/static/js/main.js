@@ -216,7 +216,16 @@ if (leaveLobby && LOBBY_CODE) {
       eventSource = null;
     }
     stopAllSounds();
-    window.location.href = '/';
+    
+    // Check if we're in an iframe (lobby loaded within landing page)
+    if (window.parent !== window) {
+      // Clear the hash in the parent window to ensure proper navigation
+      window.parent.location.hash = '';
+      window.parent.location.href = '/';
+    } else {
+      // If not in iframe, navigate normally
+      window.location.href = '/';
+    }
   });
 }
 
