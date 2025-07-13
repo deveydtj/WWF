@@ -175,6 +175,52 @@ class GameState:
 
 emoji_lock = threading.Lock()  # guard emoji selection operations
 
+# Color variants for duplicate emojis
+EMOJI_VARIANTS = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"]
+
+def get_emoji_variant(base_emoji: str, existing_emojis: set) -> str:
+    """
+    Generate a variant of the base emoji if duplicates exist.
+    
+    Args:
+        base_emoji: The base emoji string (e.g., "🐶")
+        existing_emojis: Set of existing emoji keys in the leaderboard
+    
+    Returns:
+        A unique emoji variant string (e.g., "🐶-red", "🐶-blue")
+    """
+    # If base emoji is not taken, return it as-is
+    if base_emoji not in existing_emojis:
+        return base_emoji
+    
+    # Try each color variant until we find an available one
+    for variant in EMOJI_VARIANTS:
+        variant_emoji = f"{base_emoji}-{variant}"
+        if variant_emoji not in existing_emojis:
+            return variant_emoji
+    
+    # If all predefined variants are taken, use numbered variants
+    counter = len(EMOJI_VARIANTS) + 1
+    while True:
+        variant_emoji = f"{base_emoji}-{counter}"
+        if variant_emoji not in existing_emojis:
+            return variant_emoji
+        counter += 1
+
+def get_base_emoji(emoji_variant: str) -> str:
+    """
+    Extract the base emoji from a variant.
+    
+    Args:
+        emoji_variant: Either a base emoji or variant (e.g., "🐶" or "🐶-red")
+    
+    Returns:
+        The base emoji string (e.g., "🐶")
+    """
+    if "-" in emoji_variant:
+        return emoji_variant.split("-")[0]
+    return emoji_variant
+
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
 CREATION_TIMES: dict[str, list[float]] = {}
@@ -712,31 +758,36 @@ def state():
 def set_emoji():
     """Register or change the player's emoji avatar."""
     data = request.json or {}
-    emoji = data.get("emoji")
+    base_emoji = data.get("emoji")
     player_id = data.get("player_id")
     ip = get_client_ip()
     now = time.time()
 
-    if not emoji or not isinstance(emoji, str):
+    if not base_emoji or not isinstance(base_emoji, str):
         return jsonify({"status": "error", "msg": "Invalid emoji."}), 400
 
     if not player_id:
         player_id = uuid.uuid4().hex
     new_player = player_id not in current_state.player_map
-    logger.info("Emoji request: %s player=%s ip=%s", emoji, player_id, ip)
+    logger.info("Emoji request: %s player=%s ip=%s", base_emoji, player_id, ip)
 
     with emoji_lock:
-        if (
-            emoji in current_state.leaderboard
-            and current_state.leaderboard[emoji].get("player_id") != player_id
-        ):
-            return (
-                jsonify({"status": "error", "msg": "That emoji is taken!"}),
-                409,
-            )
-
+        # Check if player already has an emoji assigned
         prev_emoji = current_state.player_map.get(player_id)
-        if prev_emoji and prev_emoji != emoji:
+        
+        # If player is requesting the same base emoji they already have (any variant), keep their current emoji
+        if prev_emoji and get_base_emoji(prev_emoji) == base_emoji:
+            emoji_variant = prev_emoji
+        else:
+            # Player is changing to a different base emoji or is new
+            # Get a unique emoji variant for this base emoji, excluding their current emoji if changing
+            existing_emojis = set(current_state.leaderboard.keys())
+            if prev_emoji and prev_emoji in existing_emojis:
+                existing_emojis.remove(prev_emoji)
+            emoji_variant = get_emoji_variant(base_emoji, existing_emojis)
+        
+        # If player had a different emoji before, remove the old entry
+        if prev_emoji and prev_emoji != emoji_variant:
             # Move existing entry so score and history persist
             entry = current_state.leaderboard.pop(
                 prev_emoji,
@@ -749,10 +800,11 @@ def set_emoji():
                     "last_active": now,
                 },
             )
-            current_state.leaderboard[emoji] = entry
+            current_state.leaderboard[emoji_variant] = entry
         else:
+            # Create new entry or update existing one
             current_state.leaderboard.setdefault(
-                emoji,
+                emoji_variant,
                 {
                     "ip": ip,
                     "player_id": player_id,
@@ -762,24 +814,35 @@ def set_emoji():
                     "last_active": now,
                 },
             )
-        current_state.leaderboard[emoji]["ip"] = ip
-        current_state.leaderboard[emoji]["player_id"] = player_id
-        current_state.leaderboard[emoji]["last_active"] = now
-        current_state.ip_to_emoji[ip] = emoji
-        current_state.player_map[player_id] = emoji
+        
+        # Update player mappings
+        current_state.leaderboard[emoji_variant]["ip"] = ip
+        current_state.leaderboard[emoji_variant]["player_id"] = player_id
+        current_state.leaderboard[emoji_variant]["last_active"] = now
+        current_state.ip_to_emoji[ip] = emoji_variant
+        current_state.player_map[player_id] = emoji_variant
         current_state.last_activity = now
         save_data()
+    
     logger.info(
-        "Emoji %s mapped to player %s (ip %s) new=%s",
-        emoji,
+        "Emoji %s (variant: %s) mapped to player %s (ip %s) new=%s",
+        base_emoji,
+        emoji_variant,
         player_id,
         ip,
         new_player,
     )
     broadcast_state()
     if new_player:
-        log_lobby_joined(_lobby_id(current_state), emoji, ip)
-    return jsonify({"status": "ok", "player_id": player_id})
+        log_lobby_joined(_lobby_id(current_state), emoji_variant, ip)
+    
+    # Return the variant that was assigned
+    return jsonify({
+        "status": "ok", 
+        "player_id": player_id,
+        "emoji": emoji_variant,
+        "base_emoji": base_emoji
+    })
 
 
 @app.route("/guess", methods=["POST"])

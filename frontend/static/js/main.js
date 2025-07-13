@@ -1,6 +1,6 @@
 import { createBoard, updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, isValidHardModeGuess, animateTilesOut, animateTilesIn } from './board.js';
 import { renderHistory } from './history.js';
-import { getMyEmoji, setMyEmoji, showEmojiModal, getMyPlayerId, setMyPlayerId } from './emoji.js';
+import { getMyEmoji, setMyEmoji, showEmojiModal, getMyPlayerId, setMyPlayerId, applyEmojiVariantStyling, getBaseEmoji } from './emoji.js';
 import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessage, subscribeToUpdates, requestHint, kickPlayerRequest, leaveLobbyRequest } from './api.js';
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
@@ -452,16 +452,26 @@ function renderLeaderboard() {
     if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
       node.classList.add('inactive');
     }
-    const label = document.createElement('span');
-    label.textContent = `${entry.emoji} ${entry.score}`;
-    node.appendChild(label);
+    
+    // Create separate elements for emoji and score
+    const emojiSpan = document.createElement('span');
+    emojiSpan.className = 'leaderboard-emoji';
+    applyEmojiVariantStyling(emojiSpan, entry.emoji);
+    
+    const scoreSpan = document.createElement('span');
+    scoreSpan.className = 'leaderboard-score';
+    scoreSpan.textContent = ` ${entry.score}`;
+    
+    node.appendChild(emojiSpan);
+    node.appendChild(scoreSpan);
 
     if (entry.emoji === myEmoji) {
       node.style.cursor = 'pointer';
       node.title = 'Click to change your emoji';
       node.addEventListener('click', () => {
         skipAutoClose = true;
-        const taken = activeEmojis.filter(e => e !== myEmoji);
+        // Pass active emojis for variant detection
+        const taken = activeEmojis;
         showEmojiModal(taken, {
           onChosen: (e) => { myEmoji = e; myPlayerId = getMyPlayerId(); ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
           skipAutoCloseRef: { value: skipAutoClose },
@@ -502,7 +512,16 @@ function renderPlayerSidebar() {
     if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
       li.classList.add('inactive');
     }
-    li.textContent = `${entry.emoji} ${entry.score}`;
+    
+    // Create emoji span with variant styling
+    const emojiSpan = document.createElement('span');
+    emojiSpan.className = 'player-emoji';
+    applyEmojiVariantStyling(emojiSpan, entry.emoji);
+    
+    const scoreText = document.createTextNode(` ${entry.score}`);
+    li.appendChild(emojiSpan);
+    li.appendChild(scoreText);
+    
     if (HOST_TOKEN && entry.emoji !== myEmoji) {
       const btn = document.createElement('button');
       btn.textContent = 'Kick';
@@ -527,7 +546,7 @@ function renderEmojiStamps(guesses) {
     const top = tileRect.top - boardRect.top + tile.offsetHeight / 2;
     const span = document.createElement('span');
     span.className = 'board-stamp';
-    span.textContent = g.emoji;
+    applyEmojiVariantStyling(span, g.emoji);
     span.style.top = `${top}px`;
     stampContainer.appendChild(span);
   });
