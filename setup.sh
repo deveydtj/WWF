@@ -26,8 +26,8 @@ check_python_packages() {
 echo "Checking Python..."
 check_cmd python3
 py_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-if [[ $(python3 -c 'import sys;print(sys.version_info<(3,11))') == "True" ]]; then
-  echo "Python 3.11+ required (found $py_version)" >&2
+if [[ $(python3 -c 'import sys;print(sys.version_info<(3,12))') == "True" ]]; then
+  echo "Python 3.12+ required (found $py_version)" >&2
   exit 1
 fi
 check_python_packages
@@ -36,8 +36,8 @@ echo "Checking Node.js..."
 check_cmd node
 node_version=$(node --version | tr -d 'v')
 node_major=${node_version%%.*}
-if [ "$node_major" -lt 18 ]; then
-  echo "Node.js 18+ required (found $node_version)" >&2
+if [ "$node_major" -lt 20 ]; then
+  echo "Node.js 20+ required (found $node_version)" >&2
   exit 1
 fi
 
