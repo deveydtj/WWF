@@ -1,5 +1,11 @@
 import { updateVH } from './static/js/utils.js';
 
+// List of available emojis for the landing page (same as game)
+const allEmojis = [
+  "🐶", "🦊", "🐼", "🐸", "🐵", "🐧", "🐙", "🦉", "🦄", "🦁",
+  "🐯", "🐨", "🐻", "🦖", "🦕", "🐝", "🐳", "🦋", "🐢", "🐬"
+];
+
 function applyDarkMode() {
   const enabled = localStorage.getItem('dark') === 'true';
   document.body.classList.toggle('dark-mode', enabled);
@@ -42,8 +48,101 @@ export function showSavedEmoji() {
   const el = document.getElementById('emojiDisplay');
   if (el) {
     const emoji = localStorage.getItem('myEmoji');
-    if (emoji) el.textContent = emoji;
+    if (emoji) {
+      el.textContent = emoji;
+      el.setAttribute('aria-label', `Selected emoji: ${emoji}. Click to change.`);
+    } else {
+      el.textContent = '👤';
+      el.setAttribute('aria-label', 'Click to select your emoji');
+    }
   }
+}
+
+export function showEmojiPicker() {
+  const modal = document.getElementById('emojiModal');
+  const choices = document.getElementById('emojiChoices');
+  const errorEl = document.getElementById('emojiModalError');
+  
+  if (!modal || !choices || !errorEl) return;
+  
+  // Clear previous choices and errors
+  choices.innerHTML = '';
+  errorEl.textContent = '';
+  
+  // Create emoji choice buttons
+  allEmojis.forEach(emoji => {
+    const btn = document.createElement('span');
+    btn.className = 'emoji-choice';
+    btn.textContent = emoji;
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('aria-label', `Select ${emoji} emoji`);
+    
+    const selectEmoji = () => {
+      localStorage.setItem('myEmoji', emoji);
+      showSavedEmoji();
+      closeEmojiPicker();
+      announce(`Selected ${emoji} emoji`);
+    };
+    
+    btn.addEventListener('click', selectEmoji);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectEmoji();
+      }
+    });
+    
+    choices.appendChild(btn);
+  });
+  
+  // Show modal
+  modal.style.display = 'flex';
+  
+  // Focus first emoji choice
+  const firstChoice = choices.querySelector('.emoji-choice');
+  if (firstChoice) firstChoice.focus();
+  
+  // Handle escape key and background click to close
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape') {
+      closeEmojiPicker();
+    }
+  };
+  
+  const handleBackgroundClick = (e) => {
+    if (e.target === modal) {
+      closeEmojiPicker();
+    }
+  };
+  
+  document.addEventListener('keydown', handleKeydown);
+  modal.addEventListener('click', handleBackgroundClick);
+  
+  // Store handlers for cleanup
+  modal._handleKeydown = handleKeydown;
+  modal._handleBackgroundClick = handleBackgroundClick;
+}
+
+export function closeEmojiPicker() {
+  const modal = document.getElementById('emojiModal');
+  if (!modal) return;
+  
+  modal.style.display = 'none';
+  
+  // Clean up event listeners
+  if (modal._handleKeydown) {
+    document.removeEventListener('keydown', modal._handleKeydown);
+    delete modal._handleKeydown;
+  }
+  if (modal._handleBackgroundClick) {
+    modal.removeEventListener('click', modal._handleBackgroundClick);
+    delete modal._handleBackgroundClick;
+  }
+  
+  // Return focus to emoji display button
+  const emojiDisplay = document.getElementById('emojiDisplay');
+  if (emojiDisplay) emojiDisplay.focus();
 }
 
 export function storeLastLobby(id) {
@@ -195,6 +294,7 @@ export function init() {
   initDarkToggle();
   initJoinForm();
   initHowTo();
+  initEmojiPicker();
   showSavedEmoji();
   fetchNetworkLobbies();
   updateVH();
@@ -208,6 +308,19 @@ export function init() {
 
   handleHashChange();
   window.addEventListener('hashchange', handleHashChange);
+}
+
+function initEmojiPicker() {
+  const emojiDisplay = document.getElementById('emojiDisplay');
+  if (emojiDisplay) {
+    emojiDisplay.addEventListener('click', showEmojiPicker);
+    emojiDisplay.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        showEmojiPicker();
+      }
+    });
+  }
 }
 
 function handleHashChange() {

@@ -165,6 +165,101 @@ header {
   align-items: center;
   justify-content: space-between;
 }
+
+#emojiDisplay {
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  margin: 0 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  transition: all 0.1s ease;
+}
+
+#emojiDisplay:hover {
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+}
+
+#emojiDisplay:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+  transform: scale(0.98);
+}
+
+/* Emoji Modal Styles */
+#emojiModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#emojiModalBox {
+  background: var(--bg-color);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+#emojiModalHeading {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: var(--text-color);
+}
+
+#emojiChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.emoji-choice {
+  font-size: 2rem;
+  padding: 0.5rem;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+}
+
+.emoji-choice:hover {
+  box-shadow: 1px 1px 2px var(--shadow-color-dark),
+              -1px -1px 2px var(--shadow-color-light);
+  transform: scale(1.05);
+}
+
+.emoji-choice:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+  transform: scale(0.95);
+}
+
+#emojiModalError {
+  color: var(--error-color);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 480px) {
   header {
     flex-direction: column;
@@ -177,6 +272,19 @@ header {
   .scores img {
     width: 24px;
     height: 24px;
+  }
+  
+  #emojiModalBox {
+    padding: 1.5rem;
+  }
+  
+  #emojiChoices {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  }
+  
+  .emoji-choice {
+    font-size: 1.5rem;
+    padding: 0.4rem;
   }
 }
 
