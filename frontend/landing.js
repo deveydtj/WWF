@@ -357,7 +357,12 @@ function handleHashChange() {
     lobby.hidden = false;
     if (!lobby.dataset.code || lobby.dataset.code !== match[1]) {
       lobby.dataset.code = match[1];
-      lobby.innerHTML = `<iframe src="/lobby/${match[1]}" title="Game lobby"></iframe>`;
+      // Clear existing content and create iframe safely
+      lobby.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.src = `/lobby/${match[1]}`;
+      iframe.title = 'Game lobby';
+      lobby.appendChild(iframe);
     }
   } else {
     lobby.hidden = true;

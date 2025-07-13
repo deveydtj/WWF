@@ -22,5 +22,5 @@ ENV PYTHONUNBUFFERED=1 \
     WORD_LIST_PATH=${WORD_LIST_PATH} \
     DEFN_CACHE_PATH=${DEFN_CACHE_PATH}
 
-EXPOSE 5000
-CMD ["gunicorn", "-k", "gevent", "--timeout", "0", "-b", "0.0.0.0:5000", "backend.server:app"]
+EXPOSE 5001
+CMD ["gunicorn", "-k", "gevent", "--timeout", "0", "-b", "0.0.0.0:5001", "backend.server:app"]
