@@ -1163,9 +1163,31 @@ def kick_player():
     current_state.daily_double_pending.pop(emoji, None)
     if current_state.winner_emoji == emoji:
         current_state.winner_emoji = None
+    
+    # Check if lobby is now empty and remove it immediately
+    lobby_code = _lobby_id(current_state)
+    if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
+        # Lobby is empty, remove it immediately
+        LOBBIES.pop(lobby_code, None)
+        logger.info(f"Removed empty lobby {lobby_code}")
+        return jsonify({"status": "ok", "lobby_removed": True})
+    
     broadcast_state()
-    log_player_kicked(_lobby_id(current_state), emoji)
+    log_player_kicked(lobby_code, emoji)
     return jsonify({"status": "ok"})
+
+
+def remove_empty_lobby(lobby_code: str) -> bool:
+    """Remove a lobby if it has no players. Returns True if removed."""
+    if lobby_code == DEFAULT_LOBBY:
+        return False
+    
+    lobby = LOBBIES.get(lobby_code)
+    if lobby and not lobby.leaderboard:
+        LOBBIES.pop(lobby_code, None)
+        logger.info(f"Removed empty lobby {lobby_code}")
+        return True
+    return False
 
 
 @app.route("/lobby/<code>/kick", methods=["POST"])

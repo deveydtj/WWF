@@ -1144,6 +1144,69 @@ def test_lobby_page_serves_game_html(server_env):
     path = server.lobby_page('ABC123')
     assert path.endswith('game.html')
 
+
+def test_empty_lobby_removed_immediately_after_kick(server_env):
+    """Test that a lobby is removed immediately when last player is kicked."""
+    server, request = server_env
+    
+    # Create a lobby
+    resp = server.lobby_create()
+    code = resp['id']
+    host_token = resp['host_token']
+    
+    # Add a player to the lobby using direct leaderboard manipulation
+    server.LOBBIES[code].leaderboard['🐶'] = {
+        'ip': '127.0.0.1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    
+    # Verify lobby exists and has one player
+    assert code in server.LOBBIES
+    assert len(server.LOBBIES[code].leaderboard) == 1
+    assert "🐶" in server.LOBBIES[code].leaderboard
+    
+    # Kick the only player
+    request.json = {"emoji": "🐶", "host_token": host_token}
+    resp = server.lobby_kick(code)
+    
+    # Verify the kick was successful
+    assert resp["status"] == "ok"
+    
+    # Verify lobby is immediately removed (not waiting for TTL)
+    assert code not in server.LOBBIES
+
+
+def test_lobby_not_removed_if_still_has_players_after_kick(server_env):
+    """Test that a lobby is not removed if players remain after a kick."""
+    server, request = server_env
+    
+    # Create a lobby
+    resp = server.lobby_create()
+    code = resp['id']
+    host_token = resp['host_token']
+    
+    # Add two players to the lobby using direct leaderboard manipulation
+    server.LOBBIES[code].leaderboard['🐶'] = {
+        'ip': '127.0.0.1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[code].leaderboard['🐸'] = {
+        'ip': '192.168.1.2', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    
+    # Verify lobby has two players
+    assert len(server.LOBBIES[code].leaderboard) == 2
+    
+    # Kick one player
+    request.json = {"emoji": "🐶", "host_token": host_token}
+    resp = server.lobby_kick(code)
+    
+    # Verify the kick was successful
+    assert resp["status"] == "ok"
+    
+    # Verify lobby still exists with one player
+    assert code in server.LOBBIES
+    assert len(server.LOBBIES[code].leaderboard) == 1
+    assert "🐸" in server.LOBBIES[code].leaderboard
+
 def test_get_lobby_creates_and_returns(server_env):
     server, _ = server_env
     code = 'ZXCV12'
@@ -1189,21 +1252,32 @@ def test_lobby_kick_removes_player(server_env):
     resp = server.lobby_create()
     code = resp['id']
     token = resp['host_token']
+    # Add two players so lobby won't be removed when we kick one
     server.LOBBIES[code].leaderboard['😎'] = {
         'ip': '2', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[code].leaderboard['🤖'] = {
+        'ip': '3', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
     }
     request.json = {'emoji': '😎', 'player_id': 'p2', 'host_token': token}
     resp = server.lobby_kick(code)
     assert resp['status'] == 'ok'
+    # Lobby should still exist with the remaining player
+    assert code in server.LOBBIES
     assert '😎' not in server.LOBBIES[code].leaderboard
+    assert '🤖' in server.LOBBIES[code].leaderboard
 
 
 def test_lobby_kick_requires_token(server_env):
     server, request = server_env
     resp = server.lobby_create()
     code = resp['id']
+    # Add two players so lobby won't be removed when the kick fails
     server.LOBBIES[code].leaderboard['😀'] = {
         'ip': '1', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
+    }
+    server.LOBBIES[code].leaderboard['🤖'] = {
+        'ip': '2', 'score': 0, 'used_yellow': [], 'used_green': [], 'last_active': 0
     }
     request.json = {'emoji': '😀', 'player_id': 'p1', 'host_token': 'BAD'}
     resp = server.lobby_kick(code)
