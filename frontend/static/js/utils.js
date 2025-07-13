@@ -7,6 +7,14 @@ export const isMobile =
   /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 /**
+ * Check if we're in mobile responsive layout (viewport <= 600px).
+ * This matches the CSS media query breakpoint for mobile layout.
+ */
+export function isMobileView() {
+  return window.innerWidth <= 600;
+}
+
+/**
  * Display a transient message to the user.
  *
  * @param {string} msg
@@ -356,11 +364,23 @@ export function fitBoardToContainer(rows = 6) {
 
 /**
  * Place a popup near an anchor element while clamping to the viewport.
+ * In mobile view, this defers to CSS media queries for centering.
  *
  * @param {HTMLElement} popup
  * @param {HTMLElement} anchor
  */
 export function positionPopup(popup, anchor) {
+  // In mobile view (viewport <= 600px), let CSS media queries handle centering
+  if (isMobileView()) {
+    // Reset any inline positioning to let CSS media queries take effect
+    popup.style.position = '';
+    popup.style.left = '';
+    popup.style.top = '';
+    popup.style.transform = '';
+    return;
+  }
+
+  // Desktop positioning logic
   const rect = anchor.getBoundingClientRect();
   const menuWidth = popup.offsetWidth;
   const menuHeight = popup.offsetHeight;
