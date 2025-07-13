@@ -1,10 +1,20 @@
+import html
+import json
+import logging
+import os
+import queue
+import random
+import re
+import string
+import threading
+import time
+import uuid
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import random
-import string
-import json
-import os
-import time
 
 try:
     import requests as _requests
@@ -38,27 +48,18 @@ except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
     requests = _RequestsShim()
 else:
     requests = _requests
-import logging
-
-logger = logging.getLogger(__name__)
-import re
-from dataclasses import dataclass, field
-from typing import Any
-import html
-import threading
-import queue
-from pathlib import Path
-import uuid
 
 try:
     import redis  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     redis = None
 
+logger = logging.getLogger(__name__)
+
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
 app = Flask(__name__)
-app.secret_key = "a_wordle_secret"
+app.secret_key = os.environ.get("SECRET_KEY", "dev_key_for_local_testing_only")
 CORS(app)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
