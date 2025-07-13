@@ -120,14 +120,19 @@
 
     <div id="gameColumn">
       <div id="titleBar">
-        <div id="resetWrapper">
-          <button id="holdReset">
-            <span id="holdResetText">Reset</span>
-            <span id="holdResetProgress"></span>
-          </button>
+        <div class="mobile-title-row">
+          <div id="resetWrapper">
+            <button id="holdReset">
+              <span id="holdResetText">Reset</span>
+              <span id="holdResetProgress"></span>
+            </button>
+          </div>
+          <h1 id="gameTitle"></h1>
+          <div class="mobile-leaderboard-container">
+            <!-- Leaderboard will be moved here on mobile -->
+          </div>
+          <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
         </div>
-        <h1 id="gameTitle"></h1>
-        <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
       </div>
 
       <!-- Board -->

@@ -387,7 +387,7 @@ function hideChatNotify() {
 
 function centerLeaderboardOnMe() {
   const lb = document.getElementById('leaderboard');
-  if (leaderboardScrolling) return;
+  if (!lb || leaderboardScrolling) return;
   if (lb.scrollWidth > lb.clientWidth) {
     const mine = lb.querySelector('.leaderboard-entry.me');
     if (mine) {
@@ -399,9 +399,43 @@ function centerLeaderboardOnMe() {
   }
 }
 
+function isMobileView() {
+  return window.innerWidth <= 600;
+}
+
+function setupMobileLeaderboard() {
+  if (isMobileView()) {
+    const lb = document.getElementById('leaderboard');
+    const mobileContainer = document.querySelector('.mobile-leaderboard-container');
+    
+    if (lb && mobileContainer && !mobileContainer.contains(lb)) {
+      // Move leaderboard to mobile container
+      lb.classList.add('mobile-inline');
+      mobileContainer.appendChild(lb);
+    }
+  } else {
+    // Move leaderboard back to original position for desktop
+    const lb = document.getElementById('leaderboard');
+    const mobileContainer = document.querySelector('.mobile-leaderboard-container');
+    const originalContainer = document.querySelector('#gameColumn');
+    
+    if (lb && mobileContainer && mobileContainer.contains(lb)) {
+      lb.classList.remove('mobile-inline');
+      // Insert leaderboard after titleBar but before boardArea
+      const titleBar = document.getElementById('titleBar');
+      const boardArea = document.getElementById('boardArea');
+      originalContainer.insertBefore(lb, boardArea);
+    }
+  }
+}
+
 // Rebuild the leaderboard DOM and keep it centered on the current player
 function renderLeaderboard() {
+  setupMobileLeaderboard(); // Ensure proper mobile layout
+  
   const lb = document.getElementById('leaderboard');
+  if (!lb) return;
+  
   lb.innerHTML = '';
   const now = Date.now() / 1000;
 
@@ -453,7 +487,7 @@ function renderLeaderboard() {
     leaderboardScrollTimeout = setTimeout(() => {
       leaderboardScrolling = false;
       centerLeaderboardOnMe();
-    }, 1000);
+    }, 5000); // Changed to 5 seconds as requested
   };
 }
 
@@ -1016,6 +1050,7 @@ window.addEventListener('resize', () => {
   }
   
   adjustKeyboardForViewport();
+  setupMobileLeaderboard(); // Handle mobile leaderboard layout on resize
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 updateVH();
@@ -1038,6 +1073,7 @@ window.addEventListener('orientationchange', () => {
   }
   
   adjustKeyboardForViewport();
+  setupMobileLeaderboard(); // Handle mobile leaderboard layout on orientation change
   if (latestState) renderEmojiStamps(latestState.guesses);
 });
 
@@ -1055,6 +1091,7 @@ window.addEventListener('orientationchange', () => {
     }
     
     adjustKeyboardForViewport();
+    setupMobileLeaderboard(); // Handle mobile leaderboard layout on delayed orientation change
   }, 300);
 });
 
