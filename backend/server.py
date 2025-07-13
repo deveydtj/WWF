@@ -164,6 +164,7 @@ class GameState:
     last_definition: str | None = None
     win_timestamp: float | None = None
     chat_messages: list = field(default_factory=list)
+    chat_rate_limits: dict = field(default_factory=dict)  # player_id -> last_message_time
     listeners: set = field(default_factory=set)
     daily_double_index: int | None = None
     daily_double_winners: set = field(default_factory=set)
@@ -1065,17 +1066,30 @@ def chat():
         text = (data.get("text") or "").strip()
         emoji = data.get("emoji")
         player_id = data.get("player_id")
+        current_time = time.time()
+        
         if not text:
             return jsonify({"status": "error", "msg": "Empty message."}), 400
+            
+        if len(text) > 140:
+            return jsonify({"status": "error", "msg": "Message too long."}), 400
+            
         if (
             emoji not in current_state.leaderboard
             or current_state.leaderboard[emoji].get("player_id") != player_id
         ):
             return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
+            
+        # Rate limiting: 1 message per second per player
+        last_message_time = current_state.chat_rate_limits.get(player_id, 0)
+        if current_time - last_message_time < 1.0:
+            return jsonify({"status": "error", "msg": "Please wait before sending another message."}), 429
+            
+        current_state.chat_rate_limits[player_id] = current_time
         current_state.chat_messages.append(
-            {"emoji": emoji, "text": text, "ts": time.time()}
+            {"emoji": emoji, "text": text, "ts": current_time}
         )
-        current_state.last_activity = time.time()
+        current_state.last_activity = current_time
         save_data()
         broadcast_state()
         return jsonify({"status": "ok"})

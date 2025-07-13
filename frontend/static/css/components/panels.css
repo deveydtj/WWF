@@ -44,6 +44,33 @@
   animation: wiggle 0.6s;
 }
 
+/* Chat message popup */
+#chatMessagePopup {
+  position: absolute;
+  background: var(--bg-color);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 
+    4px 4px 8px var(--shadow-color-dark),
+    -4px -4px 8px var(--shadow-color-light);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  white-space: nowrap;
+  max-width: 200px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+#chatMessagePopup.show {
+  animation: chatPopupOut 3s ease-out forwards;
+}
+
 #optionsMenu {
   position: absolute;
   background: var(--bg-color);

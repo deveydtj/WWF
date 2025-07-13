@@ -67,3 +67,26 @@
   95% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
+/* Chat message popup animation */
+@keyframes chatPopupOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1) translateY(-20px);
+  }
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(-20px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) translateY(-20px);
+  }
+}
