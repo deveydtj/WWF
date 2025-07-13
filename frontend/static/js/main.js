@@ -401,10 +401,17 @@ function showChatMessagePopup(message) {
   chatMessagePopup.style.left = left + 'px';
   chatMessagePopup.style.top = top + 'px';
   
+  // Limit popup text to a couple of words to prevent long paragraphs
+  const POPUP_CHAR_LIMIT = 30;
+  let displayText = message.text;
+  if (displayText.length > POPUP_CHAR_LIMIT) {
+    displayText = displayText.substring(0, POPUP_CHAR_LIMIT).trim() + '...';
+  }
+  
   // Set content
   chatMessagePopup.innerHTML = `
     <span class="chat-emoji">${message.emoji}</span>
-    <span class="chat-text">${message.text}</span>
+    <span class="chat-text">${displayText}</span>
   `;
   
   // Show popup with animation
