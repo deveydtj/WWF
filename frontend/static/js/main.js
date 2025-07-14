@@ -726,11 +726,13 @@ function applyState(state) {
   if (state.past_games) {
     state.past_games.forEach(game => game.forEach(e => historyEntries.push(e)));
   }
-  historyEntries.push(...state.guesses);
+  if (state.guesses) {
+    historyEntries.push(...state.guesses);
+  }
   renderHistory(historyList, historyEntries);
 
   maxRows = state.max_rows || 6;
-  const animateRow = state.guesses.length > prevGuessCount ? state.guesses.length - 1 : -1;
+  const animateRow = state.guesses && state.guesses.length > prevGuessCount ? state.guesses.length - 1 : -1;
   updateBoard(board, state, guessInput, maxRows, gameState.is(STATES.GAME_OVER), animateRow, dailyDoubleHint, dailyDoubleRow);
   if (dailyDoubleRow !== null && state.guesses.length > dailyDoubleRow) {
     dailyDoubleRow = null;
