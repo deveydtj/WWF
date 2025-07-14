@@ -197,8 +197,6 @@ export async function createLobby() {
     if (data.host_token) {
       localStorage.setItem('hostToken', data.host_token);
     }
-    // Mark this as a newly created lobby to auto-show invite popup
-    localStorage.setItem('showInvitePopup', data.id);
     window.location.hash = `#lobby/${data.id}`;
   } else {
     announce('Could not create lobby');

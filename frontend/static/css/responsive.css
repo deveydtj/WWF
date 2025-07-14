@@ -170,10 +170,30 @@
                 -3px -3px 6px var(--shadow-color-light);
   }
 
-  #guessInput,
-  #submitGuess,
-  #message {
-    display: none;
+  #inputArea {
+    display: flex !important;
+    flex-direction: column;
+    margin-bottom: 10px;
+    width: 100%;
+    align-items: center;
+  }
+
+  #guessInput {
+    display: block !important;
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  #submitGuess {
+    display: block !important;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
   }
 
   #messagePopup {
