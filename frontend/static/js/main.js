@@ -910,9 +910,74 @@ function checkInactivity() {
   }
 }
 
+function handleServerUpdateNotification(data) {
+  const { message, delay_seconds } = data;
+  
+  // Log the server update notification
+  console.log('Server update notification received:', data);
+  
+  // Show the server update message to the user
+  try {
+    showMessage(message, { messageEl, messagePopup });
+    announce(message);
+    console.log('Server update message displayed:', message);
+  } catch (error) {
+    console.error('Error displaying server update message:', error);
+    // Fallback: use alert if showMessage fails
+    alert(message);
+  }
+  
+  // Close event source to prevent additional messages
+  if (eventSource) {
+    try { 
+      eventSource.close(); 
+      console.log('EventSource closed');
+    } catch (error) {
+      console.error('Error closing EventSource:', error);
+    }
+    eventSource = null;
+  }
+  
+  // Set a timeout to refresh the page after the specified delay
+  const refreshDelayMs = (delay_seconds || 5) * 1000;
+  console.log(`Scheduling page refresh in ${refreshDelayMs}ms`);
+  
+  const refreshTimeout = setTimeout(() => {
+    console.log('About to refresh page...');
+    
+    // Show a final message before refresh
+    try {
+      showMessage('Refreshing page...', { messageEl, messagePopup });
+    } catch (error) {
+      console.error('Error showing refresh message:', error);
+    }
+    
+    // Small delay to let the user see the message, then refresh
+    setTimeout(() => {
+      console.log('Executing page refresh');
+      try {
+        window.location.reload();
+      } catch (error) {
+        console.error('Error refreshing page:', error);
+        // Fallback: redirect to current URL
+        window.location.href = window.location.href;
+      }
+    }, 1000);
+  }, refreshDelayMs);
+  
+  console.log('Refresh timeout set with ID:', refreshTimeout);
+}
+
 function initEventStream() {
-  eventSource = subscribeToUpdates((state) => {
-    applyState(state);
+  eventSource = subscribeToUpdates((data) => {
+    // Check if this is a server update notification
+    if (data.type === 'server_update') {
+      handleServerUpdateNotification(data);
+      return;
+    }
+    
+    // Normal game state update
+    applyState(data);
   }, LOBBY_CODE);
   if (eventSource) {
     eventSource.onerror = () => {
