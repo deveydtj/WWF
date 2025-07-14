@@ -171,7 +171,7 @@
   }
 
   #inputArea {
-    display: flex !important;
+    display: flex;
     flex-direction: column;
     margin-bottom: 10px;
     width: 100%;
@@ -179,7 +179,7 @@
   }
 
   #guessInput {
-    display: block !important;
+    display: block;
     width: 100%;
     padding: 12px;
     font-size: 18px;
@@ -189,7 +189,7 @@
   }
 
   #submitGuess {
-    display: block !important;
+    display: block;
     width: 100%;
     padding: 12px;
     font-size: 16px;

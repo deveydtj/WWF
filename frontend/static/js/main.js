@@ -270,20 +270,36 @@ let pollTimer;
 let currentInterval = FAST_INTERVAL;
 let eventSource = null;
 
-if (isMobile) {
-  guessInput.readOnly = true;
-  guessInput.setAttribute('inputmode', 'none');
-  guessInput.style.display = 'none';
-  submitButton.style.display = 'none';
-  messageEl.style.display = 'none';
-} else {
-  messageEl.style.visibility = 'hidden';
+function updateInputVisibility() {
+  // Use isMobileView() for browser, fallback to isMobile for testing environments without window
+  const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
+  
+  if (useMobileDisplay) {
+    guessInput.readOnly = true;
+    guessInput.setAttribute('inputmode', 'none');
+    guessInput.style.display = 'none';
+    submitButton.style.display = 'none';
+    messageEl.style.display = 'none';
+  } else {
+    guessInput.readOnly = false;
+    guessInput.setAttribute('inputmode', 'text');
+    guessInput.style.display = 'block';
+    submitButton.style.display = 'block';
+    messageEl.style.display = 'block';
+    messageEl.style.visibility = 'hidden';
+  }
 }
+
+// Initial call
+updateInputVisibility();
 
 // Animate the temporary points indicator after each guess
 function showPointsDelta(delta) {
   const msg = (delta > 0 ? '+' : '') + delta + ' point' + (Math.abs(delta) !== 1 ? 's' : '');
-  if (isMobile) {
+  // Use isMobileView() for browser, fallback to isMobile for testing environments without window
+  const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
+  
+  if (useMobileDisplay) {
     // Mobile uses the popup element
     messagePopup.textContent = msg;
     messagePopup.style.display = 'block';
@@ -1202,6 +1218,7 @@ window.addEventListener('resize', () => {
   repositionResetButton();
   updatePanelVisibility(); // This will handle positioning based on content
   applyLayoutMode();
+  updateInputVisibility(); // Update input visibility based on current viewport
   
   // Use enhanced scaling with verification
   const scalingSuccess = applyOptimalScaling(maxRows);
@@ -1225,6 +1242,7 @@ window.addEventListener('orientationchange', () => {
   updateVH();
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   applyLayoutMode();
+  updateInputVisibility(); // Update input visibility on orientation change
   
   // Use enhanced scaling with verification
   const scalingSuccess = applyOptimalScaling(maxRows);
@@ -1243,6 +1261,7 @@ window.addEventListener('orientationchange', () => {
   clearTimeout(orientationTimeout);
   orientationTimeout = setTimeout(() => {
     updateVH();
+    updateInputVisibility(); // Update input visibility on delayed orientation change
     
     // Use enhanced scaling with verification
     const scalingSuccess = applyOptimalScaling(maxRows);
