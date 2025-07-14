@@ -8,6 +8,17 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
          positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, isMobileView, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
          adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling } from './utils.js';
+import { positionResponsive, positionContextMenu, positionModal, positionOnGrid } from './popupPositioning.js';
+
+// Make enhanced positioning available globally for backward compatibility
+if (typeof window !== 'undefined') {
+  window.popupPositioning = {
+    positionResponsive,
+    positionContextMenu, 
+    positionModal,
+    positionOnGrid
+  };
+}
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState, loadHintState } from './hintState.js';
 import { GAME_NAME } from './config.js';
@@ -1004,7 +1015,10 @@ chatNotify.addEventListener('click', () => {
   }
 });
 optionsToggle.addEventListener('click', () => {
-  showPopup(optionsMenu, optionsToggle);
+  // Use enhanced positioning for options menu
+  optionsMenu.style.display = 'block';
+  positionContextMenu(optionsMenu, optionsToggle);
+  openDialog(optionsMenu);
 });
 optionsClose.addEventListener('click', () => { closeDialog(optionsMenu); });
 menuHistory.addEventListener('click', () => { toggleHistory(); closeDialog(optionsMenu); });

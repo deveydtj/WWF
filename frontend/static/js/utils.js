@@ -112,6 +112,7 @@ export function setGameInputDisabled(disabled) {
 
 /**
  * Position the side panels relative to the board depending on width.
+ * Enhanced with better viewport boundary detection.
  *
  * @param {HTMLElement} boardArea
  * @param {HTMLElement} historyBox
@@ -119,25 +120,61 @@ export function setGameInputDisabled(disabled) {
  * @param {HTMLElement} [chatBox]
  */
 export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox) {
-  if (window.innerWidth > 900) {
+  const viewportWidth = window.innerWidth;
+  
+  if (viewportWidth > 900) {
+    // Full mode - position panels to the sides
     const boardRect = boardArea.getBoundingClientRect();
     const top = boardRect.top + window.scrollY;
     const left = boardRect.left + window.scrollX;
     const right = boardRect.right + window.scrollX;
-
-    historyBox.style.position = 'absolute';
-    historyBox.style.top = `${top}px`;
-    historyBox.style.left = `${left - historyBox.offsetWidth - 60}px`;
-
-    definitionBox.style.position = 'absolute';
-    definitionBox.style.top = `${top}px`;
-    definitionBox.style.left = `${right + 60}px`;
-    if (chatBox) {
-      chatBox.style.position = 'absolute';
-      chatBox.style.left = `${right + 60}px`;
-      chatBox.style.top = `${top + definitionBox.offsetHeight + 20}px`;
+    
+    // Check if panels will fit within viewport
+    const historyWidth = historyBox.offsetWidth || 260;
+    const definitionWidth = definitionBox.offsetWidth || 260;
+    const margin = 60;
+    
+    const leftSpace = left - window.scrollX;
+    const rightSpace = window.innerWidth - (right - window.scrollX);
+    
+    // Position history box
+    if (leftSpace >= historyWidth + margin) {
+      historyBox.style.position = 'absolute';
+      historyBox.style.top = `${top}px`;
+      historyBox.style.left = `${left - historyWidth - margin}px`;
+    } else {
+      // Not enough space on left, use CSS positioning
+      historyBox.style.position = '';
+      historyBox.style.top = '';
+      historyBox.style.left = '';
+    }
+    
+    // Position definition box
+    if (rightSpace >= definitionWidth + margin) {
+      definitionBox.style.position = 'absolute';
+      definitionBox.style.top = `${top}px`;
+      definitionBox.style.left = `${right + margin}px`;
+      
+      // Position chat box below definition if both fit
+      if (chatBox && rightSpace >= definitionWidth + margin) {
+        chatBox.style.position = 'absolute';
+        chatBox.style.left = `${right + margin}px`;
+        chatBox.style.top = `${top + definitionBox.offsetHeight + 20}px`;
+      }
+    } else {
+      // Not enough space on right, use CSS positioning
+      definitionBox.style.position = '';
+      definitionBox.style.top = '';
+      definitionBox.style.left = '';
+      
+      if (chatBox) {
+        chatBox.style.position = '';
+        chatBox.style.top = '';
+        chatBox.style.left = '';
+      }
     }
   } else {
+    // Medium and mobile modes - let CSS handle positioning
     historyBox.style.position = '';
     historyBox.style.top = '';
     historyBox.style.left = '';
@@ -365,14 +402,19 @@ export function fitBoardToContainer(rows = 6) {
 /**
  * Place a popup near an anchor element while clamping to the viewport.
  * In mobile view, this defers to CSS media queries for centering.
- *
+ * 
+ * @deprecated Use positionResponsive from popupPositioning.js for enhanced positioning
  * @param {HTMLElement} popup
  * @param {HTMLElement} anchor
  */
 export function positionPopup(popup, anchor) {
-  // In mobile view (viewport <= 600px), let CSS media queries handle centering
+  // Import enhanced positioning if available
+  if (typeof window !== 'undefined' && window.popupPositioning) {
+    return window.popupPositioning.positionResponsive(popup, anchor, 'menu');
+  }
+  
+  // Fallback to original logic
   if (isMobileView()) {
-    // Reset any inline positioning to let CSS media queries take effect
     popup.style.position = '';
     popup.style.left = '';
     popup.style.top = '';
@@ -380,23 +422,44 @@ export function positionPopup(popup, anchor) {
     return;
   }
 
-  // Desktop positioning logic
   const rect = anchor.getBoundingClientRect();
   const menuWidth = popup.offsetWidth;
   const menuHeight = popup.offsetHeight;
-  let left = rect.right + 10 + window.scrollX;
-  if (window.innerWidth - rect.right < menuWidth + 10) {
-    if (rect.left >= menuWidth + 10) {
-      left = rect.left - menuWidth - 10 + window.scrollX;
-    } else {
-      left = Math.max(10 + window.scrollX, window.innerWidth - menuWidth - 10);
-    }
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const scrollX = window.scrollX || 0;
+  const scrollY = window.scrollY || 0;
+  const margin = 10;
+  
+  // Enhanced positioning logic with better boundary detection
+  let left, top;
+  
+  // Try positioning to the right first
+  if (rect.right + margin + menuWidth <= viewportWidth - margin) {
+    left = rect.right + margin + scrollX;
   }
-  let top = rect.top + window.scrollY;
-  if (rect.bottom + menuHeight > window.scrollY + window.innerHeight - 10) {
-    top = window.scrollY + window.innerHeight - menuHeight - 10;
+  // Try positioning to the left
+  else if (rect.left - margin - menuWidth >= margin) {
+    left = rect.left - menuWidth - margin + scrollX;
   }
-  top = Math.max(top, window.scrollY + 10);
+  // Center horizontally if neither side works
+  else {
+    left = Math.max(margin + scrollX, 
+                   Math.min((viewportWidth - menuWidth) / 2 + scrollX,
+                           viewportWidth - menuWidth - margin + scrollX));
+  }
+  
+  // Vertical positioning
+  top = rect.top + scrollY;
+  
+  // Ensure popup doesn't go below viewport
+  if (top + menuHeight > scrollY + viewportHeight - margin) {
+    top = scrollY + viewportHeight - menuHeight - margin;
+  }
+  
+  // Ensure popup doesn't go above viewport
+  top = Math.max(top, scrollY + margin);
+  
   popup.style.position = 'absolute';
   popup.style.left = `${left}px`;
   popup.style.top = `${top}px`;
@@ -510,7 +573,14 @@ export function focusFirstElement(container) {
  */
 export function showPopup(popup, anchor) {
   popup.style.display = 'block';
-  positionPopup(popup, anchor);
+  
+  // Use enhanced positioning if available
+  if (typeof window !== 'undefined' && window.popupPositioning) {
+    window.popupPositioning.positionResponsive(popup, anchor, 'menu');
+  } else {
+    positionPopup(popup, anchor);
+  }
+  
   openDialog(popup);
 }
 
