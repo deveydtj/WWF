@@ -1194,21 +1194,6 @@ if (window.innerWidth > 900) {
 }
 fetchState();
 
-// Check if we should auto-show the invite popup for newly created lobbies
-if (LOBBY_CODE) {
-  const showInviteFor = localStorage.getItem('showInvitePopup');
-  if (showInviteFor === LOBBY_CODE) {
-    // Remove the flag so it only shows once
-    localStorage.removeItem('showInvitePopup');
-    // Auto-show the invite popup after a brief delay to let the page load
-    setTimeout(() => {
-      if (copyLobbyLink) {
-        copyLobbyLink.click();
-      }
-    }, 1000);
-  }
-}
-
 initEventStream();
 setInterval(checkInactivity, 5000);
 document.addEventListener('keydown', onActivity);
