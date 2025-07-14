@@ -15,13 +15,14 @@ COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r backend/requirements.txt
 
 COPY backend/ ./backend/
+COPY frontend/ ./frontend/
 COPY data/sgb-words.txt /app/data/sgb-words.txt
 COPY data/offline_definitions.json /app/data/offline_definitions.json
 
 # Create static directory 
 RUN mkdir -p ./backend/static/
-# Copy frontend built assets - the server will fall back to dev assets if this fails
-COPY frontend/dist/ ./backend/static/
+# Copy frontend built assets if they exist - the server will fall back to dev assets if this fails
+RUN if [ -d "./frontend/dist" ]; then cp -r ./frontend/dist/* ./backend/static/; else echo "No built frontend assets found, server will use dev assets"; fi
 
 # Ensure runtime directory exists and correct ownership for appuser
 RUN chown -R appuser:appuser /app && mkdir -p /app/runtime

@@ -445,10 +445,6 @@ function centerLeaderboardOnMe() {
   }
 }
 
-function isMobileView() {
-  return window.innerWidth <= 600;
-}
-
 function setupMobileLeaderboard() {
   if (isMobileView()) {
     const lb = document.getElementById('leaderboard');
