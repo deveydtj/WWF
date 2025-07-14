@@ -113,11 +113,41 @@
   justify-content: center;
   padding: 0;
   z-index: 1000;
+  transition: color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.close-btn:hover {
+  color: var(--text-color);
 }
 
 .close-btn:active {
   box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
               inset -2px -2px 4px var(--inset-shadow-light);
+}
+
+/* Enhanced visibility for close buttons in dark mode */
+body.dark-mode .close-btn {
+  color: #e1e1e1;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(44, 48, 58, 0.95);
+  box-shadow: 2px 2px 6px var(--shadow-color-dark),
+              -2px -2px 6px var(--shadow-color-light),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+body.dark-mode .close-btn:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(44, 48, 58, 1);
+  box-shadow: 2px 2px 8px var(--shadow-color-dark),
+              -2px -2px 8px var(--shadow-color-light),
+              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+body.dark-mode .close-btn:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 /* History Panel */
