@@ -785,6 +785,24 @@ function applyState(state) {
   } else {
     definitionText.textContent = '';
   }
+  
+  // On large screens, conditionally show panels based on available content
+  if (window.innerWidth > 900) {
+    // Show history panel if there are any history entries (past games or current guesses)
+    if (historyEntries.length > 0) {
+      document.body.classList.add('history-open');
+    } else {
+      document.body.classList.remove('history-open');
+    }
+    
+    // Show definition panel if there's a definition to display
+    if (definitionText.textContent.trim() !== '') {
+      document.body.classList.add('definition-open');
+    } else {
+      document.body.classList.remove('definition-open');
+    }
+  }
+  
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 
   const justEnded = !prevGameOver && state.is_over;
@@ -1152,12 +1170,7 @@ if (myEmoji) {
     if (d.player_id) { myPlayerId = d.player_id; setMyPlayerId(d.player_id); }
   }).catch(() => {});
 }
-if (window.innerWidth > 900) {
-  document.body.classList.add('history-open');
-  document.body.classList.add('definition-open');
-  // Recalculate panel positions now that definition is visible
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-}
+// Panel visibility will be determined after fetching state based on available content
 fetchState();
 
 // Check if we should auto-show the invite popup for newly created lobbies
