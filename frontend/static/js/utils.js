@@ -21,7 +21,10 @@ export function isMobileView() {
  * @param {{messageEl:HTMLElement, messagePopup:HTMLElement}} param1
  */
 export function showMessage(msg, {messageEl, messagePopup}) {
-  if (isMobile) {
+  // Use isMobileView() for browser, fallback to isMobile for testing environments without window
+  const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
+  
+  if (useMobileDisplay) {
     messagePopup.textContent = msg;
     messagePopup.style.display = 'block';
     messagePopup.style.animation = 'fadeInOut 2s';
