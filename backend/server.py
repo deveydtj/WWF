@@ -672,6 +672,29 @@ def broadcast_state(s: GameState | None = None) -> None:
             s.listeners.discard(q)
 
 
+def broadcast_server_update_notification(message: str = "Server is being updated. Please save your progress.", delay_seconds: int = 5) -> None:
+    """Broadcast a server update notification to all connected clients across all lobbies."""
+    update_data = {
+        "type": "server_update",
+        "message": message,
+        "delay_seconds": delay_seconds,
+        "timestamp": time.time()
+    }
+    data = json.dumps(update_data)
+    
+    # Broadcast to all lobbies including the default lobby
+    total_clients = 0
+    for lobby_state in LOBBIES.values():
+        for q in list(lobby_state.listeners):
+            try:
+                q.put_nowait(data)
+                total_clients += 1
+            except Exception:
+                lobby_state.listeners.discard(q)
+    
+    logger.info(f"Server update notification sent to {total_clients} clients across {len(LOBBIES)} lobbies")
+
+
 def _log_event(event: str, **fields) -> None:
     """Write a structured analytics event to ``ANALYTICS_FILE``."""
     entry = {"event": event, "timestamp": time.time(), **fields}
@@ -1380,6 +1403,41 @@ def cleanup_lobbies():
     """
     purge_lobbies()
     return jsonify({"status": "ok"})
+
+
+@app.route("/admin/notify-update", methods=["POST"])
+def notify_server_update():
+    """Notify all connected clients to refresh their page due to server update.
+    
+    This endpoint can be called by deployment scripts to trigger a graceful
+    page refresh for all connected clients when the server is being updated.
+    
+    Request body (optional JSON):
+    {
+        "message": "Custom message to display to users",
+        "delay_seconds": 10  // How long to wait before refresh (default: 5)
+    }
+    """
+    data = request.get_json(silent=True) or {}
+    message = data.get("message", "Server is being updated. Please save your progress.")
+    delay_seconds = data.get("delay_seconds", 5)
+    
+    # Validate delay_seconds is reasonable (1-60 seconds)
+    if not isinstance(delay_seconds, int) or delay_seconds < 1 or delay_seconds > 60:
+        return jsonify({"status": "error", "msg": "delay_seconds must be an integer between 1 and 60"}), 400
+    
+    # Log the update notification
+    logger.info(f"Server update notification triggered: message='{message}', delay={delay_seconds}s")
+    
+    # Broadcast to all connected clients
+    broadcast_server_update_notification(message, delay_seconds)
+    
+    return jsonify({
+        "status": "ok", 
+        "message": message,
+        "delay_seconds": delay_seconds,
+        "lobbies_notified": len(LOBBIES)
+    })
 
 
 @app.route("/health")
