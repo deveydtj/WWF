@@ -5,7 +5,7 @@ import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessa
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
-         positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, showPopup,
+         positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, isMobileView, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
          adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling } from './utils.js';
 import { updateHintBadge } from './hintBadge.js';
