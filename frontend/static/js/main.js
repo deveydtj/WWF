@@ -741,6 +741,9 @@ function applyState(state) {
     historyEntries.push(...state.guesses);
   }
   renderHistory(historyList, historyEntries);
+  
+  // Update panel visibility after rendering history
+  updatePanelVisibility();
 
   maxRows = state.max_rows || 6;
   const animateRow = state.guesses && state.guesses.length > prevGuessCount ? state.guesses.length - 1 : -1;
@@ -785,7 +788,9 @@ function applyState(state) {
   } else {
     definitionText.textContent = '';
   }
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  
+  // Update panel visibility after definition content changes
+  updatePanelVisibility();
 
   const justEnded = !prevGameOver && state.is_over;
 
@@ -990,6 +995,37 @@ function initEventStream() {
   }
 }
 
+// Check if history panel has content to display
+function hasHistoryContent() {
+  const historyList = document.getElementById('historyList');
+  return historyList && historyList.children.length > 0;
+}
+
+// Check if definition panel has content to display
+function hasDefinitionContent() {
+  return definitionText && definitionText.textContent.trim() !== '';
+}
+
+// Show or hide panels based on content and viewport size
+function updatePanelVisibility() {
+  if (window.innerWidth > 900) {
+    // Full mode - show panels only if they have content
+    if (hasHistoryContent()) {
+      document.body.classList.add('history-open');
+    } else {
+      document.body.classList.remove('history-open');
+    }
+    
+    if (hasDefinitionContent()) {
+      document.body.classList.add('definition-open');
+    } else {
+      document.body.classList.remove('definition-open');
+    }
+    
+    positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  }
+}
+
 // Toggle one of the side panels while closing any others in medium mode
 function togglePanel(panelClass) {
   if (document.body.dataset.mode === 'medium') {
@@ -1153,10 +1189,8 @@ if (myEmoji) {
   }).catch(() => {});
 }
 if (window.innerWidth > 900) {
-  document.body.classList.add('history-open');
-  document.body.classList.add('definition-open');
-  // Recalculate panel positions now that definition is visible
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  // Only show panels if they have content to display
+  updatePanelVisibility();
 }
 fetchState();
 
@@ -1181,7 +1215,7 @@ document.addEventListener('keydown', onActivity);
 document.addEventListener('click', onActivity);
 window.addEventListener('resize', () => {
   repositionResetButton();
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  updatePanelVisibility(); // This will handle positioning based on content
   applyLayoutMode();
   
   // Use enhanced scaling with verification
