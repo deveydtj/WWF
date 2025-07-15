@@ -4,7 +4,6 @@
 
 #keyboard {
   display: inline-block;
-  margin-top: auto;
   flex: 0 0 auto; /* Don't shrink */
   /* shrink keyboard height slightly for cramped screens */
   min-height: calc(var(--tile-size) * 2.4);
@@ -26,7 +25,6 @@
 
 /* Keyboard should stick to bottom */
 #keyboard {
-  margin-top: auto;
   flex-shrink: 0; /* Never shrink the keyboard */
 }
 
