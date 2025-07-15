@@ -51,8 +51,10 @@ else:
 
 try:
     import redis  # type: ignore
+    from redis import ConnectionPool
 except Exception:  # pragma: no cover - optional dependency
     redis = None
+    ConnectionPool = None
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +94,11 @@ REDIS_URL = os.environ.get("REDIS_URL")
 redis_client = None
 if REDIS_URL and redis is not None:
     try:
-        redis_client = redis.from_url(REDIS_URL)
+        # Use connection pooling for better performance
+        pool = ConnectionPool.from_url(REDIS_URL, max_connections=20, retry_on_timeout=True)
+        redis_client = redis.Redis(connection_pool=pool)
         redis_client.ping()
+        logger.info("Redis connection established with connection pooling")
     except Exception as e:  # pragma: no cover - runtime check
         logger.warning("Redis connection failed: %s", e)
         redis_client = None
@@ -118,14 +123,17 @@ LOBBY_CODE_RE = re.compile(r"^[A-Za-z0-9]{6}$")
 
 # ---- Globals ----
 WORDS: list[str] = []
+WORDS_LOADED: bool = False
 
 
 def _init_assets() -> None:
     """Load the word list and validate the definitions cache."""
-    global WORDS
+    global WORDS, WORDS_LOADED
     try:
         with open(WORDS_FILE) as f:
             WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
+        WORDS_LOADED = True
+        logger.info(f"Loaded {len(WORDS)} words from {WORDS_FILE}")
     except Exception as e:  # pragma: no cover - startup validation
         logger.error("Startup abort: could not load word list '%s': %s", WORDS_FILE, e)
         raise SystemExit(1)
@@ -403,15 +411,18 @@ def save_data(s: GameState | None = None):
 
 
 def load_data(s: GameState | None = None):
-    global WORDS
+    global WORDS, WORDS_LOADED
     if s is None:
         s = current_state
 
     code = _lobby_id(s)
 
-    # Load word list
-    with open(WORDS_FILE) as f:
-        WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
+    # Only load word list if not already loaded (performance optimization)
+    if not WORDS_LOADED:
+        with open(WORDS_FILE) as f:
+            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
+        WORDS_LOADED = True
+        logger.info(f"Loaded {len(WORDS)} words into memory cache")
 
     data = None
     if redis_client:
@@ -511,7 +522,7 @@ def fetch_definition(word):
     logger.info(f"Fetching definition for '{word}'")
     try:
         logger.info(f"Trying online dictionary API for '{word}'")
-        resp = requests.get(url, headers=headers, timeout=5)
+        resp = requests.get(url, headers=headers, timeout=3)  # Reduced from 5 to 3 seconds
         resp.raise_for_status()
         data = resp.json()
         if isinstance(data, list) and data:

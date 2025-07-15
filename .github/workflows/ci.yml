@@ -114,11 +114,13 @@ jobs:
       - name: Build and push Docker image
         if: github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID
         run: |
-          docker build -t $ECR_REPOSITORY:$GITHUB_SHA .
+          # Reuse the existing Docker image instead of rebuilding
+          docker tag wwf:test $ECR_REPOSITORY:$GITHUB_SHA
           docker tag $ECR_REPOSITORY:$GITHUB_SHA ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$GITHUB_SHA
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$GITHUB_SHA
 
       - name: Invalidate CloudFront cache
         if: github.ref == 'refs/heads/main' && secrets.AWS_ACCESS_KEY_ID
         run: |
-          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths '/*'
+          # Only invalidate specific paths instead of everything
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths '/index.html' '/landing.css' '/landing.js' '/game.html'
