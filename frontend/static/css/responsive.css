@@ -444,6 +444,37 @@
     right: 0;
   }
 
+  /* Fix title bar layout for medium screens - override mobile layout */
+  #titleBar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  #titleBar .mobile-title-row {
+    display: contents;
+  }
+  
+  #titleBar h1 {
+    order: 2;
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    font-size: calc(1.8rem * var(--ui-scale));
+  }
+  
+  #resetWrapper {
+    order: 1;
+    margin-left: 0;
+  }
+  
+  #titleBar .mobile-leaderboard-container {
+    order: 3;
+    flex: 0 0 auto;
+    max-width: none;
+  }
+
   body[data-mode='medium'] #historyClose,
   body[data-mode='medium'] #definitionClose,
   body[data-mode='medium'] #chatClose {
@@ -496,6 +527,37 @@
 
 /* Large screens (min-width: 901px) */
 @media (min-width: 901px) {
+  /* Fix title bar layout for large screens - override mobile layout */
+  #titleBar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  #titleBar .mobile-title-row {
+    display: contents;
+  }
+  
+  #titleBar h1 {
+    order: 2;
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    font-size: calc(2rem * var(--ui-scale));
+  }
+  
+  #resetWrapper {
+    order: 1;
+    margin-left: 0;
+  }
+  
+  #titleBar .mobile-leaderboard-container {
+    order: 3;
+    flex: 0 0 auto;
+    max-width: none;
+  }
+
   #keyboard {
     min-height: calc(var(--tile-size) * 2.5);
   }
