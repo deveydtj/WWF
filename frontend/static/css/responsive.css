@@ -523,6 +523,11 @@
   #keyboard {
     min-height: calc(var(--tile-size) * 2.3);
   }
+
+  /* Add proper spacing between input area and keyboard in medium mode */
+  #inputArea {
+    margin-bottom: 30px;
+  }
 }
 
 /* Large screens (min-width: 901px) */
@@ -560,5 +565,10 @@
 
   #keyboard {
     min-height: calc(var(--tile-size) * 2.5);
+  }
+
+  /* Add proper spacing between input area and keyboard in full mode */
+  #inputArea {
+    margin-bottom: 30px;
   }
 }
