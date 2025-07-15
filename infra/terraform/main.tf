@@ -15,12 +15,30 @@ provider "aws" {
 # ------- S3 Bucket for frontend -------
 resource "aws_s3_bucket" "frontend" {
   bucket = var.frontend_bucket
-  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_public_access_block" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_policy" "frontend" {
   bucket = aws_s3_bucket.frontend.id
   policy = data.aws_iam_policy_document.frontend.json
+
+  depends_on = [aws_s3_bucket_public_access_block.frontend]
 }
 
 data "aws_iam_policy_document" "frontend" {
@@ -29,7 +47,7 @@ data "aws_iam_policy_document" "frontend" {
     resources = ["${aws_s3_bucket.frontend.arn}/*"]
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = [aws_cloudfront_origin_access_identity.frontend.iam_arn]
     }
   }
 }
@@ -46,20 +64,72 @@ resource "aws_acm_certificate" "cert" {
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   default_root_object = "index.html"
+  price_class         = "PriceClass_100" # Use only North America and Europe for cost optimization
+
   origins {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id   = "frontend"
+
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.frontend.cloudfront_access_identity_path
+    }
   }
+
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "frontend"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "frontend"
     viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 3600  # 1 hour
+    max_ttl     = 86400 # 24 hours
   }
+
+  # Cache behavior for static assets with longer TTL
+  ordered_cache_behavior {
+    path_pattern           = "/static/*"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "frontend"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 86400    # 24 hours
+    max_ttl     = 31536000 # 1 year
+  }
+
   viewer_certificate {
-    acm_certificate_arn = aws_acm_certificate.cert.arn
-    ssl_support_method  = "sni-only"
+    acm_certificate_arn      = aws_acm_certificate.cert.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_origin_access_identity" "frontend" {
+  comment = "OAI for WWF frontend S3 bucket"
 }
 
 # ------- ECS Cluster and Service -------
@@ -95,7 +165,7 @@ resource "aws_ecs_task_definition" "api" {
           awslogs-stream-prefix = "wwf",
         },
       }
-    }, var.enable_efs ? {
+      }, var.enable_efs ? {
       mountPoints = [{
         sourceVolume  = "game-data",
         containerPath = "/data",
@@ -121,6 +191,17 @@ resource "aws_ecs_service" "api" {
   task_definition = aws_ecs_task_definition.api.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
+  # Enable circuit breaker for better deployment reliability
+  deployment_configuration {
+    maximum_percent         = 200
+    minimum_healthy_percent = 50
+    deployment_circuit_breaker {
+      enable   = true
+      rollback = true
+    }
+  }
+
   network_configuration {
     subnets         = var.subnets
     security_groups = [aws_security_group.api.id]
@@ -129,6 +210,49 @@ resource "aws_ecs_service" "api" {
     target_group_arn = aws_lb_target_group.api.arn
     container_name   = "api"
     container_port   = 5001
+  }
+
+  depends_on = [aws_lb_listener.https]
+}
+
+# Add Auto Scaling for cost optimization
+resource "aws_appautoscaling_target" "api" {
+  max_capacity       = 10
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.wwf.name}/${aws_ecs_service.api.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# Scale up when CPU is high
+resource "aws_appautoscaling_policy" "api_scale_up" {
+  name               = "wwf-api-scale-up"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.api.resource_id
+  scalable_dimension = aws_appautoscaling_target.api.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.api.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value = 70.0
+  }
+}
+
+# Scale up when memory is high
+resource "aws_appautoscaling_policy" "api_scale_memory" {
+  name               = "wwf-api-scale-memory"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.api.resource_id
+  scalable_dimension = aws_appautoscaling_target.api.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.api.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value = 80.0
   }
 }
 
@@ -139,14 +263,14 @@ resource "aws_lb" "api" {
   load_balancer_type = "application"
   subnets            = var.subnets
   security_groups    = [aws_security_group.alb.id]
-  idle_timeout       = 3600
+  idle_timeout       = 60 # Reduced from 3600 to 60 seconds for better cost efficiency
 }
 
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.api.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06" # Updated to latest policy
   certificate_arn   = aws_acm_certificate.cert.arn
   default_action {
     type             = "forward"
@@ -159,9 +283,21 @@ resource "aws_lb_target_group" "api" {
   port     = 5001
   protocol = "HTTP"
   vpc_id   = var.vpc_id
+
   health_check {
-    path = "/state"
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+    port                = "traffic-port"
+    protocol            = "HTTP"
   }
+
+  # Better deregistration for faster scaling
+  deregistration_delay = 30
 }
 
 # ------- Security Groups -------
@@ -222,16 +358,16 @@ resource "aws_efs_file_system" "wwf" {
 }
 
 resource "aws_efs_mount_target" "wwf" {
-  for_each       = var.enable_efs ? toset(var.subnets) : {}
-  file_system_id = aws_efs_file_system.wwf[0].id
-  subnet_id      = each.key
+  for_each        = var.enable_efs ? toset(var.subnets) : {}
+  file_system_id  = aws_efs_file_system.wwf[0].id
+  subnet_id       = each.key
   security_groups = [aws_security_group.efs[0].id]
 }
 
 # ------- CloudWatch Logs and Alerts -------
 resource "aws_cloudwatch_log_group" "api" {
   name              = "/ecs/wwf-api"
-  retention_in_days = 14
+  retention_in_days = 7 # Reduced from 14 to 7 days for cost optimization
 }
 
 resource "aws_cloudwatch_log_metric_filter" "api_errors" {
@@ -285,11 +421,11 @@ resource "aws_iam_role_policy_attachment" "cleanup_logs" {
 }
 
 resource "aws_lambda_function" "cleanup" {
-  function_name = "wwf-lobby-cleanup"
-  role          = aws_iam_role.cleanup_lambda.arn
-  runtime       = "python3.11"
-  handler       = "cleanup_lambda.lambda_handler"
-  filename      = data.archive_file.cleanup_lambda.output_path
+  function_name    = "wwf-lobby-cleanup"
+  role             = aws_iam_role.cleanup_lambda.arn
+  runtime          = "python3.12" # Updated to latest Python version for better performance
+  handler          = "cleanup_lambda.lambda_handler"
+  filename         = data.archive_file.cleanup_lambda.output_path
   source_code_hash = data.archive_file.cleanup_lambda.output_base64sha256
   environment {
     variables = {
