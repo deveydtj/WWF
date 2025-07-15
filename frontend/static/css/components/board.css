@@ -139,6 +139,16 @@ body.hint-selecting .tile:not(.hint-target) {
   animation: tileResetIn 0.25s forwards;
 }
 
+/* Letter typing animation */
+.tile.letter-in {
+  animation: tileLetterIn 0.2s ease-out;
+}
+
+/* Tile flip animation for color reveal */
+.tile.flip-reveal {
+  animation: tileFlip 0.6s ease-in-out;
+}
+
 /* Input area */
 #inputArea {
   display: flex;

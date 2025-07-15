@@ -61,6 +61,12 @@
   min-width: calc(var(--tile-size) * 1.2); 
 }
 
+.key:hover {
+  transform: translateY(-1px);
+  box-shadow: 5px 5px 10px var(--shadow-color-dark),
+              -5px -5px 10px var(--shadow-color-light);
+}
+
 .key:active,
 .key.active-key-press {
   box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),

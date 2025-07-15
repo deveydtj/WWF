@@ -558,7 +558,7 @@ function trapFocus(dialog) {
 }
 
 /**
- * Trap focus inside a dialog until it is closed.
+ * Open a dialog with smooth animation.
  *
  * @param {HTMLElement} dialog
  */
@@ -566,15 +566,28 @@ export function openDialog(dialog) {
   lastFocused = document.activeElement;
   trappedDialog = dialog;
   trapHandler = trapFocus(dialog);
+  
+  // Show with animation
+  dialog.style.display = 'flex';
+  dialog.classList.remove('hide');
+  dialog.classList.add('show');
 }
 
 /**
- * Close a dialog and restore focus to the previous element.
+ * Close a dialog with smooth animation.
  *
  * @param {HTMLElement} dialog
  */
 export function closeDialog(dialog) {
-  dialog.style.display = 'none';
+  dialog.classList.remove('show');
+  dialog.classList.add('hide');
+  
+  // Wait for animation to complete before hiding
+  setTimeout(() => {
+    dialog.style.display = 'none';
+    dialog.classList.remove('hide');
+  }, 300); // Match animation duration
+  
   if (trapHandler) {
     dialog.removeEventListener('keydown', trapHandler);
     trapHandler = null;

@@ -105,6 +105,12 @@ button {
   transition: box-shadow 0.2s, transform 0.1s;
 }
 
+button:hover {
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+  transform: translateY(-1px);
+}
+
 button:active {
   box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
               inset -2px -2px 4px var(--inset-shadow-light);
