@@ -16,6 +16,13 @@ from typing import Any
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+# Import configuration validation
+try:
+    from .config import validate_production_config, get_config_summary
+except ImportError:
+    # Handle running as script instead of module
+    from config import validate_production_config, get_config_summary
+
 try:
     import requests as _requests
 except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
@@ -62,9 +69,38 @@ CLOSE_CALL_WINDOW = 2.0  # seconds
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_key_for_local_testing_only")
+
+# Validate secret key for production
+if not os.environ.get("SECRET_KEY") and os.environ.get("FLASK_ENV") == "production":
+    logger.error("SECRET_KEY environment variable must be set for production")
+    raise SystemExit(1)
+
 CORS(app)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s:%(message)s")
+# Configure logging based on environment
+def configure_logging():
+    """Configure logging for production vs development."""
+    log_level = logging.INFO
+    log_format = "%(asctime)s %(levelname)s:%(name)s:%(message)s"
+    
+    # More detailed logging for production
+    if os.environ.get("FLASK_ENV") == "production":
+        log_format = "%(asctime)s %(levelname)s [%(name)s:%(filename)s:%(lineno)d] %(message)s"
+        # Add request ID context if available
+        if hasattr(logging, 'structlog'):
+            # Use structured logging if available
+            pass
+    
+    logging.basicConfig(
+        level=log_level,
+        format=log_format,
+        handlers=[
+            logging.StreamHandler(),
+            # Add file handler for production if needed
+        ]
+    )
+
+configure_logging()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
@@ -120,6 +156,12 @@ LOBBY_CREATION_LIMIT = 5
 LOBBY_CREATION_WINDOW = 60  # seconds
 LOBBY_CODE_RE = re.compile(r"^[A-Za-z0-9]{6}$")
 
+# Enhanced rate limiting
+API_RATE_LIMIT = 100  # requests per minute per IP
+API_RATE_WINDOW = 60  # seconds
+GUESS_RATE_LIMIT = 30  # guesses per minute per player
+GUESS_RATE_WINDOW = 60  # seconds
+
 
 # ---- Globals ----
 WORDS: list[str] = []
@@ -152,7 +194,19 @@ def _init_assets() -> None:
         raise SystemExit(1)
 
 
+# Initialize assets and validate configuration
 _init_assets()
+
+# Validate production configuration
+try:
+    validate_production_config()
+    logger.info("Configuration summary: %s", get_config_summary())
+except Exception as e:
+    logger.error("Configuration validation failed: %s", e)
+    if os.environ.get("FLASK_ENV") == "production":
+        raise SystemExit(1)
+    else:
+        logger.warning("Continuing in development mode despite configuration issues")
 
 
 @dataclass
@@ -236,6 +290,10 @@ def get_base_emoji(emoji_variant: str) -> str:
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
 CREATION_TIMES: dict[str, list[float]] = {}
+
+# Enhanced rate limiting tracking
+API_REQUEST_TIMES: dict[str, list[float]] = {}  # IP -> request timestamps
+GUESS_REQUEST_TIMES: dict[str, list[float]] = {}  # player_id -> guess timestamps
 
 # Track recently removed lobbies to prevent immediate recreation
 RECENTLY_REMOVED_LOBBIES: dict[str, float] = {}
@@ -582,6 +640,34 @@ def get_client_ip():
     return request.remote_addr or "unknown"
 
 
+def check_api_rate_limit(ip: str) -> bool:
+    """Check if the IP has exceeded the API rate limit."""
+    now = time.time()
+    times = API_REQUEST_TIMES.setdefault(ip, [])
+    # Remove timestamps older than the window
+    times[:] = [t for t in times if now - t < API_RATE_WINDOW]
+    
+    if len(times) >= API_RATE_LIMIT:
+        return False
+    
+    times.append(now)
+    return True
+
+
+def check_guess_rate_limit(player_id: str) -> bool:
+    """Check if the player has exceeded the guess rate limit."""
+    now = time.time()
+    times = GUESS_REQUEST_TIMES.setdefault(player_id, [])
+    # Remove timestamps older than the window
+    times[:] = [t for t in times if now - t < GUESS_RATE_WINDOW]
+    
+    if len(times) >= GUESS_RATE_LIMIT:
+        return False
+    
+    times.append(now)
+    return True
+
+
 def result_for_guess(guess, target):
     """Return Wordle-style feedback comparing a guess to the target."""
     result = ["absent"] * 5
@@ -892,11 +978,21 @@ def set_emoji():
 @app.route("/guess", methods=["POST"])
 def guess_word():
     """Process a player's guess and update scores and game state."""
+    # Apply API rate limiting
+    ip = get_client_ip()
+    if not check_api_rate_limit(ip):
+        return jsonify({"status": "error", "msg": "Too many requests. Please slow down."}), 429
+    
     data = request.json or {}
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
     emoji = data.get("emoji")
     player_id = data.get("player_id")
+    
+    # Apply guess-specific rate limiting  
+    if player_id and not check_guess_rate_limit(player_id):
+        return jsonify({"status": "error", "msg": "Too many guesses. Please wait before trying again."}), 429
+    
     ip = get_client_ip()
     points_delta = 0
     logger.info(
@@ -1453,15 +1549,57 @@ def notify_server_update():
 
 @app.route("/health")
 def health() -> Any:
-    """Health check ensuring required assets are loaded."""
+    """Enhanced health check for production readiness."""
     missing = []
+    warnings = []
+    
+    # Check critical assets
     if not WORDS:
         missing.append("word_list")
     if not OFFLINE_DEFINITIONS_FILE.exists():
         missing.append("definitions_cache")
+    
+    # Check production configuration
+    if os.environ.get("FLASK_ENV") == "production":
+        if not os.environ.get("SECRET_KEY"):
+            missing.append("secret_key")
+        if app.secret_key == "dev_key_for_local_testing_only":
+            missing.append("production_secret_key")
+    
+    # Check Redis connection if configured
+    if REDIS_URL and redis_client:
+        try:
+            redis_client.ping()
+        except Exception as e:
+            warnings.append(f"redis_connection_issue: {str(e)}")
+    
+    # Check file system permissions
+    try:
+        # Check if we can write to the game file directory
+        GAME_FILE.parent.mkdir(exist_ok=True)
+        test_file = GAME_FILE.parent / "health_check.tmp"
+        test_file.write_text("test")
+        test_file.unlink()
+    except Exception as e:
+        warnings.append(f"filesystem_write_issue: {str(e)}")
+    
+    # Return status
     if missing:
-        return jsonify({"status": "unhealthy", "missing": missing}), 503
-    return jsonify({"status": "ok"})
+        return jsonify({
+            "status": "unhealthy", 
+            "missing": missing,
+            "warnings": warnings,
+            "timestamp": time.time()
+        }), 503
+    
+    return jsonify({
+        "status": "ok",
+        "warnings": warnings,
+        "active_lobbies": len(LOBBIES),
+        "words_loaded": len(WORDS),
+        "redis_enabled": bool(redis_client),
+        "timestamp": time.time()
+    })
 
 
 @app.route("/")
@@ -1568,3 +1706,45 @@ if __name__ == "__main__":
     t = threading.Thread(target=_purge_loop, daemon=True)
     t.start()
     app.run(host="0.0.0.0", port=5001)
+
+
+# Security headers configuration - must be defined after app and routes
+def setup_security_headers(app_instance):
+    """Setup security headers for the Flask app."""
+    @app_instance.after_request
+    def add_security_headers(response):
+        """Add security headers to all responses for production safety."""
+        # Only add strict security headers in production
+        is_production = os.environ.get("FLASK_ENV") == "production"
+        
+        # Always add basic security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        if is_production:
+            # Strict security for production
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "connect-src 'self' https://api.dictionaryapi.dev; "
+                "font-src 'self'; "
+                "frame-ancestors 'none';"
+            )
+        else:
+            # Development-friendly CSP
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                "connect-src 'self' https://api.dictionaryapi.dev ws: wss:; "
+                "img-src 'self' data: https:;"
+            )
+        
+        return response
+    return add_security_headers
+
+
+# Setup security headers
+setup_security_headers(app)
