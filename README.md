@@ -253,6 +253,19 @@ ECS Fargate service running the Flask API. Set `enable_efs` to mount a shared
 EFS volume and override the `GAME_FILE` path. Refer to the README in that
 directory for usage instructions.
 
+## Production Deployment
+
+WordSquad is production-ready with comprehensive security features and monitoring. Key production features include:
+
+- **Security Headers**: CSP, HSTS, XSS protection, and frame options
+- **Rate Limiting**: API-wide and guess-specific rate limiting
+- **Environment Validation**: Automatic validation of production configuration
+- **Enhanced Health Checks**: Comprehensive monitoring endpoint
+- **Docker Security**: Non-root user execution and health checks
+- **Dependency Security**: Regular security updates for all dependencies
+
+See [PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) for detailed deployment instructions and security verification steps.
+
 ## Repository Practices
 
 - Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
