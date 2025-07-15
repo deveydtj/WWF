@@ -274,11 +274,13 @@ function updateInputVisibility() {
   const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
   
   if (useMobileDisplay) {
-    guessInput.readOnly = true;
-    guessInput.setAttribute('inputmode', 'none');
-    guessInput.style.display = 'none';
-    submitButton.style.display = 'none';
-    messageEl.style.display = 'none';
+    // Show input area on mobile, positioned above keyboard
+    guessInput.readOnly = false;
+    guessInput.setAttribute('inputmode', 'text');
+    guessInput.style.display = 'block';
+    submitButton.style.display = 'block';
+    messageEl.style.display = 'block';
+    messageEl.style.visibility = 'hidden';
   } else {
     guessInput.readOnly = false;
     guessInput.setAttribute('inputmode', 'text');

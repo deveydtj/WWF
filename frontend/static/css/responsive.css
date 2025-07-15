@@ -419,9 +419,30 @@
     margin-bottom: calc(var(--tile-gap) * 0.6);
   }
 
-  /* Hide input area on ultra small screens to save space */
+  /* Keep input area visible on ultra small screens but optimize for space */
   #inputArea {
-    display: none;
+    display: flex;
+    flex-direction: column;
+    margin: 5px auto;
+    width: 100%;
+    align-items: center;
+    /* Position above keyboard with minimal spacing */
+    margin-bottom: 5px;
+  }
+  
+  #guessInput {
+    display: block;
+    width: 90%;
+    padding: 8px;
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+  
+  #submitGuess {
+    display: block;
+    width: 90%;
+    padding: 8px;
+    font-size: 14px;
   }
 }
 
