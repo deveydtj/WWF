@@ -193,7 +193,6 @@ if (copyLobbyLink && LOBBY_CODE) {
       }).catch(() => {
         // Fallback to custom modal if sharing fails
         shareLink.value = url;
-        shareModal.style.display = 'flex';
         openDialog(shareModal);
         shareLink.focus();
         shareLink.select();
@@ -201,7 +200,6 @@ if (copyLobbyLink && LOBBY_CODE) {
     } else {
       // Fallback for browsers without Web Share API
       shareLink.value = url;
-      shareModal.style.display = 'flex';
       openDialog(shareModal);
       shareLink.focus();
       shareLink.select();

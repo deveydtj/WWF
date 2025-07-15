@@ -139,6 +139,5 @@ export function showEmojiModal(takenEmojis, {
   });
 
   errorEl.textContent = '';
-  modal.style.display = 'flex';
   openDialog(modal);
 }

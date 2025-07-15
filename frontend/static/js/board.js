@@ -15,12 +15,29 @@ export function createBoard(board, rows = 6) {
 }
 
 /**
+ * Add animation when a letter appears in a tile
+ */
+function animateLetterIn(tile, letter) {
+  tile.textContent = letter.toUpperCase();
+  tile.classList.add('letter-in');
+  
+  // Remove animation class after animation completes
+  tile.addEventListener('animationend', () => {
+    tile.classList.remove('letter-in');
+  }, { once: true });
+}
+
+/**
  * Render all guesses and the current input onto the board.
  * Existing tiles are cleared before applying new status classes.
  */
 export function updateBoard(board, state, guessInput, rows = 6, gameOver = false, animateRow = -1, hint = null, hintRow = null) {
   const guesses = state.guesses;
   const tiles = board.children;
+  
+  // Store previous state to detect new letters
+  const previousTexts = Array.from(tiles).map(tile => tile.textContent);
+  
   for (let i = 0; i < rows * 5; i++) {
     tiles[i].textContent = '';
     tiles[i].className = 'tile';
@@ -32,6 +49,8 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
       tile.classList.add(g.result[i]);
       if (row === animateRow) {
         tile.style.transitionDelay = `${i * 0.15}s`;
+        // Add flip animation for color reveal
+        tile.classList.add('flip-reveal');
       } else {
         tile.style.transitionDelay = '';
       }
@@ -51,14 +70,29 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
     const rowIndex = guesses.length;
     for (let i = 0; i < 5; i++) {
       const tile = tiles[rowIndex * 5 + i];
+      const tileIndex = rowIndex * 5 + i;
+      
       tile.classList.toggle('hint-target', hintRow === rowIndex);
       if (hint && hint.row === rowIndex && hint.col === i) {
-        tile.textContent = hint.letter.toUpperCase();
+        if (previousTexts[tileIndex] !== hint.letter.toUpperCase()) {
+          animateLetterIn(tile, hint.letter);
+        } else {
+          tile.textContent = hint.letter.toUpperCase();
+        }
         tile.classList.add('ghost');
       } else if (i < guessInput.value.length) {
-        tile.textContent = guessInput.value[i].toUpperCase();
+        const newLetter = guessInput.value[i].toUpperCase();
+        if (previousTexts[tileIndex] !== newLetter) {
+          animateLetterIn(tile, newLetter);
+        } else {
+          tile.textContent = newLetter;
+        }
       } else if (greenPositions[i]) {
-        tile.textContent = greenPositions[i].toUpperCase();
+        if (previousTexts[tileIndex] !== greenPositions[i].toUpperCase()) {
+          animateLetterIn(tile, greenPositions[i]);
+        } else {
+          tile.textContent = greenPositions[i].toUpperCase();
+        }
         tile.classList.add('ghost');
       }
     }
