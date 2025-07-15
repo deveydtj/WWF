@@ -2,16 +2,50 @@
 
 This checklist ensures all security and configuration requirements are met before deploying WordSquad to production.
 
-## Pre-Deployment Security Checklist
+## Next Steps After AWS Account Creation
 
-### ✅ Frontend Security
+### 🚀 AWS Infrastructure Setup (START HERE)
+
+#### 1. Configure AWS CLI and Credentials
+- [ ] **Install AWS CLI**: Download and install AWS CLI v2
+- [ ] **Configure AWS Profile**: Run `aws configure` with your AWS access keys
+- [ ] **Verify Access**: Test with `aws sts get-caller-identity`
+
+#### 2. Set Up Terraform Backend Infrastructure
+- [ ] **Create S3 Bucket for State**: `aws s3 mb s3://your-terraform-state-bucket-name`
+- [ ] **Create DynamoDB Table**: For state locking (see `infra/terraform/README.md`)
+- [ ] **Enable S3 Versioning**: `aws s3api put-bucket-versioning --bucket your-terraform-state-bucket-name --versioning-configuration Status=Enabled`
+
+#### 3. Configure Domain and Networking
+- [ ] **Register Domain**: Or use existing domain for the application
+- [ ] **Create/Configure VPC**: Use existing VPC or create new one with public/private subnets
+- [ ] **Note VPC Details**: Record VPC ID and subnet IDs for Terraform configuration
+
+#### 4. Update Terraform Configuration
+- [ ] **Edit `infra/live/variables.tfvars`**: Replace all placeholder values with real AWS values
+- [ ] **Set Domain**: Update `domain` variable with your registered domain
+- [ ] **Set AWS Region**: Choose your preferred AWS region
+- [ ] **Configure VPC/Subnets**: Use your VPC and subnet IDs
+
+#### 5. Set Up GitHub Repository Secrets
+- [ ] **AWS_ACCESS_KEY_ID**: Your AWS access key
+- [ ] **AWS_SECRET_ACCESS_KEY**: Your AWS secret key
+- [ ] **AWS_ACCOUNT_ID**: Your 12-digit AWS account ID
+- [ ] **AWS_REGION**: Your chosen AWS region (e.g., us-east-1)
+- [ ] **ECR_REPO**: Set to `wwf-api`
+- [ ] **TF_VAR_domain**: Your domain name
+- [ ] **CF_DISTRIBUTION_ID**: (Will be set after first Terraform deployment)
+
+### 📋 Pre-Deployment Security Checklist
+
+#### ✅ Frontend Security
 - [x] **Frontend Dependencies Updated**: Vite upgraded to v7.0.4 to fix esbuild vulnerability
 - [x] **Build Process**: Frontend builds successfully with `npm run build`
 - [x] **Static Assets**: Built assets are properly copied to backend/static/
 
-### ✅ Backend Security & Configuration
+#### ✅ Backend Security & Configuration
 
-#### Environment Variables (REQUIRED for Production)
+##### Environment Variables (REQUIRED for Production)
 - [ ] `SECRET_KEY` - Set to a strong, unique value (32+ characters)
 - [ ] `FLASK_ENV=production` - Enables production security mode
 - [ ] `REDIS_URL` - (Optional) For multi-instance deployments
