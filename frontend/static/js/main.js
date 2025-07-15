@@ -275,11 +275,13 @@ function updateInputVisibility() {
   const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
   
   if (useMobileDisplay) {
+    // Keep input visible on mobile for better UX, but make it read-only
+    // Users can see what they're typing when using the on-screen keyboard
     guessInput.readOnly = true;
     guessInput.setAttribute('inputmode', 'none');
-    guessInput.style.display = 'none';
-    submitButton.style.display = 'none';
-    messageEl.style.display = 'none';
+    guessInput.style.display = 'block';
+    submitButton.style.display = 'block';
+    messageEl.style.display = 'none'; // Hide message element to save space
   } else {
     guessInput.readOnly = false;
     guessInput.setAttribute('inputmode', 'text');
