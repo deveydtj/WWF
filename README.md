@@ -264,7 +264,14 @@ WordSquad is production-ready with comprehensive security features and monitorin
 - **Docker Security**: Non-root user execution and health checks
 - **Dependency Security**: Regular security updates for all dependencies
 
-See [PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) for detailed deployment instructions and security verification steps.
+### Quick Start for AWS Deployment
+
+**Just created an AWS account?** Start here:
+1. Follow [AWS_QUICKSTART.md](docs/AWS_QUICKSTART.md) for immediate next steps
+2. Then proceed with [DEPLOY_GUIDE.md](docs/DEPLOY_GUIDE.md) for full deployment
+3. Use [PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) to verify your deployment
+
+For detailed deployment instructions and security verification steps, see the complete documentation in the `docs/` directory.
 
 ## Repository Practices
 
