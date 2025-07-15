@@ -19,14 +19,18 @@
 
   #optionsToggle {
     display: block;
-    left: auto;
-    right: 0;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 70;
   }
   
   #chatNotify {
     display: block;
-    left: auto;
-    right: 0;
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    z-index: 70;
   }
 
   /* Hide player count in mobile/light mode to save space */
