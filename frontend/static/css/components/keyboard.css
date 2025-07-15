@@ -10,6 +10,24 @@
   min-height: calc(var(--tile-size) * 2.4);
   width: 100%;
   max-width: 500px; /* Prevent keyboard from getting too wide */
+  /* Ensure keyboard stays at bottom and is always visible */
+  position: relative;
+  z-index: 10;
+  margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
+}
+
+/* Ensure keyboard container has proper flexbox behavior */
+#gameColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Keyboard should stick to bottom */
+#keyboard {
+  margin-top: auto;
+  flex-shrink: 0; /* Never shrink the keyboard */
 }
 
 .keyboard-row {

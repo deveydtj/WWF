@@ -208,7 +208,24 @@
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
     margin-top: auto;
-    margin-bottom: 5px;
+    margin-bottom: max(5px, env(safe-area-inset-bottom, 0px));
+    /* Ensure keyboard is always visible */
+    position: relative;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  /* Ensure gameColumn uses full viewport height properly */
+  #gameColumn {
+    min-height: calc(var(--vh, 1vh) * 100);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Board area should be flexible but keyboard should not shrink */
+  #boardArea {
+    flex: 1 1 auto;
+    min-height: 0; /* Allow board to shrink if needed */
   }
 
   .key {
@@ -350,6 +367,10 @@
   
   #keyboard {
     min-height: calc(var(--tile-size) * 2.0);
+    /* More aggressive positioning for very small screens */
+    margin-bottom: max(2px, env(safe-area-inset-bottom, 0px));
+    /* Ensure it's always visible by reducing margins */
+    margin-top: 5px;
   }
 
   .key {
@@ -357,6 +378,11 @@
     height: calc(var(--tile-size) * 0.75);
     font-size: calc(var(--tile-size) * 0.24);
     margin: 1px;
+  }
+
+  /* Make keyboard more compact to prevent overflow */
+  .keyboard-row {
+    margin-bottom: calc(var(--tile-gap) * 0.8);
   }
 }
 
@@ -375,11 +401,27 @@
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
   
+  #keyboard {
+    /* Very compact keyboard for tiny screens */
+    min-height: calc(var(--tile-size) * 1.8);
+    margin-bottom: max(1px, env(safe-area-inset-bottom, 0px));
+    margin-top: 2px;
+  }
+  
   .key {
     min-width: calc(var(--tile-size) * 0.52);
     height: calc(var(--tile-size) * 0.7);
     font-size: calc(var(--tile-size) * 0.22);
     margin: 1px;
+  }
+
+  .keyboard-row {
+    margin-bottom: calc(var(--tile-gap) * 0.6);
+  }
+
+  /* Hide input area on ultra small screens to save space */
+  #inputArea {
+    display: none;
   }
 }
 

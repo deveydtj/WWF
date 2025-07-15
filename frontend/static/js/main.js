@@ -7,7 +7,8 @@ import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
          positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, isMobileView, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
-         adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling } from './utils.js';
+         adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling, 
+         checkKeyboardVisibility, ensureKeyboardVisibility, calculateMinRequiredHeight } from './utils.js';
 import { positionResponsive, positionContextMenu, positionModal, positionOnGrid } from './popupPositioning.js';
 
 // Make enhanced positioning available globally for backward compatibility
@@ -1229,6 +1230,9 @@ window.addEventListener('resize', () => {
   adjustKeyboardForViewport();
   setupMobileLeaderboard(); // Handle mobile leaderboard layout on resize
   if (latestState) renderEmojiStamps(latestState.guesses);
+  
+  // Ensure keyboard visibility after all adjustments
+  setTimeout(() => ensureKeyboardVisibility(), 100);
 });
 updateVH();
 window.addEventListener('resize', updateVH);
@@ -1236,6 +1240,8 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
     updateVH();
     adjustKeyboardForViewport();
+    // Ensure keyboard stays visible when visual viewport changes
+    setTimeout(() => ensureKeyboardVisibility(), 50);
   });
 }
 window.addEventListener('orientationchange', () => {
@@ -1253,6 +1259,9 @@ window.addEventListener('orientationchange', () => {
   adjustKeyboardForViewport();
   setupMobileLeaderboard(); // Handle mobile leaderboard layout on orientation change
   if (latestState) renderEmojiStamps(latestState.guesses);
+  
+  // Ensure keyboard visibility after orientation change
+  setTimeout(() => ensureKeyboardVisibility(), 200);
 });
 
 // Add a timeout for orientation change to handle delayed layout updates
@@ -1271,6 +1280,9 @@ window.addEventListener('orientationchange', () => {
     
     adjustKeyboardForViewport();
     setupMobileLeaderboard(); // Handle mobile leaderboard layout on delayed orientation change
+    
+    // Final keyboard visibility check after all delayed adjustments
+    ensureKeyboardVisibility();
   }, 300);
 });
 

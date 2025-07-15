@@ -253,7 +253,7 @@ export function applyLayoutMode() {
 /**
  * Calculate a tile size that fits the board within the viewport.
  * Prevents overlap with the header and leaderboard in full mode.
- * Enhanced version with improved container measurement.
+ * Enhanced version with improved container measurement and guaranteed keyboard visibility.
  *
  * @param {number} rows - Number of board rows
  * @returns {{ tile: number, board: number }} Size in pixels
@@ -272,6 +272,9 @@ export function fitBoardToContainer(rows = 6) {
           root.style.setProperty('--tile-gap', `${gap}px`);
           root.style.setProperty('--board-width', `${boardWidth}px`);
           root.style.setProperty('--ui-scale', `${tileSize / 60}`);
+          
+          // Ensure keyboard visibility after scaling
+          setTimeout(() => ensureKeyboardVisibility(), 100);
           return { tile: tileSize, board: boardWidth };
         }
       }
@@ -280,7 +283,7 @@ export function fitBoardToContainer(rows = 6) {
     }
   }
 
-  // Fallback to original implementation
+  // Enhanced implementation with keyboard-first approach
   const boardArea = document.getElementById('boardArea');
   if (!boardArea) return { tile: 0, board: 0 };
 
@@ -341,29 +344,27 @@ export function fitBoardToContainer(rows = 6) {
     const kbMargins = kbStyle ?
       parseFloat(kbStyle.marginTop) + parseFloat(kbStyle.marginBottom) : 0;
 
-    // Reserve extra space for keyboard - this is the key fix
+    // Enhanced keyboard safety calculations
+    const keyboardSafetyBuffer = calculateKeyboardSafetyBuffer();
     const totalUsedHeight = h.title + h.lobby + h.leaderboard + h.input +
                            boardMargins + kbMargins + h.message;
 
-    let containerHeight = root.clientHeight;
-    if (!containerHeight && typeof window !== 'undefined') {
-      containerHeight = window.innerHeight;
-    }
+    let containerHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     if (boardArea.parentElement && boardArea.parentElement.clientHeight) {
       containerHeight = containerHeight
         ? Math.min(boardArea.parentElement.clientHeight, containerHeight)
         : boardArea.parentElement.clientHeight;
     }
 
-    // Calculate available height based on container minus keyboard height
-    // Add extra buffer for mobile keyboards to ensure they're fully visible
-    const mobileKeyboardBuffer = (typeof window !== 'undefined' && window.innerWidth <= 600) ? 20 : 0;
-    const availHeight = Math.max(0,
-      containerHeight - h.keyboard - totalUsedHeight - 20 - mobileKeyboardBuffer);
+    // Calculate available height with guaranteed keyboard space
+    // The keyboard MUST fit, so we work backwards from that requirement
+    const reservedForKeyboard = h.keyboard + keyboardSafetyBuffer;
+    const availableForOtherElements = Math.max(0, containerHeight - reservedForKeyboard);
+    const availableForBoard = Math.max(0, availableForOtherElements - totalUsedHeight);
 
     // Size constraints
     const sizeByWidth = Math.max(20, (width - gap * 4) / 5);
-    const sizeByHeight = Math.max(20, (availHeight - gap * (rows - 1)) / rows);
+    const sizeByHeight = Math.max(20, (availableForBoard - gap * (rows - 1)) / rows);
 
     const newSize = Math.min(maxSize, sizeByWidth, sizeByHeight);
 
@@ -382,24 +383,70 @@ export function fitBoardToContainer(rows = 6) {
   const boardWidth = size * 5 + gap * 4;
   root.style.setProperty('--board-width', `${boardWidth}px`);
 
-  // Additional mobile-specific adjustments
-  if (isMobile && size < 35) {
-    // On very small screens, make keyboard even more compact
-    const keyboard = document.getElementById('keyboard');
-    if (keyboard) {
-      keyboard.style.transform = `scale(${Math.max(0.8, size / 35)})`;
-      keyboard.style.transformOrigin = 'center bottom';
-    }
-  } else {
-    // Reset any scaling on larger screens
-    const keyboard = document.getElementById('keyboard');
-    if (keyboard) {
-      keyboard.style.transform = '';
-      keyboard.style.transformOrigin = '';
-    }
+  // Enhanced mobile-specific adjustments with keyboard visibility
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  
+  if (viewportWidth <= 600) {
+    // Mobile adjustments with keyboard safety
+    applyMobileKeyboardAdjustments(size, viewportHeight);
   }
 
+  // Validate and ensure keyboard visibility
+  setTimeout(() => {
+    const visibility = checkKeyboardVisibility();
+    if (!visibility.visible) {
+      console.warn('Keyboard visibility issue detected, applying fixes...');
+      ensureKeyboardVisibility(true);
+    }
+  }, 100);
+
   return { tile: size, board: boardWidth };
+}
+
+/**
+ * Calculate safety buffer needed for keyboard visibility
+ */
+function calculateKeyboardSafetyBuffer() {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  
+  // More buffer for smaller screens
+  if (viewportHeight < 600) {
+    return 30; // Extra buffer for very small screens
+  } else if (viewportWidth <= 600) {
+    return 20; // Standard mobile buffer
+  } else {
+    return 10; // Minimal buffer for desktop
+  }
+}
+
+/**
+ * Apply mobile-specific keyboard adjustments
+ */
+function applyMobileKeyboardAdjustments(tileSize, viewportHeight) {
+  const keyboard = document.getElementById('keyboard');
+  if (!keyboard) return;
+
+  // Reset any previous transforms
+  keyboard.style.transform = '';
+  keyboard.style.transformOrigin = '';
+
+  if (viewportHeight < 600) {
+    // Very small screens: aggressive optimizations
+    const scale = Math.max(0.75, Math.min(1, viewportHeight / 600));
+    keyboard.style.transform = `scale(${scale})`;
+    keyboard.style.transformOrigin = 'center bottom';
+    keyboard.style.marginBottom = '2px';
+    
+    // Also make the keyboard more compact
+    keyboard.style.maxHeight = `${Math.min(120, viewportHeight * 0.2)}px`;
+  } else if (tileSize < 35) {
+    // Small tiles: moderate scaling
+    const scale = Math.max(0.85, tileSize / 35);
+    keyboard.style.transform = `scale(${scale})`;
+    keyboard.style.transformOrigin = 'center bottom';
+  }
 }
 
 /**
@@ -588,14 +635,250 @@ export function showPopup(popup, anchor) {
 }
 
 /**
+ * Check if the keyboard is fully visible in the viewport.
+ * @returns {Object} Visibility status and metrics
+ */
+export function checkKeyboardVisibility() {
+  const keyboard = document.getElementById('keyboard');
+  if (!keyboard) return { visible: false, error: 'Keyboard not found' };
+
+  const keyboardRect = keyboard.getBoundingClientRect();
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+
+  const fullyVisible = keyboardRect.top >= 0 && 
+                      keyboardRect.left >= 0 && 
+                      keyboardRect.bottom <= viewportHeight && 
+                      keyboardRect.right <= viewportWidth;
+
+  const partiallyVisible = keyboardRect.top < viewportHeight && 
+                          keyboardRect.bottom > 0 && 
+                          keyboardRect.left < viewportWidth && 
+                          keyboardRect.right > 0;
+
+  const cutOffBottom = keyboardRect.bottom > viewportHeight;
+  const cutOffAmount = cutOffBottom ? keyboardRect.bottom - viewportHeight : 0;
+
+  return {
+    visible: fullyVisible,
+    partiallyVisible,
+    cutOffBottom,
+    cutOffAmount,
+    keyboardRect: {
+      top: keyboardRect.top,
+      bottom: keyboardRect.bottom,
+      left: keyboardRect.left,
+      right: keyboardRect.right,
+      width: keyboardRect.width,
+      height: keyboardRect.height
+    },
+    viewport: {
+      width: viewportWidth,
+      height: viewportHeight
+    }
+  };
+}
+
+/**
+ * Calculate minimum required viewport height to fit all game elements including keyboard.
+ * @param {number} rows - Number of board rows
+ * @returns {Object} Height requirements and recommendations
+ */
+export function calculateMinRequiredHeight(rows = 6) {
+  const elements = {
+    titleBar: getElementHeight('titleBar'),
+    lobbyHeader: getElementHeight('lobbyHeader'),
+    leaderboard: getElementHeight('leaderboard'),
+    board: calculateBoardHeight(rows),
+    inputArea: getElementHeight('inputArea'),
+    keyboard: getElementHeight('keyboard'),
+    message: 25, // Reserve space for messages
+  };
+
+  // Add margins and padding
+  const margins = {
+    appContainer: 20, // Top/bottom padding
+    boardArea: 20, // Board area margins
+    keyboard: 10, // Keyboard margins
+    buffer: 20 // Safety buffer
+  };
+
+  const totalRequired = Object.values(elements).reduce((sum, height) => sum + height, 0) + 
+                       Object.values(margins).reduce((sum, margin) => sum + margin, 0);
+
+  return {
+    elements,
+    margins,
+    totalRequired,
+    current: window.visualViewport ? window.visualViewport.height : window.innerHeight,
+    deficit: Math.max(0, totalRequired - (window.visualViewport ? window.visualViewport.height : window.innerHeight)),
+    recommendations: generateHeightRecommendations(elements, margins, totalRequired)
+  };
+}
+
+/**
+ * Generate recommendations for height constraints.
+ */
+function generateHeightRecommendations(elements, margins, totalRequired) {
+  const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const recommendations = [];
+
+  if (totalRequired > currentHeight) {
+    const deficit = totalRequired - currentHeight;
+    recommendations.push({
+      type: 'critical',
+      message: `Viewport too short by ${deficit}px. Keyboard may be cut off.`,
+      action: 'reduce_element_sizes'
+    });
+
+    // Suggest specific reductions
+    if (elements.board > currentHeight * 0.4) {
+      recommendations.push({
+        type: 'suggestion',
+        message: 'Board taking up significant space. Consider smaller tiles.',
+        action: 'reduce_tile_size'
+      });
+    }
+
+    if (elements.keyboard > currentHeight * 0.25) {
+      recommendations.push({
+        type: 'suggestion', 
+        message: 'Keyboard taking up significant space. Consider compact mode.',
+        action: 'compact_keyboard'
+      });
+    }
+  }
+
+  return recommendations;
+}
+
+/**
+ * Calculate board height based on current tile size and rows.
+ */
+function calculateBoardHeight(rows) {
+  const root = document.documentElement;
+  const style = getComputedStyle(root);
+  const tileSize = parseFloat(style.getPropertyValue('--tile-size')) || 40;
+  const gap = parseFloat(style.getPropertyValue('--tile-gap')) || 8;
+  return rows * tileSize + (rows - 1) * gap;
+}
+
+/**
+ * Get element height safely with fallback.
+ */
+function getElementHeight(id, fallback = 0) {
+  const element = document.getElementById(id);
+  return element ? element.offsetHeight : fallback;
+}
+
+/**
+ * Ensure keyboard stays visible by adjusting layout if needed.
+ * @param {boolean} force - Force adjustment even if keyboard appears visible
+ * @returns {boolean} Whether adjustment was successful
+ */
+export function ensureKeyboardVisibility(force = false) {
+  const visibility = checkKeyboardVisibility();
+  
+  if (visibility.visible && !force) {
+    return true; // Already visible
+  }
+
+  if (!visibility.partiallyVisible) {
+    console.warn('Keyboard completely outside viewport');
+    return false;
+  }
+
+  // Try different strategies to make keyboard visible
+  const strategies = [
+    () => adjustKeyboardForViewport(),
+    () => compactKeyboardForSmallViewports(),
+    () => repositionKeyboardDynamically(),
+    () => reduceOtherElementSizes()
+  ];
+
+  for (const strategy of strategies) {
+    try {
+      strategy();
+      const newVisibility = checkKeyboardVisibility();
+      if (newVisibility.visible) {
+        return true;
+      }
+    } catch (error) {
+      console.warn('Keyboard visibility strategy failed:', error);
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Compact keyboard for small viewports.
+ */
+function compactKeyboardForSmallViewports() {
+  const keyboard = document.getElementById('keyboard');
+  if (!keyboard) return;
+
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  
+  if (viewportHeight < 600) {
+    // Apply more aggressive scaling for very small screens
+    const scale = Math.max(0.7, Math.min(1, viewportHeight / 600));
+    keyboard.style.transform = `scale(${scale})`;
+    keyboard.style.transformOrigin = 'center bottom';
+    keyboard.style.marginBottom = '5px';
+  }
+}
+
+/**
+ * Dynamically reposition keyboard if it's cut off.
+ */
+function repositionKeyboardDynamically() {
+  const keyboard = document.getElementById('keyboard');
+  if (!keyboard) return;
+
+  const visibility = checkKeyboardVisibility();
+  if (visibility.cutOffBottom) {
+    // Move keyboard up by the amount it's cut off, plus a small buffer
+    const adjustment = visibility.cutOffAmount + 10;
+    keyboard.style.transform = `translateY(-${adjustment}px)`;
+  }
+}
+
+/**
+ * Reduce sizes of other elements to make room for keyboard.
+ */
+function reduceOtherElementSizes() {
+  const requirements = calculateMinRequiredHeight();
+  
+  if (requirements.deficit > 0) {
+    // Reduce tile size to make more room
+    const root = document.documentElement;
+    const currentTileSize = parseFloat(getComputedStyle(root).getPropertyValue('--tile-size')) || 40;
+    const reductionFactor = Math.max(0.8, (requirements.current - requirements.deficit) / requirements.current);
+    const newTileSize = Math.max(20, currentTileSize * reductionFactor);
+    
+    root.style.setProperty('--tile-size', `${newTileSize}px`);
+    root.style.setProperty('--ui-scale', `${newTileSize / 60}`);
+  }
+}
+
+/**
  * Adjust the on-screen keyboard position when the visual viewport changes.
  */
 export function adjustKeyboardForViewport() {
   const keyboard = document.getElementById('keyboard');
   if (!keyboard) return;
+  
+  // Check if keyboard is cut off and needs adjustment
+  const visibility = checkKeyboardVisibility();
+  
   if (window.visualViewport) {
     const offset = Math.max(0, window.innerHeight - window.visualViewport.height);
     keyboard.style.transform = `translateY(-${offset}px)`;
+  } else if (visibility.cutOffBottom) {
+    // Fallback: adjust based on cut-off amount
+    const adjustment = visibility.cutOffAmount + 5;
+    keyboard.style.transform = `translateY(-${adjustment}px)`;
   } else {
     keyboard.style.transform = '';
   }
