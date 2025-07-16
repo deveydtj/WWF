@@ -180,6 +180,10 @@
     margin-bottom: 10px;
     width: 100%;
     align-items: center;
+    /* Ensure input area is positioned above keyboard */
+    position: relative;
+    z-index: 5;
+    order: 2; /* Position after board but before keyboard */
   }
 
   #guessInput {
@@ -192,12 +196,47 @@
     text-transform: uppercase;
   }
 
+  /* Mobile-specific input styling */
+  #guessInput.mobile-input {
+    position: relative;
+    z-index: 10;
+    /* Ensure input stays visible above virtual keyboard */
+    background-color: var(--bg-color);
+    border: 2px solid var(--text-color-light);
+    box-shadow: 
+      inset 3px 3px 6px var(--inset-shadow-dark),
+      inset -3px -3px 6px var(--inset-shadow-light),
+      0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  #guessInput.mobile-input.focused {
+    /* Enhanced styling when input is focused and native keyboard is visible */
+    border-color: var(--correct-bg);
+    box-shadow: 
+      inset 3px 3px 6px var(--inset-shadow-dark),
+      inset -3px -3px 6px var(--inset-shadow-light),
+      0 0 0 2px var(--correct-bg),
+      0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+
   #submitGuess {
     display: block;
     width: 100%;
     padding: 12px;
     font-size: 16px;
     border-radius: 8px;
+  }
+
+  #submitGuess.mobile-submit {
+    position: relative;
+    z-index: 10;
+    /* Enhanced visibility for mobile */
+    box-shadow: 
+      5px 5px 10px var(--shadow-color-dark),
+      -5px -5px 10px var(--shadow-color-light),
+      0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   #messagePopup {
@@ -207,12 +246,13 @@
   /* Mobile keyboard adjustments */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
-    margin-top: auto;
+    margin-top: 5px; /* Reduced margin for better spacing with input */
     margin-bottom: max(5px, env(safe-area-inset-bottom, 0px));
     /* Ensure keyboard is always visible */
     position: relative;
-    z-index: 100;
+    z-index: 10;
     flex-shrink: 0;
+    order: 4; /* Ensure keyboard comes after input */
   }
 
   /* Ensure gameColumn uses full viewport height properly */
@@ -226,6 +266,28 @@
   #boardArea {
     flex: 1 1 auto;
     min-height: 0; /* Allow board to shrink if needed */
+    order: 1; /* Board comes first */
+  }
+
+  /* Input area positioning */
+  #inputArea {
+    flex: 0 0 auto;
+    order: 2; /* Input comes after board */
+    margin: 10px auto 15px auto; /* More space around input area */
+  }
+
+  /* Message area */
+  #message {
+    order: 3; /* Message comes after input */
+    flex: 0 0 auto;
+    margin: 5px 0;
+  }
+
+  /* Keyboard positioning */
+  #keyboard {
+    order: 4; /* Keyboard comes last */
+    flex: 0 0 auto;
+    margin-top: 10px;
   }
 
   .key {
@@ -419,9 +481,20 @@
     margin-bottom: calc(var(--tile-gap) * 0.6);
   }
 
-  /* Hide input area on ultra small screens to save space */
+  /* Show input area on ultra small screens but make it more compact */
   #inputArea {
-    display: none;
+    margin: 5px auto;
+    transform: scale(0.9); /* Slightly smaller to fit */
+  }
+  
+  #guessInput.mobile-input {
+    padding: 8px 10px; /* Reduced padding */
+    font-size: 16px; /* Slightly smaller font */
+  }
+  
+  #submitGuess.mobile-submit {
+    padding: 8px 10px; /* Reduced padding */
+    font-size: 14px; /* Smaller font for submit button */
   }
 }
 

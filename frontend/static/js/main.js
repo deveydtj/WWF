@@ -274,11 +274,17 @@ function updateInputVisibility() {
   const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
   
   if (useMobileDisplay) {
-    guessInput.readOnly = true;
-    guessInput.setAttribute('inputmode', 'none');
-    guessInput.style.display = 'none';
-    submitButton.style.display = 'none';
-    messageEl.style.display = 'none';
+    // Keep input visible on mobile but with special handling for keyboard
+    guessInput.readOnly = false;
+    guessInput.setAttribute('inputmode', 'text');
+    guessInput.style.display = 'block';
+    submitButton.style.display = 'block';
+    messageEl.style.display = 'block';
+    messageEl.style.visibility = 'hidden';
+    
+    // Add mobile-specific input handling
+    guessInput.classList.add('mobile-input');
+    submitButton.classList.add('mobile-submit');
   } else {
     guessInput.readOnly = false;
     guessInput.setAttribute('inputmode', 'text');
@@ -286,11 +292,47 @@ function updateInputVisibility() {
     submitButton.style.display = 'block';
     messageEl.style.display = 'block';
     messageEl.style.visibility = 'hidden';
+    
+    // Remove mobile-specific classes
+    guessInput.classList.remove('mobile-input');
+    submitButton.classList.remove('mobile-submit');
   }
 }
 
 // Initial call
 updateInputVisibility();
+
+/**
+ * Handle native keyboard appearance for input field positioning
+ */
+function handleNativeKeyboardForInput() {
+  const inputArea = document.getElementById('inputArea');
+  const guessInput = document.getElementById('guessInput');
+  
+  if (!inputArea || !guessInput) return;
+  
+  // Check if input is focused and if visual viewport has changed
+  if (document.activeElement === guessInput && window.visualViewport) {
+    const viewportHeight = window.visualViewport.height;
+    const windowHeight = window.innerHeight;
+    const keyboardHeight = windowHeight - viewportHeight;
+    
+    if (keyboardHeight > 50) { // Native keyboard is visible
+      // Ensure input area stays above the keyboard
+      const inputRect = inputArea.getBoundingClientRect();
+      const availableHeight = viewportHeight - 20; // 20px buffer
+      
+      if (inputRect.bottom > availableHeight) {
+        // Scroll input into view
+        inputArea.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }
+  }
+}
 
 // Animate the temporary points indicator after each guess
 function showPointsDelta(delta) {
@@ -1061,6 +1103,26 @@ setupTypingListeners({
   isAnimating: () => false
 });
 
+// Add mobile input focus/blur handling for better keyboard interaction
+if (guessInput) {
+  guessInput.addEventListener('focus', () => {
+    if (isMobileView()) {
+      // When input is focused on mobile, ensure it stays visible
+      setTimeout(() => handleNativeKeyboardForInput(), 300);
+      
+      // Add focused state styling
+      guessInput.classList.add('focused');
+    }
+  });
+  
+  guessInput.addEventListener('blur', () => {
+    if (isMobileView()) {
+      // Remove focused state styling
+      guessInput.classList.remove('focused');
+    }
+  });
+}
+
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark-mode');
   localStorage.setItem('darkMode', isDark);
@@ -1240,6 +1302,8 @@ if (window.visualViewport) {
     adjustKeyboardForViewport();
     // Ensure keyboard stays visible when visual viewport changes
     setTimeout(() => ensureKeyboardVisibility(), 50);
+    // Handle input field positioning when native keyboard appears
+    handleNativeKeyboardForInput();
   });
 }
 window.addEventListener('orientationchange', () => {
