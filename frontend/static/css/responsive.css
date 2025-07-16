@@ -526,7 +526,12 @@
 
   /* Add proper spacing between input area and keyboard in medium mode */
   #inputArea {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 30px;
+    flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }
 
@@ -569,6 +574,11 @@
 
   /* Add proper spacing between input area and keyboard in full mode */
   #inputArea {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 30px;
+    flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }
