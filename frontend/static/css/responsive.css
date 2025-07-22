@@ -515,13 +515,27 @@
   }
 
   :root {
-    /* medium screens scale slightly smaller */
-    --tile-size: min(9vmin, 46px);
+    /* Medium screens: Use smaller tiles to prevent input field from being hidden */
+    --tile-size: min(8vmin, 42px);
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
   
   #keyboard {
     min-height: calc(var(--tile-size) * 2.3);
+    flex-shrink: 0; /* Prevent keyboard from shrinking */
+  }
+
+  /* Ensure gameColumn uses proper flexbox layout */
+  #gameColumn {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Make board area shrink when needed */
+  #boardArea {
+    flex: 1 1 auto;
+    min-height: 0; /* Allow board to shrink if needed */
   }
 
   /* Add proper spacing between input area and keyboard in medium mode */
@@ -530,7 +544,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-bottom: 30px;
+    margin-bottom: 15px; /* Reduced margin to save space */
     flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }
@@ -568,8 +582,28 @@
     max-width: none;
   }
 
+  /* Use smaller tiles for better space management */
+  :root {
+    --tile-size: min(10vmin, 54px); /* Reduced from min(11vmin, 60px) */
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+
   #keyboard {
     min-height: calc(var(--tile-size) * 2.5);
+    flex-shrink: 0; /* Prevent keyboard from shrinking */
+  }
+
+  /* Ensure gameColumn uses proper flexbox layout */
+  #gameColumn {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Make board area shrink when needed */
+  #boardArea {
+    flex: 1 1 auto;
+    min-height: 0; /* Allow board to shrink if needed */
   }
 
   /* Add proper spacing between input area and keyboard in full mode */
@@ -578,7 +612,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px; /* Reduced margin to save space */
     flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }
