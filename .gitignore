@@ -14,3 +14,4 @@ backend/static/*.html
 
 # Terraform state
 .terraform/
+.terraform.lock.hcl

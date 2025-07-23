@@ -17,6 +17,18 @@ resource "aws_s3_bucket" "frontend" {
   bucket = var.frontend_bucket
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = var.kms_key_arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
@@ -354,7 +366,9 @@ resource "aws_security_group" "efs" {
 }
 
 resource "aws_efs_file_system" "wwf" {
-  count = var.enable_efs ? 1 : 0
+  count      = var.enable_efs ? 1 : 0
+  encrypted  = true
+  kms_key_id = var.kms_key_arn
 }
 
 resource "aws_efs_mount_target" "wwf" {
@@ -368,6 +382,7 @@ resource "aws_efs_mount_target" "wwf" {
 resource "aws_cloudwatch_log_group" "api" {
   name              = "/ecs/wwf-api"
   retention_in_days = 7 # Reduced from 14 to 7 days for cost optimization
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_cloudwatch_log_metric_filter" "api_errors" {
