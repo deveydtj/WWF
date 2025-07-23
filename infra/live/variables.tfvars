@@ -23,6 +23,9 @@ api_image = "123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest"  # Will be updat
 # Optional: EFS Storage (set to true if you want persistent storage)
 # enable_efs = true
 
+# KMS Encryption Key (defaults to provided ARN if not overridden)
+# kms_key_arn = "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35"
+
 # Terraform State Configuration (for remote state backend)
 state_bucket = "your-terraform-state-bucket"  # S3 bucket for Terraform state
 lock_table = "your-terraform-lock-table"     # DynamoDB table for state locking

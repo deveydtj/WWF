@@ -45,3 +45,9 @@ variable "enable_efs" {
   default     = false
 }
 
+variable "kms_key_arn" {
+  description = "KMS key ARN for encrypting AWS resources"
+  type        = string
+  default     = "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35"
+}
+
