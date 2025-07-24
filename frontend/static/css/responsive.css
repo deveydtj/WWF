@@ -222,9 +222,9 @@
     flex-direction: column;
   }
 
-  /* Board area should be flexible but keyboard should not shrink */
+  /* Board area should only take space it needs, not expand */
   #boardArea {
-    flex: 1 1 auto;
+    flex: 0 0 auto; /* Only take space needed, don't expand */
     min-height: 0; /* Allow board to shrink if needed */
   }
 
@@ -532,9 +532,9 @@
     flex-direction: column;
   }
 
-  /* Make board area shrink when needed */
+  /* Board area should only take space it needs */
   #boardArea {
-    flex: 1 1 auto;
+    flex: 0 0 auto; /* Only take space needed, don't expand */
     min-height: 0; /* Allow board to shrink if needed */
   }
 
@@ -600,9 +600,9 @@
     flex-direction: column;
   }
 
-  /* Make board area shrink when needed */
+  /* Board area should only take space it needs */
   #boardArea {
-    flex: 1 1 auto;
+    flex: 0 0 auto; /* Only take space needed, don't expand */
     min-height: 0; /* Allow board to shrink if needed */
   }
 
