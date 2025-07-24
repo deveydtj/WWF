@@ -897,6 +897,174 @@ export function adjustKeyboardForViewport() {
   }
 }
 
+/**
+ * Check if the input field is being covered by the digital keyboard.
+ * This is specifically designed to ensure the input field remains accessible.
+ * @returns {Object} Status of input field visibility and overlap information
+ */
+export function checkInputFieldKeyboardOverlap() {
+  const inputField = document.getElementById('guessInput');
+  const keyboard = document.getElementById('keyboard');
+  
+  if (!inputField || !keyboard) {
+    return { 
+      error: 'Required elements not found',
+      inputField: !!inputField,
+      keyboard: !!keyboard,
+      overlap: false
+    };
+  }
+
+  const inputRect = inputField.getBoundingClientRect();
+  const keyboardRect = keyboard.getBoundingClientRect();
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+
+  // Check if input field is within viewport
+  const inputInViewport = inputRect.top >= 0 && 
+                         inputRect.left >= 0 && 
+                         inputRect.bottom <= viewportHeight && 
+                         inputRect.right <= viewportWidth;
+
+  // Check if input field overlaps with keyboard
+  const overlap = !(inputRect.bottom <= keyboardRect.top ||
+                   inputRect.top >= keyboardRect.bottom ||
+                   inputRect.right <= keyboardRect.left ||
+                   inputRect.left >= keyboardRect.right);
+
+  // Calculate how much of the input field is covered
+  let overlapHeight = 0;
+  if (overlap) {
+    const overlapTop = Math.max(inputRect.top, keyboardRect.top);
+    const overlapBottom = Math.min(inputRect.bottom, keyboardRect.bottom);
+    overlapHeight = Math.max(0, overlapBottom - overlapTop);
+  }
+
+  const overlapPercentage = inputRect.height > 0 ? (overlapHeight / inputRect.height) * 100 : 0;
+
+  // Check if there's a visual viewport change (indicating on-screen keyboard)
+  const hasVisualViewportChange = window.visualViewport && 
+                                 Math.abs(window.innerHeight - window.visualViewport.height) > 50;
+
+  return {
+    overlap,
+    overlapHeight,
+    overlapPercentage: Math.round(overlapPercentage * 100) / 100,
+    inputInViewport,
+    inputAccessible: inputInViewport && (!overlap || overlapPercentage < 50),
+    hasVisualViewportChange,
+    inputRect: {
+      top: inputRect.top,
+      bottom: inputRect.bottom,
+      left: inputRect.left,
+      right: inputRect.right,
+      width: inputRect.width,
+      height: inputRect.height
+    },
+    keyboardRect: {
+      top: keyboardRect.top,
+      bottom: keyboardRect.bottom,
+      left: keyboardRect.left,
+      right: keyboardRect.right,
+      width: keyboardRect.width,
+      height: keyboardRect.height
+    },
+    viewport: {
+      width: viewportWidth,
+      height: viewportHeight,
+      innerHeight: window.innerHeight,
+      visualHeight: window.visualViewport ? window.visualViewport.height : window.innerHeight
+    }
+  };
+}
+
+/**
+ * Ensure the input field is not covered by the digital keyboard.
+ * This function specifically addresses input field accessibility issues.
+ * @returns {boolean} Whether the input field is accessible
+ */
+export function ensureInputFieldVisibility() {
+  const status = checkInputFieldKeyboardOverlap();
+  
+  if (status.error) {
+    console.warn('Cannot check input field visibility:', status.error);
+    return false;
+  }
+
+  if (status.inputAccessible) {
+    return true; // Already accessible
+  }
+
+  // Try to make input field accessible
+  const strategies = [
+    () => adjustInputFieldPosition(),
+    () => adjustKeyboardForViewport(),
+    () => ensureKeyboardVisibility(),
+    () => compactLayoutForInputField()
+  ];
+
+  for (const strategy of strategies) {
+    try {
+      strategy();
+      const newStatus = checkInputFieldKeyboardOverlap();
+      if (newStatus.inputAccessible) {
+        console.log('Input field made accessible using strategy:', strategy.name);
+        return true;
+      }
+    } catch (error) {
+      console.warn('Input field visibility strategy failed:', error);
+    }
+  }
+
+  console.warn('Could not ensure input field visibility');
+  return false;
+}
+
+/**
+ * Adjust input field position to avoid keyboard overlap.
+ */
+function adjustInputFieldPosition() {
+  const inputArea = document.getElementById('inputArea');
+  const status = checkInputFieldKeyboardOverlap();
+  
+  if (!inputArea || !status.overlap) return;
+
+  // If there's significant overlap, try moving the input area up
+  if (status.overlapPercentage > 30) {
+    const adjustment = Math.min(status.overlapHeight + 10, 100);
+    inputArea.style.transform = `translateY(-${adjustment}px)`;
+    inputArea.style.transition = 'transform 0.3s ease';
+  }
+}
+
+/**
+ * Compact layout specifically for input field accessibility.
+ */
+function compactLayoutForInputField() {
+  const status = checkInputFieldKeyboardOverlap();
+  
+  if (!status.overlap) return;
+
+  // Reduce margins and padding of elements above the input field
+  const titleBar = document.getElementById('titleBar');
+  const boardArea = document.getElementById('boardArea');
+  
+  if (titleBar) {
+    titleBar.style.marginBottom = '5px';
+  }
+  
+  if (boardArea) {
+    boardArea.style.marginBottom = '5px';
+  }
+
+  // Make the input area more compact
+  const inputArea = document.getElementById('inputArea');
+  if (inputArea) {
+    inputArea.style.marginTop = '3px';
+    inputArea.style.marginBottom = '3px';
+  }
+}
+
 // Re-export enhanced board container functions for backward compatibility
 export { 
   verifyElementsFitInViewport, 

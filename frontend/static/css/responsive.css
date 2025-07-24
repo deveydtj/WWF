@@ -443,6 +443,11 @@
 
 /* Medium screens (601px - 900px) */
 @media (min-width: 601px) and (max-width: 900px) {
+  /* Hide player count in medium mode to save space and prevent input field overlap */
+  #playerCount {
+    display: none;
+  }
+
   #historyBox,
   #definitionBox,
   #chatBox {
@@ -477,7 +482,7 @@
     flex: 1;
     margin: 0;
     text-align: center;
-    font-size: calc(1.8rem * var(--ui-scale));
+    font-size: calc(1.4rem * var(--ui-scale)); /* Reduced from 1.8rem to 1.4rem */
   }
   
   #resetWrapper {
@@ -567,6 +572,11 @@
 
 /* Large screens (min-width: 901px) */
 @media (min-width: 901px) {
+  /* Hide player count in full mode to save space and prevent input field overlap */
+  #playerCount {
+    display: none;
+  }
+
   /* Fix title bar layout for large screens - override mobile layout */
   #titleBar {
     flex-direction: row;
@@ -584,7 +594,7 @@
     flex: 1;
     margin: 0;
     text-align: center;
-    font-size: calc(2rem * var(--ui-scale));
+    font-size: calc(1.5rem * var(--ui-scale)); /* Reduced from 2rem to 1.5rem */
   }
   
   #resetWrapper {
