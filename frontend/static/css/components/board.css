@@ -10,7 +10,7 @@
   margin: 10px auto 0;
   width: 100%;
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 0 auto; /* Only take space needed, don't expand */
 }
 
 /* Game board grid */
