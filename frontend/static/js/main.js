@@ -8,7 +8,8 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
          positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, isMobileView, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
          adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling, 
-         checkKeyboardVisibility, ensureKeyboardVisibility, calculateMinRequiredHeight } from './utils.js';
+         checkKeyboardVisibility, ensureKeyboardVisibility, calculateMinRequiredHeight,
+         checkInputFieldKeyboardOverlap, ensureInputFieldVisibility } from './utils.js';
 import { positionResponsive, positionContextMenu, positionModal, positionOnGrid } from './popupPositioning.js';
 
 // Make enhanced positioning available globally for backward compatibility
@@ -1240,6 +1241,8 @@ if (window.visualViewport) {
     adjustKeyboardForViewport();
     // Ensure keyboard stays visible when visual viewport changes
     setTimeout(() => ensureKeyboardVisibility(), 50);
+    // Double check that input field is not covered by digital keyboard
+    setTimeout(() => ensureInputFieldVisibility(), 100);
   });
 }
 window.addEventListener('orientationchange', () => {
@@ -1260,6 +1263,8 @@ window.addEventListener('orientationchange', () => {
   
   // Ensure keyboard visibility after orientation change
   setTimeout(() => ensureKeyboardVisibility(), 200);
+  // Double check that input field is not covered by digital keyboard
+  setTimeout(() => ensureInputFieldVisibility(), 250);
 });
 
 // Add a timeout for orientation change to handle delayed layout updates
@@ -1281,6 +1286,8 @@ window.addEventListener('orientationchange', () => {
     
     // Final keyboard visibility check after all delayed adjustments
     ensureKeyboardVisibility();
+    // Final check for input field visibility
+    ensureInputFieldVisibility();
   }, 300);
 });
 
