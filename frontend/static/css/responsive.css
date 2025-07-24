@@ -5,7 +5,7 @@
 /* Mobile devices (max-width: 600px) */
 @media (max-width: 600px) {
   #appContainer {
-    padding: 10px;
+    padding: 5px;
     min-height: 100vh;
     min-height: calc(var(--vh, 1vh) * 100);
   }
@@ -35,6 +35,11 @@
 
   /* Hide player count in mobile/light mode to save space */
   #playerCount {
+    display: none;
+  }
+
+  /* Hide input field in mobile/light mode - users will use on-screen keyboard only */
+  body:not(.dark-mode) #inputArea {
     display: none;
   }
 
@@ -177,7 +182,7 @@
   #inputArea {
     display: flex;
     flex-direction: column;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     width: 100%;
     align-items: center;
   }
@@ -185,17 +190,17 @@
   #guessInput {
     display: block;
     width: 100%;
-    padding: 12px;
-    font-size: 18px;
+    padding: 10px;
+    font-size: 16px;
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     text-transform: uppercase;
   }
 
   #submitGuess {
     display: block;
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     font-size: 16px;
     border-radius: 8px;
   }
@@ -207,8 +212,8 @@
   /* Mobile keyboard adjustments */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
-    margin-top: auto;
-    margin-bottom: max(5px, env(safe-area-inset-bottom, 0px));
+    margin-top: 5px;
+    margin-bottom: max(3px, env(safe-area-inset-bottom, 0px));
     /* Ensure keyboard is always visible */
     position: relative;
     z-index: 100;
@@ -419,9 +424,20 @@
     margin-bottom: calc(var(--tile-gap) * 0.6);
   }
 
-  /* Hide input area on ultra small screens to save space */
+  /* Keep input area visible but more compact on ultra small screens */
   #inputArea {
-    display: none;
+    margin-bottom: 3px;
+    gap: 4px;
+  }
+  
+  #guessInput {
+    padding: 6px;
+    font-size: 14px;
+  }
+  
+  #submitGuess {
+    padding: 6px 8px;
+    font-size: 12px;
   }
 }
 
@@ -544,7 +560,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-bottom: 15px; /* Reduced margin to save space */
+    margin-bottom: 8px; /* Reduced margin to save space */
     flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }
@@ -612,7 +628,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px; /* Reduced margin to save space */
+    margin-bottom: 10px; /* Reduced margin to save space */
     flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }

@@ -7,7 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  margin: 10px auto 0;
+  margin: 5px auto 0;
   width: 100%;
   position: relative;
   flex: 0 0 auto; /* Only take space needed, don't expand */
@@ -154,11 +154,9 @@ body.hint-selecting .tile:not(.hint-target) {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 10px auto;
+  margin: 5px auto;
   width: max-content;
   flex: 0 0 auto;
-  margin: 10px auto;
-  margin-top: auto; /* Push input area and keyboard to bottom */
 }
 
 #guessInput,
