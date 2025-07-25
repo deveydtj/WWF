@@ -13,6 +13,11 @@ variable "domain" {
   type        = string
 }
 
+variable "hosted_zone_id" {
+  description = "Route53 hosted zone ID for the domain"
+  type        = string
+}
+
 variable "vpc_id" {
   description = "VPC ID for ALB and ECS"
   type        = string

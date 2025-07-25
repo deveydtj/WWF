@@ -8,7 +8,8 @@ aws_region = "us-east-1"  # Your preferred AWS region
 frontend_bucket = "your-wwf-frontend-bucket-name"  # Replace with unique bucket name
 
 # Domain Configuration
-domain = "your-domain.com"  # Replace with your registered domain
+domain = "wordsquad.io"  # Domain for the application
+hosted_zone_id = "Z1ABCDEFGXYZ"  # Route53 hosted zone ID for wordsquad.io
 
 # Network Configuration (Use your existing VPC or create new one)
 vpc_id = "vpc-123456"  # Replace with your VPC ID
@@ -26,6 +27,6 @@ api_image = "123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest"  # Will be updat
 # KMS Encryption Key (defaults to provided ARN if not overridden)
 # kms_key_arn = "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35"
 
-# Terraform State Configuration (for remote state backend)
-state_bucket = "your-terraform-state-bucket"  # S3 bucket for Terraform state
-lock_table = "your-terraform-lock-table"     # DynamoDB table for state locking
+# Terraform State Configuration (for remote state backend - remove if using local backend)
+# state_bucket = "your-terraform-state-bucket"  # S3 bucket for Terraform state
+# lock_table = "your-terraform-lock-table"     # DynamoDB table for state locking

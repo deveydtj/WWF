@@ -68,17 +68,43 @@ data "aws_iam_policy_document" "frontend" {
 resource "aws_acm_certificate" "cert" {
   domain_name       = var.domain
   validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-# Validation records are created outside of this module
+# ------- Route53 DNS Validation -------
+resource "aws_route53_record" "cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.hosted_zone_id
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn         = aws_acm_certificate.cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
 
 # ------- CloudFront Distribution -------
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # Use only North America and Europe for cost optimization
+  aliases             = [var.domain]
 
-  origins {
+  origin {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id   = "frontend"
 
@@ -128,7 +154,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cert.arn
+    acm_certificate_arn      = aws_acm_certificate_validation.cert.certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
@@ -142,6 +168,19 @@ resource "aws_cloudfront_distribution" "cdn" {
 
 resource "aws_cloudfront_origin_access_identity" "frontend" {
   comment = "OAI for WWF frontend S3 bucket"
+}
+
+# ------- Route53 DNS Record -------
+resource "aws_route53_record" "domain" {
+  zone_id = var.hosted_zone_id
+  name    = var.domain
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.cdn.domain_name
+    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
+    evaluate_target_health = false
+  }
 }
 
 # ------- ECS Cluster and Service -------
@@ -205,14 +244,12 @@ resource "aws_ecs_service" "api" {
   launch_type     = "FARGATE"
 
   # Enable circuit breaker for better deployment reliability
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 50
-    deployment_circuit_breaker {
-      enable   = true
-      rollback = true
-    }
-  }
+  enable_execute_command = false
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
+
+  enable_ecs_managed_tags = true
 
   network_configuration {
     subnets         = var.subnets
@@ -372,7 +409,7 @@ resource "aws_efs_file_system" "wwf" {
 }
 
 resource "aws_efs_mount_target" "wwf" {
-  for_each        = var.enable_efs ? toset(var.subnets) : {}
+  for_each        = var.enable_efs ? toset(var.subnets) : toset([])
   file_system_id  = aws_efs_file_system.wwf[0].id
   subnet_id       = each.key
   security_groups = [aws_security_group.efs[0].id]
