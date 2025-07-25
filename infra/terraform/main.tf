@@ -517,3 +517,13 @@ output "cloudfront_domain" {
 output "alb_dns_name" {
   value = aws_lb.api.dns_name
 }
+
+output "domain_name" {
+  value       = var.domain
+  description = "The custom domain name configured for the application"
+}
+
+output "hosted_zone_id" {
+  value       = var.hosted_zone_id
+  description = "The Route53 hosted zone ID used for DNS configuration"
+}
