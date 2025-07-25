@@ -16,7 +16,7 @@ vpc_id = "vpc-123456"  # Replace with your VPC ID
 subnets = ["subnet-abc","subnet-def"]  # Replace with your subnet IDs (minimum 2)
 
 # IAM Configuration
-ecs_task_execution_role = "arn:aws:iam::123456:role/ecsTaskExecution"  # Create or use existing ECS task execution role
+ecs_task_execution_role = "arn:aws:iam::718219275474:role/ecsTaskExecutionRole"  # Create or use existing ECS task execution role
 
 # Container Configuration
 api_image = "123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest"  # Will be updated by CI/CD

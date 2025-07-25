@@ -56,3 +56,13 @@ variable "hosted_zone_id" {
   type        = string
 }
 
+variable "state_bucket" {
+  description = "S3 bucket for Terraform state storage"
+  type        = string
+}
+
+variable "lock_table" {
+  description = "DynamoDB table for Terraform state locking"
+  type        = string
+}
+
