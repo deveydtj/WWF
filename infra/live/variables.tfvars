@@ -8,7 +8,8 @@ aws_region = "us-east-1"  # Your preferred AWS region
 frontend_bucket = "your-wwf-frontend-bucket-name"  # Replace with unique bucket name
 
 # Domain Configuration
-domain = "your-domain.com"  # Replace with your registered domain
+domain = "wordsquad.io"  # Updated to wordsquad.io domain
+hosted_zone_id = "Z04938291S4N31CYCROQC"  # Hosted zone ID for wordsquad.io
 
 # Network Configuration (Use your existing VPC or create new one)
 vpc_id = "vpc-123456"  # Replace with your VPC ID
