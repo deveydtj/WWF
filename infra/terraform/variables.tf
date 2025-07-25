@@ -51,3 +51,8 @@ variable "kms_key_arn" {
   default     = "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35"
 }
 
+variable "hosted_zone_id" {
+  description = "Route53 hosted zone ID for the domain"
+  type        = string
+}
+
