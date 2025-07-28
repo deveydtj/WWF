@@ -15,6 +15,12 @@ provider "aws" {
 # ------- S3 Bucket for frontend -------
 resource "aws_s3_bucket" "frontend" {
   bucket = var.frontend_bucket
+
+  tags = {
+    Project     = "WWF"
+    Environment = "development"
+    Purpose     = "frontend-hosting"
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
@@ -110,6 +116,12 @@ resource "aws_cloudfront_distribution" "cdn" {
   price_class         = "PriceClass_100" # Use only North America and Europe for cost optimization
   aliases             = [var.domain]
 
+  tags = {
+    Project     = "WWF"
+    Environment = "development"
+    Purpose     = "frontend-cdn"
+  }
+
   origin {
     domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id   = "frontend"
@@ -192,15 +204,27 @@ resource "aws_route53_record" "main" {
 # ------- ECS Cluster and Service -------
 resource "aws_ecs_cluster" "wwf" {
   name = "wwf"
+
+  tags = {
+    Project     = "WWF"
+    Environment = "development"
+    Purpose     = "game-backend"
+  }
 }
 
 resource "aws_ecs_task_definition" "api" {
   family                   = "wwf-api"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 256 # Keep minimal for development
+  memory                   = 512 # Keep minimal for development
   execution_role_arn       = var.ecs_task_execution_role
+
+  tags = {
+    Project     = "WWF"
+    Environment = "development"
+    Purpose     = "game-api-task"
+  }
   container_definitions = jsonencode([
     merge({
       name  = "api",
@@ -267,16 +291,16 @@ resource "aws_ecs_service" "api" {
   depends_on = [aws_lb_listener.https]
 }
 
-# Add Auto Scaling for cost optimization
+# Add Auto Scaling for cost optimization (reduced max capacity for cost control)
 resource "aws_appautoscaling_target" "api" {
-  max_capacity       = 10
+  max_capacity       = 2 # Reduced from 10 to 2 for cost optimization
   min_capacity       = 1
   resource_id        = "service/${aws_ecs_cluster.wwf.name}/${aws_ecs_service.api.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 }
 
-# Scale up when CPU is high
+# Scale up when CPU is high (increased threshold for cost optimization)
 resource "aws_appautoscaling_policy" "api_scale_up" {
   name               = "wwf-api-scale-up"
   policy_type        = "TargetTrackingScaling"
@@ -288,11 +312,11 @@ resource "aws_appautoscaling_policy" "api_scale_up" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value = 70.0
+    target_value = 85.0 # Increased from 70.0 to be less aggressive
   }
 }
 
-# Scale up when memory is high
+# Scale up when memory is high (increased threshold for cost optimization)
 resource "aws_appautoscaling_policy" "api_scale_memory" {
   name               = "wwf-api-scale-memory"
   policy_type        = "TargetTrackingScaling"
@@ -304,7 +328,37 @@ resource "aws_appautoscaling_policy" "api_scale_memory" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value = 80.0
+    target_value = 90.0 # Increased from 80.0 to be less aggressive
+  }
+}
+
+# ------- Scheduled Scaling for Cost Optimization -------
+
+# Scale down to 0 instances during off hours (11 PM - 6 AM UTC)
+resource "aws_appautoscaling_scheduled_action" "scale_down_night" {
+  name               = "wwf-scale-down-night"
+  service_namespace  = aws_appautoscaling_target.api.service_namespace
+  resource_id        = aws_appautoscaling_target.api.resource_id
+  scalable_dimension = aws_appautoscaling_target.api.scalable_dimension
+  schedule           = "cron(0 23 * * ? *)" # 11 PM UTC daily
+
+  scalable_target_action {
+    min_capacity = 0 # Scale down to 0 during off hours
+    max_capacity = 2
+  }
+}
+
+# Scale back up in the morning (6 AM UTC)
+resource "aws_appautoscaling_scheduled_action" "scale_up_morning" {
+  name               = "wwf-scale-up-morning"
+  service_namespace  = aws_appautoscaling_target.api.service_namespace
+  resource_id        = aws_appautoscaling_target.api.resource_id
+  scalable_dimension = aws_appautoscaling_target.api.scalable_dimension
+  schedule           = "cron(0 6 * * ? *)" # 6 AM UTC daily
+
+  scalable_target_action {
+    min_capacity = 1 # Resume normal operation
+    max_capacity = 2
   }
 }
 
@@ -316,6 +370,12 @@ resource "aws_lb" "api" {
   subnets            = var.subnets
   security_groups    = [aws_security_group.alb.id]
   idle_timeout       = 60 # Reduced from 3600 to 60 seconds for better cost efficiency
+
+  tags = {
+    Project     = "WWF"
+    Environment = "development"
+    Purpose     = "game-api-loadbalancer"
+  }
 }
 
 resource "aws_lb_listener" "https" {
@@ -526,4 +586,70 @@ output "domain_name" {
 output "hosted_zone_id" {
   value       = var.hosted_zone_id
   description = "The Route53 hosted zone ID used for DNS configuration"
+}
+
+# ------- Cost Monitoring and Budgets -------
+
+# SNS topic for budget alerts
+resource "aws_sns_topic" "budget_alerts" {
+  name         = "wwf-budget-alerts"
+  display_name = "WWF Budget Alerts"
+}
+
+resource "aws_sns_topic_subscription" "budget_email" {
+  count     = var.budget_alert_email != "" ? 1 : 0
+  topic_arn = aws_sns_topic.budget_alerts.arn
+  protocol  = "email"
+  endpoint  = var.budget_alert_email
+}
+
+# Budget for overall AWS spending
+resource "aws_budgets_budget" "wwf_monthly" {
+  name              = "wwf-monthly-budget"
+  budget_type       = "COST"
+  limit_amount      = "10" # $10 monthly limit for development
+  limit_unit        = "USD"
+  time_unit         = "MONTHLY"
+  time_period_start = "2024-01-01_00:00"
+
+  cost_filters = {
+    TagKey   = ["Project"]
+    TagValue = ["WWF"]
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80 # Alert at 80% of budget
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = var.budget_alert_email != "" ? [var.budget_alert_email] : []
+    subscriber_sns_topic_arns  = [aws_sns_topic.budget_alerts.arn]
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100 # Alert when budget exceeded
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = var.budget_alert_email != "" ? [var.budget_alert_email] : []
+    subscriber_sns_topic_arns  = [aws_sns_topic.budget_alerts.arn]
+  }
+}
+
+# CloudWatch billing alarm
+resource "aws_cloudwatch_metric_alarm" "high_cost" {
+  alarm_name          = "wwf-high-cost-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "EstimatedCharges"
+  namespace           = "AWS/Billing"
+  period              = "86400" # 24 hours
+  statistic           = "Maximum"
+  threshold           = "8" # Alert at $8 spending
+  alarm_description   = "This metric monitors AWS estimated charges for WWF project"
+  alarm_actions       = [aws_sns_topic.budget_alerts.arn]
+
+  dimensions = {
+    Currency = "USD"
+  }
 }

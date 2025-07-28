@@ -30,3 +30,6 @@ api_image = "123456.dkr.ecr.us-east-1.amazonaws.com/wwf:latest"  # Will be updat
 # Terraform State Configuration (for remote state backend)
 state_bucket = "your-terraform-state-bucket"  # S3 bucket for Terraform state
 lock_table = "your-terraform-lock-table"     # DynamoDB table for state locking
+
+# Cost Monitoring (optional)
+budget_alert_email = "deveydtj@gmail.com"  # Email for cost alerts and budget notifications
