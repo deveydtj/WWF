@@ -32,4 +32,4 @@ state_bucket = "your-terraform-state-bucket"  # S3 bucket for Terraform state
 lock_table = "your-terraform-lock-table"     # DynamoDB table for state locking
 
 # Cost Monitoring (optional)
-# budget_alert_email = "your-email@example.com"  # Email for cost alerts and budget notifications
+budget_alert_email = "deveydtj@gmail.com"  # Email for cost alerts and budget notifications
