@@ -66,3 +66,9 @@ variable "lock_table" {
   type        = string
 }
 
+variable "budget_alert_email" {
+  description = "Email address for budget and cost alerts"
+  type        = string
+  default     = ""
+}
+
