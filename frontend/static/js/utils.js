@@ -126,68 +126,41 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
   const viewportWidth = window.innerWidth;
   
   if (viewportWidth > 900) {
-    // Full mode - position panels to the sides
-    const boardRect = boardArea.getBoundingClientRect();
-    const top = boardRect.top + window.scrollY;
-    const left = boardRect.left + window.scrollX;
-    const right = boardRect.right + window.scrollX;
+    // Full mode - let CSS handle positioning for large screens
+    // Clear any inline styles to let CSS take precedence
+    historyBox.style.position = '';
+    historyBox.style.top = '';
+    historyBox.style.left = '';
+    historyBox.style.right = '';
     
-    // Check if panels will fit within viewport
-    const historyWidth = historyBox.offsetWidth || 260;
-    const definitionWidth = definitionBox.offsetWidth || 260;
-    const margin = 60;
+    definitionBox.style.position = '';
+    definitionBox.style.top = '';
+    definitionBox.style.left = '';
+    definitionBox.style.right = '';
     
-    const leftSpace = left - window.scrollX;
-    const rightSpace = window.innerWidth - (right - window.scrollX);
-    
-    // Position history box
-    if (leftSpace >= historyWidth + margin) {
-      historyBox.style.position = 'absolute';
-      historyBox.style.top = `${top}px`;
-      historyBox.style.left = `${left - historyWidth - margin}px`;
-    } else {
-      // Not enough space on left, use CSS positioning
-      historyBox.style.position = '';
-      historyBox.style.top = '';
-      historyBox.style.left = '';
-    }
-    
-    // Position definition box
-    if (rightSpace >= definitionWidth + margin) {
-      definitionBox.style.position = 'absolute';
-      definitionBox.style.top = `${top}px`;
-      definitionBox.style.left = `${right + margin}px`;
-      
-      // Position chat box below definition if both fit
-      if (chatBox && rightSpace >= definitionWidth + margin) {
-        chatBox.style.position = 'absolute';
-        chatBox.style.left = `${right + margin}px`;
-        chatBox.style.top = `${top + definitionBox.offsetHeight + 20}px`;
-      }
-    } else {
-      // Not enough space on right, use CSS positioning
-      definitionBox.style.position = '';
-      definitionBox.style.top = '';
-      definitionBox.style.left = '';
-      
-      if (chatBox) {
-        chatBox.style.position = '';
-        chatBox.style.top = '';
-        chatBox.style.left = '';
-      }
+    if (chatBox) {
+      chatBox.style.position = '';
+      chatBox.style.top = '';
+      chatBox.style.left = '';
+      chatBox.style.right = '';
     }
   } else {
     // Medium and mobile modes - let CSS handle positioning
     historyBox.style.position = '';
     historyBox.style.top = '';
     historyBox.style.left = '';
+    historyBox.style.right = '';
+    
     definitionBox.style.position = '';
     definitionBox.style.top = '';
     definitionBox.style.left = '';
+    definitionBox.style.right = '';
+    
     if (chatBox) {
       chatBox.style.position = '';
       chatBox.style.top = '';
       chatBox.style.left = '';
+      chatBox.style.right = '';
     }
   }
 }

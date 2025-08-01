@@ -421,22 +421,35 @@ body.players-open #playerSidebar {
     position: relative;
   }
   
+  /* Large screen panel positioning - use absolute positioning relative to viewport */
   body #historyBox {
-    top: 0 !important;
-    left: auto !important;
-    right: calc(100% + 20px) !important;
-    transform-origin: right center !important;
-  }
-  
-  body #definitionBox {
-    top: 0 !important;
+    position: absolute !important;
+    top: 100px !important;
+    left: calc(50% - var(--board-width) / 2 - 300px) !important;
     right: auto !important;
-    left: calc(100% + 20px) !important;
+    width: 280px !important;
+    max-height: calc(100vh - 200px) !important;
     transform-origin: left center !important;
   }
   
-  #chatBox {
-    transform-origin: left center;
+  body #definitionBox {
+    position: absolute !important;
+    top: 100px !important;
+    right: calc(50% - var(--board-width) / 2 - 300px) !important;
+    left: auto !important;
+    width: 280px !important;
+    max-height: calc(100vh - 200px) !important;
+    transform-origin: right center !important;
+  }
+  
+  body #chatBox {
+    position: absolute !important;
+    top: 200px !important;
+    right: calc(50% - var(--board-width) / 2 - 300px) !important;
+    left: auto !important;
+    width: 280px !important;
+    max-height: calc(100vh - 300px) !important;
+    transform-origin: right center !important;
   }
   
   body:not(.history-open) #historyBox {
@@ -455,5 +468,24 @@ body.players-open #playerSidebar {
     transform: scale(0);
     opacity: 0;
     pointer-events: none;
+  }
+  
+  /* When panels are open, they should be visible */
+  body.history-open #historyBox {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  body.definition-open #definitionBox {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  body.chat-open #chatBox {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
   }
 }
