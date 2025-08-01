@@ -421,34 +421,34 @@ body.players-open #playerSidebar {
     position: relative;
   }
   
-  /* Large screen panel positioning - use absolute positioning relative to viewport */
+  /* Large screen panel positioning - align with board level and add gaps */
   body #historyBox {
     position: absolute !important;
-    top: 100px !important;
-    left: calc(50% - var(--board-width) / 2 - 300px) !important;
+    top: 140px !important; /* Move down to align with board level */
+    left: calc(50% - var(--board-width) / 2 - 320px) !important; /* Add 20px gap from board */
     right: auto !important;
     width: 280px !important;
-    max-height: calc(100vh - 200px) !important;
+    max-height: calc(100vh - 240px) !important;
     transform-origin: left center !important;
   }
   
   body #definitionBox {
     position: absolute !important;
-    top: 100px !important;
-    right: calc(50% - var(--board-width) / 2 - 300px) !important;
+    top: 140px !important; /* Move down to align with board level */
+    right: calc(50% - var(--board-width) / 2 - 320px) !important; /* Add 20px gap from board */
     left: auto !important;
     width: 280px !important;
-    max-height: calc(100vh - 200px) !important;
+    max-height: calc(100vh - 240px) !important;
     transform-origin: right center !important;
   }
   
   body #chatBox {
     position: absolute !important;
-    top: 200px !important;
-    right: calc(50% - var(--board-width) / 2 - 300px) !important;
+    top: 240px !important; /* Position below definition panel */
+    right: calc(50% - var(--board-width) / 2 - 320px) !important; /* Add 20px gap from board */
     left: auto !important;
     width: 280px !important;
-    max-height: calc(100vh - 300px) !important;
+    max-height: calc(100vh - 340px) !important;
     transform-origin: right center !important;
   }
   
