@@ -229,17 +229,19 @@ export function applyLayoutMode() {
   } else if (width <= 900) {
     mode = 'medium';
   } else {
+    // For screens wider than 900px, use full mode unless space is really constrained
     const boardArea = document.getElementById('boardArea');
-    const historyBox = document.getElementById('historyBox');
-    const definitionBox = document.getElementById('definitionBox');
-    if (boardArea && historyBox && definitionBox) {
+    if (boardArea) {
       const rect = boardArea.getBoundingClientRect();
       const leftSpace = rect.left;
       const rightSpace = width - rect.right;
-      const margin = 60;
+      const minPanelWidth = 224; // 14rem in pixels (approximately)
+      const margin = 40; // Reduced margin for more generous space calculation
+      
+      // Only switch to medium mode if there's really not enough space
       if (
-        leftSpace < historyBox.offsetWidth + margin ||
-        rightSpace < definitionBox.offsetWidth + margin
+        (leftSpace < minPanelWidth + margin && rightSpace < minPanelWidth + margin) ||
+        width < 1200 // Be more conservative about switching to medium mode
       ) {
         mode = 'medium';
       }

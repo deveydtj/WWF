@@ -421,39 +421,96 @@ body.players-open #playerSidebar {
     position: relative;
   }
   
-  #historyBox {
-    top: 0;
-    left: auto;
-    right: calc(100% + 20px);
-    transform-origin: right center;
+  /* Large screen panel positioning - attached to sides of board */
+  body[data-mode='full'] #historyBox {
+    position: absolute !important;
+    top: 0 !important;
+    left: auto !important;
+    right: calc(100% + 20px) !important;
+    width: clamp(14rem, 25vw, 16rem) !important;
+    max-height: 70vh !important;
+    transform-origin: right center !important;
+    background: var(--bg-color) !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    box-shadow: inset 2px 2px 5px var(--shadow-color-dark),
+                inset -2px -2px 5px var(--shadow-color-light) !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
   
-  #definitionBox {
-    top: 0;
-    right: auto;
-    left: calc(100% + 20px);
-    transform-origin: left center;
+  body[data-mode='full'] #definitionBox {
+    position: absolute !important;
+    top: 0 !important;
+    right: auto !important;
+    left: calc(100% + 20px) !important;
+    width: clamp(14rem, 25vw, 16rem) !important;
+    max-height: 70vh !important;
+    transform-origin: left center !important;
+    background: var(--bg-color) !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    box-shadow: inset 2px 2px 5px var(--shadow-color-dark),
+                inset -2px -2px 5px var(--shadow-color-light) !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
   
-  #chatBox {
-    transform-origin: left center;
+  body[data-mode='full'] #chatBox {
+    position: absolute !important;
+    top: 0 !important;
+    right: auto !important;
+    left: calc(100% + 20px) !important;
+    width: clamp(14rem, 25vw, 16rem) !important;
+    max-height: 70vh !important;
+    transform-origin: left center !important;
+    background: var(--bg-color) !important;
+    padding: 36px 10px 10px !important;
+    border-radius: 8px !important;
+    box-shadow: inset 2px 2px 5px var(--shadow-color-dark),
+                inset -2px -2px 5px var(--shadow-color-light) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
   }
   
-  body:not(.history-open) #historyBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
+  /* Panel visibility states for large screens */
+  body[data-mode='full']:not(.history-open) #historyBox {
+    transform: scale(0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
   
-  body:not(.definition-open) #definitionBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
+  body[data-mode='full']:not(.definition-open) #definitionBox {
+    transform: scale(0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
   
-  body:not(.chat-open) #chatBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
+  body[data-mode='full']:not(.chat-open) #chatBox {
+    transform: scale(0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Show panels when open */
+  body[data-mode='full'].history-open #historyBox {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  body[data-mode='full'].definition-open #definitionBox {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  body[data-mode='full'].chat-open #chatBox {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 }
