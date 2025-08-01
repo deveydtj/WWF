@@ -1022,19 +1022,26 @@ function hasDefinitionContent() {
   return definitionText && definitionText.textContent.trim() !== '';
 }
 
+// Track manual panel toggles to avoid overriding user actions
+let manualPanelToggles = {
+  history: false,
+  definition: false,
+  chat: false
+};
+
 // Show or hide panels based on content and viewport size
 function updatePanelVisibility() {
   if (window.innerWidth > 900) {
-    // Full mode - show panels only if they have content
-    if (hasHistoryContent()) {
+    // Full mode - show panels if they have content OR if manually toggled
+    if (hasHistoryContent() || manualPanelToggles.history) {
       document.body.classList.add('history-open');
-    } else {
+    } else if (!manualPanelToggles.history) {
       document.body.classList.remove('history-open');
     }
     
-    if (hasDefinitionContent()) {
+    if (hasDefinitionContent() || manualPanelToggles.definition) {
       document.body.classList.add('definition-open');
-    } else {
+    } else if (!manualPanelToggles.definition) {
       document.body.classList.remove('definition-open');
     }
     
@@ -1078,6 +1085,8 @@ function toggleSound() {
 }
 
 function toggleHistory() {
+  // Track that this is a manual toggle
+  manualPanelToggles.history = !document.body.classList.contains('history-open');
   togglePanel('history-open');
   if (document.body.classList.contains('history-open')) {
     focusFirstElement(historyBox);
@@ -1085,6 +1094,8 @@ function toggleHistory() {
 }
 
 function toggleDefinition() {
+  // Track that this is a manual toggle
+  manualPanelToggles.definition = !document.body.classList.contains('definition-open');
   togglePanel('definition-open');
   if (document.body.classList.contains('definition-open')) {
     focusFirstElement(definitionBoxEl);
@@ -1113,18 +1124,22 @@ function toggleHintSelection() {
 }
 
 historyClose.addEventListener('click', () => {
+  manualPanelToggles.history = false;
   document.body.classList.remove('history-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 definitionClose.addEventListener('click', () => {
+  manualPanelToggles.definition = false;
   document.body.classList.remove('definition-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 chatClose.addEventListener('click', () => {
+  manualPanelToggles.chat = false;
   document.body.classList.remove('chat-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 chatNotify.addEventListener('click', () => {
+  manualPanelToggles.chat = !document.body.classList.contains('chat-open');
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
@@ -1141,6 +1156,7 @@ optionsClose.addEventListener('click', () => { closeDialog(optionsMenu); });
 menuHistory.addEventListener('click', () => { toggleHistory(); closeDialog(optionsMenu); });
 menuDefinition.addEventListener('click', () => { toggleDefinition(); closeDialog(optionsMenu); });
 menuChat.addEventListener('click', () => {
+  manualPanelToggles.chat = !document.body.classList.contains('chat-open');
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
