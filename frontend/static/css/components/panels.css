@@ -425,7 +425,7 @@ body.players-open #playerSidebar {
   body #historyBox {
     position: absolute !important;
     top: 140px !important; /* Move down to align with board level */
-    left: calc(50% - var(--board-width) / 2 - 320px) !important; /* Add 20px gap from board */
+    left: calc(50% - var(--board-width) / 2 - 315px) !important; /* Add 15px gap from board */
     right: auto !important;
     width: 280px !important;
     max-height: calc(100vh - 240px) !important;
@@ -434,21 +434,21 @@ body.players-open #playerSidebar {
   
   body #definitionBox {
     position: absolute !important;
-    top: 140px !important; /* Move down to align with board level */
-    right: calc(50% - var(--board-width) / 2 - 320px) !important; /* Add 20px gap from board */
+    top: 180px !important; /* Move down further to avoid options gear overlap */
+    right: calc(50% - var(--board-width) / 2 - 315px) !important; /* Add 15px gap from board */
     left: auto !important;
     width: 280px !important;
-    max-height: calc(100vh - 240px) !important;
+    max-height: calc(100vh - 280px) !important;
     transform-origin: right center !important;
   }
   
   body #chatBox {
     position: absolute !important;
-    top: 240px !important; /* Position below definition panel */
-    right: calc(50% - var(--board-width) / 2 - 320px) !important; /* Add 20px gap from board */
+    top: 280px !important; /* Position below definition panel with more space */
+    right: calc(50% - var(--board-width) / 2 - 315px) !important; /* Add 15px gap from board */
     left: auto !important;
     width: 280px !important;
-    max-height: calc(100vh - 340px) !important;
+    max-height: calc(100vh - 380px) !important;
     transform-origin: right center !important;
   }
   
