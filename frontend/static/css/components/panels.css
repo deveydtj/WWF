@@ -444,7 +444,7 @@ body.players-open #playerSidebar {
   
   body #chatBox {
     position: absolute !important;
-    top: 490px !important; /* Position just below definition panel (180px + 300px + 10px gap) */
+    /* Dynamic top position will be set by JavaScript based on definition panel height */
     right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Match definition panel position */
     left: auto !important;
     width: 280px !important;

@@ -5,7 +5,7 @@ import { getState, sendEmoji, sendGuess, resetGame, sendHeartbeat, sendChatMessa
 import { renderChat } from './chat.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { showMessage, announce, applyDarkModePreference, shakeInput, repositionResetButton,
-         positionSidePanels, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, isMobileView, showPopup,
+         positionSidePanels, updateChatPanelPosition, updateVH, applyLayoutMode, fitBoardToContainer, isMobile, isMobileView, showPopup,
          openDialog, closeDialog, focusFirstElement, setGameInputDisabled, enableClickOffDismiss,
          adjustKeyboardForViewport, verifyElementsFitInViewport, applyOptimalScaling, 
          checkKeyboardVisibility, ensureKeyboardVisibility, calculateMinRequiredHeight,
@@ -805,6 +805,9 @@ function applyState(state) {
     definitionText.textContent = '';
   }
   
+  // Update chat panel position after definition content changes
+  updateChatPanelPosition();
+  
   // Update panel visibility after definition content changes
   updatePanelVisibility();
 
@@ -896,6 +899,7 @@ async function submitGuessHandler() {
     if (resp.over) {
       const def = resp.state.definition || 'Definition not found.';
       definitionText.textContent = `${resp.state.target_word.toUpperCase()} – ${def}`;
+      updateChatPanelPosition(); // Update chat panel position after definition changes
       positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
     }
   } else {
@@ -1046,6 +1050,7 @@ function updatePanelVisibility() {
     }
     
     positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+    updateChatPanelPosition(); // Update chat panel position after panel visibility changes
   }
 }
 
@@ -1058,6 +1063,11 @@ function togglePanel(panelClass) {
   }
   document.body.classList.toggle(panelClass);
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  
+  // Update chat panel position when panels are toggled (especially when definition panel is toggled)
+  if (panelClass === 'definition-open' || panelClass === 'chat-open') {
+    updateChatPanelPosition();
+  }
 }
 
 setupTypingListeners({
@@ -1132,6 +1142,7 @@ definitionClose.addEventListener('click', () => {
   manualPanelToggles.definition = false;
   document.body.classList.remove('definition-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+  updateChatPanelPosition(); // Update chat panel position when definition panel is closed
 });
 chatClose.addEventListener('click', () => {
   manualPanelToggles.chat = false;
@@ -1233,6 +1244,7 @@ document.addEventListener('click', onActivity);
 window.addEventListener('resize', () => {
   repositionResetButton();
   updatePanelVisibility(); // This will handle positioning based on content
+  updateChatPanelPosition(); // Update chat panel position on window resize
   applyLayoutMode();
   updateInputVisibility(); // Update input visibility based on current viewport
   
