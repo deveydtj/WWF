@@ -284,7 +284,7 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   line-height: 1;
   position: absolute;
   top: 36px;
-  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  right: -50px;
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.3s, transform 0.3s;
@@ -319,7 +319,7 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   line-height: 1;
   position: absolute;
   top: 0;
-  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  right: -50px;
 }
 
 /* Extra small mobile adjustments */
