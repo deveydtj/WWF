@@ -435,7 +435,7 @@ body.players-open #playerSidebar {
   body #definitionBox {
     position: absolute !important;
     top: 180px !important; /* Move down further to avoid options gear overlap */
-    right: calc(50% - var(--board-width) / 2 - 315px) !important; /* Add 15px gap from board */
+    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Move further right to avoid options button */
     left: auto !important;
     width: 280px !important;
     max-height: 300px !important; /* Limit height to prevent overlap with chat panel */
@@ -444,8 +444,8 @@ body.players-open #playerSidebar {
   
   body #chatBox {
     position: absolute !important;
-    top: 490px !important; /* Position just below definition panel with small gap */
-    right: calc(50% - var(--board-width) / 2 - 315px) !important; /* Add 15px gap from board */
+    top: 490px !important; /* Position just below definition panel (180px + 300px + 10px gap) */
+    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Match definition panel position */
     left: auto !important;
     width: 280px !important;
     max-height: calc(100vh - 510px) !important; /* Adjust max-height for the new position */
