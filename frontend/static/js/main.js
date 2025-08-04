@@ -1154,7 +1154,14 @@ chatNotify.addEventListener('click', () => {
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
-    focusFirstElement(chatBox);
+    // Use a more robust focusing approach for chat
+    setTimeout(() => {
+      const chatInput = document.getElementById('chatInput');
+      if (chatInput) {
+        chatInput.focus();
+        console.log('Chat input focused via setTimeout');
+      }
+    }, 100);
   }
 });
 optionsToggle.addEventListener('click', () => {
@@ -1171,7 +1178,14 @@ menuChat.addEventListener('click', () => {
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
-    focusFirstElement(chatBox);
+    // Use a more robust focusing approach for chat
+    setTimeout(() => {
+      const chatInput = document.getElementById('chatInput');
+      if (chatInput) {
+        chatInput.focus();
+        console.log('Chat input focused via menu setTimeout');
+      }
+    }, 100);
   }
   closeDialog(optionsMenu);
 });
@@ -1239,8 +1253,32 @@ fetchState();
 
 initEventStream();
 setInterval(checkInactivity, 5000);
-document.addEventListener('keydown', onActivity);
-document.addEventListener('click', onActivity);
+document.addEventListener('keydown', (e) => {
+  // Don't trigger activity on keystrokes in chat input
+  if (e.target && e.target.id === 'chatInput') {
+    return;
+  }
+  onActivity();
+});
+document.addEventListener('click', (e) => {
+  // Don't trigger activity on clicks within chat elements to prevent focus stealing
+  const chatElement = e.target.closest('#chatBox, #chatInput, #chatSend, #chatMessages, #chatForm');
+  if (chatElement) {
+    console.log('Preventing onActivity for chat element:', e.target, chatElement);
+    
+    // If clicking specifically on the chat input, ensure it gets and keeps focus
+    if (e.target.id === 'chatInput' || e.target.closest('#chatInput')) {
+      setTimeout(() => {
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+          chatInput.focus();
+        }
+      }, 50);
+    }
+    return;
+  }
+  onActivity();
+});
 window.addEventListener('resize', () => {
   repositionResetButton();
   updatePanelVisibility(); // This will handle positioning based on content
@@ -1396,6 +1434,37 @@ chatForm.addEventListener('submit', async (e) => {
   chatInput.value = '';
   await sendChatMessage(text, myEmoji, myPlayerId, LOBBY_CODE);
   fetchState();
+});
+
+// Add specific focus management for chat input
+chatInput.addEventListener('click', (e) => {
+  e.stopPropagation(); // Prevent bubbling to document click handler
+  setTimeout(() => {
+    chatInput.focus();
+    console.log('Chat input refocused after click');
+  }, 50);
+});
+
+chatInput.addEventListener('focus', () => {
+  console.log('Chat input received focus');
+});
+
+chatInput.addEventListener('blur', (e) => {
+  console.log('Chat input lost focus to:', e.relatedTarget);
+  // If focus is being stolen by the guess input, take it back
+  if (e.relatedTarget && e.relatedTarget.id === 'guessInput') {
+    setTimeout(() => {
+      if (document.body.classList.contains('chat-open')) {
+        console.log('Reclaiming focus from guess input');
+        chatInput.focus();
+      }
+    }, 100);
+  }
+});
+
+// Prevent the global document click handler from stealing focus during chat interaction
+chatBox.addEventListener('click', (e) => {
+  e.stopPropagation();
 });
 
 window.addEventListener('beforeunload', () => {
