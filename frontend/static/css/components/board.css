@@ -13,6 +13,14 @@
   flex: 0 0 auto; /* Only take space needed, don't expand */
 }
 
+/* Large screen board area - constrain width to leave space for side panels */
+@media (min-width: 1200px) {
+  #boardArea {
+    max-width: calc(100% - 600px); /* Leave 300px on each side for panels */
+    margin: 5px auto 0;
+  }
+}
+
 /* Game board grid */
 #board {
   margin: 0;
