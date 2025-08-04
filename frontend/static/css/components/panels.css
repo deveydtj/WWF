@@ -444,11 +444,11 @@ body.players-open #playerSidebar {
   
   body #chatBox {
     position: absolute !important;
-    top: 500px !important; /* Position below definition panel with enough space to prevent overlap */
+    top: 320px !important; /* Position just below definition panel */
     right: calc(50% - var(--board-width) / 2 - 315px) !important; /* Add 15px gap from board */
     left: auto !important;
     width: 280px !important;
-    max-height: calc(100vh - 520px) !important; /* Adjust max-height for the new position */
+    max-height: calc(100vh - 340px) !important; /* Adjust max-height for the new position */
     transform-origin: right center !important;
   }
   
