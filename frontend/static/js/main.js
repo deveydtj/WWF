@@ -1144,17 +1144,20 @@ definitionClose.addEventListener('click', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   updateChatPanelPosition(); // Update chat panel position when definition panel is closed
 });
-chatClose.addEventListener('click', () => {
-  manualPanelToggles.chat = false;
-  document.body.classList.remove('chat-open');
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-});
+// chatClose event handler is now defined above in the chat input focus management section
 chatNotify.addEventListener('click', () => {
   manualPanelToggles.chat = !document.body.classList.contains('chat-open');
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
-    focusFirstElement(chatBox);
+    // Use a more robust focusing approach for chat
+    setTimeout(() => {
+      const chatInput = document.getElementById('chatInput');
+      if (chatInput) {
+        chatInput.focus();
+        console.log('Chat input focused via setTimeout');
+      }
+    }, 100);
   }
 });
 optionsToggle.addEventListener('click', () => {
@@ -1171,7 +1174,14 @@ menuChat.addEventListener('click', () => {
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
-    focusFirstElement(chatBox);
+    // Use a more robust focusing approach for chat
+    setTimeout(() => {
+      const chatInput = document.getElementById('chatInput');
+      if (chatInput) {
+        chatInput.focus();
+        console.log('Chat input focused via menu setTimeout');
+      }
+    }, 100);
   }
   closeDialog(optionsMenu);
 });
@@ -1239,8 +1249,32 @@ fetchState();
 
 initEventStream();
 setInterval(checkInactivity, 5000);
-document.addEventListener('keydown', onActivity);
-document.addEventListener('click', onActivity);
+document.addEventListener('keydown', (e) => {
+  // Don't trigger activity on keystrokes in chat input
+  if (e.target && e.target.id === 'chatInput') {
+    return;
+  }
+  onActivity();
+});
+document.addEventListener('click', (e) => {
+  // Don't trigger activity on clicks within chat elements to prevent focus stealing
+  const chatElement = e.target.closest('#chatBox, #chatInput, #chatSend, #chatMessages, #chatForm');
+  if (chatElement) {
+    console.log('Preventing onActivity for chat element:', e.target, chatElement);
+    
+    // If clicking specifically on the chat input, ensure it gets and keeps focus
+    if (e.target.id === 'chatInput' || e.target.closest('#chatInput')) {
+      setTimeout(() => {
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+          chatInput.focus();
+        }
+      }, 50);
+    }
+    return;
+  }
+  onActivity();
+});
 window.addEventListener('resize', () => {
   repositionResetButton();
   updatePanelVisibility(); // This will handle positioning based on content
@@ -1396,6 +1430,107 @@ chatForm.addEventListener('submit', async (e) => {
   chatInput.value = '';
   await sendChatMessage(text, myEmoji, myPlayerId, LOBBY_CODE);
   fetchState();
+});
+
+// Add specific focus management for chat input
+let chatInputFocusProtection = false;
+let userIntentionallyLeftChat = false;
+
+chatInput.addEventListener('click', (e) => {
+  e.stopPropagation(); // Prevent bubbling to document click handler
+  chatInputFocusProtection = true;
+  userIntentionallyLeftChat = false; // Reset when user clicks on chat input
+  setTimeout(() => {
+    chatInput.focus();
+    console.log('Chat input refocused after click');
+  }, 50);
+});
+
+chatInput.addEventListener('focus', () => {
+  console.log('Chat input received focus');
+  chatInputFocusProtection = true;
+  userIntentionallyLeftChat = false; // Reset when chat input gets focus
+});
+
+chatInput.addEventListener('blur', (e) => {
+  console.log('Chat input lost focus to:', e.relatedTarget);
+  
+  // Only reclaim focus if:
+  // 1. Protection is active
+  // 2. Chat is open
+  // 3. User didn't intentionally leave (ESC or click on game input)
+  // 4. Focus didn't go to game input or related game elements
+  if (chatInputFocusProtection && 
+      document.body.classList.contains('chat-open') && 
+      !userIntentionallyLeftChat) {
+    
+    const relatedTarget = e.relatedTarget;
+    const isGameElement = relatedTarget && (
+      relatedTarget.id === 'guessInput' ||
+      relatedTarget.closest('#board') ||
+      relatedTarget.closest('#keyboard') ||
+      relatedTarget.closest('#submitGuess')
+    );
+    
+    // Don't reclaim focus if user clicked on a game element
+    if (!isGameElement) {
+      setTimeout(() => {
+        if (document.body.classList.contains('chat-open') && 
+            document.activeElement !== chatInput && 
+            !userIntentionallyLeftChat) {
+          console.log('Reclaiming focus for chat input');
+          chatInput.focus();
+        }
+      }, 50);
+    }
+  }
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    // User pressed ESC - they want to leave chat input
+    e.preventDefault();
+    userIntentionallyLeftChat = true;
+    chatInputFocusProtection = false;
+    guessInput.focus(); // Transfer focus to game input
+    console.log('User pressed ESC in chat - transferring focus to game input');
+  } else {
+    // Reset protection flag when user starts typing
+    chatInputFocusProtection = true;
+    userIntentionallyLeftChat = false;
+  }
+});
+
+// Prevent the global document click handler from stealing focus during chat interaction
+chatBox.addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+// Stop protection when chat is closed
+chatClose.addEventListener('click', () => {
+  chatInputFocusProtection = false;
+  userIntentionallyLeftChat = false;
+  manualPanelToggles.chat = false;
+  document.body.classList.remove('chat-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+});
+
+// Allow users to intentionally transfer focus to game input by clicking on it
+guessInput.addEventListener('click', () => {
+  if (document.body.classList.contains('chat-open')) {
+    userIntentionallyLeftChat = true;
+    chatInputFocusProtection = false;
+    console.log('User clicked on game input - disabling chat focus protection');
+  }
+});
+
+// Also handle focus events on game input in case it gets focus through other means
+guessInput.addEventListener('focus', () => {
+  if (document.body.classList.contains('chat-open')) {
+    userIntentionallyLeftChat = true;
+    chatInputFocusProtection = false;
+    console.log('Game input received focus - disabling chat focus protection');
+  }
 });
 
 window.addEventListener('beforeunload', () => {

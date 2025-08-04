@@ -19,7 +19,12 @@ export function handleVirtualKey(event, {guessInput, submitGuessHandler, isAnima
     } else if (currentValue.length < 5 && /^[a-z]$/i.test(key)) {
       guessInput.value += key.toUpperCase();
     }
-    guessInput.focus();
+    // Don't focus guess input if chat is open and chat input might be focused
+    const chatOpen = document.body.classList.contains('chat-open');
+    const activeChatInput = document.activeElement && document.activeElement.id === 'chatInput';
+    if (!chatOpen || !activeChatInput) {
+      guessInput.focus();
+    }
     updateBoardFromTyping();
   }
 }
