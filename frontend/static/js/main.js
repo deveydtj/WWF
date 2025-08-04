@@ -1144,11 +1144,7 @@ definitionClose.addEventListener('click', () => {
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   updateChatPanelPosition(); // Update chat panel position when definition panel is closed
 });
-chatClose.addEventListener('click', () => {
-  manualPanelToggles.chat = false;
-  document.body.classList.remove('chat-open');
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-});
+// chatClose event handler is now defined above in the chat input focus management section
 chatNotify.addEventListener('click', () => {
   manualPanelToggles.chat = !document.body.classList.contains('chat-open');
   togglePanel('chat-open');
@@ -1437,8 +1433,11 @@ chatForm.addEventListener('submit', async (e) => {
 });
 
 // Add specific focus management for chat input
+let chatInputFocusProtection = false;
+
 chatInput.addEventListener('click', (e) => {
   e.stopPropagation(); // Prevent bubbling to document click handler
+  chatInputFocusProtection = true;
   setTimeout(() => {
     chatInput.focus();
     console.log('Chat input refocused after click');
@@ -1447,24 +1446,39 @@ chatInput.addEventListener('click', (e) => {
 
 chatInput.addEventListener('focus', () => {
   console.log('Chat input received focus');
+  chatInputFocusProtection = true;
 });
 
 chatInput.addEventListener('blur', (e) => {
   console.log('Chat input lost focus to:', e.relatedTarget);
-  // If focus is being stolen by the guess input, take it back
-  if (e.relatedTarget && e.relatedTarget.id === 'guessInput') {
+  
+  // If we're in protection mode and focus is being stolen, reclaim it
+  if (chatInputFocusProtection && document.body.classList.contains('chat-open')) {
     setTimeout(() => {
-      if (document.body.classList.contains('chat-open')) {
-        console.log('Reclaiming focus from guess input');
+      if (document.body.classList.contains('chat-open') && document.activeElement !== chatInput) {
+        console.log('Reclaiming focus for chat input');
         chatInput.focus();
       }
-    }, 100);
+    }, 50);
   }
+});
+
+chatInput.addEventListener('keydown', () => {
+  // Reset protection flag when user starts typing
+  chatInputFocusProtection = true;
 });
 
 // Prevent the global document click handler from stealing focus during chat interaction
 chatBox.addEventListener('click', (e) => {
   e.stopPropagation();
+});
+
+// Stop protection when chat is closed
+chatClose.addEventListener('click', () => {
+  chatInputFocusProtection = false;
+  manualPanelToggles.chat = false;
+  document.body.classList.remove('chat-open');
+  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 
 window.addEventListener('beforeunload', () => {
