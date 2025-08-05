@@ -713,9 +713,9 @@
     max-width: none;
   }
 
-  /* Use larger tiles to avoid over-scaling - removed aggressive scaling */
+  /* Use fixed tile size - no viewport-dependent scaling */
   :root {
-    --tile-size: min(10vmin, 54px); /* Larger tiles for better appearance */
+    --tile-size: 54px; /* Fixed size - no scaling with viewport */
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
@@ -789,9 +789,9 @@
     max-width: none;
   }
 
-  /* Use appropriately sized tiles for very large screens */
+  /* Use fixed tile size for very large screens */
   :root {
-    --tile-size: min(10vmin, 54px);
+    --tile-size: 54px; /* Fixed size - no scaling with viewport */
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
