@@ -18,19 +18,23 @@
   }
 
   #optionsToggle {
-    display: block;
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 70;
+    display: block !important;
+    position: fixed !important;
+    top: 10px !important;
+    right: 120px !important; /* Moved much further left to completely avoid overlap */
+    left: auto !important; /* Override any left positioning */
+    z-index: 70 !important;
+    font-size: 20px !important; /* Slightly smaller to fit better */
   }
   
   #chatNotify {
-    display: block;
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    z-index: 70;
+    display: block !important;
+    position: fixed !important;
+    top: 10px !important;
+    right: 70px !important; /* Positioned with adequate spacing from options button */
+    left: auto !important; /* Override any left positioning */
+    z-index: 70 !important;
+    font-size: 20px !important; /* Slightly smaller to fit better */
   }
 
   /* Hide player count in mobile/light mode to save space */
@@ -570,14 +574,14 @@
   }
 }
 
-/* Large screens (min-width: 901px) */
-@media (min-width: 901px) {
-  /* Hide player count in full mode to save space and prevent input field overlap */
+/* Large screens - intermediate breakpoint (901px - 1199px) */
+@media (min-width: 901px) and (max-width: 1199px) {
+  /* Hide player count to save space and prevent input field overlap */
   #playerCount {
     display: none;
   }
 
-  /* Fix title bar layout for large screens - override mobile layout */
+  /* Fix title bar layout - override mobile layout */
   #titleBar {
     flex-direction: row;
     justify-content: space-between;
@@ -594,7 +598,7 @@
     flex: 1;
     margin: 0;
     text-align: center;
-    font-size: calc(1.5rem * var(--ui-scale)); /* Reduced from 2rem to 1.5rem */
+    font-size: calc(1.4rem * var(--ui-scale));
   }
   
   #resetWrapper {
@@ -608,9 +612,219 @@
     max-width: none;
   }
 
-  /* Use smaller tiles for better space management */
+  /* Moderately sized tiles for intermediate screens */
   :root {
-    --tile-size: min(10vmin, 54px); /* Reduced from min(11vmin, 60px) */
+    --tile-size: min(9vmin, 48px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.4);
+    flex-shrink: 0;
+  }
+
+  /* Use medium-style panel positioning for constrained large screens */
+  body[data-mode='medium'] #historyBox,
+  body[data-mode='medium'] #definitionBox,
+  body[data-mode='medium'] #chatBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 80;
+  }
+
+  body[data-mode='medium'] #chatBox {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body[data-mode='medium']:not(.history-open) #historyBox,
+  body[data-mode='medium']:not(.definition-open) #definitionBox,
+  body[data-mode='medium']:not(.chat-open) #chatBox {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Ensure gameColumn uses proper flexbox layout */
+  #gameColumn {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Board area should only take space it needs */
+  #boardArea {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  /* Add proper spacing between input area and keyboard */
+  #inputArea {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    flex: 0 0 auto;
+  }
+}
+
+/* Large screens - problem range (1200px - 1550px) */
+@media (min-width: 1200px) and (max-width: 1550px) {
+  /* Hide player count to save space */
+  #playerCount {
+    display: none;
+  }
+
+  /* Fix title bar layout */
+  #titleBar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  #titleBar .mobile-title-row {
+    display: contents;
+  }
+  
+  #titleBar h1 {
+    order: 2;
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    font-size: calc(1.5rem * var(--ui-scale));
+  }
+  
+  #resetWrapper {
+    order: 1;
+    margin-left: 0;
+  }
+  
+  #titleBar .mobile-leaderboard-container {
+    order: 3;
+    flex: 0 0 auto;
+    max-width: none;
+  }
+
+  /* Use medium-sized tiles to prevent over-scaling */
+  :root {
+    --tile-size: min(8vmin, 46px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.4);
+    flex-shrink: 0;
+  }
+
+  /* Force medium mode panel behavior to avoid side panel issues */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: 85% !important;
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    z-index: 80 !important;
+  }
+
+  #chatBox {
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body:not(.history-open) #historyBox,
+  body:not(.definition-open) #definitionBox,
+  body:not(.chat-open) #chatBox {
+    transform: translate(-50%, -50%) scale(0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  body.history-open #historyBox,
+  body.definition-open #definitionBox,
+  body.chat-open #chatBox {
+    transform: translate(-50%, -50%) scale(1) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Ensure gameColumn uses proper flexbox layout */
+  #gameColumn {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Board area should only take space it needs */
+  #boardArea {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  /* Add proper spacing between input area and keyboard */
+  #inputArea {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    flex: 0 0 auto;
+  }
+}
+
+/* Very large screens (min-width: 1551px) */
+@media (min-width: 1551px) {
+  /* Hide player count to save space and prevent input field overlap */
+  #playerCount {
+    display: none;
+  }
+
+  /* Fix title bar layout for very large screens - override mobile layout */
+  #titleBar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  #titleBar .mobile-title-row {
+    display: contents;
+  }
+  
+  #titleBar h1 {
+    order: 2;
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    font-size: calc(1.6rem * var(--ui-scale));
+  }
+  
+  #resetWrapper {
+    order: 1;
+    margin-left: 0;
+  }
+  
+  #titleBar .mobile-leaderboard-container {
+    order: 3;
+    flex: 0 0 auto;
+    max-width: none;
+  }
+
+  /* Use appropriately sized tiles for very large screens */
+  :root {
+    --tile-size: min(10vmin, 54px);
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 

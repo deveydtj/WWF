@@ -125,8 +125,8 @@ export function setGameInputDisabled(disabled) {
 export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox) {
   const viewportWidth = window.innerWidth;
   
-  if (viewportWidth > 900) {
-    // Full mode - let CSS handle positioning for large screens
+  if (viewportWidth > 1550) {
+    // Very large screens - let CSS handle positioning for truly large screens
     // Clear any inline styles to let CSS take precedence
     historyBox.style.position = '';
     historyBox.style.top = '';
@@ -145,7 +145,7 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
       chatBox.style.right = '';
     }
   } else {
-    // Medium and mobile modes - let CSS handle positioning
+    // Medium and mobile modes, and constrained large screens - let CSS handle positioning
     historyBox.style.position = '';
     historyBox.style.top = '';
     historyBox.style.left = '';
@@ -243,21 +243,22 @@ export function applyLayoutMode() {
     mode = 'light';
   } else if (width <= 900) {
     mode = 'medium';
+  } else if (width <= 1550) {
+    // For screens 901-1550px, use medium mode for better layout
+    // This prevents the over-scaling issues in the problematic 1200-1550px range
+    mode = 'medium';
   } else {
-    // For screens wider than 900px, use full mode unless space is really constrained
+    // For screens wider than 1550px, use full mode with side panels
     const boardArea = document.getElementById('boardArea');
     if (boardArea) {
       const rect = boardArea.getBoundingClientRect();
       const leftSpace = rect.left;
       const rightSpace = width - rect.right;
-      const minPanelWidth = 224; // 14rem in pixels (approximately)
-      const margin = 40; // Reduced margin for more generous space calculation
+      const minPanelWidth = 280; // 17.5rem in pixels (approximately)
+      const margin = 40; // Margin for comfortable spacing
       
-      // Only switch to medium mode if there's really not enough space
-      if (
-        (leftSpace < minPanelWidth + margin && rightSpace < minPanelWidth + margin) ||
-        width < 1200 // Be more conservative about switching to medium mode
-      ) {
+      // Only use full mode if there's enough space for side panels
+      if (leftSpace < minPanelWidth + margin || rightSpace < minPanelWidth + margin) {
         mode = 'medium';
       }
     }
