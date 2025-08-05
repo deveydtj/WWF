@@ -20,21 +20,21 @@
   #optionsToggle {
     display: block !important;
     position: fixed !important;
-    top: 10px !important;
-    right: 120px !important; /* Moved much further left to completely avoid overlap */
+    top: 50px !important; /* Moved down to avoid lobby header */
+    right: 10px !important; /* Back to right edge */
     left: auto !important; /* Override any left positioning */
     z-index: 70 !important;
-    font-size: 20px !important; /* Slightly smaller to fit better */
+    font-size: 18px !important; /* Smaller to fit better on mobile */
   }
   
   #chatNotify {
     display: block !important;
     position: fixed !important;
-    top: 10px !important;
-    right: 70px !important; /* Positioned with adequate spacing from options button */
+    top: 90px !important; /* Positioned below options button with spacing */
+    right: 10px !important; /* Aligned with options button */
     left: auto !important; /* Override any left positioning */
     z-index: 70 !important;
-    font-size: 20px !important; /* Slightly smaller to fit better */
+    font-size: 18px !important; /* Smaller to fit better on mobile */
   }
 
   /* Hide player count in mobile/light mode to save space */
@@ -713,9 +713,9 @@
     max-width: none;
   }
 
-  /* Use medium-sized tiles to prevent over-scaling */
+  /* Use larger tiles to avoid over-scaling - removed aggressive scaling */
   :root {
-    --tile-size: min(8vmin, 46px);
+    --tile-size: min(10vmin, 54px); /* Larger tiles for better appearance */
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
@@ -724,41 +724,8 @@
     flex-shrink: 0;
   }
 
-  /* Force medium mode panel behavior to avoid side panel issues */
-  #historyBox,
-  #definitionBox,
-  #chatBox {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    max-width: 85% !important;
-    max-height: 75vh !important;
-    overflow-y: auto !important;
-    z-index: 80 !important;
-  }
-
-  #chatBox {
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  body:not(.history-open) #historyBox,
-  body:not(.definition-open) #definitionBox,
-  body:not(.chat-open) #chatBox {
-    transform: translate(-50%, -50%) scale(0) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-
-  body.history-open #historyBox,
-  body.definition-open #definitionBox,
-  body.chat-open #chatBox {
-    transform: translate(-50%, -50%) scale(1) !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
+  /* Allow normal panel behavior - removed forced medium mode positioning */
+  /* Side panels will be positioned by JavaScript based on available space */
 
   /* Ensure gameColumn uses proper flexbox layout */
   #gameColumn {
