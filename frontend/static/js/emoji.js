@@ -1,8 +1,39 @@
 import { sendEmoji } from './api.js';
-import { openDialog, closeDialog, enableClickOffDismiss } from './utils.js';
+import { openDialog, closeDialog } from './utils.js';
 
 const emojiModal = typeof document !== 'undefined' ? document.getElementById('emojiModal') : null;
-enableClickOffDismiss(emojiModal);
+
+// Track the current skipAutoCloseRef to respect auto-close preferences
+let currentSkipAutoCloseRef = null;
+
+// Set up click-off dismiss functionality that respects skipAutoCloseRef
+if (emojiModal) {
+  emojiModal.addEventListener('click', (e) => {
+    if (e.target === emojiModal) {
+      // Only close if skipAutoCloseRef is not set or is false
+      if (!currentSkipAutoCloseRef || !currentSkipAutoCloseRef.value) {
+        closeDialog(emojiModal);
+        currentSkipAutoCloseRef = null; // Clear reference when closing
+      }
+    }
+  });
+
+  // Listen for when the modal is closed to clean up the reference
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        const modal = mutation.target;
+        if (modal.style.display === 'none' || !modal.classList.contains('show')) {
+          currentSkipAutoCloseRef = null;
+        }
+      }
+    });
+  });
+  
+  if (emojiModal) {
+    observer.observe(emojiModal, { attributes: true, attributeFilter: ['style', 'class'] });
+  }
+}
 
 /**
  * Retrieve the player's stored emoji identifier.
@@ -105,6 +136,9 @@ export function showEmojiModal(takenEmojis, {
   const errorEl = document.getElementById('emojiModalError');
   choices.innerHTML = '';
 
+  // Store the skipAutoCloseRef for the click-off handler to use
+  currentSkipAutoCloseRef = skipAutoCloseRef;
+
   allEmojis.forEach(e => {
     const btn = document.createElement('button');
     btn.className = 'emoji-choice';
@@ -129,6 +163,8 @@ export function showEmojiModal(takenEmojis, {
       setMyEmoji(assignedEmoji);
       if (typeof onChosen === 'function') onChosen(assignedEmoji);
       closeDialog(modal);
+      // Clear the reference when modal is closed
+      currentSkipAutoCloseRef = null;
     } else {
       errorEl.textContent = data.msg || 'That emoji is taken.';
       if (typeof onError === 'function') onError(data.msg);
