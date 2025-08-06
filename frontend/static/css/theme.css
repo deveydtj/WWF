@@ -1,59 +1,77 @@
 :root {
-  --bg-color: #e0e5ec;
-  --text-color: #3d4a5a;
-  --text-color-light: #5a677a;
-  --shadow-color-dark: #bec3c9;
+  /* Modern light theme with improved contrast and accessibility */
+  --bg-color: #f8fafc;
+  --text-color: #1e293b;
+  --text-color-light: #475569;
+  --shadow-color-dark: #e2e8f0;
   --shadow-color-light: #ffffff;
-  --inset-shadow-dark: #bec3c9;
+  --inset-shadow-dark: #cbd5e1;
   --inset-shadow-light: #ffffff;
-  --tile-bg: #e0e5ec;
-  --key-bg: #e0e5ec;
-  --key-text: #5a677a;
-  --correct-bg: #6aaa64;
-  --present-bg: #c9b458;
-  --absent-bg: #787c7e;
-  --correct-shadow-dark: #5a9354;
-  --correct-shadow-light: #7ccc74;
-  --present-shadow-dark: #b09d4d;
-  --present-shadow-light: #e2cb63;
-  --absent-shadow-dark: #666a6c;
-  --absent-shadow-light: #8a8e90;
-  --border-color: transparent;
-  --error-color: #ba1c1c;
+  --tile-bg: #f1f5f9;
+  --key-bg: #f1f5f9;
+  --key-text: #475569;
+  --correct-bg: #10b981;
+  --present-bg: #f59e0b;
+  --absent-bg: #6b7280;
+  --correct-shadow-dark: #059669;
+  --correct-shadow-light: #34d399;
+  --present-shadow-dark: #d97706;
+  --present-shadow-light: #fbbf24;
+  --absent-shadow-dark: #4b5563;
+  --absent-shadow-light: #9ca3af;
+  --border-color: #e2e8f0;
+  --error-color: #ef4444;
+  
+  /* Modern gradients */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  
+  /* Glass morphism effects */
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --backdrop-blur: blur(16px);
 }
 
 body.dark-mode {
-  --bg-color: #2c303a;
-  --text-color: #d1d1d1;
-  --text-color-light: #b0b8c4;
-  --shadow-color-dark: #1f2229;
-  --shadow-color-light: #393e4b;
-  --inset-shadow-dark: #1f2229;
-  --inset-shadow-light: #393e4b;
-  --tile-bg: #2c303a;
-  --key-bg: #4f5564;
-  --absent-bg: #3a3a3c;
-  --key-text: #e1e1e1;
-  --correct-bg: #538d4e;
-  --present-bg: #b59f3b;
-  --correct-shadow-dark: #416d3e;
-  --correct-shadow-light: #65ab5e;
-  --present-shadow-dark: #8f7c2d;
-  --present-shadow-light: #dbc249;
-  --absent-shadow-dark: #2e2e30;
-  --absent-shadow-light: #464648;
-  --border-color: #4a4a4f;
-  --error-color: #ff7b7b;
+  /* Modern dark theme with better contrast */
+  --bg-color: #0f172a;
+  --text-color: #f1f5f9;
+  --text-color-light: #cbd5e1;
+  --shadow-color-dark: #020617;
+  --shadow-color-light: #1e293b;
+  --inset-shadow-dark: #020617;
+  --inset-shadow-light: #334155;
+  --tile-bg: #1e293b;
+  --key-bg: #334155;
+  --absent-bg: #475569;
+  --key-text: #e2e8f0;
+  --correct-bg: #059669;
+  --present-bg: #d97706;
+  --correct-shadow-dark: #047857;
+  --correct-shadow-light: #10b981;
+  --present-shadow-dark: #b45309;
+  --present-shadow-light: #f59e0b;
+  --absent-shadow-dark: #374151;
+  --absent-shadow-light: #6b7280;
+  --border-color: #334155;
+  --error-color: #f87171;
+  
+  /* Dark mode glass effects */
+  --glass-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   text-align: center;
   margin: 0;
   padding: 0;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #message.positive { color: var(--correct-bg); }
@@ -88,27 +106,61 @@ body {
   border: 0;
 }
 
-/* Neumorphic base style for buttons */
+/* Modern button base styles */
 button {
   border: none;
-  border-radius: 8px;
-  padding: 0.4rem 0.8rem;
-  background: var(--bg-color);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  background: var(--tile-bg);
   color: var(--text-color);
-  box-shadow: 3px 3px 6px var(--shadow-color-dark),
-              -3px -3px 6px var(--shadow-color-light);
+  font-weight: 500;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
+              0 1px 3px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.1s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 button:hover {
-  box-shadow: 4px 4px 8px var(--shadow-color-dark),
-              -4px -4px 8px var(--shadow-color-light);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
+              0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 button:active {
-  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
-              inset -2px -2px 4px var(--inset-shadow-light);
-  transform: translateY(1px);
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Primary button style */
+button.primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+button.primary:hover {
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+/* Modern ripple effect */
+button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+  pointer-events: none;
+}
+
+button:active::after {
+  width: 200px;
+  height: 200px;
 }

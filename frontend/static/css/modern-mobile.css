@@ -1,0 +1,413 @@
+/* ─────────────────────────────────────────────
+   Modern Mobile Layout - Streamlined responsive design for mobile devices
+   ───────────────────────────────────────────── */
+
+/* Modern CSS custom properties for mobile */
+:root {
+  /* Modern viewport handling */
+  --viewport-height: 100vh;
+  --viewport-width: 100vw;
+  --safe-height: 100vh;
+  
+  /* Adaptive spacing system */
+  --space-xs: clamp(0.25rem, 1vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 2vw, 1rem);
+  --space-md: clamp(1rem, 3vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 4vw, 2rem);
+  
+  /* Modern touch targets */
+  --touch-target-min: 44px;
+  --touch-target-optimal: 48px;
+  
+  /* Fluid tile sizing for mobile */
+  --mobile-tile-size: clamp(32px, 9vw, 45px);
+  --mobile-board-gap: clamp(3px, 1.5vw, 6px);
+  
+  /* Modern color palette */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --surface-elevated: rgba(255, 255, 255, 0.1);
+  --surface-glass: rgba(255, 255, 255, 0.05);
+  --shadow-soft: rgba(0, 0, 0, 0.1);
+  --shadow-medium: rgba(0, 0, 0, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* Support for dynamic viewport units */
+@supports (height: 100dvh) {
+  :root {
+    --viewport-height: 100dvh;
+    --safe-height: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+  :root {
+    --safe-height: 100svh;
+  }
+}
+
+/* Modern mobile layout container - override existing responsive styles */
+@media (max-width: 600px) {
+  /* Reset and modernize base layout */
+  #appContainer {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: var(--safe-height) !important;
+    padding: var(--space-xs) !important;
+    gap: var(--space-sm) !important;
+    overflow-x: hidden !important;
+    background: var(--bg-color) !important;
+  }
+  
+  /* Override gameColumn layout */
+  #gameColumn {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: var(--safe-height) !important;
+    gap: var(--space-sm) !important;
+    padding: 0 !important;
+  }
+  
+  /* Modern title bar with better spacing */
+  #titleBar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-sm) !important;
+    padding: var(--space-sm) 0 !important;
+    position: relative !important;
+    z-index: 10 !important;
+    flex: 0 0 auto !important;
+  }
+  
+  #titleBar h1 {
+    font-size: clamp(1.25rem, 4vw, 1.75rem) !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    background: var(--primary-gradient) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+  
+  /* Improved mobile board area */
+  #boardArea {
+    display: flex !important;
+    justify-content: center !important;
+    padding: var(--space-md) var(--space-sm) !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+  }
+  
+  #board {
+    --tile-size: var(--mobile-tile-size) !important;
+    --tile-gap: var(--mobile-board-gap) !important;
+    
+    display: grid !important;
+    grid-template-columns: repeat(5, var(--tile-size)) !important;
+    gap: var(--tile-gap) !important;
+    padding: var(--space-md) !important;
+    background: var(--glass-bg) !important;
+    border-radius: var(--radius-lg) !important;
+    backdrop-filter: var(--backdrop-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 8px 32px var(--shadow-soft) !important;
+    margin: 0 !important;
+  }
+  
+  /* Modern tile styling - override existing */
+  .tile {
+    width: var(--tile-size) !important;
+    height: var(--tile-size) !important;
+    border-radius: var(--radius-sm) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: calc(var(--tile-size) * 0.45) !important;
+    font-weight: 600 !important;
+    background: var(--tile-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 8px var(--shadow-soft) !important;
+  }
+  
+  .tile:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px var(--shadow-medium) !important;
+  }
+  
+  /* Modern keyboard with improved touch targets */
+  #keyboard {
+    margin-top: auto !important;
+    padding: var(--space-md) !important;
+    background: var(--glass-bg) !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    backdrop-filter: var(--backdrop-blur) !important;
+    border-top: 1px solid var(--glass-border) !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 20 !important;
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    max-width: none !important;
+  }
+  
+  .keyboard-row {
+    display: flex !important;
+    justify-content: center !important;
+    gap: var(--space-xs) !important;
+    margin-bottom: var(--space-xs) !important;
+  }
+  
+  .keyboard-row:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  .key {
+    min-width: var(--touch-target-optimal) !important;
+    min-height: var(--touch-target-optimal) !important;
+    padding: 0 var(--space-xs) !important;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+    background: var(--key-bg) !important;
+    color: var(--key-text) !important;
+    font-size: clamp(14px, 3vw, 16px) !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 4px var(--shadow-soft) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+  
+  .key:active {
+    transform: scale(0.95) !important;
+    box-shadow: inset 0 2px 4px var(--shadow-soft) !important;
+  }
+  
+  .key.wide {
+    min-width: calc(var(--touch-target-optimal) * 1.5) !important;
+  }
+  
+  /* Modern input area - hide for mobile */
+  #inputArea {
+    display: none !important;
+  }
+  
+  /* Hide unnecessary elements on mobile */
+  #playerCount {
+    display: none !important;
+  }
+  
+  /* Message area improvements */
+  #message {
+    padding: var(--space-sm) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    flex: 0 0 auto !important;
+  }
+  
+  /* Modern panel positioning for mobile */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 60vh !important;
+    background: var(--bg-color) !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    backdrop-filter: var(--backdrop-blur) !important;
+    border-top: 1px solid var(--border-color) !important;
+    transform: translateY(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 50 !important;
+    box-shadow: 0 -8px 32px var(--shadow-medium) !important;
+    padding: var(--space-md) !important;
+    overflow-y: auto !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Panel open states */
+  body.history-open #historyBox,
+  body.definition-open #definitionBox,
+  body.chat-open #chatBox {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Modern floating action buttons */
+  #optionsToggle,
+  #chatNotify {
+    position: fixed !important;
+    width: var(--touch-target-optimal) !important;
+    height: var(--touch-target-optimal) !important;
+    border-radius: 50% !important;
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    z-index: 30 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  #optionsToggle {
+    top: var(--space-lg) !important;
+    right: var(--space-md) !important;
+  }
+  
+  #chatNotify {
+    top: calc(var(--space-lg) + var(--touch-target-optimal) + var(--space-sm)) !important;
+    right: var(--space-md) !important;
+  }
+  
+  #optionsToggle:active,
+  #chatNotify:active {
+    transform: scale(0.9) !important;
+  }
+  
+  /* Message styling */
+  #messagePopup {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: var(--bg-color) !important;
+    padding: var(--space-md) !important;
+    border-radius: var(--radius-md) !important;
+    backdrop-filter: var(--backdrop-blur) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 8px 32px var(--shadow-medium) !important;
+    z-index: 60 !important;
+    max-width: 80vw !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Override leaderboard positioning */
+  #leaderboard {
+    display: flex !important;
+    justify-content: center !important;
+    gap: var(--space-xs) !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .leaderboard-entry {
+    padding: var(--space-xs) var(--space-sm) !important;
+    border-radius: var(--radius-sm) !important;
+    background: var(--tile-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    font-size: 14px !important;
+    min-width: auto !important;
+  }
+}
+
+/* Extra small devices optimization */
+@media (max-width: 350px) {
+  :root {
+    --mobile-tile-size: clamp(28px, 8vw, 38px) !important;
+    --mobile-board-gap: clamp(2px, 1vw, 4px) !important;
+    --space-xs: 0.25rem !important;
+    --space-sm: 0.5rem !important;
+  }
+  
+  .key {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 12px !important;
+  }
+  
+  #titleBar h1 {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 600px) and (orientation: landscape) and (max-height: 500px) {
+  #appContainer {
+    padding: var(--space-xs) !important;
+    gap: var(--space-xs) !important;
+  }
+  
+  #titleBar {
+    padding: var(--space-xs) 0 !important;
+  }
+  
+  #titleBar h1 {
+    font-size: 1.25rem !important;
+  }
+  
+  #boardArea {
+    padding: var(--space-xs) !important;
+  }
+  
+  #board {
+    padding: var(--space-sm) !important;
+  }
+  
+  #keyboard {
+    padding: var(--space-sm) !important;
+  }
+  
+  .keyboard-row {
+    margin-bottom: 2px !important;
+  }
+  
+  .key {
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+}
+
+/* Dark mode adjustments for modern mobile */
+body.dark-mode {
+  --surface-glass: rgba(0, 0, 0, 0.3) !important;
+  --surface-elevated: rgba(255, 255, 255, 0.05) !important;
+  --shadow-soft: rgba(0, 0, 0, 0.3) !important;
+  --shadow-medium: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Animation improvements */
+@media (prefers-reduced-motion: no-preference) {
+  .tile {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .key {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .tile,
+  .key {
+    border: 2px solid currentColor !important;
+  }
+}
