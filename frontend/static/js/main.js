@@ -11,6 +11,23 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
          checkKeyboardVisibility, ensureKeyboardVisibility, calculateMinRequiredHeight,
          checkInputFieldKeyboardOverlap, ensureInputFieldVisibility } from './utils.js';
 import { positionResponsive, positionContextMenu, positionModal, positionOnGrid } from './popupPositioning.js';
+import { updateHintBadge } from './hintBadge.js';
+import { saveHintState, loadHintState } from './hintState.js';
+import { GAME_NAME } from './config.js';
+import { StateManager, STATES } from './stateManager.js';
+
+// Import our new modular components
+import { initAudio, stopAllSounds, playClick, playJingle, toggleSound, isSoundEnabled } from './audioManager.js';
+import { updateInputVisibility, showPointsDelta, showHintTooltip, hideHintTooltip, burstConfetti, 
+         showChatNotify, showChatMessagePopup, hideChatNotify, showCloseCallNotification, 
+         hideCloseCallNotification, showNetworkError, hideNetworkError } from './uiNotifications.js';
+import { setupMobileLeaderboard, renderLeaderboard, renderPlayerSidebar, renderEmojiStamps, 
+         updateLeaderboard, getLeaderboard, getPlayerRank, centerLeaderboardOnMe } from './leaderboardManager.js';
+
+// Import board scaling test utilities for debugging
+import './boardScalingTests.js';
+// Import enhanced scaling system
+import { initializeEnhancedScaling } from './enhancedScaling.js';
 
 // Make enhanced positioning available globally for backward compatibility
 if (typeof window !== 'undefined') {
@@ -21,16 +38,6 @@ if (typeof window !== 'undefined') {
     positionOnGrid
   };
 }
-import { updateHintBadge } from './hintBadge.js';
-import { saveHintState, loadHintState } from './hintState.js';
-import { GAME_NAME } from './config.js';
-
-import { StateManager, STATES } from './stateManager.js';
-
-// Import board scaling test utilities for debugging
-import './boardScalingTests.js';
-// Import enhanced scaling system
-import { initializeEnhancedScaling } from './enhancedScaling.js';
 
 const gameState = new StateManager();
 
@@ -50,33 +57,6 @@ let hadNetworkError = false;
 let lastChatTime = 0;
 const CHAT_COOLDOWN_MS = 1000; // 1 second cooldown between messages
 const MAX_CHAT_LENGTH = 140; // Already enforced in HTML, but double-check
-
-// Default to sound off unless user explicitly enabled it
-let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
-let audioCtx = null;
-
-function ensureAudioContext() {
-  if (!audioCtx) {
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (err) {
-      console.error('Failed to init audio context:', err);
-      soundEnabled = false;
-      if (menuSound) menuSound.textContent = '🔈 Sound Off';
-      return null;
-    }
-  }
-  return audioCtx;
-}
-
-function stopAllSounds() {
-  if (audioCtx) {
-    try {
-      audioCtx.close();
-    } catch {}
-    audioCtx = null;
-  }
-}
 
 const HOST_TOKEN = localStorage.getItem('hostToken');
 
