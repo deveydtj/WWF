@@ -713,9 +713,9 @@
     max-width: none;
   }
 
-  /* Use fixed tile size - no viewport-dependent scaling */
+  /* Use larger fixed tile size for better visibility at 1200px */
   :root {
-    --tile-size: 54px; /* Fixed size - no scaling with viewport */
+    --tile-size: 60px; /* Increased from 54px for better usability */
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
@@ -789,9 +789,9 @@
     max-width: none;
   }
 
-  /* Use fixed tile size for very large screens */
+  /* Use larger fixed tile size for very large screens */
   :root {
-    --tile-size: 54px; /* Fixed size - no scaling with viewport */
+    --tile-size: 60px; /* Increased from 54px for consistency */
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
