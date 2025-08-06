@@ -9,18 +9,21 @@ import string
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-# Import configuration validation
+# Import our modules
 try:
+    from .models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
+    from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
     from .config import validate_production_config, get_config_summary
 except ImportError:
     # Handle running as script instead of module
+    from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
+    from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
     from config import validate_production_config, get_config_summary
 
 try:
@@ -63,8 +66,6 @@ except Exception:  # pragma: no cover - optional dependency
     redis = None
     ConnectionPool = None
 
-logger = logging.getLogger(__name__)
-
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
 app = Flask(__name__)
@@ -101,6 +102,8 @@ def configure_logging():
     )
 
 configure_logging()
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
@@ -139,17 +142,6 @@ if REDIS_URL and redis is not None:
         logger.warning("Redis connection failed: %s", e)
         redis_client = None
 
-# Standard Scrabble letter values used for scoring
-SCRABBLE_SCORES = {
-    **{letter: 1 for letter in "aeilnorstu"},
-    **{letter: 2 for letter in "dg"},
-    **{letter: 3 for letter in "bcmp"},
-    **{letter: 4 for letter in "fhvwy"},
-    "k": 5,
-    **{letter: 8 for letter in "jx"},
-    **{letter: 10 for letter in "qz"},
-}
-
 # Lobby management constants
 LOBBY_TTL = 30 * 60  # 30 minutes
 LOBBY_CREATION_LIMIT = 5
@@ -162,40 +154,8 @@ API_RATE_WINDOW = 60  # seconds
 GUESS_RATE_LIMIT = 30  # guesses per minute per player
 GUESS_RATE_WINDOW = 60  # seconds
 
-
-# ---- Globals ----
-WORDS: list[str] = []
-WORDS_LOADED: bool = False
-
-
-def _init_assets() -> None:
-    """Load the word list and validate the definitions cache."""
-    global WORDS, WORDS_LOADED
-    try:
-        with open(WORDS_FILE) as f:
-            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
-        WORDS_LOADED = True
-        logger.info(f"Loaded {len(WORDS)} words from {WORDS_FILE}")
-    except Exception as e:  # pragma: no cover - startup validation
-        logger.error("Startup abort: could not load word list '%s': %s", WORDS_FILE, e)
-        raise SystemExit(1)
-    if not WORDS:
-        logger.error("Startup abort: word list '%s' contains no words", WORDS_FILE)
-        raise SystemExit(1)
-    try:
-        with open(OFFLINE_DEFINITIONS_FILE) as f:
-            json.load(f)
-    except Exception as e:  # pragma: no cover - startup validation
-        logger.error(
-            "Startup abort: could not parse definitions file '%s': %s",
-            OFFLINE_DEFINITIONS_FILE,
-            e,
-        )
-        raise SystemExit(1)
-
-
-# Initialize assets and validate configuration
-_init_assets()
+# Initialize game assets 
+init_game_assets(WORDS_FILE, OFFLINE_DEFINITIONS_FILE)
 
 # Validate production configuration
 try:
@@ -208,84 +168,7 @@ except Exception as e:
     else:
         logger.warning("Continuing in development mode despite configuration issues")
 
-
-@dataclass
-class GameState:
-    leaderboard: dict = field(default_factory=dict)
-    ip_to_emoji: dict = field(default_factory=dict)
-    player_map: dict = field(default_factory=dict)  # player_id -> emoji mapping
-    winner_emoji: str | None = None
-    target_word: str = ""
-    guesses: list = field(default_factory=list)
-    is_over: bool = False
-    found_greens: set = field(default_factory=set)
-    found_yellows: set = field(default_factory=set)
-    past_games: list = field(default_factory=list)
-    definition: str | None = None
-    last_word: str | None = None
-    last_definition: str | None = None
-    win_timestamp: float | None = None
-    chat_messages: list = field(default_factory=list)
-    chat_rate_limits: dict = field(default_factory=dict)  # player_id -> last_message_time
-    listeners: set = field(default_factory=set)
-    daily_double_index: int | None = None
-    daily_double_winners: set = field(default_factory=set)
-    daily_double_pending: dict = field(default_factory=dict)
-    host_token: str | None = None
-    phase: str = "waiting"
-    last_activity: float = field(default_factory=time.time)
-
-
 emoji_lock = threading.Lock()  # guard emoji selection operations
-
-# Color variants for duplicate emojis
-EMOJI_VARIANTS = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"]
-
-
-def get_emoji_variant(base_emoji: str, existing_emojis: set) -> str:
-    """
-    Generate a variant of the base emoji if duplicates exist.
-
-    Args:
-        base_emoji: The base emoji string (e.g., "🐶")
-        existing_emojis: Set of existing emoji keys in the leaderboard
-
-    Returns:
-        A unique emoji variant string (e.g., "🐶-red", "🐶-blue")
-    """
-    # If base emoji is not taken, return it as-is
-    if base_emoji not in existing_emojis:
-        return base_emoji
-
-    # Try each color variant until we find an available one
-    for variant in EMOJI_VARIANTS:
-        variant_emoji = f"{base_emoji}-{variant}"
-        if variant_emoji not in existing_emojis:
-            return variant_emoji
-
-    # If all predefined variants are taken, use numbered variants
-    counter = len(EMOJI_VARIANTS) + 1
-    while True:
-        variant_emoji = f"{base_emoji}-{counter}"
-        if variant_emoji not in existing_emojis:
-            return variant_emoji
-        counter += 1
-
-
-def get_base_emoji(emoji_variant: str) -> str:
-    """
-    Extract the base emoji from a variant.
-
-    Args:
-        emoji_variant: Either a base emoji or variant (e.g., "🐶" or "🐶-red")
-
-    Returns:
-        The base emoji string (e.g., "🐶")
-    """
-    if "-" in emoji_variant:
-        return emoji_variant.split("-")[0]
-    return emoji_variant
-
 
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
@@ -364,13 +247,6 @@ def _with_lobby(code: str, func):
         return func()
     finally:
         current_state = prev
-
-
-def sanitize_definition(text: str) -> str:
-    """Remove HTML tags and extra whitespace from a definition."""
-    text = re.sub(r"<[^>]*>", "", text)
-    text = html.unescape(text)
-    return " ".join(text.split())
 
 
 def _reset_state(s: GameState | None = None) -> GameState:
@@ -537,100 +413,6 @@ def load_data(s: GameState | None = None):
 
 
 # ---- Game Logic ----
-
-
-def generate_lobby_code() -> str:
-    """Return a random six-character lobby code."""
-    alphabet = string.ascii_uppercase + string.digits
-    return "".join(random.choices(alphabet, k=6))
-
-
-def pick_new_word(s: GameState | None = None):
-    """Choose a new target word and reset all in-memory game current_state."""
-    if s is None:
-        s = current_state
-    s.target_word = random.choice(WORDS)
-    s.guesses.clear()
-    s.is_over = False
-    s.winner_emoji = None
-    s.found_greens = set()
-    s.found_yellows = set()
-    s.definition = None
-    s.win_timestamp = None
-    if MAX_ROWS > 1:
-        s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
-    else:
-        s.daily_double_index = None
-    s.daily_double_winners.clear()
-    for player in list(s.daily_double_pending.keys()):
-        s.daily_double_pending[player] = 0
-    s.phase = "waiting"
-    s.last_activity = time.time()
-
-
-def fetch_definition(word):
-    """Look up a word's definition online with an offline JSON fallback."""
-    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0 "
-            "Gecko/20100101 Firefox/109.0"
-        )
-    }
-    logger.info(f"Fetching definition for '{word}'")
-    try:
-        logger.info(f"Trying online dictionary API for '{word}'")
-        resp = requests.get(url, headers=headers, timeout=3)  # Reduced from 5 to 3 seconds
-        resp.raise_for_status()
-        data = resp.json()
-        if isinstance(data, list) and data:
-            meanings = data[0].get("meanings")
-            if meanings:
-                defs = meanings[0].get("definitions")
-                if defs:
-                    definition = defs[0].get("definition")
-                    if definition:
-                        definition = sanitize_definition(definition)
-                    logger.info(f"Online definition for '{word}': {definition}")
-                    return definition
-    except requests.RequestException as e:
-        logger.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
-        try:
-            with open(OFFLINE_DEFINITIONS_FILE) as f:
-                offline = json.load(f)
-            definition = offline.get(word)
-            if definition:
-                definition = sanitize_definition(definition)
-                logger.info(f"Offline definition for '{word}': {definition}")
-            else:
-                logger.info(f"No offline definition found for '{word}'")
-            return definition
-        except Exception as e2:
-            logger.info(f"Offline lookup failed for '{word}': {e2}")
-    except Exception as e:
-        logger.info(f"Unexpected error fetching definition for '{word}': {e}")
-    logger.info(f"No definition found for '{word}'")
-    return None
-
-
-def _definition_worker(word: str, s: GameState) -> None:
-    """Background task to fetch a word's definition and persist it."""
-    s.definition = fetch_definition(word)
-    logger.info(f"Definition lookup complete for '{word}': {s.definition or 'None'}")
-    s.last_word = word
-    s.last_definition = s.definition
-    save_data(s)
-    broadcast_state(s)
-
-
-def start_definition_lookup(word: str, s: GameState | None = None) -> threading.Thread:
-    """Start asynchronous definition lookup for the solved word."""
-    if s is None:
-        s = current_state
-    t = threading.Thread(target=_definition_worker, args=(word, s))
-    t.daemon = True
-    t.start()
-    return t
 
 
 def get_client_ip():
@@ -1111,7 +893,7 @@ def guess_word():
 
     if over:
         current_state.phase = "finished"
-        start_definition_lookup(current_state.target_word, current_state)
+        start_definition_lookup(current_state.target_word, current_state, save_data, broadcast_state)
 
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
