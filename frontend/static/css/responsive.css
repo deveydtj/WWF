@@ -68,7 +68,7 @@
     height: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.83));
     font-size: max(12px, calc(var(--tile-size) * 0.27));
   }
-}
+
   #appContainer {
     padding: 5px;
     min-height: 100vh;
@@ -656,6 +656,17 @@
     --tile-gap: 7px !important;
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
   }
+
+  /* Reduce input field and button size for large screens */
+  #guessInput,
+  #submitGuess {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+
+  #guessInput {
+    width: clamp(8rem, 20vw, 10rem);
+  }
 }
 
 /* Very large screens (min-width: 1551px) */
@@ -669,5 +680,16 @@
   .game-container {
     max-width: 1400px;
     margin: 0 auto;
+  }
+
+  /* Even smaller input sizing for very large screens */
+  #guessInput,
+  #submitGuess {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+
+  #guessInput {
+    width: clamp(8rem, 15vw, 9rem);
   }
 }
