@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Enhanced Scaling System Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      line-height: 1.6;
+    }
+    
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      color: #2c3e50;
+      margin: 0 0 10px 0;
+      font-size: 2.5rem;
+    }
+    
+    .header p {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    
+    .test-section {
+      margin-bottom: 40px;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+    }
+    
+    .test-section h2 {
+      margin: 0 0 20px 0;
+      color: #2c3e50;
+      font-size: 1.5rem;
+    }
+    
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .test-button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #3498db;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    }
+    
+    .test-button:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+    }
+    
+    .test-button.danger {
+      background: #e74c3c;
+      box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+    }
+    
+    .test-button.danger:hover {
+      background: #c0392b;
+      box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
+    }
+    
+    .test-button.success {
+      background: #27ae60;
+      box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
+    }
+    
+    .test-button.success:hover {
+      background: #229954;
+      box-shadow: 0 4px 8px rgba(39, 174, 96, 0.4);
+    }
+    
+    .results-area {
+      margin-top: 25px;
+      padding: 20px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e1e8ed;
+      min-height: 100px;
+    }
+    
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .device-card {
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e1e8ed;
+      transition: all 0.3s ease;
+    }
+    
+    .device-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .device-card h3 {
+      margin: 0 0 15px 0;
+      color: #2c3e50;
+      font-size: 1.2rem;
+    }
+    
+    .device-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 14px;
+    }
+    
+    .device-info .label {
+      font-weight: 600;
+      color: #7f8c8d;
+    }
+    
+    .device-info .value {
+      color: #2c3e50;
+    }
+    
+    .status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .viewport-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .viewport-card {
+      padding: 15px;
+      background: #ecf0f1;
+      border-radius: 6px;
+      text-align: center;
+    }
+    
+    .viewport-card .metric {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+    
+    .viewport-card .label {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    pre {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.4;
+      margin: 20px 0;
+    }
+    
+    .highlight {
+      background: #f39c12;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      .test-container {
+        margin: 10px;
+        padding: 20px;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .device-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .viewport-info {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <div class="header">
+      <h1>🚀 Enhanced Scaling System</h1>
+      <p>Comprehensive testing interface for the modernized display scaling system</p>
+    </div>
+
+    <div class="test-section">
+      <h2>📊 Real-time Viewport Information</h2>
+      <div id="viewportInfo" class="viewport-info">
+        <!-- Viewport info will be inserted here -->
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>🧪 Quick Tests</h2>
+      <div class="button-grid">
+        <button class="test-button" onclick="runEnhancedScalingTest()">Test Enhanced Scaling</button>
+        <button class="test-button" onclick="runDeviceCompatibilityTest()">Device Compatibility</button>
+        <button class="test-button" onclick="runKeyboardVisibilityTest()">Keyboard Visibility</button>
+        <button class="test-button" onclick="runViewportAnalysisTest()">Viewport Analysis</button>
+        <button class="test-button" onclick="runOrientationTest()">Orientation Test</button>
+        <button class="test-button" onclick="getDiagnostics()">System Diagnostics</button>
+      </div>
+      <div id="testResults" class="results-area">
+        <p>Click a test button to see results...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>📱 Device Simulation</h2>
+      <div class="button-grid">
+        <button class="test-button" onclick="simulateDevice(375, 667, 'iPhone SE')">iPhone SE</button>
+        <button class="test-button" onclick="simulateDevice(390, 844, 'iPhone 12')">iPhone 12</button>
+        <button class="test-button" onclick="simulateDevice(428, 926, 'iPhone 12 Pro Max')">iPhone 12 Pro Max</button>
+        <button class="test-button" onclick="simulateDevice(768, 1024, 'iPad')">iPad</button>
+        <button class="test-button" onclick="simulateDevice(1024, 768, 'iPad Landscape')">iPad Landscape</button>
+        <button class="test-button" onclick="simulateDevice(360, 800, 'Galaxy S20')">Galaxy S20</button>
+        <button class="test-button" onclick="simulateDevice(1280, 720, 'Small Desktop')">Small Desktop</button>
+        <button class="test-button" onclick="simulateDevice(1920, 1080, 'Desktop')">Desktop</button>
+        <button class="test-button danger" onclick="simulateDevice(280, 480, 'Tiny Screen')">Tiny Screen</button>
+        <button class="test-button success" onclick="resetViewport()">Reset Viewport</button>
+      </div>
+      <div id="deviceResults" class="device-grid">
+        <!-- Device test results will be inserted here -->
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>🔧 Advanced Testing</h2>
+      <div class="button-grid">
+        <button class="test-button" onclick="stressTestScaling()">Stress Test</button>
+        <button class="test-button" onclick="testVirtualKeyboard()">Virtual Keyboard</button>
+        <button class="test-button" onclick="testAccessibility()">Accessibility</button>
+        <button class="test-button" onclick="performanceTest()">Performance Test</button>
+      </div>
+      <div id="advancedResults" class="results-area">
+        <p>Advanced test results will appear here...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>📋 System Output</h2>
+      <pre id="systemOutput">System ready - click any test to see detailed output...</pre>
+    </div>
+  </div>
+
+  <!-- Import the enhanced scaling system -->
+  <script type="module">
+    import { initializeEnhancedScaling } from '/static/js/enhancedScaling.js';
+    
+    // Initialize the enhanced scaling system
+    let enhancedScaling;
+    
+    try {
+      enhancedScaling = initializeEnhancedScaling();
+      console.log('Enhanced scaling system loaded successfully');
+      updateSystemOutput('✅ Enhanced scaling system initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize enhanced scaling:', error);
+      updateSystemOutput('❌ Failed to initialize enhanced scaling: ' + error.message);
+    }
+    
+    // Make functions available globally
+    window.enhancedScaling = enhancedScaling;
+    
+    // Update viewport info regularly
+    function updateViewportInfo() {
+      const info = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        visualWidth: window.visualViewport?.width || window.innerWidth,
+        visualHeight: window.visualViewport?.height || window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio || 1,
+        orientation: screen.orientation?.type || 'unknown'
+      };
+      
+      document.getElementById('viewportInfo').innerHTML = `
+        <div class="viewport-card">
+          <div class="metric">${info.width}</div>
+          <div class="label">Width</div>
+        </div>
+        <div class="viewport-card">
+          <div class="metric">${info.height}</div>
+          <div class="label">Height</div>
+        </div>
+        <div class="viewport-card">
+          <div class="metric">${info.visualWidth}</div>
+          <div class="label">Visual Width</div>
+        </div>
+        <div class="viewport-card">
+          <div class="metric">${info.visualHeight}</div>
+          <div class="label">Visual Height</div>
+        </div>
+        <div class="viewport-card">
+          <div class="metric">${info.devicePixelRatio}</div>
+          <div class="label">DPR</div>
+        </div>
+        <div class="viewport-card">
+          <div class="metric">${info.orientation.split('-')[0]}</div>
+          <div class="label">Orientation</div>
+        </div>
+      `;
+    }
+    
+    function updateSystemOutput(message) {
+      const output = document.getElementById('systemOutput');
+      const timestamp = new Date().toLocaleTimeString();
+      output.textContent = `[${timestamp}] ${message}\n` + output.textContent;
+    }
+    
+    // Test functions
+    window.runEnhancedScalingTest = function() {
+      if (!enhancedScaling) {
+        document.getElementById('testResults').innerHTML = '<div class="status error">Enhanced scaling not available</div>';
+        return;
+      }
+      
+      try {
+        const result = enhancedScaling.applyOptimalScaling(6);
+        const diagnostics = enhancedScaling.getDiagnostics();
+        
+        document.getElementById('testResults').innerHTML = `
+          <div class="status ${result.success ? 'success' : 'error'}">
+            ${result.success ? '✅ Enhanced scaling successful' : '❌ Enhanced scaling failed'}
+          </div>
+          <div style="margin-top: 15px;">
+            <strong>Current Scaling:</strong><br>
+            Tile Size: ${diagnostics.currentScaling.tileSize}px<br>
+            Board Width: ${diagnostics.currentScaling.boardWidth}px<br>
+            Scale Factor: ${diagnostics.currentScaling.scaleFactor}<br>
+            Device Category: ${diagnostics.deviceCategory}<br>
+            Fits in Viewport: ${diagnostics.currentScaling.fitsInViewport.overall ? 'Yes' : 'No'}
+          </div>
+        `;
+        
+        updateSystemOutput(`Enhanced scaling test completed: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+      } catch (error) {
+        document.getElementById('testResults').innerHTML = `<div class="status error">❌ Test failed: ${error.message}</div>`;
+        updateSystemOutput(`Enhanced scaling test error: ${error.message}`);
+      }
+    };
+    
+    window.simulateDevice = function(width, height, name) {
+      // Note: This would require additional iframe or window manipulation in a real implementation
+      updateSystemOutput(`Simulating ${name} (${width}x${height}) - resize your browser window to test`);
+      
+      if (enhancedScaling) {
+        // Force a recalculation
+        setTimeout(() => {
+          const result = enhancedScaling.applyOptimalScaling(6);
+          updateSystemOutput(`${name} scaling result: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+        }, 100);
+      }
+    };
+    
+    window.getDiagnostics = function() {
+      if (!enhancedScaling) {
+        document.getElementById('testResults').innerHTML = '<div class="status error">Enhanced scaling not available</div>';
+        return;
+      }
+      
+      const diagnostics = enhancedScaling.getDiagnostics();
+      document.getElementById('systemOutput').textContent = JSON.stringify(diagnostics, null, 2);
+      
+      document.getElementById('testResults').innerHTML = `
+        <div class="status success">✅ Diagnostics retrieved</div>
+        <p>Full diagnostics output available in System Output section below.</p>
+      `;
+    };
+    
+    window.resetViewport = function() {
+      updateSystemOutput('Reset viewport - manually resize your browser to reset');
+    };
+    
+    // Initialize
+    updateViewportInfo();
+    window.addEventListener('resize', updateViewportInfo);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateViewportInfo, 100);
+    });
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportInfo);
+    }
+  </script>
+</body>
+</html>

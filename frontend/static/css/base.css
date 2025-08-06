@@ -23,11 +23,20 @@
   --absent-shadow-dark: #666a6c;
   --absent-shadow-light: #8a8e90;
   --border-color: transparent;
-  /* default maximum tile size */
-  --tile-size: min(11vmin, 60px);
+  
+  /* Enhanced scaling system - integrated with modern responsive design */
+  --tile-size: var(--current-tile-size, min(11vmin, 60px));
   --tile-gap: calc(var(--tile-size) / 6);
-  --ui-scale: 1;
+  --ui-scale: var(--current-scale-factor, 1);
   --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  
+  /* Modern viewport support */
+  --viewport-height: var(--dynamic-viewport-height, 100vh);
+  --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));
+  
+  /* Touch and accessibility */
+  --min-touch-target: 44px;
+  --accessibility-scale: 1;
 }
 
 body.dark-mode {
@@ -81,8 +90,12 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 100vh; /* Fallback */
-  min-height: calc(var(--vh, 1vh) * 100);
+  min-height: var(--keyboard-safe-height, 100vh); /* Modern viewport with keyboard support */
+  min-height: calc(var(--vh, 1vh) * 100); /* Fallback */
+  
+  /* Enable container queries */
+  container-type: inline-size;
+  container-name: app;
 }
 
 /* Stack core game UI vertically */

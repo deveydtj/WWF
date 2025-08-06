@@ -1,8 +1,23 @@
 /* ─────────────────────────────────────────────
-   Responsive Design - Mobile and screen size adaptations
+   Responsive Design - Enhanced mobile and screen size adaptations
    ───────────────────────────────────────────── */
 
-/* Mobile devices (max-width: 600px) */
+/* Modern container-based responsive design */
+@container app (max-width: 600px) {
+  /* Mobile layout optimizations */
+  #appContainer {
+    padding: 5px;
+    min-height: var(--keyboard-safe-height, 100vh);
+  }
+
+  :root {
+    /* Mobile scaling - use enhanced scaling values when available */
+    --tile-size: var(--current-tile-size, min(8vmin, 32px));
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+}
+
+/* Enhanced mobile devices (max-width: 600px) with improved keyboard handling */
 @media (max-width: 600px) {
   #appContainer {
     padding: 5px;
@@ -213,20 +228,22 @@
     font-size: 16px;
   }
 
-  /* Mobile keyboard adjustments */
+  /* Enhanced mobile keyboard adjustments with virtual keyboard support */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
     margin-top: 5px;
-    margin-bottom: max(3px, env(safe-area-inset-bottom, 0px));
-    /* Ensure keyboard is always visible */
+    margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
+    /* Ensure keyboard is always visible above virtual keyboard */
     position: relative;
     z-index: 100;
     flex-shrink: 0;
+    transform: scale(var(--keyboard-scale, 1));
+    transform-origin: center bottom;
   }
 
-  /* Ensure gameColumn uses full viewport height properly */
+  /* Enhanced gameColumn with modern viewport support */
   #gameColumn {
-    min-height: calc(var(--vh, 1vh) * 100);
+    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
     display: flex;
     flex-direction: column;
   }
