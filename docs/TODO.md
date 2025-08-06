@@ -154,7 +154,7 @@ No outstanding tasks.
 
 ### To-Do List Workflow for WordSquad
 
-  - Write a `setup.sh` or documentation to check Python version and dependencies.
+  - Write a `scripts/setup.sh` or documentation to check Python version and dependencies.
   - Log missing asset errors during startup.
 - [ ] Event Loop Cleanup
   - Centralize the main game loop.

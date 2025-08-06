@@ -45,7 +45,7 @@ Install the dependencies with pip:
 pip install Flask Flask-Cors
 ```
 
-Run `./setup.sh` to verify that Python, Node.js and required assets are present
+Run `./scripts/setup.sh` to verify that Python, Node.js and required assets are present
 before starting development.
 
 ## Running the server
@@ -175,7 +175,7 @@ Alternatively run `start_docker.sh` to reset your local repository and
 launch Docker Compose in one step:
 
 ```bash
-./start_docker.sh
+./scripts/start_docker.sh
 ```
 
 The compose file mounts your `backend/` directory so changes trigger a reload.

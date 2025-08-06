@@ -106,7 +106,7 @@ export function showEmojiModal(takenEmojis, {
   choices.innerHTML = '';
 
   allEmojis.forEach(e => {
-    const btn = document.createElement('span');
+    const btn = document.createElement('button');
     btn.className = 'emoji-choice';
     btn.innerText = e;
     

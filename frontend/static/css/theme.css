@@ -56,10 +56,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.emoji-choice:hover {
-  border: 2px solid var(--correct-bg);
-}
-
 #message.positive { color: var(--correct-bg); }
 #message.negative { color: var(--error-color); }
 
