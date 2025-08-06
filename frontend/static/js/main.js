@@ -29,7 +29,7 @@ import { initResetManager, performReset, quickResetHandler, updateResetButton, s
 import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility, togglePanel, 
          toggleHistory, toggleDefinition, getManualPanelToggles, setManualPanelToggle } from './panelManager.js';
 import { toggleDarkMode, showInfo, resetOptionsMenuPositioning, closeOptionsMenu } from './optionsManager.js';
-import { initHintManager, updateHintState, toggleHintSelection, selectHint, getHintState } from './hintManager.js';
+import { initHintManager, updateHintState, toggleHintSelection, selectHint } from './hintManager.js';
 
 // Import board scaling test utilities for debugging
 import './boardScalingTests.js';
