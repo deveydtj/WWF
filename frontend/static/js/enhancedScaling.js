@@ -210,10 +210,12 @@ export class ScalingCalculator {
       optimalTileSize = Math.max(optimalTileSize, this.constraints.minTouchTarget);
     }
     
-    // Compact mode adjustments - more aggressive on very small screens
+    // Compact mode adjustments - less aggressive to preserve keyboard usability
     if (needsCompactMode) {
-      const compactFactor = availableHeight < 500 ? 0.8 : 0.9;
+      // More conservative scaling during viewport changes to prevent tiny keyboards
+      const compactFactor = availableHeight < 400 ? 0.85 : 0.92; // Less aggressive
       optimalTileSize *= compactFactor;
+      console.log(`🔧 Compact mode keyboard scaling: ${compactFactor} (viewport: ${availableHeight}px)`);
     }
     
     // Prevent tiles from being too small on very small screens
@@ -424,7 +426,10 @@ export class EnhancedScalingSystem {
     
     // Additional check: ensure keyboard isn't too small (which indicates scaling issues)
     const keyboardHeight = rect.bottom - rect.top;
-    const isTooSmall = keyboardHeight < 100; // Minimum viable keyboard height
+    const minViableHeight = Math.max(120, viewportHeight * 0.15); // Consistent minimum height
+    const isTooSmall = keyboardHeight < minViableHeight;
+    
+    console.log(`🔧 Keyboard size check: height=${keyboardHeight}px, minRequired=${minViableHeight}px, tooSmall=${isTooSmall}`);
     
     if (!isVisible || isTooSmall) {
       console.warn('⚠️ Keyboard visibility or sizing issue detected, applying fixes');
@@ -449,8 +454,13 @@ export class EnhancedScalingSystem {
     
     console.log(`🔧 Keyboard visibility check: viewport=${viewportHeight}px, keyboard.bottom=${keyboardRect.bottom}px, keyboard.top=${keyboardRect.top}px`);
     
-    // Only apply fixes if keyboard is actually cut off
-    if (keyboardRect.bottom > viewportHeight + 5) { // Add 5px buffer
+    // Check if keyboard is cut off or too small
+    const isOffScreen = keyboardRect.bottom > viewportHeight + 5; // Add 5px buffer
+    const currentHeight = keyboardRect.bottom - keyboardRect.top;
+    const minViableHeight = Math.max(120, viewportHeight * 0.15);
+    const isTooSmall = currentHeight < minViableHeight;
+    
+    if (isOffScreen || isTooSmall) {
       // Apply minimal CSS-based fix without changing horizontal positioning
       keyboard.style.position = 'fixed';
       keyboard.style.bottom = `max(0px, env(safe-area-inset-bottom, 0px))`;
@@ -472,14 +482,12 @@ export class EnhancedScalingSystem {
         console.log('🔧 Keyboard horizontal position preserved');
       }
       
-      // Ensure keyboard isn't too small on very small displays
-      const minKeyboardHeight = Math.max(120, viewportHeight * 0.2);
-      const maxKeyboardHeight = Math.min(200, viewportHeight * 0.35);
-      keyboard.style.minHeight = `${minKeyboardHeight}px`;
-      keyboard.style.maxHeight = `${maxKeyboardHeight}px`;
+      // Ensure keyboard maintains minimum viable size
+      keyboard.style.minHeight = `${minViableHeight}px`;
+      keyboard.style.maxHeight = `${Math.min(200, viewportHeight * 0.35)}px`;
       keyboard.style.overflow = 'hidden';
       
-      console.log(`🔧 Applied keyboard visibility fix: minHeight=${minKeyboardHeight}px, maxHeight=${maxKeyboardHeight}px`);
+      console.log(`🔧 Applied keyboard visibility fix: minHeight=${minViableHeight}px, was=${currentHeight}px`);
     } else {
       // Keyboard is visible, reset any forced positioning
       this.resetKeyboardPositioning();
@@ -521,8 +529,29 @@ export class EnhancedScalingSystem {
         const heightChange = Math.abs(currentHeight - lastViewportHeight);
         
         if (widthChange > 50 || heightChange > 100) {
-          console.log(`🔄 Significant viewport change detected (${widthChange}px width, ${heightChange}px height), re-applying scaling`);
-          this.applyOptimalScaling();
+          // Before re-scaling, check if current keyboard is already adequate
+          const keyboard = document.getElementById('keyboard');
+          let shouldRescale = true;
+          
+          if (keyboard) {
+            const keyboardRect = keyboard.getBoundingClientRect();
+            const keyboardHeight = keyboardRect.bottom - keyboardRect.top;
+            const minViableHeight = Math.max(120, currentHeight * 0.15);
+            const isCurrentlyAdequate = keyboardHeight >= minViableHeight && 
+                                      keyboardRect.bottom <= currentHeight + 10;
+            
+            if (isCurrentlyAdequate && heightChange < 200) {
+              // Keyboard is already adequate and change isn't massive, just check visibility
+              console.log(`🔧 Keyboard already adequate (${keyboardHeight}px >= ${minViableHeight}px), skipping rescale`);
+              this.checkKeyboardVisibility();
+              shouldRescale = false;
+            }
+          }
+          
+          if (shouldRescale) {
+            console.log(`🔄 Significant viewport change detected (${widthChange}px width, ${heightChange}px height), re-applying scaling`);
+            this.applyOptimalScaling();
+          }
           
           // Update tracking values
           lastViewportWidth = currentWidth;
