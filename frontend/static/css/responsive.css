@@ -48,7 +48,6 @@
     flex: 0 0 auto;
     min-height: auto; /* Calculate height based on content */
     height: auto; /* Allow height to be calculated from board content */
-    container-type: size;
   }
 
   /* Enhanced mobile tile sizing */

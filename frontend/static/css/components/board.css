@@ -46,8 +46,8 @@ body[data-mode='medium'] #stampContainer {
 
 .board-stamp {
   position: absolute;
-  left: 0;
-  transform: translate(-110%, -50%);
+  left: calc(50% - var(--board-width) / 2 - 40px); /* Position to the left of the board */
+  transform: translateY(-50%);
   font-size: 32px;
   line-height: 1;
 }
