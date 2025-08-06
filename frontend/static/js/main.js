@@ -1160,15 +1160,50 @@ chatNotify.addEventListener('click', () => {
     }, 100);
   }
 });
+// Helper function to reset options menu positioning
+function resetOptionsMenuPositioning() {
+  optionsMenu.style.position = '';
+  optionsMenu.style.top = '';
+  optionsMenu.style.left = '';
+  optionsMenu.style.transform = '';
+  optionsMenu.style.zIndex = '';
+}
+
+// Helper function to close options menu with cleanup
+function closeOptionsMenu() {
+  resetOptionsMenuPositioning();
+  closeDialog(optionsMenu);
+}
+
 optionsToggle.addEventListener('click', () => {
-  // Use enhanced positioning for options menu
-  optionsMenu.style.display = 'block';
-  positionContextMenu(optionsMenu, optionsToggle);
+  // Check if options menu is already open
+  if (optionsMenu.style.display === 'flex' || optionsMenu.style.display === 'block') {
+    // Close the menu if it's already open
+    closeOptionsMenu();
+    return;
+  }
+  
+  // Check if we're in medium mode and should center the menu
+  const currentMode = document.body.dataset.mode;
+  if (currentMode === 'medium') {
+    // In medium mode, center the options menu on screen
+    optionsMenu.style.display = 'flex';
+    optionsMenu.style.position = 'fixed';
+    optionsMenu.style.top = '50%';
+    optionsMenu.style.left = '50%';
+    optionsMenu.style.transform = 'translate(-50%, -50%)';
+    optionsMenu.style.zIndex = '80'; // Ensure it's above other elements
+  } else {
+    // Use enhanced positioning for options menu in other modes
+    optionsMenu.style.display = 'block';
+    positionContextMenu(optionsMenu, optionsToggle);
+  }
+  
   openDialog(optionsMenu);
 });
-optionsClose.addEventListener('click', () => { closeDialog(optionsMenu); });
-menuHistory.addEventListener('click', () => { toggleHistory(); closeDialog(optionsMenu); });
-menuDefinition.addEventListener('click', () => { toggleDefinition(); closeDialog(optionsMenu); });
+optionsClose.addEventListener('click', () => { closeOptionsMenu(); });
+menuHistory.addEventListener('click', () => { toggleHistory(); closeOptionsMenu(); });
+menuDefinition.addEventListener('click', () => { toggleDefinition(); closeOptionsMenu(); });
 menuChat.addEventListener('click', () => {
   manualPanelToggles.chat = !document.body.classList.contains('chat-open');
   togglePanel('chat-open');
@@ -1183,9 +1218,9 @@ menuChat.addEventListener('click', () => {
       }
     }, 100);
   }
-  closeDialog(optionsMenu);
+  closeOptionsMenu();
 });
-menuInfo.addEventListener('click', () => { showInfo(); closeDialog(optionsMenu); });
+menuInfo.addEventListener('click', () => { showInfo(); closeOptionsMenu(); });
 menuDarkMode.addEventListener('click', toggleDarkMode);
 menuSound.addEventListener('click', toggleSound);
 closeCallOk.addEventListener('click', () => { closeDialog(closeCallPopup); });
