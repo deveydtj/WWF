@@ -7,7 +7,7 @@
   background: rgba(0, 0, 0, 0.33);
   backdrop-filter: blur(4px);
   position: fixed;
-  z-index: 102;
+  z-index: 9999;
   top: 0;
   left: 0;
   right: 0;
@@ -17,6 +17,7 @@
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: auto;
 }
 
 #emojiModal.show {
@@ -36,6 +37,9 @@
   text-align: center;
   transform: translateY(-20px) scale(0.95);
   transition: transform 0.3s ease, opacity 0.3s ease;
+  position: relative;
+  z-index: 10000;
+  pointer-events: auto;
 }
 
 #emojiModal.show #emojiModalBox {
