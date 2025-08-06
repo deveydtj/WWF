@@ -24,6 +24,13 @@ import { updateInputVisibility, showPointsDelta, showHintTooltip, hideHintToolti
 import { setupMobileLeaderboard, renderLeaderboard, renderPlayerSidebar, renderEmojiStamps, 
          updateLeaderboard, getLeaderboard, getPlayerRank, centerLeaderboardOnMe } from './leaderboardManager.js';
 
+// Import new extracted modules
+import { initResetManager, performReset, quickResetHandler, updateResetButton, startHoldReset, stopHoldReset } from './resetManager.js';
+import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility, togglePanel, 
+         toggleHistory, toggleDefinition, getManualPanelToggles, setManualPanelToggle } from './panelManager.js';
+import { toggleDarkMode, showInfo, resetOptionsMenuPositioning, closeOptionsMenu } from './optionsManager.js';
+import { initHintManager, updateHintState, toggleHintSelection, selectHint, getHintState } from './hintManager.js';
+
 // Import board scaling test utilities for debugging
 import './boardScalingTests.js';
 // Import enhanced scaling system
@@ -275,79 +282,7 @@ updateInputVisibility();
 
 
 
-async function performReset() {
-  if (typeof stopAllSounds === 'function') stopAllSounds();
-  await animateTilesOut(board);
-  const resp = await resetGame(LOBBY_CODE, HOST_TOKEN);
-  if (!resp || resp.status !== 'ok') {
-    if (resp && resp.msg) {
-      showMessage(resp.msg, { messageEl, messagePopup });
-    }
-    return resp;
-  }
-  await fetchState();
-  await animateTilesIn(board);
-  showMessage('Game reset!', { messageEl, messagePopup });
-  return resp;
-}
 
-async function quickResetHandler() {
-  // Quick reset is only enabled when the game is over, so proceed directly
-  return await performReset();
-}
-
-function updateResetButton() {
-  if (gameState.is(STATES.GAME_OVER)) {
-    holdResetText.textContent = 'Reset';
-    holdResetProgress.style.width = '0%';
-    holdResetProgress.style.opacity = '0';
-    holdReset.onmousedown = null;
-    holdReset.ontouchstart = null;
-    holdReset.onclick = () => { quickResetHandler(); };
-  } else {
-    holdResetText.textContent = 'Reset';
-    holdResetProgress.style.opacity = '0.9';
-    holdReset.onclick = null;
-    holdReset.onmousedown = startHoldReset;
-    holdReset.ontouchstart = (e) => {
-      e.preventDefault();
-      startHoldReset();
-    };
-  }
-}
-
-let holdProgress = null;
-// Animate the hold-to-reset progress bar and trigger a reset when complete
-function startHoldReset() {
-  let heldTime = 0;
-  const holdDuration = 2000;
-  holdResetProgress.style.width = '0%';
-  holdResetProgress.style.transition = 'none';
-  holdResetProgress.style.opacity = '0.9';
-  holdResetProgress.style.background = 'var(--absent-shadow-light)';
-  holdProgress = setInterval(() => {
-    heldTime += 20;
-    const percent = Math.min(heldTime / holdDuration, 1) * 100;
-    holdResetProgress.style.width = percent + '%';
-    if (heldTime >= holdDuration) {
-      clearInterval(holdProgress);
-      holdResetProgress.style.width = '100%';
-      holdResetProgress.style.opacity = '0.95';
-      holdResetProgress.style.background = 'var(--correct-shadow-light)';
-      setTimeout(() => {
-        holdResetProgress.style.width = '0%';
-      }, 350);
-      performReset();
-    }
-  }, 20);
-}
-function stopHoldReset() {
-  clearInterval(holdProgress);
-  holdResetProgress.style.transition = 'width 0.15s';
-  holdResetProgress.style.width = '0%';
-  holdResetProgress.style.opacity = '0.9';
-}
-['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev => holdReset.addEventListener(ev, stopHoldReset));
 
 // Apply the server state to the UI and update all related variables
 function applyState(state) {
@@ -470,7 +405,7 @@ function applyState(state) {
   const haveMy = activeEmojis.includes(myEmoji);
   if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
     showEmojiModal(activeEmojis, {
-      onChosen: e => { myEmoji = e; myPlayerId = getMyPlayerId(); ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
+      onChosen: e => { myEmoji = e; myPlayerId = getMyPlayerId(); ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); updateHintState(myEmoji, myPlayerId); fetchState(); },
       skipAutoCloseRef: { value: skipAutoClose },
       onError: (msg) => showMessage(msg, { messageEl, messagePopup })
     });
@@ -670,59 +605,7 @@ function initEventStream() {
 }
 
 // Check if history panel has content to display
-function hasHistoryContent() {
-  const historyList = document.getElementById('historyList');
-  return historyList && historyList.children.length > 0;
-}
 
-// Check if definition panel has content to display
-function hasDefinitionContent() {
-  return definitionText && definitionText.textContent.trim() !== '';
-}
-
-// Track manual panel toggles to avoid overriding user actions
-let manualPanelToggles = {
-  history: false,
-  definition: false,
-  chat: false
-};
-
-// Show or hide panels based on content and viewport size
-function updatePanelVisibility() {
-  if (window.innerWidth > 1550) {
-    // Full mode - show panels if they have content OR if manually toggled
-    if (hasHistoryContent() || manualPanelToggles.history) {
-      document.body.classList.add('history-open');
-    } else if (!manualPanelToggles.history) {
-      document.body.classList.remove('history-open');
-    }
-    
-    if (hasDefinitionContent() || manualPanelToggles.definition) {
-      document.body.classList.add('definition-open');
-    } else if (!manualPanelToggles.definition) {
-      document.body.classList.remove('definition-open');
-    }
-    
-    positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-    updateChatPanelPosition(); // Update chat panel position after panel visibility changes
-  }
-}
-
-// Toggle one of the side panels while closing any others in medium mode
-function togglePanel(panelClass) {
-  if (document.body.dataset.mode === 'medium') {
-    ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
-      if (c !== panelClass) document.body.classList.remove(c);
-    });
-  }
-  document.body.classList.toggle(panelClass);
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-  
-  // Update chat panel position when panels are toggled (especially when definition panel is toggled)
-  if (panelClass === 'definition-open' || panelClass === 'chat-open') {
-    updateChatPanelPosition();
-  }
-}
 
 setupTypingListeners({
   keyboardEl: keyboard,
@@ -733,67 +616,22 @@ setupTypingListeners({
   isAnimating: () => false
 });
 
-function toggleDarkMode() {
-  const isDark = document.body.classList.toggle('dark-mode');
-  localStorage.setItem('darkMode', isDark);
-  applyDarkModePreference(menuDarkMode);
-}
 
-
-
-function toggleHistory() {
-  // Track that this is a manual toggle
-  manualPanelToggles.history = !document.body.classList.contains('history-open');
-  togglePanel('history-open');
-  if (document.body.classList.contains('history-open')) {
-    focusFirstElement(historyBox);
-  }
-}
-
-function toggleDefinition() {
-  // Track that this is a manual toggle
-  manualPanelToggles.definition = !document.body.classList.contains('definition-open');
-  togglePanel('definition-open');
-  if (document.body.classList.contains('definition-open')) {
-    focusFirstElement(definitionBoxEl);
-  }
-}
-
-function showInfo() {
-  infoPopup.style.display = 'flex';
-  openDialog(infoPopup);
-}
-
-function toggleHintSelection() {
-  if (dailyDoubleRow === null) return;
-  const selecting = document.body.classList.toggle('hint-selecting');
-  const tiles = Array.from(board.children);
-  tiles.forEach((t, i) => {
-    const row = Math.floor(i / 5);
-    t.tabIndex = selecting && row === dailyDoubleRow ? 0 : -1;
-  });
-  if (selecting) {
-    focusFirstElement(board);
-    announce('Hint selection active. Use arrow keys to choose a tile, then press Enter.');
-  } else {
-    announce('Hint selection canceled.');
-  }
-}
 
 historyClose.addEventListener('click', () => {
-  manualPanelToggles.history = false;
+  setManualPanelToggle('history', false);
   document.body.classList.remove('history-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
 definitionClose.addEventListener('click', () => {
-  manualPanelToggles.definition = false;
+  setManualPanelToggle('definition', false);
   document.body.classList.remove('definition-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
   updateChatPanelPosition(); // Update chat panel position when definition panel is closed
 });
 // chatClose event handler is now defined above in the chat input focus management section
 chatNotify.addEventListener('click', () => {
-  manualPanelToggles.chat = !document.body.classList.contains('chat-open');
+  setManualPanelToggle('chat', !document.body.classList.contains('chat-open'));
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
@@ -807,20 +645,7 @@ chatNotify.addEventListener('click', () => {
     }, 100);
   }
 });
-// Helper function to reset options menu positioning
-function resetOptionsMenuPositioning() {
-  optionsMenu.style.position = '';
-  optionsMenu.style.top = '';
-  optionsMenu.style.left = '';
-  optionsMenu.style.transform = '';
-  optionsMenu.style.zIndex = '';
-}
 
-// Helper function to close options menu with cleanup
-function closeOptionsMenu() {
-  resetOptionsMenuPositioning();
-  closeDialog(optionsMenu);
-}
 
 optionsToggle.addEventListener('click', () => {
   // Check if options menu is already open
@@ -852,7 +677,7 @@ optionsClose.addEventListener('click', () => { closeOptionsMenu(); });
 menuHistory.addEventListener('click', () => { toggleHistory(); closeOptionsMenu(); });
 menuDefinition.addEventListener('click', () => { toggleDefinition(); closeOptionsMenu(); });
 menuChat.addEventListener('click', () => {
-  manualPanelToggles.chat = !document.body.classList.contains('chat-open');
+  setManualPanelToggle('chat', !document.body.classList.contains('chat-open'));
   togglePanel('chat-open');
   hideChatNotify();
   if (document.body.classList.contains('chat-open')) {
@@ -897,6 +722,30 @@ applyDarkModePreference(menuDarkMode);
 menuSound.textContent = isSoundEnabled() ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
+
+// Initialize the extracted modules
+initResetManager({
+  gameState,
+  fetchState,
+  LOBBY_CODE,
+  HOST_TOKEN,
+  board,
+  messageEl,
+  messagePopup
+});
+
+initHintManager({
+  board,
+  gameState,
+  fetchState,
+  myEmoji,
+  myPlayerId,
+  LOBBY_CODE,
+  messageEl,
+  messagePopup,
+  getDailyDoubleState: () => ({ dailyDoubleRow, dailyDoubleHint }),
+  setDailyDoubleState: (row, hint) => { dailyDoubleRow = row; dailyDoubleHint = hint; }
+});
 
 // Initialize and use enhanced scaling system
 const enhancedScaling = initializeEnhancedScaling();
@@ -1080,24 +929,7 @@ window.addEventListener('orientationchange', () => {
   }, 300);
 });
 
-async function selectHint(col) {
-  hideHintTooltip();
-  const resp = await requestHint(col, myEmoji, myPlayerId, LOBBY_CODE);
-  if (resp.status === 'ok') {
-    dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
-    dailyDoubleRow = null;
-    document.body.classList.remove('hint-selecting');
-    Array.from(board.children).forEach(t => (t.tabIndex = -1));
-    setGameInputDisabled(gameState.is(STATES.GAME_OVER));
-    saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
-    hideHintTooltip();
-    showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
-    announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);
-    fetchState();
-  } else if (resp.msg) {
-    showMessage(resp.msg, { messageEl, messagePopup });
-  }
-}
+
 
 board.addEventListener('click', async (e) => {
   if (dailyDoubleRow === null) return;
@@ -1237,7 +1069,7 @@ chatBox.addEventListener('click', (e) => {
 chatClose.addEventListener('click', () => {
   chatInputFocusProtection = false;
   userIntentionallyLeftChat = false;
-  manualPanelToggles.chat = false;
+  setManualPanelToggle('chat', false);
   document.body.classList.remove('chat-open');
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
 });
