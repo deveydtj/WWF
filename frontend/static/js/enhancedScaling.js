@@ -1,3 +1,5 @@
+import { resetAllElementTransforms } from './utils.js';
+
 /**
  * Enhanced Display Scaling System
  * Modern, device-aware scaling with comprehensive viewport management
@@ -70,6 +72,7 @@ export class ViewportAnalyzer {
     const minDimension = Math.min(width, height);
     const maxDimension = Math.max(width, height);
     
+    if (minDimension < 320) return 'tiny-mobile'; // Very small phones
     if (minDimension < 400) return 'small-mobile';
     if (minDimension < 600) return 'mobile';
     if (minDimension < 900 && isTouchDevice) return 'tablet';
@@ -131,6 +134,12 @@ export class ScalingCalculator {
 
     // Device-specific adjustments
     const deviceAdjustments = {
+      'tiny-mobile': {
+        minTileSize: 18,
+        maxTileSize: 32,
+        keyboardBuffer: 30,
+        gapRatio: 0.10
+      },
       'small-mobile': {
         minTileSize: 20,
         maxTileSize: 40,
@@ -203,10 +212,12 @@ export class ScalingCalculator {
       optimalTileSize = Math.max(optimalTileSize, this.constraints.minTouchTarget);
     }
     
-    // Compact mode adjustments - more aggressive on very small screens
+    // Compact mode adjustments - less aggressive to preserve keyboard usability
     if (needsCompactMode) {
-      const compactFactor = availableHeight < 500 ? 0.8 : 0.9;
+      // More conservative scaling during viewport changes to prevent tiny keyboards
+      const compactFactor = availableHeight < 400 ? 0.85 : 0.92; // Less aggressive
       optimalTileSize *= compactFactor;
+      console.log(`🔧 Compact mode keyboard scaling: ${compactFactor} (viewport: ${availableHeight}px)`);
     }
     
     // Prevent tiles from being too small on very small screens
@@ -302,11 +313,30 @@ export class CSSScalingManager {
     const { scaleFactor, viewport } = scalingResult;
     
     if (viewport.needsCompactMode) {
-      this.setProperty('--keyboard-scale', Math.min(scaleFactor * 0.9, 1));
+      // On very small displays, ensure keyboard doesn't get too small
+      const minKeyboardScale = viewport.availableWidth < 350 ? 0.85 : 0.8;
+      const keyboardScale = Math.max(minKeyboardScale, Math.min(scaleFactor * 0.9, 1));
+      this.setProperty('--keyboard-scale', keyboardScale);
       this.setProperty('--keyboard-height', 'auto');
+      console.log(`🔧 Compact mode keyboard scaling: ${keyboardScale} (viewport: ${viewport.availableWidth}px)`);
+      
+      // Force minimum keyboard dimensions
+      const keyboard = document.getElementById('keyboard');
+      if (keyboard) {
+        const minHeight = Math.max(120, viewport.availableHeight * 0.25);
+        keyboard.style.minHeight = `${minHeight}px`;
+        keyboard.style.maxHeight = `${Math.min(200, viewport.availableHeight * 0.4)}px`;
+      }
     } else {
       this.setProperty('--keyboard-scale', scaleFactor);
       this.setProperty('--keyboard-height', 'auto');
+      
+      // Reset any forced dimensions for larger screens
+      const keyboard = document.getElementById('keyboard');
+      if (keyboard) {
+        keyboard.style.minHeight = '';
+        keyboard.style.maxHeight = '';
+      }
     }
   }
 
@@ -354,6 +384,9 @@ export class EnhancedScalingSystem {
 
   applyOptimalScaling(rows = 6) {
     try {
+      // Reset all element positioning before applying new scaling
+      this.resetAllElementPositioning();
+      
       const scalingResult = this.calculator.calculateOptimalScaling(rows);
       const success = this.cssManager.applyScaling(scalingResult);
       
@@ -372,71 +405,262 @@ export class EnhancedScalingSystem {
   }
 
   verifyAndAdjust(scalingResult) {
-    // Verify keyboard visibility
+    // Store scaling context for persistent keyboard monitoring
+    this.lastScalingResult = scalingResult;
+    
+    // Verify keyboard visibility with a brief delay to allow DOM updates
     setTimeout(() => {
-      if (!this.isKeyboardVisible()) {
-        console.log('✅ Keyboard visibility confirmed');
-      } else {
-        console.warn('⚠️ Keyboard visibility issue detected, applying fixes');
-        this.fixKeyboardVisibility();
-      }
+      this.checkKeyboardVisibility();
     }, 100);
   }
 
-  isKeyboardVisible() {
+  checkKeyboardVisibility() {
     const keyboard = document.getElementById('keyboard');
-    if (!keyboard) return true; // Assume visible if not found
+    if (!keyboard) {
+      console.log('✅ Keyboard element not found, skipping visibility check');
+      return;
+    }
     
     const rect = keyboard.getBoundingClientRect();
     const viewportHeight = window.visualViewport?.height || window.innerHeight;
     
-    // Check if keyboard is fully visible with some buffer
+    console.log(`🔧 Keyboard visibility check: viewport=${viewportHeight}px, keyboard.bottom=${rect.bottom}px, keyboard.top=${rect.top}px`);
+    
+    // Check if keyboard is fully visible with buffer
     const isVisible = (rect.bottom + 10) <= viewportHeight && rect.top >= 0;
     
-    return isVisible;
+    // Additional check: ensure keyboard isn't too small (which indicates scaling issues)
+    const keyboardHeight = rect.bottom - rect.top;
+    const minViableHeight = Math.max(120, viewportHeight * 0.15); // Consistent minimum height
+    const isTooSmall = keyboardHeight < minViableHeight;
+    
+    console.log(`🔧 Keyboard size check: height=${keyboardHeight}px, minRequired=${minViableHeight}px, tooSmall=${isTooSmall}`);
+    
+    if (!isVisible || isTooSmall) {
+      console.warn('⚠️ Keyboard visibility or sizing issue detected, applying fixes');
+      this.fixKeyboardVisibility();
+    } else {
+      // Keyboard is properly visible, reset any forced positioning to normal CSS
+      this.resetAllElementPositioning();
+      console.log('🔧 Keyboard is visible and properly sized, reset all positioning to normal');
+    }
   }
 
   fixKeyboardVisibility() {
     const keyboard = document.getElementById('keyboard');
-    if (!keyboard) return;
+    if (!keyboard) {
+      console.log('🔧 Keyboard element not found, skipping visibility fix');
+      return;
+    }
     
     // Get current viewport info
     const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const viewportWidth = window.innerWidth;
     const keyboardRect = keyboard.getBoundingClientRect();
     
-    // Only apply fixes if keyboard is actually cut off
-    if (keyboardRect.bottom > viewportHeight) {
-      // Apply CSS-based fix first
+    console.log(`🔧 Keyboard visibility check: viewport=${viewportWidth}x${viewportHeight}px, keyboard.bottom=${keyboardRect.bottom}px, keyboard.top=${keyboardRect.top}px`);
+    
+    // Check if keyboard is cut off or too small - but be more conservative
+    const isSignificantlyOffScreen = keyboardRect.bottom > viewportHeight + 20; // Increased buffer to 20px
+    const currentHeight = keyboardRect.bottom - keyboardRect.top;
+    const minViableHeight = Math.max(120, viewportHeight * 0.15);
+    const isCriticallyTooSmall = currentHeight < (minViableHeight * 0.8); // Only trigger if really too small
+    
+    // Check if keyboard is severely mispositioned horizontally
+    const isHorizontallyBroken = keyboardRect.left < -50 || keyboardRect.right > viewportWidth + 50;
+    
+    // Only apply aggressive fixes if keyboard is severely broken
+    const needsEmergencyFix = (isSignificantlyOffScreen && keyboardRect.top > viewportHeight) || 
+                              isCriticallyTooSmall || 
+                              isHorizontallyBroken;
+    
+    if (needsEmergencyFix) {
+      console.log('🔧 Keyboard needs emergency fix - applying position: fixed and overflow: hidden');
+      
+      // Apply emergency CSS fixes
       keyboard.style.position = 'fixed';
       keyboard.style.bottom = `max(0px, env(safe-area-inset-bottom, 0px))`;
-      keyboard.style.left = '50%';
-      keyboard.style.transform = 'translateX(-50%)';
       keyboard.style.zIndex = '1000';
-      keyboard.style.maxHeight = `${Math.min(150, viewportHeight * 0.3)}px`;
-      keyboard.style.overflow = 'hidden';
       
-      console.log('🔧 Applied keyboard visibility fix');
+      // Only center horizontally if keyboard positioning is severely broken
+      if (isHorizontallyBroken) {
+        keyboard.style.left = '50%';
+        keyboard.style.transform = 'translateX(-50%)';
+        console.log('🔧 Keyboard was severely off-screen, applied centering fix');
+      } else {
+        // Preserve existing horizontal positioning
+        keyboard.style.left = '';
+        keyboard.style.transform = '';
+        console.log('🔧 Keyboard horizontal position preserved');
+      }
+      
+      // Only apply overflow: hidden if absolutely necessary
+      if (isCriticallyTooSmall) {
+        keyboard.style.minHeight = `${minViableHeight}px`;
+        keyboard.style.maxHeight = `${Math.min(200, viewportHeight * 0.35)}px`;
+        keyboard.style.overflow = 'hidden';
+        console.log(`🔧 Applied size constraints: minHeight=${minViableHeight}px, overflow=hidden`);
+      }
+      
+      console.log(`🔧 Applied emergency keyboard fix: was=${currentHeight}px, minRequired=${minViableHeight}px`);
+    } else if (isSignificantlyOffScreen || currentHeight < minViableHeight) {
+      // Minor positioning issue - try gentle fixes without position: fixed
+      console.log('🔧 Keyboard has minor positioning issue - applying gentle fix');
+      
+      // Don't use position: fixed for minor issues
+      keyboard.style.position = '';
+      keyboard.style.bottom = '';
+      keyboard.style.zIndex = '';
+      keyboard.style.overflow = ''; // Don't use overflow: hidden for minor issues
+      
+      // Only adjust if significantly cut off
+      if (isSignificantlyOffScreen) {
+        const adjustment = Math.min(keyboardRect.bottom - viewportHeight + 10, 60);
+        keyboard.style.transform = `translateY(-${adjustment}px)`;
+        console.log(`🔧 Applied gentle keyboard adjustment: translateY(-${adjustment}px)`);
+      } else {
+        keyboard.style.transform = '';
+      }
+      
+      // Apply minimum height without overflow: hidden
+      if (currentHeight < minViableHeight) {
+        keyboard.style.minHeight = `${minViableHeight}px`;
+        console.log(`🔧 Applied minHeight without overflow constraint: ${minViableHeight}px`);
+      }
+    } else {
+      // Keyboard is properly positioned, reset all forced CSS
+      this.resetKeyboardPositioning();
+      console.log('🔧 Keyboard is properly positioned, reset all forced CSS');
+    }
+  }
+
+  resetKeyboardPositioning() {
+    const keyboard = document.getElementById('keyboard');
+    if (!keyboard) return;
+    
+    // Reset any inline styles that might interfere with normal CSS
+    keyboard.style.position = '';
+    keyboard.style.left = '';
+    keyboard.style.bottom = '';
+    keyboard.style.transform = '';
+    keyboard.style.zIndex = '';
+    keyboard.style.minHeight = '';
+    keyboard.style.maxHeight = '';
+    keyboard.style.overflow = '';
+    keyboard.style.transformOrigin = '';
+    
+    console.log('🔧 Reset keyboard positioning to normal CSS');
+  }
+
+  resetInputAreaPositioning() {
+    const inputArea = document.getElementById('inputArea');
+    if (!inputArea) return;
+    
+    // Reset any inline styles that might interfere with normal CSS
+    inputArea.style.transform = '';
+    inputArea.style.transition = '';
+    inputArea.style.marginTop = '';
+    inputArea.style.marginBottom = '';
+    
+    console.log('🔧 Reset inputArea positioning to normal CSS');
+  }
+
+  resetAllElementPositioning() {
+    // Use the comprehensive reset from utils.js for consistency
+    if (typeof resetAllElementTransforms === 'function') {
+      resetAllElementTransforms();
+    } else {
+      // Fallback: reset locally if import fails
+      this.resetKeyboardPositioning();
+      this.resetInputAreaPositioning();
+      
+      const titleBar = document.getElementById('titleBar');
+      const boardArea = document.getElementById('boardArea');
+      
+      if (titleBar) {
+        titleBar.style.marginBottom = '';
+      }
+      
+      if (boardArea) {
+        boardArea.style.marginBottom = '';
+      }
+      
+      console.log('🔧 Reset all element positioning to normal CSS (fallback)');
     }
   }
 
   setupEventListeners() {
-    // Debounced resize handler
+    // Debounced resize handler with scaling persistence
     let resizeTimeout;
+    let lastViewportWidth = window.innerWidth;
+    let lastViewportHeight = window.innerHeight;
+    
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        this.applyOptimalScaling();
-      }, 100);
+        const currentWidth = window.innerWidth;
+        const currentHeight = window.innerHeight;
+        
+        // Only re-scale if there's a significant viewport change
+        const widthChange = Math.abs(currentWidth - lastViewportWidth);
+        const heightChange = Math.abs(currentHeight - lastViewportHeight);
+        
+        if (widthChange > 50 || heightChange > 100) {
+          // Before re-scaling, check if current keyboard is already adequate
+          const keyboard = document.getElementById('keyboard');
+          let shouldRescale = true;
+          
+          if (keyboard) {
+            const keyboardRect = keyboard.getBoundingClientRect();
+            const keyboardHeight = keyboardRect.bottom - keyboardRect.top;
+            const minViableHeight = Math.max(120, currentHeight * 0.15);
+            const isCurrentlyAdequate = keyboardHeight >= minViableHeight && 
+                                      keyboardRect.bottom <= currentHeight + 10;
+            
+            if (isCurrentlyAdequate && heightChange < 200) {
+              // Keyboard is already adequate and change isn't massive, just check visibility
+              console.log(`🔧 Keyboard already adequate (${keyboardHeight}px >= ${minViableHeight}px), skipping rescale`);
+              this.checkKeyboardVisibility();
+              shouldRescale = false;
+            }
+          }
+          
+          if (shouldRescale) {
+            console.log(`🔄 Significant viewport change detected (${widthChange}px width, ${heightChange}px height), re-applying scaling`);
+            this.applyOptimalScaling();
+          }
+          
+          // Update tracking values
+          lastViewportWidth = currentWidth;
+          lastViewportHeight = currentHeight;
+        } else {
+          // Minor change, just check keyboard visibility
+          this.checkKeyboardVisibility();
+        }
+      }, 150); // Slightly longer delay to allow viewport to stabilize
     };
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', () => {
-      setTimeout(() => this.applyOptimalScaling(), 200);
+      setTimeout(() => {
+        console.log('📱 Orientation change detected, re-applying scaling');
+        this.applyOptimalScaling();
+        // Update tracking values after orientation change
+        lastViewportWidth = window.innerWidth;
+        lastViewportHeight = window.innerHeight;
+      }, 300); // Longer delay for orientation changes
     });
 
-    // Visual viewport changes (virtual keyboard)
+    // Visual viewport changes (virtual keyboard) - be more conservative
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // Only check keyboard visibility on visual viewport changes
+          // Don't re-scale unless it's a major change
+          this.checkKeyboardVisibility();
+        }, 100);
+      });
     }
   }
 

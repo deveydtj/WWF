@@ -51,6 +51,8 @@ body[data-mode='medium'] #stampContainer {
   line-height: 1;
 }
 
+/* Keep stamps in their normal position - history panel will move to accommodate */
+
 .confetti-container {
   position: absolute;
   width: 0;

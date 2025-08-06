@@ -385,11 +385,28 @@ export function applyOptimalScaling(rows = 6) {
  */
 function applyMobileOptimizations(optimalSizing) {
   const keyboard = document.getElementById('keyboard');
-  if (keyboard && optimalSizing.tileSize < 35) {
-    // Scale down keyboard for very small screens
-    const scale = Math.max(0.8, optimalSizing.tileSize / 35);
-    keyboard.style.transform = `scale(${scale})`;
-    keyboard.style.transformOrigin = 'center bottom';
+  if (keyboard) {
+    // Reset problematic CSS properties first 
+    keyboard.style.position = '';
+    keyboard.style.overflow = '';
+    keyboard.style.left = '';
+    keyboard.style.bottom = '';
+    keyboard.style.zIndex = '';
+    keyboard.style.minHeight = '';
+    keyboard.style.maxHeight = '';
+    
+    if (optimalSizing.tileSize < 35) {
+      // Scale down keyboard for very small screens
+      const scale = Math.max(0.8, optimalSizing.tileSize / 35);
+      keyboard.style.transform = `scale(${scale})`;
+      keyboard.style.transformOrigin = 'center bottom';
+      console.log(`🔧 Applied mobile keyboard scaling: ${scale}`);
+    } else {
+      // Reset transform for larger screens with comprehensive cleanup
+      keyboard.style.transform = '';
+      keyboard.style.transformOrigin = '';
+      console.log('🔧 Mobile keyboard: reset to normal CSS for larger screen');
+    }
   }
 
   // Reduce padding on very small screens
@@ -397,6 +414,12 @@ function applyMobileOptimizations(optimalSizing) {
     const appContainer = document.getElementById('appContainer');
     if (appContainer) {
       appContainer.style.padding = '5px';
+    }
+  } else {
+    // Reset padding for larger screens
+    const appContainer = document.getElementById('appContainer');
+    if (appContainer) {
+      appContainer.style.padding = '';
     }
   }
 }
