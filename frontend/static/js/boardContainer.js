@@ -334,7 +334,7 @@ export function applyOptimalScaling(rows = 6) {
       root.style.setProperty('--tile-size', `${currentCSSSize}px`);
       root.style.setProperty('--tile-gap', `${gap}px`);
       root.style.setProperty('--board-width', `${boardWidth}px`);
-      root.style.setProperty('--ui-scale', `${currentCSSSize / 60}`);
+      root.style.setProperty('--ui-scale', `${Math.min(1.1, currentCSSSize / 60)}`); // Cap ui-scale at 1.1
       
       return true; // CSS handling is sufficient
     }
@@ -349,9 +349,9 @@ export function applyOptimalScaling(rows = 6) {
     finalTileSize = Math.max(65, optimalSizing.tileSize);
     console.log(`Applied 1200px-1550px minimum (65px): ${finalTileSize}px`);
   } else if (viewportWidth > 1550) {
-    // For very large screens, ensure minimum tile size of 70px
-    finalTileSize = Math.max(70, optimalSizing.tileSize);
-    console.log(`Applied 1551px+ minimum (70px): ${finalTileSize}px`);
+    // For very large screens, ensure minimum tile size of 60px (reduced from 70px)
+    finalTileSize = Math.max(60, optimalSizing.tileSize);
+    console.log(`Applied 1551px+ minimum (60px): ${finalTileSize}px`);
   }
   
   // Recalculate gap and board width if tile size was adjusted
@@ -363,7 +363,7 @@ export function applyOptimalScaling(rows = 6) {
   root.style.setProperty('--tile-size', `${finalTileSize}px`);
   root.style.setProperty('--tile-gap', `${gap}px`);
   root.style.setProperty('--board-width', `${boardWidth}px`);
-  root.style.setProperty('--ui-scale', `${finalTileSize / 60}`); // Scale relative to 60px base
+  root.style.setProperty('--ui-scale', `${Math.min(1.1, finalTileSize / 60)}`); // Cap ui-scale at 1.1 to prevent button oversizing
 
   // Apply mobile optimizations if needed (but not for 1200px+ screens)
   if (viewportWidth < 1200) {
