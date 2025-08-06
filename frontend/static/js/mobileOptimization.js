@@ -1,5 +1,5 @@
 /**
- * Mobile Layout Optimization
+ * Simple Mobile Layout Optimization
  * Disables complex scaling systems on mobile to let CSS handle responsive design
  */
 
@@ -21,42 +21,39 @@
       // Disable enhanced scaling
       if (window.initializeEnhancedScaling) {
         window.initializeEnhancedScaling = () => {
-          console.log('🚀 Enhanced scaling disabled for mobile - using CSS responsive design');
+          console.log('📱 Enhanced scaling disabled for mobile - using CSS responsive design');
         };
       }
       
       // Disable automatic scaling adjustments  
       if (window.applyOptimalScaling) {
         window.applyOptimalScaling = () => {
-          console.log('📱 Optimal scaling disabled for mobile - using modern CSS');
+          console.log('📱 Optimal scaling disabled for mobile - using simple CSS');
         };
       }
       
       // Disable problematic keyboard checks
       if (window.checkKeyboardVisibility) {
         window.checkKeyboardVisibility = () => {
-          console.log('⌨️ Keyboard visibility checks disabled - using CSS sticky positioning');
           return true;
         };
       }
       
       if (window.ensureKeyboardVisibility) {
         window.ensureKeyboardVisibility = () => {
-          console.log('⌨️ Keyboard visibility enforcement disabled for mobile');
+          // Do nothing
         };
       }
       
       if (window.adjustKeyboardForViewport) {
         window.adjustKeyboardForViewport = () => {
-          console.log('⌨️ Keyboard viewport adjustments disabled for mobile');
+          // Do nothing
         };
       }
       
       // Disable fitBoardToContainer interference
       if (window.fitBoardToContainer) {
-        const originalFit = window.fitBoardToContainer;
         window.fitBoardToContainer = () => {
-          console.log('📐 Board fitting disabled for mobile - using CSS grid');
           return {
             tileSize: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mobile-tile-size')),
             gap: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--mobile-board-gap')),
@@ -78,6 +75,6 @@
     setTimeout(overrideScalingFunctions, 100);
     setTimeout(overrideScalingFunctions, 500);
     
-    console.log('📱 Mobile layout optimization active');
+    console.log('📱 Simple mobile layout optimization active');
   }
 })();

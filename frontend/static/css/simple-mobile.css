@@ -1,0 +1,284 @@
+/* Simple Mobile Layout - Functional responsive design for mobile devices */
+
+/* Mobile-specific CSS variables */
+:root {
+  /* Responsive sizing for mobile */
+  --mobile-tile-size: clamp(30px, 8vw, 42px);
+  --mobile-board-gap: clamp(2px, 1vw, 4px);
+  --mobile-spacing: clamp(8px, 2vw, 16px);
+  
+  /* Touch target size */
+  --touch-target: 44px;
+}
+
+/* Mobile responsive layout */
+@media screen and (max-width: 600px) {
+  /* Hide non-essential elements for better mobile experience */
+  #definitionBox {
+    display: none !important;
+  }
+  
+  #historyBox {
+    display: none !important;
+  }
+  
+  /* Simplify header on mobile */
+  #lobbyHeader {
+    padding: var(--mobile-spacing);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  #hostControls {
+    display: flex;
+    gap: 8px;
+  }
+  
+  #hostControls button {
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+    padding: 8px;
+    font-size: 16px;
+  }
+  
+  /* Optimize game column layout */
+  #gameColumn {
+    padding: var(--mobile-spacing);
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  /* Mobile title bar */
+  #titleBar {
+    margin-bottom: var(--mobile-spacing);
+  }
+  
+  .mobile-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  #gameTitle {
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    margin: 0;
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+  
+  /* Mobile board optimization */
+  #boardArea {
+    position: relative;
+    margin-bottom: var(--mobile-spacing);
+  }
+  
+  #board {
+    display: grid;
+    grid-template-columns: repeat(5, var(--mobile-tile-size));
+    grid-gap: var(--mobile-board-gap);
+    justify-content: center;
+    margin: 0 auto;
+    max-width: calc(5 * var(--mobile-tile-size) + 4 * var(--mobile-board-gap));
+  }
+  
+  .tile {
+    width: var(--mobile-tile-size);
+    height: var(--mobile-tile-size);
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    font-weight: bold;
+    border: 1px solid var(--border-color, #ccc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Mobile input area */
+  #inputArea {
+    display: flex;
+    gap: var(--mobile-spacing);
+    margin-bottom: var(--mobile-spacing);
+    align-items: center;
+  }
+  
+  #guessInput {
+    flex: 1;
+    min-height: var(--touch-target);
+    padding: 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 8px;
+  }
+  
+  #submitGuess {
+    min-height: var(--touch-target);
+    min-width: 80px;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--correct-bg, #6aaa64);
+    color: white;
+    font-weight: bold;
+  }
+  
+  /* Mobile keyboard optimization */
+  #keyboard {
+    display: grid;
+    gap: 6px;
+    justify-content: center;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  
+  .keyboard-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+  }
+  
+  .key {
+    min-height: var(--touch-target);
+    min-width: clamp(28px, 7vw, 36px);
+    padding: 8px 4px;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    font-weight: bold;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+    background: var(--key-bg, #f0f0f0);
+    color: var(--key-text, #333);
+    touch-action: manipulation;
+  }
+  
+  .key.wide {
+    min-width: clamp(48px, 12vw, 64px);
+  }
+  
+  /* Hide or simplify options on mobile */
+  #optionsToggle,
+  #chatNotify {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+    padding: 8px;
+    font-size: 18px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 50%;
+    background: var(--bg-color, #fff);
+    z-index: 10;
+  }
+  
+  #chatNotify {
+    right: 56px;
+  }
+  
+  /* Simplify leaderboard for mobile */
+  #leaderboard {
+    margin: var(--mobile-spacing) 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .mobile-leaderboard-container {
+    display: none; /* Hide mobile leaderboard container for now */
+  }
+  
+  /* Mobile modals and panels */
+  #optionsMenu,
+  #chatBox,
+  #playerSidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--mobile-spacing);
+  }
+  
+  #optionsMenu > *:not(.close-btn),
+  #chatBox > *:not(.close-btn),
+  #playerSidebar > *:not(.close-btn) {
+    background: var(--bg-color, #fff);
+    border-radius: 12px;
+    padding: var(--mobile-spacing);
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+    padding: 8px;
+    font-size: 18px;
+    border: none;
+    border-radius: 50%;
+    background: var(--error-color, #ff4444);
+    color: white;
+    z-index: 1001;
+  }
+  
+  /* Hide waiting overlay on mobile when not needed */
+  #waitingOverlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-color, #fff);
+    padding: var(--mobile-spacing);
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #ccc);
+    z-index: 100;
+  }
+  
+  /* Mobile chat optimization */
+  #chatForm {
+    display: flex;
+    gap: 8px;
+    padding: var(--mobile-spacing);
+    border-top: 1px solid var(--border-color, #ccc);
+  }
+  
+  #chatInput {
+    flex: 1;
+    min-height: var(--touch-target);
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 8px;
+  }
+  
+  #chatSend {
+    min-height: var(--touch-target);
+    min-width: 80px;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--correct-bg, #6aaa64);
+    color: white;
+  }
+  
+  /* Mobile message popup */
+  #messagePopup,
+  #message {
+    text-align: center;
+    margin: var(--mobile-spacing) 0;
+    font-size: clamp(0.9rem, 3vw, 1.1rem);
+  }
+}
