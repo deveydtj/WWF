@@ -20,12 +20,14 @@ try:
     from .models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
     from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
     from .data_persistence import init_persistence, save_data, load_data
+    from .analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from .config import validate_production_config, get_config_summary
 except ImportError:
     # Handle running as script instead of module
     from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
     from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
     from data_persistence import init_persistence, save_data, load_data
+    from analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from config import validate_production_config, get_config_summary
 
 try:
@@ -190,6 +192,9 @@ current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
 
 # Initialize data persistence layer
 init_persistence(redis_client, GAME_FILE, LOBBIES_FILE, DEFAULT_LOBBY, LOBBIES)
+
+# Initialize analytics
+init_analytics(ANALYTICS_FILE)
 
 
 # Create backward compatible wrappers for persistence functions
@@ -473,44 +478,6 @@ def broadcast_server_update_notification(message: str = "Server is being updated
                 lobby_state.listeners.discard(q)
     
     logger.info(f"Server update notification sent to {total_clients} clients across {len(LOBBIES)} lobbies")
-
-
-def _log_event(event: str, **fields) -> None:
-    """Write a structured analytics event to ``ANALYTICS_FILE``."""
-    entry = {"event": event, "timestamp": time.time(), **fields}
-    try:
-        with open(ANALYTICS_FILE, "a") as f:
-            f.write(json.dumps(entry) + "\n")
-    except Exception as e:  # pragma: no cover - logging failures shouldn't break API
-        logger.info(f"Failed to log analytics event: {e}")
-
-
-def log_daily_double_used(emoji: str, ip: str) -> None:
-    """Append a Daily Double usage event to the analytics log."""
-    _log_event("daily_double_used", emoji=emoji, ip=ip)
-
-
-def log_lobby_created(lobby_id: str, ip: str) -> None:
-    """Log creation of a new lobby."""
-    _log_event("lobby_created", lobby_id=lobby_id, ip=ip)
-
-
-def log_lobby_joined(lobby_id: str, emoji: str, ip: str) -> None:
-    """Log a player joining ``lobby_id``."""
-    _log_event("lobby_joined", lobby_id=lobby_id, emoji=emoji, ip=ip)
-
-
-def log_lobby_finished(lobby_id: str, ip: str | None = None) -> None:
-    """Log a lobby finishing or being reset."""
-    data = {"lobby_id": lobby_id}
-    if ip:
-        data["ip"] = ip
-    _log_event("lobby_finished", **data)
-
-
-def log_player_kicked(lobby_id: str, emoji: str) -> None:
-    """Log a player being kicked from ``lobby_id``."""
-    _log_event("player_kicked", lobby_id=lobby_id, emoji=emoji)
 
 
 # ---- API Routes ----
@@ -1233,6 +1200,10 @@ def notify_server_update():
 @app.route("/health")
 def health() -> Any:
     """Enhanced health check for production readiness."""
+    try:
+        from .game_logic import WORDS
+    except ImportError:
+        from game_logic import WORDS
     missing = []
     warnings = []
     

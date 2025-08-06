@@ -4,7 +4,10 @@ import json
 from unittest.mock import patch, MagicMock
 import pytest
 
-from backend.server import app, WORDS, WORDS_LOADED, redis_client, load_data, fetch_definition
+from backend.server import app, redis_client
+from backend.game_logic import WORDS, WORDS_LOADED  
+from backend.data_persistence import load_data
+from backend.game_logic import fetch_definition
 
 
 class TestAWSOptimizations:
@@ -19,10 +22,11 @@ class TestAWSOptimizations:
 
     def test_load_data_does_not_reload_words_when_cached(self):
         """Test that load_data doesn't reload words when already cached."""
+        from backend.server import current_state, _reset_state
         original_words_count = len(WORDS)
         
         # Call load_data when words are already loaded
-        load_data()
+        load_data(current_state, None, _reset_state)
         
         # Verify words count hasn't changed (indicating no reload from file)
         assert len(WORDS) == original_words_count, "WORDS should not be reloaded when cached"
@@ -69,7 +73,7 @@ class TestAWSOptimizations:
         from backend.server import health, app
         with app.app_context():
             # Mock missing WORDS to test unhealthy state
-            with patch('backend.server.WORDS', []):
+            with patch('backend.game_logic.WORDS', []):
                 response = health()
                 # Should return tuple (response, status_code) for error cases
                 if isinstance(response, tuple):
