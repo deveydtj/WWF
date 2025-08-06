@@ -713,10 +713,11 @@
     max-width: none;
   }
 
-  /* Use larger fixed tile size for better visibility at 1200px */
+  /* Use much larger fixed tile size to prevent JavaScript from shrinking too much */
   :root {
-    --tile-size: 60px; /* Increased from 54px for better usability */
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --tile-size: 70px !important; /* Increased from 60px, with !important to prevent JS override */
+    --tile-gap: 7px !important; /* Proportional gap */
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
   }
 
   #keyboard {
@@ -789,10 +790,11 @@
     max-width: none;
   }
 
-  /* Use larger fixed tile size for very large screens */
+  /* Use even larger fixed tile size for very large screens */
   :root {
-    --tile-size: 60px; /* Increased from 54px for consistency */
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --tile-size: 75px !important; /* Increased from 60px, with !important to prevent JS override */
+    --tile-gap: 7px !important; /* Proportional gap */
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
   }
 
   #keyboard {

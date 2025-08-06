@@ -282,6 +282,25 @@ export function generateScalingRecommendations(containerInfo, optimalSizing) {
 }
 
 /**
+ * Get the current CSS-defined fixed tile size if any
+ * @returns {number} Current CSS tile size in pixels, or 0 if not set
+ */
+function getCurrentCSSFixedTileSize() {
+  // Create a test element to check the computed CSS tile size
+  const testElement = document.createElement('div');
+  testElement.style.width = 'var(--tile-size, 0px)';
+  testElement.style.height = '1px';
+  testElement.style.visibility = 'hidden';
+  testElement.style.position = 'absolute';
+  document.body.appendChild(testElement);
+  
+  const computedSize = parseInt(getComputedStyle(testElement).width) || 0;
+  document.body.removeChild(testElement);
+  
+  return computedSize;
+}
+
+/**
  * Apply optimal scaling to the board based on container analysis
  * @param {number} rows - Number of board rows
  * @returns {boolean} Success status
@@ -296,16 +315,43 @@ export function applyOptimalScaling(rows = 6) {
   const { optimalSizing } = verification;
   if (!optimalSizing) return false;
 
-  // Special handling for 1200px+ screens where tiles were too small
   const viewportWidth = window.innerWidth;
+  
+  // For larger screens (1200px+), check if CSS has already set appropriate fixed sizes
+  // before applying JavaScript overrides
+  if (viewportWidth >= 1200) {
+    const currentCSSSize = getCurrentCSSFixedTileSize();
+    
+    // If CSS has set a good fixed size (60px+), respect it unless it's clearly inadequate
+    if (currentCSSSize >= 60) {
+      console.log(`CSS fixed tile size (${currentCSSSize}px) is adequate for ${viewportWidth}px viewport, respecting CSS`);
+      
+      // Only apply minimal adjustments if needed
+      const gap = Math.max(2, currentCSSSize * 0.1);
+      const boardWidth = 5 * currentCSSSize + 4 * gap;
+      
+      const root = document.documentElement;
+      root.style.setProperty('--tile-size', `${currentCSSSize}px`);
+      root.style.setProperty('--tile-gap', `${gap}px`);
+      root.style.setProperty('--board-width', `${boardWidth}px`);
+      root.style.setProperty('--ui-scale', `${currentCSSSize / 60}`);
+      
+      return true; // CSS handling is sufficient
+    }
+  }
+
+  // For smaller screens or when CSS doesn't provide adequate sizing, apply JavaScript scaling
   let finalTileSize = optimalSizing.tileSize;
   
+  // Apply viewport-specific minimums as safety net
   if (viewportWidth >= 1200 && viewportWidth <= 1550) {
-    // For 1200px screens, ensure minimum tile size of 50px for better usability
-    finalTileSize = Math.max(50, optimalSizing.tileSize);
+    // For 1200px-1550px range, ensure minimum tile size of 65px for better usability
+    finalTileSize = Math.max(65, optimalSizing.tileSize);
+    console.log(`Applied 1200px-1550px minimum (65px): ${finalTileSize}px`);
   } else if (viewportWidth > 1550) {
-    // For very large screens, ensure minimum tile size of 55px
-    finalTileSize = Math.max(55, optimalSizing.tileSize);
+    // For very large screens, ensure minimum tile size of 70px
+    finalTileSize = Math.max(70, optimalSizing.tileSize);
+    console.log(`Applied 1551px+ minimum (70px): ${finalTileSize}px`);
   }
   
   // Recalculate gap and board width if tile size was adjusted
