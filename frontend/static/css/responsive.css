@@ -46,7 +46,8 @@
   /* Improved board area with container queries */
   #boardArea {
     flex: 0 0 auto;
-    min-height: 0;
+    min-height: auto; /* Calculate height based on content */
+    height: auto; /* Allow height to be calculated from board content */
     container-type: size;
   }
 
@@ -309,7 +310,8 @@
   /* Board area should only take space it needs, not expand */
   #boardArea {
     flex: 0 0 auto; /* Only take space needed, don't expand */
-    min-height: 0; /* Allow board to shrink if needed */
+    min-height: auto; /* Calculate height based on content */
+    height: auto; /* Allow height to be calculated from board content */
   }
 
   /* Ensure input area doesn't take excessive space */
@@ -658,7 +660,8 @@
   /* Board area should only take space it needs */
   #boardArea {
     flex: 0 0 auto; /* Only take space needed, don't expand */
-    min-height: 0; /* Allow board to shrink if needed */
+    min-height: auto; /* Calculate height based on content */
+    height: auto; /* Allow height to be calculated from board content */
   }
 
   /* Add proper spacing between input area and keyboard in medium mode */
