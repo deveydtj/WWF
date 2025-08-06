@@ -467,9 +467,14 @@ function applyMobileKeyboardAdjustments(tileSize, viewportHeight) {
   const keyboard = document.getElementById('keyboard');
   if (!keyboard) return;
 
-  // Reset any previous transforms
+  // Reset any problematic CSS properties first
   keyboard.style.transform = '';
   keyboard.style.transformOrigin = '';
+  keyboard.style.position = '';
+  keyboard.style.overflow = '';
+  keyboard.style.minHeight = '';
+  keyboard.style.maxHeight = '';
+  keyboard.style.marginBottom = '';
 
   if (viewportHeight < 600) {
     // Very small screens: aggressive optimizations
@@ -478,13 +483,18 @@ function applyMobileKeyboardAdjustments(tileSize, viewportHeight) {
     keyboard.style.transformOrigin = 'center bottom';
     keyboard.style.marginBottom = '2px';
     
-    // Also make the keyboard more compact
+    // Also make the keyboard more compact - but don't use overflow: hidden
     keyboard.style.maxHeight = `${Math.min(120, viewportHeight * 0.2)}px`;
+    console.log(`🔧 Applied mobile keyboard scaling: ${scale} for very small screen`);
   } else if (tileSize < 35) {
     // Small tiles: moderate scaling
     const scale = Math.max(0.85, tileSize / 35);
     keyboard.style.transform = `scale(${scale})`;
     keyboard.style.transformOrigin = 'center bottom';
+    console.log(`🔧 Applied mobile keyboard scaling: ${scale} for small tiles`);
+  } else {
+    // Larger screens: ensure clean reset
+    console.log('🔧 Mobile keyboard: reset to normal CSS for larger screen');
   }
 }
 
