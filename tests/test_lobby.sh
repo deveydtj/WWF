@@ -8,8 +8,8 @@ echo "================================"
 echo
 
 # Check if Python script exists
-if [ ! -f "run_test_lobby.py" ]; then
-    echo "❌ Error: run_test_lobby.py not found"
+if [ ! -f "tests/run_test_lobby.py" ]; then
+    echo "❌ Error: tests/run_test_lobby.py not found"
     echo "Make sure you're running this from the WordSquad repository root"
     exit 1
 fi
@@ -28,4 +28,4 @@ fi
 
 echo "🚀 Starting test lobby..."
 echo
-python3 run_test_lobby.py
+python3 tests/run_test_lobby.py

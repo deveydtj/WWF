@@ -6,12 +6,12 @@ This directory contains simple scripts to run a single WordSquad lobby locally f
 
 ### Option 1: Bash Script (Simplest)
 ```bash
-./test_lobby.sh
+./tests/test_lobby.sh
 ```
 
 ### Option 2: Python Script (Direct)
 ```bash
-python3 run_test_lobby.py
+python3 tests/run_test_lobby.py
 ```
 
 ## What These Scripts Do
@@ -53,7 +53,7 @@ Setting up single lobby for local network testing...
 ## Requirements
 
 - Python 3.12+
-- Flask and Flask-Cors (installed automatically by test_lobby.sh)
+- Flask and Flask-Cors (installed automatically by tests/test_lobby.sh)
 
 ## Notes
 

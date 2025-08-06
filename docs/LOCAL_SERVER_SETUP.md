@@ -8,7 +8,7 @@ This guide explains how to start the development server for WordSquad on your ma
    - The dependencies listed in `backend/requirements.txt`
    - A modern web browser
 
-   Run `./setup.sh` from the repository root to confirm Python, Node.js, and required assets are installed.
+   Run `./scripts/setup.sh` from the repository root to confirm Python, Node.js, and required assets are installed.
 
 2. **Install Node dependencies**
    ```bash

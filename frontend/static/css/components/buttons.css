@@ -63,12 +63,14 @@
   filter: drop-shadow(1px 2px 1px var(--shadow-color-dark));
   border: 2px solid transparent;
   border-radius: 50%;
-  transition: border 0.2s, background-color 0.2s, filter 0.2s;
+  transition: border-color 0.2s, background-color 0.2s, filter 0.2s;
   position: relative;
+  background: none;
+  padding: 4px;
 }
 
 .emoji-choice:hover {
-  border: 2px solid var(--correct-bg);
+  border-color: var(--correct-bg);
 }
 
 /* Indicator for emojis that will get variants */
