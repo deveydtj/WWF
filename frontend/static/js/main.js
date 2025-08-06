@@ -252,356 +252,28 @@ let pollTimer;
 let currentInterval = FAST_INTERVAL;
 let eventSource = null;
 
-function updateInputVisibility() {
-  // Use isMobileView() for browser, fallback to isMobile for testing environments without window
-  const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
-  
-  if (useMobileDisplay) {
-    guessInput.readOnly = true;
-    guessInput.setAttribute('inputmode', 'none');
-    guessInput.style.display = 'none';
-    submitButton.style.display = 'none';
-    messageEl.style.display = 'none';
-  } else {
-    guessInput.readOnly = false;
-    guessInput.setAttribute('inputmode', 'text');
-    guessInput.style.display = 'block';
-    submitButton.style.display = 'block';
-    messageEl.style.display = 'block';
-    messageEl.style.visibility = 'hidden';
-  }
-}
+
 
 // Initial call
 updateInputVisibility();
 
-// Animate the temporary points indicator after each guess
-function showPointsDelta(delta) {
-  const msg = (delta > 0 ? '+' : '') + delta + ' point' + (Math.abs(delta) !== 1 ? 's' : '');
-  // Use isMobileView() for browser, fallback to isMobile for testing environments without window
-  const useMobileDisplay = (typeof window !== 'undefined') ? isMobileView() : isMobile;
-  
-  if (useMobileDisplay) {
-    // Mobile uses the popup element
-    messagePopup.textContent = msg;
-    messagePopup.style.display = 'block';
-    messagePopup.style.animation = 'fadeInOut 2s';
-    messagePopup.addEventListener('animationend', () => {
-      messagePopup.style.display = 'none';
-      messagePopup.style.animation = '';
-    }, { once: true });
-  } else {
-    messageEl.classList.remove('positive', 'negative');
-    if (delta > 0) messageEl.classList.add('positive');
-    if (delta < 0) messageEl.classList.add('negative');
-    messageEl.textContent = msg;
-    messageEl.style.visibility = 'visible';
-    messageEl.style.animation = 'fadeInOut 2s';
-    messageEl.addEventListener('animationend', () => {
-      messageEl.style.visibility = 'hidden';
-      messageEl.style.animation = '';
-      messageEl.classList.remove('positive', 'negative');
-    }, { once: true });
-  }
-}
 
-function showHintTooltip(text) {
-  if (!hintTooltip) return;
-  hintTooltip.textContent = text;
-  hintTooltip.style.display = 'block';
-}
 
-function hideHintTooltip() {
-  if (!hintTooltip) return;
-  hintTooltip.style.display = 'none';
-}
 
-function burstConfetti(row, col) {
-  const tiles = Array.from(board.children);
-  const tile = tiles[row * 5 + col];
-  if (!tile) return;
-  const boardRect = boardArea.getBoundingClientRect();
-  const tileRect = tile.getBoundingClientRect();
-  const originX = tileRect.left - boardRect.left + tileRect.width / 2;
-  const originY = tileRect.top - boardRect.top + tileRect.height / 2;
-  const container = document.createElement('div');
-  container.className = 'confetti-container';
-  container.style.left = `${originX}px`;
-  container.style.top = `${originY}px`;
-  boardArea.appendChild(container);
-  const colors = ['#f87171', '#facc15', '#34d399', '#60a5fa', '#a78bfa'];
-  for (let i = 0; i < 15; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.backgroundColor = colors[i % colors.length];
-    const dx = (Math.random() - 0.5) * 120;
-    const dy = -Math.random() * 120 - 30;
-    const rotate = Math.random() * 720;
-    piece.style.transform = 'translate(0,0) rotate(0deg)';
-    piece.style.opacity = '1';
-    piece.style.transition = 'transform 0.8s ease-out, opacity 0.8s';
-    container.appendChild(piece);
-    requestAnimationFrame(() => {
-      piece.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
-      piece.style.opacity = '0';
-    });
-  }
-  setTimeout(() => container.remove(), 900);
-}
 
-function playClick() {
-  if (!soundEnabled) return;
-  if (!ensureAudioContext()) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.05);
-}
 
-function playJingle() {
-  if (!soundEnabled) return;
-  if (!ensureAudioContext()) return;
-  const notes = [523.25, 659.25, 783.99];
-  notes.forEach((freq, i) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.2);
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.2);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(audioCtx.currentTime + i * 0.2);
-    osc.stop(audioCtx.currentTime + i * 0.2 + 0.18);
-  });
-  announce('Jingle playing');
-}
 
-function showChatNotify() {
-  chatNotify.style.display = 'block';
-  requestAnimationFrame(() => chatNotify.classList.add('visible'));
-  clearTimeout(chatWiggleTimer);
-  chatWiggleTimer = setTimeout(() => {
-    if (chatNotify.classList.contains('visible')) {
-      chatNotify.classList.add('wiggle');
-      chatNotify.addEventListener('animationend', () => {
-        chatNotify.classList.remove('wiggle');
-      }, { once: true });
-    }
-  }, 2000);
-}
 
-function showChatMessagePopup(message) {
-  if (!message || !chatNotify || !chatMessagePopup) return;
-  
-  // Position popup relative to chat notify button
-  const chatRect = chatNotify.getBoundingClientRect();
-  const boardArea = document.getElementById('boardArea');
-  const boardRect = boardArea.getBoundingClientRect();
-  
-  // Calculate position relative to board area
-  const left = chatRect.left - boardRect.left + chatRect.width / 2;
-  const top = chatRect.top - boardRect.top + chatRect.height / 2;
-  
-  chatMessagePopup.style.left = left + 'px';
-  chatMessagePopup.style.top = top + 'px';
-  
-  // Limit popup text to a couple of words to prevent long paragraphs
-  const POPUP_CHAR_LIMIT = 30;
-  let displayText = message.text;
-  if (displayText.length > POPUP_CHAR_LIMIT) {
-    displayText = displayText.substring(0, POPUP_CHAR_LIMIT).trim() + '...';
-  }
-  
-  // Set content
-  chatMessagePopup.innerHTML = `
-    <span class="chat-emoji">${message.emoji}</span>
-    <span class="chat-text">${displayText}</span>
-  `;
-  
-  // Show popup with animation
-  chatMessagePopup.classList.remove('show');
-  requestAnimationFrame(() => {
-    chatMessagePopup.classList.add('show');
-  });
-  
-  // Remove animation class after animation completes
-  setTimeout(() => {
-    chatMessagePopup.classList.remove('show');
-  }, 3000);
-}
 
-function hideChatNotify() {
-  chatNotify.classList.remove('visible');
-  clearTimeout(chatWiggleTimer);
-}
 
-function centerLeaderboardOnMe() {
-  const lb = document.getElementById('leaderboard');
-  if (!lb || leaderboardScrolling) return;
-  if (lb.scrollWidth > lb.clientWidth) {
-    const mine = lb.querySelector('.leaderboard-entry.me');
-    if (mine) {
-      const offset = mine.offsetLeft + mine.offsetWidth / 2 - lb.clientWidth / 2;
-      lb.scrollLeft = offset;
-    }
-  } else {
-    lb.scrollLeft = 0;
-  }
-}
 
-function setupMobileLeaderboard() {
-  if (isMobileView()) {
-    const lb = document.getElementById('leaderboard');
-    const mobileContainer = document.querySelector('.mobile-leaderboard-container');
-    
-    if (lb && mobileContainer && !mobileContainer.contains(lb)) {
-      // Move leaderboard to mobile container
-      lb.classList.add('mobile-inline');
-      mobileContainer.appendChild(lb);
-    }
-  } else {
-    // Move leaderboard back to original position for desktop
-    const lb = document.getElementById('leaderboard');
-    const mobileContainer = document.querySelector('.mobile-leaderboard-container');
-    const originalContainer = document.querySelector('#gameColumn');
-    
-    if (lb && mobileContainer && mobileContainer.contains(lb)) {
-      lb.classList.remove('mobile-inline');
-      // Insert leaderboard after titleBar but before boardArea
-      const titleBar = document.getElementById('titleBar');
-      const boardArea = document.getElementById('boardArea');
-      originalContainer.insertBefore(lb, boardArea);
-    }
-  }
-}
 
-// Rebuild the leaderboard DOM and keep it centered on the current player
-function renderLeaderboard() {
-  setupMobileLeaderboard(); // Ensure proper mobile layout
-  
-  const lb = document.getElementById('leaderboard');
-  if (!lb) return;
-  
-  lb.innerHTML = '';
-  const now = Date.now() / 1000;
 
-  leaderboard.forEach(entry => {
-    const node = document.createElement('span');
-    node.className = 'leaderboard-entry' + (myEmoji === entry.emoji ? ' me' : '');
-    const prevScore = prevLeaderboard[entry.emoji];
-    if (prevScore === undefined || prevScore !== entry.score) {
-      node.classList.add('flash');
-      node.addEventListener('animationend', () => {
-        node.classList.remove('flash');
-      }, { once: true });
-    }
-    if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
-      node.classList.add('inactive');
-    }
-    
-    // Create separate elements for emoji and score
-    const emojiSpan = document.createElement('span');
-    emojiSpan.className = 'leaderboard-emoji';
-    applyEmojiVariantStyling(emojiSpan, entry.emoji);
-    
-    const scoreSpan = document.createElement('span');
-    scoreSpan.className = 'leaderboard-score';
-    scoreSpan.textContent = ` ${entry.score}`;
-    
-    node.appendChild(emojiSpan);
-    node.appendChild(scoreSpan);
 
-    if (entry.emoji === myEmoji) {
-      node.style.cursor = 'pointer';
-      node.title = 'Click to change your emoji';
-      node.addEventListener('click', () => {
-        skipAutoClose = true;
-        // Pass active emojis for variant detection
-        const taken = activeEmojis;
-        showEmojiModal(taken, {
-          onChosen: (e) => { myEmoji = e; myPlayerId = getMyPlayerId(); ({ row: dailyDoubleRow, hint: dailyDoubleHint } = loadHintState(myEmoji)); fetchState(); },
-          skipAutoCloseRef: { value: skipAutoClose },
-          onError: (msg) => showMessage(msg, { messageEl, messagePopup })
-        });
-      });
-      if (dailyDoubleAvailable) {
-        const badge = document.createElement('span');
-        badge.className = 'hint-badge';
-        badge.textContent = '🔍 x1';
-        node.appendChild(badge);
-      }
-    }
 
-    lb.appendChild(node);
-  });
 
-  centerLeaderboardOnMe();
 
-  lb.onscroll = () => {
-    leaderboardScrolling = true;
-    clearTimeout(leaderboardScrollTimeout);
-    leaderboardScrollTimeout = setTimeout(() => {
-      leaderboardScrolling = false;
-      centerLeaderboardOnMe();
-    }, 5000); // Changed to 5 seconds as requested
-  };
-}
 
-function renderPlayerSidebar() {
-  const list = document.getElementById('playerList');
-  if (!list) return;
-  list.innerHTML = '';
-  const now = Date.now() / 1000;
-  leaderboard.forEach(entry => {
-    const li = document.createElement('li');
-    li.className = 'player-row';
-    if (entry.last_active !== undefined && (now - entry.last_active > 300)) {
-      li.classList.add('inactive');
-    }
-    
-    // Create emoji span with variant styling
-    const emojiSpan = document.createElement('span');
-    emojiSpan.className = 'player-emoji';
-    applyEmojiVariantStyling(emojiSpan, entry.emoji);
-    
-    const scoreText = document.createTextNode(` ${entry.score}`);
-    li.appendChild(emojiSpan);
-    li.appendChild(scoreText);
-    
-    if (HOST_TOKEN && entry.emoji !== myEmoji) {
-      const btn = document.createElement('button');
-      btn.textContent = 'Kick';
-      btn.addEventListener('click', () => {
-        kickPlayerRequest(LOBBY_CODE, entry.emoji, HOST_TOKEN).then(fetchState);
-      });
-      li.appendChild(btn);
-    }
-    list.appendChild(li);
-  });
-}
-
-// Display emoji markers beside each completed guess in medium mode
-function renderEmojiStamps(guesses) {
-  stampContainer.innerHTML = '';
-  if (document.body.dataset.mode !== 'medium') return;
-  const boardRect = board.getBoundingClientRect();
-  guesses.forEach((g, idx) => {
-    const tile = board.children[idx * 5];
-    if (!tile) return;
-    const tileRect = tile.getBoundingClientRect();
-    const top = tileRect.top - boardRect.top + tile.offsetHeight / 2;
-    const span = document.createElement('span');
-    span.className = 'board-stamp';
-    applyEmojiVariantStyling(span, g.emoji);
-    span.style.top = `${top}px`;
-    stampContainer.appendChild(span);
-  });
-}
 
 async function performReset() {
   if (typeof stopAllSounds === 'function') stopAllSounds();
@@ -1067,14 +739,7 @@ function toggleDarkMode() {
   applyDarkModePreference(menuDarkMode);
 }
 
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-  localStorage.setItem('soundEnabled', soundEnabled);
-  menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
-  if (!soundEnabled) {
-    stopAllSounds();
-  }
-}
+
 
 function toggleHistory() {
   // Track that this is a manual toggle
@@ -1229,7 +894,7 @@ if (playerCloseBtn) {
 }
 
 applyDarkModePreference(menuDarkMode);
-menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
+menuSound.textContent = isSoundEnabled() ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
 
