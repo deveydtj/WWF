@@ -19,11 +19,13 @@ from flask_cors import CORS
 try:
     from .models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
     from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
+    from .data_persistence import init_persistence, save_data, load_data
     from .config import validate_production_config, get_config_summary
 except ImportError:
     # Handle running as script instead of module
     from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
     from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
+    from data_persistence import init_persistence, save_data, load_data
     from config import validate_production_config, get_config_summary
 
 try:
@@ -186,6 +188,24 @@ REMOVAL_COOLDOWN = 30.0  # seconds to prevent recreation after removal
 DEFAULT_LOBBY = "DEFAULT"
 current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
 
+# Initialize data persistence layer
+init_persistence(redis_client, GAME_FILE, LOBBIES_FILE, DEFAULT_LOBBY, LOBBIES)
+
+
+# Create backward compatible wrappers for persistence functions
+def save_data_legacy(s: GameState | None = None):
+    """Backward compatible wrapper for save_data."""
+    if s is None:
+        s = current_state
+    save_data(s, _lobby_id(s))
+
+
+def load_data_legacy(s: GameState | None = None):
+    """Backward compatible wrapper for load_data."""
+    if s is None:
+        s = current_state
+    load_data(s, _lobby_id(s), _reset_state)
+
 
 def get_lobby(code: str) -> GameState:
     """Return the GameState for ``code``, creating it if needed."""
@@ -200,10 +220,10 @@ def get_lobby(code: str) -> GameState:
 
         lobby = _reset_state(GameState())
         LOBBIES[code] = lobby
-        load_data(lobby)
+        load_data(lobby, _lobby_id(lobby), _reset_state)
         if not lobby.target_word:
             pick_new_word(lobby)
-            save_data(lobby)
+            save_data(lobby, _lobby_id(lobby))
     return lobby
 
 
@@ -291,125 +311,6 @@ def _lobby_id(s: GameState) -> str:
         if state is s:
             return cid
     return DEFAULT_LOBBY
-
-
-def save_data(s: GameState | None = None):
-    if s is None:
-        s = current_state
-    code = _lobby_id(s)
-    data = {
-        "leaderboard": s.leaderboard,
-        "ip_to_emoji": s.ip_to_emoji,
-        "player_map": s.player_map,
-        "winner_emoji": s.winner_emoji,
-        "target_word": s.target_word,
-        "guesses": s.guesses,
-        "is_over": s.is_over,
-        "found_greens": list(s.found_greens),
-        "found_yellows": list(s.found_yellows),
-        "past_games": s.past_games,
-        "definition": s.definition,
-        "last_word": s.last_word,
-        "last_definition": s.last_definition,
-        "win_timestamp": s.win_timestamp,
-        "chat_messages": s.chat_messages,
-        "daily_double_index": s.daily_double_index,
-        "daily_double_winners": list(s.daily_double_winners),
-        "daily_double_pending": s.daily_double_pending,
-        "host_token": s.host_token,
-        "phase": s.phase,
-        "last_activity": s.last_activity,
-    }
-    if redis_client:
-        try:
-            redis_client.set(f"wwf:{code}", json.dumps(data))
-        except Exception as e:  # pragma: no cover - redis failures
-            logger.warning("Redis save failed: %s", e)
-    if code == DEFAULT_LOBBY:
-        with open(GAME_FILE, "w") as f:
-            json.dump(data, f)
-    else:
-        try:
-            all_data = {}
-            if LOBBIES_FILE.exists():
-                with open(LOBBIES_FILE) as f:
-                    all_data = json.load(f)
-        except Exception:
-            all_data = {}
-        all_data[code] = data
-        try:
-            with open(LOBBIES_FILE, "w") as f:
-                json.dump(all_data, f)
-        except Exception as e:  # pragma: no cover - persistence errors
-            logger.warning("Lobby save failed: %s", e)
-
-
-def load_data(s: GameState | None = None):
-    global WORDS, WORDS_LOADED
-    if s is None:
-        s = current_state
-
-    code = _lobby_id(s)
-
-    # Only load word list if not already loaded (performance optimization)
-    if not WORDS_LOADED:
-        with open(WORDS_FILE) as f:
-            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
-        WORDS_LOADED = True
-        logger.info(f"Loaded {len(WORDS)} words into memory cache")
-
-    data = None
-    if redis_client:
-        try:
-            blob = redis_client.get(f"wwf:{code}")
-            if blob:
-                data = json.loads(blob)
-        except Exception as e:  # pragma: no cover - redis failures
-            logger.warning("Redis load failed: %s", e)
-
-    if data is None and code == DEFAULT_LOBBY and os.path.exists(GAME_FILE):
-        with open(GAME_FILE) as f:
-            try:
-                data = json.load(f)
-            except Exception:
-                _reset_state(s)
-                data = None
-    elif data is None and code != DEFAULT_LOBBY and os.path.exists(LOBBIES_FILE):
-        try:
-            with open(LOBBIES_FILE) as f:
-                data_all = json.load(f)
-            data = data_all.get(code)
-        except Exception:
-            data = None
-
-    if not data:
-        _reset_state(s)
-        return
-
-    try:
-        s.leaderboard = data.get("leaderboard", {})
-        s.ip_to_emoji = data.get("ip_to_emoji", {})
-        s.player_map = data.get("player_map", {})
-        s.winner_emoji = data.get("winner_emoji")
-        s.target_word = data.get("target_word", "")
-        s.guesses[:] = data.get("guesses", [])
-        s.is_over = data.get("is_over", False)
-        s.found_greens = set(data.get("found_greens", []))
-        s.found_yellows = set(data.get("found_yellows", []))
-        s.past_games[:] = data.get("past_games", [])
-        s.definition = data.get("definition")
-        s.last_word = data.get("last_word")
-        s.last_definition = data.get("last_definition")
-        s.win_timestamp = data.get("win_timestamp")
-        s.chat_messages[:] = data.get("chat_messages", [])
-        s.daily_double_index = data.get("daily_double_index")
-        s.daily_double_winners = set(data.get("daily_double_winners", []))
-        s.daily_double_pending = data.get("daily_double_pending", {})
-        s.host_token = data.get("host_token")
-        s.phase = data.get("phase", "waiting")
-        s.last_activity = data.get("last_activity", time.time())
-    except Exception:
-        _reset_state(s)
 
 
 # ---- Game Logic ----
@@ -650,7 +551,7 @@ def state():
         ):
             current_state.leaderboard[e]["last_active"] = time.time()
             current_state.last_activity = time.time()
-            save_data()
+            save_data_legacy()
             emoji = e
     else:
         try:
@@ -734,7 +635,7 @@ def set_emoji():
         current_state.ip_to_emoji[ip] = emoji_variant
         current_state.player_map[player_id] = emoji_variant
         current_state.last_activity = now
-        save_data()
+        save_data_legacy()
 
     logger.info(
         "Emoji %s (variant: %s) mapped to player %s (ip %s) new=%s",
@@ -900,7 +801,7 @@ def guess_word():
         points_delta -= 1
 
     current_state.leaderboard[emoji]["score"] += points_delta
-    save_data()
+    save_data_legacy()
     # — attach this turn’s points so client can render a history
     new_entry["points"] = points_delta
 
@@ -958,7 +859,7 @@ def select_hint():
 
     row = current_state.daily_double_pending.pop(emoji)
     letter = current_state.target_word[col]
-    save_data()
+    save_data_legacy()
     log_daily_double_used(emoji, ip)
     return jsonify(
         {
@@ -1002,7 +903,7 @@ def chat():
             {"emoji": emoji, "text": text, "ts": current_time}
         )
         current_state.last_activity = current_time
-        save_data()
+        save_data_legacy()
         broadcast_state()
         return jsonify({"status": "ok"})
     return jsonify({"messages": current_state.chat_messages})
@@ -1016,7 +917,7 @@ def reset_game():
     current_state.past_games.append(list(current_state.guesses))
     pick_new_word(current_state)
     current_state.last_activity = time.time()
-    save_data()
+    save_data_legacy()
     broadcast_state()
     log_lobby_finished(_lobby_id(current_state), get_client_ip())
     logger.info("Lobby %s reset complete", _lobby_id(current_state))
@@ -1048,7 +949,7 @@ def lobby_create():
     token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
     state.host_token = token
     LOBBIES[code] = state
-    save_data(state)
+    save_data(state, _lobby_id(state))
     log_lobby_created(code, ip)
     logger.info("Lobby %s created host=%s", code, ip)
     return jsonify({"id": code, "host_token": token})
@@ -1258,7 +1159,7 @@ def leave_lobby():
 
     # Save state and broadcast changes
     current_state.last_activity = time.time()
-    save_data()
+    save_data_legacy()
     broadcast_state()
 
     return jsonify({"status": "ok"})
@@ -1478,10 +1379,10 @@ def spa_fallback_route(requested_path: str):
 
 
 if __name__ == "__main__":
-    load_data()
+    load_data_legacy()
     if not current_state.target_word:
         pick_new_word(current_state)
-        save_data()
+        save_data_legacy()
 
     # Launch a background thread that periodically purges idle lobbies
     def _purge_loop() -> None:
