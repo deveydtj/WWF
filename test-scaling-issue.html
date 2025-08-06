@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scaling Issue Test - 1328px-1550px</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .viewport-simulator {
+            border: 2px solid #007bff;
+            margin: 10px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .game-mockup {
+            background: #f8f9fa;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .board-mockup {
+            display: grid;
+            grid-template-columns: repeat(5, var(--tile-size, 60px));
+            grid-gap: var(--tile-gap, 6px);
+            margin: 10px;
+        }
+        .tile-mockup {
+            width: var(--tile-size, 60px);
+            height: var(--tile-size, 60px);
+            background: #dee2e6;
+            border: 1px solid #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        .keyboard-mockup {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .keyboard-row {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+        }
+        .key-mockup {
+            min-width: calc(var(--tile-size, 60px) * 0.6);
+            height: calc(var(--tile-size, 60px) * 0.7);
+            background: #e9ecef;
+            border: 1px solid #adb5bd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: calc(var(--tile-size, 60px) * 0.25);
+        }
+        .result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Scaling Issue Investigation: 1328px-1550px Range</h1>
+    
+    <div class="test-container">
+        <h2>Real Browser Test</h2>
+        <p><strong>Current viewport:</strong> <span id="currentViewport"></span></p>
+        <p><strong>Current tile size (CSS):</strong> <span id="currentTileSize"></span></p>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Viewport Simulators</h2>
+        <div id="simulators"></div>
+    </div>
+
+    <script>
+        // Import the actual CSS and JavaScript from the game
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/static/css/responsive.css';
+        document.head.appendChild(link);
+
+        function updateCurrentInfo() {
+            const viewport = `${window.innerWidth}x${window.innerHeight}`;
+            document.getElementById('currentViewport').textContent = viewport;
+            
+            // Get computed CSS tile size
+            const testElement = document.createElement('div');
+            testElement.style.width = 'var(--tile-size, 60px)';
+            testElement.style.height = '1px';
+            testElement.style.visibility = 'hidden';
+            document.body.appendChild(testElement);
+            
+            const computedSize = getComputedStyle(testElement).width;
+            document.getElementById('currentTileSize').textContent = computedSize;
+            document.body.removeChild(testElement);
+            
+            // Analyze the current situation
+            analyzeCurrentScaling();
+        }
+
+        function analyzeCurrentScaling() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const resultsDiv = document.getElementById('results');
+            
+            let analysis = '';
+            
+            if (width >= 1328 && width <= 1550) {
+                analysis += '<div class="warning">⚠️ You are in the problematic range (1328px-1550px)!</div>';
+                
+                // Check what media query should be active
+                if (width >= 1200 && width <= 1550) {
+                    analysis += '<div class="result">📏 CSS Media Query: 1200px-1550px range should apply --tile-size: 60px</div>';
+                }
+                
+                // Get actual computed tile size
+                const testElement = document.createElement('div');
+                testElement.style.width = 'var(--tile-size, 60px)';
+                testElement.style.height = '1px';
+                testElement.style.visibility = 'hidden';
+                document.body.appendChild(testElement);
+                
+                const actualSize = parseInt(getComputedStyle(testElement).width);
+                document.body.removeChild(testElement);
+                
+                if (actualSize < 50) {
+                    analysis += '<div class="error">❌ CONFIRMED ISSUE: Actual tile size (' + actualSize + 'px) is too small!</div>';
+                } else if (actualSize < 55) {
+                    analysis += '<div class="warning">⚠️ Tile size (' + actualSize + 'px) might still feel small</div>';
+                } else {
+                    analysis += '<div class="success">✅ Tile size (' + actualSize + 'px) should be adequate</div>';
+                }
+                
+            } else {
+                analysis += '<div class="result">ℹ️ Current viewport (' + width + 'px) is outside the reported problem range</div>';
+            }
+            
+            resultsDiv.innerHTML = analysis;
+        }
+
+        function createViewportSimulator(width, height, label) {
+            const simulator = document.createElement('div');
+            simulator.className = 'viewport-simulator';
+            simulator.style.width = Math.min(width * 0.3, 400) + 'px'; // Scale down for display
+            simulator.style.height = Math.min(height * 0.3, 300) + 'px';
+            
+            // Calculate what tile size should be for this viewport
+            let expectedTileSize = 60; // Default from CSS
+            
+            // This matches the logic from the CSS media queries
+            if (width >= 1200 && width <= 1550) {
+                expectedTileSize = 60; // CSS: --tile-size: 60px
+            } else if (width >= 1551) {
+                expectedTileSize = 60; // CSS: --tile-size: 60px
+            }
+            
+            simulator.innerHTML = `
+                <h4>${label} (${width}x${height})</h4>
+                <div class="game-mockup">
+                    <div style="--tile-size: ${expectedTileSize}px; --tile-gap: ${Math.max(2, expectedTileSize * 0.1)}px;">
+                        <div class="board-mockup">
+                            ${Array(30).fill(0).map(() => '<div class="tile-mockup">A</div>').join('')}
+                        </div>
+                        <div class="keyboard-mockup">
+                            <div class="keyboard-row">
+                                ${'QWERTYUIOP'.split('').map(k => `<div class="key-mockup">${k}</div>`).join('')}
+                            </div>
+                            <div class="keyboard-row">
+                                ${'ASDFGHJKL'.split('').map(k => `<div class="key-mockup">${k}</div>`).join('')}
+                            </div>
+                            <div class="keyboard-row">
+                                ${'ZXCVBNM'.split('').map(k => `<div class="key-mockup">${k}</div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; margin: 5px 0;">
+                        Expected tile size: ${expectedTileSize}px
+                        ${expectedTileSize < 45 ? '<br><span style="color: red;">⚠️ May feel too small</span>' : ''}
+                    </p>
+                </div>
+            `;
+            
+            return simulator;
+        }
+
+        // Create viewport simulators for the problematic range
+        const simulatorsDiv = document.getElementById('simulators');
+        const testViewports = [
+            { width: 1200, height: 900, label: '1200px (start of range)' },
+            { width: 1328, height: 900, label: '1328px (user reported)' },
+            { width: 1400, height: 900, label: '1400px (middle)' },
+            { width: 1550, height: 900, label: '1550px (end of range)' },
+            { width: 1600, height: 900, label: '1600px (after range)' }
+        ];
+
+        testViewports.forEach(viewport => {
+            simulatorsDiv.appendChild(createViewportSimulator(viewport.width, viewport.height, viewport.label));
+        });
+
+        // Initialize
+        updateCurrentInfo();
+        window.addEventListener('resize', updateCurrentInfo);
+
+        // Instructions for testing
+        const instructions = document.createElement('div');
+        instructions.className = 'test-container';
+        instructions.innerHTML = `
+            <h2>🧪 Testing Instructions</h2>
+            <ol>
+                <li><strong>Resize your browser</strong> to widths between 1328px and 1550px</li>
+                <li><strong>Check the "Real Browser Test"</strong> section above to see if the issue is confirmed</li>
+                <li><strong>Compare with the simulators</strong> below to see expected vs actual behavior</li>
+                <li><strong>Look for red error messages</strong> indicating confirmed scaling issues</li>
+            </ol>
+            <p><em>If you see red error messages, this confirms the scaling bug exists in the current implementation.</em></p>
+        `;
+        document.body.appendChild(instructions);
+    </script>
+</body>
+</html>
