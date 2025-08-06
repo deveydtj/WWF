@@ -1,0 +1,183 @@
+/* ─────────────────────────────────────────────
+   Mobile Menu - Collapsible menu for mobile buttons
+   ───────────────────────────────────────────── */
+
+/* Mobile menu container - hidden by default on desktop */
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+}
+
+/* Mobile menu toggle button */
+.mobile-menu-toggle {
+  background: var(--bg-color);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.mobile-menu-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 5px 5px 10px var(--shadow-color-dark),
+              -5px -5px 10px var(--shadow-color-light);
+}
+
+.mobile-menu-toggle:active {
+  transform: scale(0.95);
+  box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+              inset -2px -2px 5px var(--inset-shadow-light);
+}
+
+/* Mobile menu content panel */
+.mobile-menu-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--bg-color);
+  border-radius: 16px;
+  padding: 16px;
+  min-width: 180px;
+  box-shadow: 8px 8px 16px var(--shadow-color-dark),
+              -8px -8px 16px var(--shadow-color-light);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Menu content visible state */
+.mobile-menu.open .mobile-menu-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+/* Individual menu items */
+.mobile-menu-item {
+  background: var(--bg-color);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  touch-action: manipulation;
+  text-align: left;
+  width: 100%;
+}
+
+.mobile-menu-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+              -4px -4px 8px var(--shadow-color-light);
+}
+
+.mobile-menu-item:active {
+  transform: scale(0.95);
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+}
+
+/* Close button */
+.mobile-menu-close {
+  background: var(--absent-bg);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  touch-action: manipulation;
+}
+
+.mobile-menu-close:hover {
+  transform: scale(1.05);
+}
+
+.mobile-menu-close:active {
+  transform: scale(0.95);
+  box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Show mobile menu only on mobile screens */
+@media (max-width: 600px) {
+  .mobile-menu {
+    display: block;
+  }
+  
+  /* Hide the original floating buttons on mobile */
+  #optionsToggle,
+  #chatNotify {
+    display: none !important;
+  }
+}
+
+/* Backdrop when menu is open (optional) */
+.mobile-menu.open::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  z-index: -1;
+}
+
+/* Animation for toggle button when menu is open */
+.mobile-menu.open .mobile-menu-toggle {
+  transform: rotate(90deg);
+  background: var(--present-bg);
+  color: white;
+}
+
+/* Accessibility improvements */
+.mobile-menu-toggle:focus,
+.mobile-menu-item:focus,
+.mobile-menu-close:focus {
+  outline: 2px solid var(--correct-bg);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-content,
+  .mobile-menu-toggle,
+  .mobile-menu-item,
+  .mobile-menu-close {
+    transition: none;
+  }
+}

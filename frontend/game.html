@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="static/css/components/keyboard.css">
   <link rel="stylesheet" href="static/css/components/panels.css">
   <link rel="stylesheet" href="static/css/components/buttons.css">
+  <link rel="stylesheet" href="static/css/components/mobile-menu.css">
   <link rel="stylesheet" href="static/css/components/leaderboard.css">
   <link rel="stylesheet" href="static/css/components/modals.css">
   <link rel="stylesheet" href="static/css/animations.css">
@@ -133,6 +134,16 @@
             <!-- Leaderboard will be moved here on mobile -->
           </div>
           <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
+        </div>
+      </div>
+
+      <!-- Mobile Menu (only visible on mobile) -->
+      <div id="mobileMenu" class="mobile-menu" role="navigation" aria-label="Mobile menu">
+        <button id="mobileMenuToggle" class="mobile-menu-toggle" title="Menu">☰</button>
+        <div id="mobileMenuContent" class="mobile-menu-content">
+          <button id="mobileOptionsToggle" class="mobile-menu-item" title="More Options">⚙️ Options</button>
+          <button id="mobileChatNotify" class="mobile-menu-item" title="Open Chat">💬 Chat</button>
+          <button id="mobileMenuClose" class="mobile-menu-close" title="Close Menu">✖</button>
         </div>
       </div>
 

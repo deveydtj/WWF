@@ -13,6 +13,17 @@
   flex: 0 0 auto; /* Only take space needed, don't expand */
 }
 
+/* Mobile: Full width board area */
+@media (max-width: 600px) {
+  #boardArea {
+    width: 100vw; /* Use full viewport width */
+    margin-left: calc(-1 * var(--container-padding, 5px)); /* Account for container padding */
+    margin-right: calc(-1 * var(--container-padding, 5px)); /* Account for container padding */
+    padding: 0 var(--container-padding, 5px); /* Add padding to maintain spacing */
+    box-sizing: border-box;
+  }
+}
+
 /* Large screen board area - constrain width to leave space for side panels */
 @media (min-width: 1200px) {
   #boardArea {
@@ -28,6 +39,19 @@
   grid-template-columns: repeat(5, var(--tile-size));
   grid-gap: var(--tile-gap);
   max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+}
+
+/* Mobile: Optimize board for full width */
+@media (max-width: 600px) {
+  #board {
+    /* Calculate optimal tile size to use most of the screen width */
+    --mobile-available-width: calc(100vw - 2 * var(--container-padding, 5px) - 8px); /* Account for padding and margins */
+    --mobile-tile-size: calc((var(--mobile-available-width) - 4 * var(--tile-gap)) / 5);
+    
+    grid-template-columns: repeat(5, var(--mobile-tile-size));
+    max-width: var(--mobile-available-width);
+    width: 100%;
+  }
 }
 
 /* Board stamps and confetti */
@@ -86,6 +110,15 @@ body[data-mode='medium'] #stampContainer {
   transition: background-color 0.3s, color 0.3s, border-color 0.3s,
               transform 0.1s, opacity 0.1s;
   color: var(--text-color);
+}
+
+/* Mobile: Use mobile tile size */
+@media (max-width: 600px) {
+  .tile {
+    width: var(--mobile-tile-size);
+    height: var(--mobile-tile-size);
+    font-size: calc(var(--mobile-tile-size) * 0.46);
+  }
 }
 
 .tile.backspace-effect {

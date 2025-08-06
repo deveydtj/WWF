@@ -11,6 +11,7 @@ import { showMessage, announce, applyDarkModePreference, shakeInput, repositionR
          checkKeyboardVisibility, ensureKeyboardVisibility, calculateMinRequiredHeight,
          checkInputFieldKeyboardOverlap, ensureInputFieldVisibility } from './utils.js';
 import { positionResponsive, positionContextMenu, positionModal, positionOnGrid } from './popupPositioning.js';
+import { initializeMobileMenu } from './mobileMenu.js';
 
 // Make enhanced positioning available globally for backward compatibility
 if (typeof window !== 'undefined') {
@@ -1267,6 +1268,9 @@ if (!scalingResult.success) {
 } else {
   console.log('✅ Enhanced scaling applied successfully');
 }
+
+// Initialize mobile menu
+initializeMobileMenu();
 
 // Verify all elements fit and log any issues
 const verification = verifyElementsFitInViewport(maxRows);

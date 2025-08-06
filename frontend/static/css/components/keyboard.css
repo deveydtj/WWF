@@ -8,11 +8,23 @@
   /* shrink keyboard height slightly for cramped screens */
   min-height: calc(var(--tile-size) * 2.4);
   width: 100%;
-  max-width: 500px; /* Prevent keyboard from getting too wide */
+  max-width: 500px; /* Prevent keyboard from getting too wide on desktop */
   /* Ensure keyboard stays at bottom and is always visible */
   position: relative;
   z-index: 10;
   margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
+}
+
+/* Mobile-first: Full width keyboard */
+@media (max-width: 600px) {
+  #keyboard {
+    max-width: 100% !important; /* Full width on mobile */
+    width: 100vw; /* Use full viewport width */
+    margin-left: calc(-1 * var(--container-padding, 5px)); /* Account for container padding */
+    margin-right: calc(-1 * var(--container-padding, 5px)); /* Account for container padding */
+    padding: 0 var(--container-padding, 5px); /* Add padding to maintain button spacing */
+    box-sizing: border-box;
+  }
 }
 
 /* Ensure keyboard container has proper flexbox behavior */
@@ -32,6 +44,14 @@
   display: flex;
   justify-content: center;
   margin-bottom: calc(var(--tile-gap) * 1.2);
+}
+
+/* Mobile: Distribute keys across full width */
+@media (max-width: 600px) {
+  .keyboard-row {
+    justify-content: space-between; /* Distribute keys evenly */
+    padding: 0 4px; /* Small padding to prevent edge touching */
+  }
 }
 
 .key {
@@ -55,8 +75,29 @@
   padding: 0 5px;
 }
 
+/* Mobile: Optimize key sizing for full width */
+@media (max-width: 600px) {
+  .key {
+    /* Calculate key width to distribute evenly across screen */
+    flex: 1; /* Allow keys to grow and fill available space */
+    min-width: 0; /* Allow flexbox to control width */
+    max-width: calc((100vw - 2 * var(--container-padding, 5px) - 8px) / 10); /* Max width for standard keys */
+    height: calc(var(--mobile-tile-size, var(--tile-size)) * 0.83);
+    margin: 2px; /* Reduced margin for more space */
+    font-size: calc(var(--mobile-tile-size, var(--tile-size)) * 0.27);
+  }
+}
+
 .key.wide { 
   min-width: calc(var(--tile-size) * 1.2); 
+}
+
+/* Mobile: Adjust wide keys */
+@media (max-width: 600px) {
+  .key.wide {
+    flex: 1.5; /* Make wide keys proportionally larger */
+    min-width: 0;
+  }
 }
 
 .key:hover {
