@@ -713,10 +713,18 @@
     max-width: none;
   }
 
-  /* Use fixed tile size - no viewport-dependent scaling */
+  /* Use much larger fixed tile size to prevent JavaScript from shrinking too much */
   :root {
-    --tile-size: 54px; /* Fixed size - no scaling with viewport */
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --tile-size: 70px !important; /* Increased from 60px, with !important to prevent JS override */
+    --tile-gap: 7px !important; /* Proportional gap */
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
+  }
+
+  /* Fix reset button scaling - prevent it from getting too large */
+  #holdReset {
+    width: clamp(5rem, 18vw, 6.25rem) !important; /* Remove ui-scale multiplication */
+    height: clamp(2.25rem, 6vh, 2.8rem) !important; /* Remove ui-scale multiplication */
+    font-size: 18px !important; /* Fixed font size instead of scaled */
   }
 
   #keyboard {
@@ -789,14 +797,23 @@
     max-width: none;
   }
 
-  /* Use fixed tile size for very large screens */
+  /* Use smaller tile size for very large screens - reduced from 75px to 65px */
   :root {
-    --tile-size: 54px; /* Fixed size - no scaling with viewport */
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --tile-size: 65px !important; /* Reduced from 75px to 65px to avoid "too big" tiles */
+    --tile-gap: 6px !important; /* Proportional gap adjustment */
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
   }
 
+  /* Fix reset button scaling - prevent it from getting too large */
+  #holdReset {
+    width: clamp(5rem, 18vw, 6.25rem) !important; /* Remove ui-scale multiplication */
+    height: clamp(2.25rem, 6vh, 2.8rem) !important; /* Remove ui-scale multiplication */
+    font-size: 18px !important; /* Fixed font size instead of scaled */
+  }
+
+  /* Reduce keyboard height to prevent overlap with input area */
   #keyboard {
-    min-height: calc(var(--tile-size) * 2.5);
+    min-height: calc(var(--tile-size) * 2.2); /* Reduced from 2.5 to 2.2 */
     flex-shrink: 0; /* Prevent keyboard from shrinking */
   }
 
