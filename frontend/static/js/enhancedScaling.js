@@ -70,6 +70,7 @@ export class ViewportAnalyzer {
     const minDimension = Math.min(width, height);
     const maxDimension = Math.max(width, height);
     
+    if (minDimension < 320) return 'tiny-mobile'; // Very small phones
     if (minDimension < 400) return 'small-mobile';
     if (minDimension < 600) return 'mobile';
     if (minDimension < 900 && isTouchDevice) return 'tablet';
@@ -131,6 +132,12 @@ export class ScalingCalculator {
 
     // Device-specific adjustments
     const deviceAdjustments = {
+      'tiny-mobile': {
+        minTileSize: 18,
+        maxTileSize: 32,
+        keyboardBuffer: 30,
+        gapRatio: 0.10
+      },
       'small-mobile': {
         minTileSize: 20,
         maxTileSize: 40,
@@ -302,8 +309,12 @@ export class CSSScalingManager {
     const { scaleFactor, viewport } = scalingResult;
     
     if (viewport.needsCompactMode) {
-      this.setProperty('--keyboard-scale', Math.min(scaleFactor * 0.9, 1));
+      // On very small displays, ensure keyboard doesn't get too small
+      const minKeyboardScale = viewport.availableWidth < 350 ? 0.85 : 0.8;
+      const keyboardScale = Math.max(minKeyboardScale, Math.min(scaleFactor * 0.9, 1));
+      this.setProperty('--keyboard-scale', keyboardScale);
       this.setProperty('--keyboard-height', 'auto');
+      console.log(`🔧 Compact mode keyboard scaling: ${keyboardScale} (viewport: ${viewport.availableWidth}px)`);
     } else {
       this.setProperty('--keyboard-scale', scaleFactor);
       this.setProperty('--keyboard-height', 'auto');
@@ -398,24 +409,36 @@ export class EnhancedScalingSystem {
 
   fixKeyboardVisibility() {
     const keyboard = document.getElementById('keyboard');
-    if (!keyboard) return;
+    if (!keyboard) {
+      console.log('🔧 Keyboard element not found, skipping visibility fix');
+      return;
+    }
     
     // Get current viewport info
     const viewportHeight = window.visualViewport?.height || window.innerHeight;
     const keyboardRect = keyboard.getBoundingClientRect();
     
+    console.log(`🔧 Keyboard visibility check: viewport=${viewportHeight}px, keyboard.bottom=${keyboardRect.bottom}px, keyboard.top=${keyboardRect.top}px`);
+    
     // Only apply fixes if keyboard is actually cut off
-    if (keyboardRect.bottom > viewportHeight) {
+    if (keyboardRect.bottom > viewportHeight + 5) { // Add 5px buffer
       // Apply CSS-based fix first
       keyboard.style.position = 'fixed';
       keyboard.style.bottom = `max(0px, env(safe-area-inset-bottom, 0px))`;
       keyboard.style.left = '50%';
       keyboard.style.transform = 'translateX(-50%)';
       keyboard.style.zIndex = '1000';
-      keyboard.style.maxHeight = `${Math.min(150, viewportHeight * 0.3)}px`;
+      
+      // Ensure keyboard isn't too small on very small displays
+      const minKeyboardHeight = Math.max(120, viewportHeight * 0.2);
+      const maxKeyboardHeight = Math.min(200, viewportHeight * 0.35);
+      keyboard.style.minHeight = `${minKeyboardHeight}px`;
+      keyboard.style.maxHeight = `${maxKeyboardHeight}px`;
       keyboard.style.overflow = 'hidden';
       
-      console.log('🔧 Applied keyboard visibility fix');
+      console.log(`🔧 Applied keyboard visibility fix: minHeight=${minKeyboardHeight}px, maxHeight=${maxKeyboardHeight}px`);
+    } else {
+      console.log('🔧 Keyboard is visible, no fix needed');
     }
   }
 
