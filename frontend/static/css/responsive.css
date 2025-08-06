@@ -251,7 +251,7 @@
   #inputArea {
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    margin-bottom: 3px; /* Reduced to keep keyboard closer to board */
     width: 100%;
     align-items: center;
   }
@@ -274,6 +274,15 @@
     border-radius: 8px;
   }
 
+  /* When both reset and guess buttons are visible on mobile, make them consistent */
+  body.dark-mode #submitGuess,
+  body:not(.dark-mode) #submitGuess {
+    width: calc(clamp(4rem, 20vw, 4.5rem) * var(--ui-scale));
+    height: calc(2rem * var(--ui-scale));
+    padding: 0; /* Remove padding since we're using explicit width/height */
+    font-size: calc(0.875rem * var(--ui-scale));
+  }
+
   #messagePopup {
     font-size: 16px;
   }
@@ -281,7 +290,6 @@
   /* Enhanced mobile keyboard adjustments with virtual keyboard support */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
-    margin-top: 5px;
     margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
     /* Ensure keyboard is always visible above virtual keyboard */
     position: relative;
@@ -302,6 +310,29 @@
   #boardArea {
     flex: 0 0 auto; /* Only take space needed, don't expand */
     min-height: 0; /* Allow board to shrink if needed */
+  }
+
+  /* Ensure input area doesn't take excessive space */
+  #inputArea {
+    flex: 0 0 auto; /* Don't allow expansion */
+    margin: 3px auto 3px; /* Reduced margins to keep keyboard closer to board */
+  }
+
+  /* Keep message areas compact */
+  #message {
+    flex: 0 0 auto;
+    margin: 3px 0; /* Reduced margin */
+  }
+
+  #messagePopup {
+    flex: 0 0 auto;
+  }
+
+  /* Position keyboard immediately after other elements */
+  #keyboard {
+    flex: 0 0 auto; /* Don't shrink or expand */
+    margin-top: 3px; /* Reduced margin to position closer to board */
+    order: 999; /* Ensure keyboard comes last in flex order */
   }
 
   .key {
@@ -639,6 +670,14 @@
     margin-bottom: 8px; /* Reduced margin to save space */
     flex: 0 0 auto; /* Don't allow input area to shrink */
   }
+
+  /* Make reset and guess buttons same size on medium screens */
+  #submitGuess {
+    width: calc(clamp(4.5rem, 16vw, 5.5rem) * var(--ui-scale));
+    height: calc(clamp(2rem, 5vh, 2.5rem) * var(--ui-scale));
+    padding: 0; /* Remove padding since we're using explicit width/height */
+    font-size: calc(16px * var(--ui-scale));
+  }
 }
 
 /* Large screens - intermediate breakpoint (901px - 1199px) */
@@ -667,6 +706,13 @@
   #guessInput {
     width: clamp(8rem, 20vw, 10rem);
   }
+
+  /* Make reset and guess buttons same size on large screens */
+  #submitGuess {
+    width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
+    height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
+    padding: 0; /* Remove padding since we're using explicit width/height */
+  }
 }
 
 /* Very large screens (min-width: 1551px) */
@@ -691,5 +737,12 @@
 
   #guessInput {
     width: clamp(8rem, 15vw, 9rem);
+  }
+
+  /* Make reset and guess buttons same size on very large screens */
+  #submitGuess {
+    width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
+    height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
+    padding: 0; /* Remove padding since we're using explicit width/height */
   }
 }
