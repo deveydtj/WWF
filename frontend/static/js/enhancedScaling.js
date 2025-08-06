@@ -1,3 +1,5 @@
+import { resetAllElementTransforms } from './utils.js';
+
 /**
  * Enhanced Display Scaling System
  * Modern, device-aware scaling with comprehensive viewport management
@@ -382,6 +384,9 @@ export class EnhancedScalingSystem {
 
   applyOptimalScaling(rows = 6) {
     try {
+      // Reset all element positioning before applying new scaling
+      this.resetAllElementPositioning();
+      
       const scalingResult = this.calculator.calculateOptimalScaling(rows);
       const success = this.cssManager.applyScaling(scalingResult);
       
@@ -436,8 +441,8 @@ export class EnhancedScalingSystem {
       this.fixKeyboardVisibility();
     } else {
       // Keyboard is properly visible, reset any forced positioning to normal CSS
-      this.resetKeyboardPositioning();
-      console.log('🔧 Keyboard is visible and properly sized, reset to normal positioning');
+      this.resetAllElementPositioning();
+      console.log('🔧 Keyboard is visible and properly sized, reset all positioning to normal');
     }
   }
 
@@ -490,8 +495,8 @@ export class EnhancedScalingSystem {
       console.log(`🔧 Applied keyboard visibility fix: minHeight=${minViableHeight}px, was=${currentHeight}px`);
     } else {
       // Keyboard is visible, reset any forced positioning
-      this.resetKeyboardPositioning();
-      console.log('🔧 Keyboard is visible, reset to normal positioning');
+      this.resetAllElementPositioning();
+      console.log('🔧 Keyboard is visible, reset all positioning to normal');
     }
   }
 
@@ -510,6 +515,43 @@ export class EnhancedScalingSystem {
     keyboard.style.overflow = '';
     
     console.log('🔧 Reset keyboard positioning to normal CSS');
+  }
+
+  resetInputAreaPositioning() {
+    const inputArea = document.getElementById('inputArea');
+    if (!inputArea) return;
+    
+    // Reset any inline styles that might interfere with normal CSS
+    inputArea.style.transform = '';
+    inputArea.style.transition = '';
+    inputArea.style.marginTop = '';
+    inputArea.style.marginBottom = '';
+    
+    console.log('🔧 Reset inputArea positioning to normal CSS');
+  }
+
+  resetAllElementPositioning() {
+    // Use the comprehensive reset from utils.js for consistency
+    if (typeof resetAllElementTransforms === 'function') {
+      resetAllElementTransforms();
+    } else {
+      // Fallback: reset locally if import fails
+      this.resetKeyboardPositioning();
+      this.resetInputAreaPositioning();
+      
+      const titleBar = document.getElementById('titleBar');
+      const boardArea = document.getElementById('boardArea');
+      
+      if (titleBar) {
+        titleBar.style.marginBottom = '';
+      }
+      
+      if (boardArea) {
+        boardArea.style.marginBottom = '';
+      }
+      
+      console.log('🔧 Reset all element positioning to normal CSS (fallback)');
+    }
   }
 
   setupEventListeners() {

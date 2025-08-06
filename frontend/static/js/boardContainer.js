@@ -385,11 +385,18 @@ export function applyOptimalScaling(rows = 6) {
  */
 function applyMobileOptimizations(optimalSizing) {
   const keyboard = document.getElementById('keyboard');
-  if (keyboard && optimalSizing.tileSize < 35) {
-    // Scale down keyboard for very small screens
-    const scale = Math.max(0.8, optimalSizing.tileSize / 35);
-    keyboard.style.transform = `scale(${scale})`;
-    keyboard.style.transformOrigin = 'center bottom';
+  if (keyboard) {
+    if (optimalSizing.tileSize < 35) {
+      // Scale down keyboard for very small screens
+      const scale = Math.max(0.8, optimalSizing.tileSize / 35);
+      keyboard.style.transform = `scale(${scale})`;
+      keyboard.style.transformOrigin = 'center bottom';
+      console.log(`🔧 Applied mobile keyboard scaling: ${scale}`);
+    } else {
+      // Reset transform for larger screens
+      keyboard.style.transform = '';
+      keyboard.style.transformOrigin = '';
+    }
   }
 
   // Reduce padding on very small screens
