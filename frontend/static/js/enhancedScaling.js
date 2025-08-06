@@ -430,7 +430,9 @@ export class EnhancedScalingSystem {
       console.warn('⚠️ Keyboard visibility or sizing issue detected, applying fixes');
       this.fixKeyboardVisibility();
     } else {
-      console.log('🔧 Keyboard is visible and properly sized, no fix needed');
+      // Keyboard is properly visible, reset any forced positioning to normal CSS
+      this.resetKeyboardPositioning();
+      console.log('🔧 Keyboard is visible and properly sized, reset to normal positioning');
     }
   }
 
@@ -449,12 +451,26 @@ export class EnhancedScalingSystem {
     
     // Only apply fixes if keyboard is actually cut off
     if (keyboardRect.bottom > viewportHeight + 5) { // Add 5px buffer
-      // Apply CSS-based fix first
+      // Apply minimal CSS-based fix without changing horizontal positioning
       keyboard.style.position = 'fixed';
       keyboard.style.bottom = `max(0px, env(safe-area-inset-bottom, 0px))`;
-      keyboard.style.left = '50%';
-      keyboard.style.transform = 'translateX(-50%)';
       keyboard.style.zIndex = '1000';
+      
+      // Only center horizontally if keyboard positioning is severely broken
+      const keyboardWidth = keyboardRect.width;
+      const viewportWidth = window.innerWidth;
+      const isPositionedOffScreen = keyboardRect.left < 0 || keyboardRect.right > viewportWidth;
+      
+      if (isPositionedOffScreen) {
+        keyboard.style.left = '50%';
+        keyboard.style.transform = 'translateX(-50%)';
+        console.log('🔧 Keyboard was off-screen, applied centering fix');
+      } else {
+        // Preserve existing horizontal positioning
+        keyboard.style.left = '';
+        keyboard.style.transform = '';
+        console.log('🔧 Keyboard horizontal position preserved');
+      }
       
       // Ensure keyboard isn't too small on very small displays
       const minKeyboardHeight = Math.max(120, viewportHeight * 0.2);
@@ -465,8 +481,27 @@ export class EnhancedScalingSystem {
       
       console.log(`🔧 Applied keyboard visibility fix: minHeight=${minKeyboardHeight}px, maxHeight=${maxKeyboardHeight}px`);
     } else {
-      console.log('🔧 Keyboard is visible, no fix needed');
+      // Keyboard is visible, reset any forced positioning
+      this.resetKeyboardPositioning();
+      console.log('🔧 Keyboard is visible, reset to normal positioning');
     }
+  }
+
+  resetKeyboardPositioning() {
+    const keyboard = document.getElementById('keyboard');
+    if (!keyboard) return;
+    
+    // Reset any inline styles that might interfere with normal CSS
+    keyboard.style.position = '';
+    keyboard.style.left = '';
+    keyboard.style.bottom = '';
+    keyboard.style.transform = '';
+    keyboard.style.zIndex = '';
+    keyboard.style.minHeight = '';
+    keyboard.style.maxHeight = '';
+    keyboard.style.overflow = '';
+    
+    console.log('🔧 Reset keyboard positioning to normal CSS');
   }
 
   setupEventListeners() {
