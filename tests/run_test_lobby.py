@@ -14,7 +14,7 @@ import subprocess
 from pathlib import Path
 
 # Add backend to path so we can import modules
-sys.path.insert(0, str(Path(__file__).parent / "backend"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 def get_local_ip():
     """Get the local IP address for network access."""
@@ -67,7 +67,7 @@ def main():
     print("Setting up single lobby for local network testing...\n")
     
     # Change to the repository directory
-    repo_dir = Path(__file__).parent
+    repo_dir = Path(__file__).parent.parent
     os.chdir(repo_dir)
     
     # Check if dependencies are installed
