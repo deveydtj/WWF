@@ -1035,7 +1035,7 @@ let manualPanelToggles = {
 
 // Show or hide panels based on content and viewport size
 function updatePanelVisibility() {
-  if (window.innerWidth > 900) {
+  if (window.innerWidth > 1550) {
     // Full mode - show panels if they have content OR if manually toggled
     if (hasHistoryContent() || manualPanelToggles.history) {
       document.body.classList.add('history-open');
@@ -1241,7 +1241,7 @@ if (myEmoji) {
     if (d.player_id) { myPlayerId = d.player_id; setMyPlayerId(d.player_id); }
   }).catch(() => {});
 }
-if (window.innerWidth > 900) {
+if (window.innerWidth > 1550) {
   // Only show panels if they have content to display
   updatePanelVisibility();
 }
