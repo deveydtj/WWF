@@ -1,9 +1,74 @@
 /* ─────────────────────────────────────────────
-   Responsive Design - Mobile and screen size adaptations
+   Responsive Design - Enhanced mobile and screen size adaptations
    ───────────────────────────────────────────── */
 
-/* Mobile devices (max-width: 600px) */
+/* Modern container-based responsive design */
+@container app (max-width: 600px) {
+  /* Mobile layout optimizations */
+  #appContainer {
+    padding: 5px;
+    min-height: var(--keyboard-safe-height, 100vh);
+  }
+
+  :root {
+    /* Mobile scaling - use enhanced scaling values when available */
+    --tile-size: var(--current-tile-size, min(8vmin, 32px));
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+}
+
+/* Enhanced mobile devices (max-width: 600px) with improved keyboard handling */
 @media (max-width: 600px) {
+  #appContainer {
+    padding: 5px;
+    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
+  }
+
+  /* Enhanced keyboard handling with modern viewport units */
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2.2);
+    margin-top: 5px;
+    margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
+    position: relative;
+    z-index: 100;
+    flex-shrink: 0;
+    transform: scale(var(--keyboard-scale, 1));
+    transform-origin: center bottom;
+  }
+
+  /* Enhanced gameColumn with modern viewport support */
+  #gameColumn {
+    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Improved board area with container queries */
+  #boardArea {
+    flex: 0 0 auto;
+    min-height: 0;
+    container-type: size;
+  }
+
+  /* Enhanced mobile tile sizing */
+  :root {
+    --tile-size: var(--current-tile-size, min(8vmin, 32px));
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+
+  .tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    font-size: max(12px, calc(var(--tile-size) * 0.44));
+    border-radius: clamp(3px, var(--tile-size) * 0.1, 6px);
+  }
+
+  .key {
+    min-width: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.58));
+    height: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.83));
+    font-size: max(12px, calc(var(--tile-size) * 0.27));
+  }
+}
   #appContainer {
     padding: 5px;
     min-height: 100vh;
@@ -213,20 +278,22 @@
     font-size: 16px;
   }
 
-  /* Mobile keyboard adjustments */
+  /* Enhanced mobile keyboard adjustments with virtual keyboard support */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
     margin-top: 5px;
-    margin-bottom: max(3px, env(safe-area-inset-bottom, 0px));
-    /* Ensure keyboard is always visible */
+    margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
+    /* Ensure keyboard is always visible above virtual keyboard */
     position: relative;
     z-index: 100;
     flex-shrink: 0;
+    transform: scale(var(--keyboard-scale, 1));
+    transform-origin: center bottom;
   }
 
-  /* Ensure gameColumn uses full viewport height properly */
+  /* Enhanced gameColumn with modern viewport support */
   #gameColumn {
-    min-height: calc(var(--vh, 1vh) * 100);
+    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
     display: flex;
     flex-direction: column;
   }
@@ -576,267 +643,31 @@
 
 /* Large screens - intermediate breakpoint (901px - 1199px) */
 @media (min-width: 901px) and (max-width: 1199px) {
-  /* Hide player count to save space and prevent input field overlap */
-  #playerCount {
-    display: none;
-  }
-
-  /* Fix title bar layout - override mobile layout */
-  #titleBar {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  #titleBar .mobile-title-row {
-    display: contents;
-  }
-  
-  #titleBar h1 {
-    order: 2;
-    flex: 1;
-    margin: 0;
-    text-align: center;
-    font-size: calc(1.4rem * var(--ui-scale));
-  }
-  
-  #resetWrapper {
-    order: 1;
-    margin-left: 0;
-  }
-  
-  #titleBar .mobile-leaderboard-container {
-    order: 3;
-    flex: 0 0 auto;
-    max-width: none;
-  }
-
-  /* Moderately sized tiles for intermediate screens */
   :root {
-    --tile-size: min(9vmin, 48px);
+    --tile-size: var(--current-tile-size, min(9vmin, 48px));
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
-  }
-
-  #keyboard {
-    min-height: calc(var(--tile-size) * 2.4);
-    flex-shrink: 0;
-  }
-
-  /* Use medium-style panel positioning for constrained large screens */
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 80;
-  }
-
-  body[data-mode='medium'] #chatBox {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  body[data-mode='medium']:not(.history-open) #historyBox,
-  body[data-mode='medium']:not(.definition-open) #definitionBox,
-  body[data-mode='medium']:not(.chat-open) #chatBox {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Ensure gameColumn uses proper flexbox layout */
-  #gameColumn {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Board area should only take space it needs */
-  #boardArea {
-    flex: 0 0 auto;
-    min-height: 0;
-  }
-
-  /* Add proper spacing between input area and keyboard */
-  #inputArea {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    flex: 0 0 auto;
   }
 }
 
 /* Large screens - problem range (1200px - 1550px) */
 @media (min-width: 1200px) and (max-width: 1550px) {
-  /* Hide player count to save space */
-  #playerCount {
-    display: none;
-  }
-
-  /* Fix title bar layout */
-  #titleBar {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  #titleBar .mobile-title-row {
-    display: contents;
-  }
-  
-  #titleBar h1 {
-    order: 2;
-    flex: 1;
-    margin: 0;
-    text-align: center;
-    font-size: calc(1.5rem * var(--ui-scale));
-  }
-  
-  #resetWrapper {
-    order: 1;
-    margin-left: 0;
-  }
-  
-  #titleBar .mobile-leaderboard-container {
-    order: 3;
-    flex: 0 0 auto;
-    max-width: none;
-  }
-
-  /* Use much larger fixed tile size to prevent JavaScript from shrinking too much */
   :root {
-    --tile-size: 70px !important; /* Increased from 60px, with !important to prevent JS override */
-    --tile-gap: 7px !important; /* Proportional gap */
+    --tile-size: var(--current-tile-size, 60px) !important;
+    --tile-gap: 7px !important;
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
-  }
-
-  /* Fix reset button scaling - prevent it from getting too large */
-  #holdReset {
-    width: clamp(5rem, 18vw, 6.25rem) !important; /* Remove ui-scale multiplication */
-    height: clamp(2.25rem, 6vh, 2.8rem) !important; /* Remove ui-scale multiplication */
-    font-size: 18px !important; /* Fixed font size instead of scaled */
-  }
-
-  #keyboard {
-    min-height: calc(var(--tile-size) * 2.4);
-    flex-shrink: 0;
-  }
-
-  /* Allow normal panel behavior - removed forced medium mode positioning */
-  /* Side panels will be positioned by JavaScript based on available space */
-
-  /* Ensure gameColumn uses proper flexbox layout */
-  #gameColumn {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Board area should only take space it needs */
-  #boardArea {
-    flex: 0 0 auto;
-    min-height: 0;
-  }
-
-  /* Add proper spacing between input area and keyboard */
-  #inputArea {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    flex: 0 0 auto;
   }
 }
 
 /* Very large screens (min-width: 1551px) */
 @media (min-width: 1551px) {
-  /* Hide player count to save space and prevent input field overlap */
-  #playerCount {
-    display: none;
-  }
-
-  /* Fix title bar layout for very large screens - override mobile layout */
-  #titleBar {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  #titleBar .mobile-title-row {
-    display: contents;
-  }
-  
-  #titleBar h1 {
-    order: 2;
-    flex: 1;
-    margin: 0;
-    text-align: center;
-    font-size: calc(1.6rem * var(--ui-scale));
-  }
-  
-  #resetWrapper {
-    order: 1;
-    margin-left: 0;
-  }
-  
-  #titleBar .mobile-leaderboard-container {
-    order: 3;
-    flex: 0 0 auto;
-    max-width: none;
-  }
-
-  /* Use smaller tile size for very large screens - reduced from 75px to 65px */
   :root {
-    --tile-size: 65px !important; /* Reduced from 75px to 65px to avoid "too big" tiles */
-    --tile-gap: 6px !important; /* Proportional gap adjustment */
+    --tile-size: var(--current-tile-size, 65px) !important;
+    --tile-gap: 6px !important;
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
   }
 
-  /* Fix reset button scaling - prevent it from getting too large */
-  #holdReset {
-    width: clamp(5rem, 18vw, 6.25rem) !important; /* Remove ui-scale multiplication */
-    height: clamp(2.25rem, 6vh, 2.8rem) !important; /* Remove ui-scale multiplication */
-    font-size: 18px !important; /* Fixed font size instead of scaled */
-  }
-
-  /* Reduce keyboard height to prevent overlap with input area */
-  #keyboard {
-    min-height: calc(var(--tile-size) * 2.2); /* Reduced from 2.5 to 2.2 */
-    flex-shrink: 0; /* Prevent keyboard from shrinking */
-  }
-
-  /* Ensure gameColumn uses proper flexbox layout */
-  #gameColumn {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Board area should only take space it needs */
-  #boardArea {
-    flex: 0 0 auto; /* Only take space needed, don't expand */
-    min-height: 0; /* Allow board to shrink if needed */
-  }
-
-  /* Add proper spacing between input area and keyboard in full mode */
-  #inputArea {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px; /* Reduced margin to save space */
-    flex: 0 0 auto; /* Don't allow input area to shrink */
+  .game-container {
+    max-width: 1400px;
+    margin: 0 auto;
   }
 }

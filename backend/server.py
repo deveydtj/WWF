@@ -1637,6 +1637,13 @@ def lobby_page(code: str):
     return send_from_directory(str(root), "game.html")
 
 
+@app.route("/enhanced-scaling-test")
+def enhanced_scaling_test():
+    """Serve the enhanced scaling test page."""
+    root = STATIC_DIR if (STATIC_DIR / "enhanced-scaling-test.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "enhanced-scaling-test.html")
+
+
 # Serve static JavaScript modules
 @app.route("/static/js/<path:filename>")
 @app.route("/js/<path:filename>")

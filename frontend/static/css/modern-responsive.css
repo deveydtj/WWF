@@ -1,0 +1,218 @@
+/* ─────────────────────────────────────────────
+   Modern Responsive Design - Advanced viewport and container-based scaling
+   ───────────────────────────────────────────── */
+
+/* Modern viewport units for better mobile support */
+:root {
+  /* Modern viewport units - use when available */
+  --viewport-height: 100vh;
+  --small-viewport-height: 100svh;
+  --large-viewport-height: 100lvh;
+  --dynamic-viewport-height: 100dvh;
+  
+  /* Responsive scaling factors */
+  --min-scale: 0.75;
+  --max-scale: 1.25;
+  --fluid-scale: clamp(var(--min-scale), 1vw + 0.5rem, var(--max-scale));
+  
+  /* Container-based responsive properties */
+  --container-padding: clamp(0.5rem, 2vw, 2rem);
+  --component-gap: clamp(0.25rem, 1vw, 1rem);
+  
+  /* Dynamic tile sizing */
+  --tile-size-base: 60px;
+  --tile-size-mobile: clamp(32px, 8vw, 48px);
+  --tile-size-tablet: clamp(48px, 6vw, 60px);
+  --tile-size-desktop: clamp(60px, 4vw, 70px);
+  
+  /* Fluid board dimensions */
+  --board-aspect-ratio: 5 / 6;
+  --board-max-width: min(90vw, 500px);
+  --board-max-height: min(80vh, 600px);
+}
+
+/* Support for modern viewport units where available */
+@supports (height: 100dvh) {
+  :root {
+    --viewport-height: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+  :root {
+    --small-viewport-height: 100svh;
+  }
+}
+
+/* Container queries for component-based responsive design */
+@container (min-width: 400px) {
+  .game-container {
+    --tile-size: var(--tile-size-tablet);
+  }
+}
+
+@container (min-width: 768px) {
+  .game-container {
+    --tile-size: var(--tile-size-desktop);
+  }
+}
+
+/* Enhanced mobile-first responsive scaling */
+.game-container {
+  container-type: inline-size;
+  --tile-size: var(--tile-size-mobile);
+  --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+}
+
+/* Fluid typography scaling */
+.fluid-text {
+  font-size: clamp(0.875rem, 2.5vw, 1.25rem);
+  line-height: 1.4;
+}
+
+/* Responsive grid system using CSS Grid */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: var(--component-gap);
+}
+
+/* Adaptive spacing system */
+.adaptive-padding {
+  padding: clamp(0.5rem, 2vw + 0.5rem, 2rem);
+}
+
+.adaptive-margin {
+  margin: clamp(0.25rem, 1vw + 0.25rem, 1rem);
+}
+
+/* Keyboard-safe viewport for mobile devices */
+@media (max-height: 600px) and (max-width: 768px) {
+  :root {
+    --viewport-height: 100svh; /* Use small viewport height on mobile keyboards */
+    --keyboard-safe-area: max(env(keyboard-inset-height, 0px), 0px);
+  }
+  
+  .keyboard-safe-container {
+    min-height: calc(var(--viewport-height) - var(--keyboard-safe-area));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  :root {
+    --tile-border-width: 0.5px;
+    --shadow-blur: 4px;
+  }
+}
+
+/* Orientation-aware responsive design */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --tile-size: var(--tile-size-mobile);
+    --compact-mode: true;
+  }
+  
+  .landscape-optimize {
+    flex-direction: row;
+    gap: var(--component-gap);
+  }
+}
+
+/* Wide screen optimizations */
+@media (min-width: 1200px) {
+  :root {
+    --tile-size: min(var(--tile-size-desktop), 65px);
+    --board-max-width: 450px;
+  }
+}
+
+/* Ultra-wide screen handling */
+@media (min-width: 1920px) {
+  .game-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  :root {
+    --tile-size: 60px; /* Prevent tiles from becoming too large */
+  }
+}
+
+/* Foldable device support */
+@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+  :root {
+    --tile-size: var(--tile-size-tablet);
+  }
+  
+  .foldable-optimize {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}
+
+/* Accessibility: Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Enhanced contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --tile-border-width: 2px;
+    --shadow-blur: 0px;
+  }
+}
+
+/* Touch-optimized sizing */
+@media (hover: none) and (pointer: coarse) {
+  :root {
+    --min-touch-target: 44px;
+    --tile-size: max(var(--tile-size), var(--min-touch-target));
+  }
+  
+  .touch-target {
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+  }
+}
+
+/* Print styles (if needed) */
+@media print {
+  .game-container {
+    --tile-size: 40px;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Future-proofing: CSS environment variables */
+.safe-area-container {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+/* Intrinsic responsive design patterns */
+.intrinsic-ratio {
+  aspect-ratio: var(--board-aspect-ratio);
+  width: 100%;
+  max-width: var(--board-max-width);
+  max-height: var(--board-max-height);
+}
+
+/* Fluid space scaling */
+.fluid-space-xs { margin: clamp(0.25rem, 0.5vw, 0.5rem); }
+.fluid-space-sm { margin: clamp(0.5rem, 1vw, 1rem); }
+.fluid-space-md { margin: clamp(1rem, 2vw, 2rem); }
+.fluid-space-lg { margin: clamp(1.5rem, 3vw, 3rem); }
+.fluid-space-xl { margin: clamp(2rem, 4vw, 4rem); }

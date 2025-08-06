@@ -29,6 +29,8 @@ import { StateManager, STATES } from './stateManager.js';
 
 // Import board scaling test utilities for debugging
 import './boardScalingTests.js';
+// Import enhanced scaling system
+import { initializeEnhancedScaling } from './enhancedScaling.js';
 
 const gameState = new StateManager();
 
@@ -1251,11 +1253,19 @@ menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
 applyLayoutMode();
 createBoard(board, maxRows);
 
-// Use enhanced container measurement and scaling
-const scalingSuccess = applyOptimalScaling(maxRows);
-if (!scalingSuccess) {
+// Initialize and use enhanced scaling system
+const enhancedScaling = initializeEnhancedScaling();
+const scalingResult = enhancedScaling.applyOptimalScaling(maxRows);
+
+if (!scalingResult.success) {
+  console.warn('Enhanced scaling failed, using fallback:', scalingResult.error);
   // Fallback to original method if enhanced scaling fails
-  fitBoardToContainer(maxRows);
+  const fallbackResult = applyOptimalScaling(maxRows);
+  if (!fallbackResult) {
+    fitBoardToContainer(maxRows);
+  }
+} else {
+  console.log('✅ Enhanced scaling applied successfully');
 }
 
 // Verify all elements fit and log any issues
@@ -1317,10 +1327,22 @@ window.addEventListener('resize', () => {
   applyLayoutMode();
   updateInputVisibility(); // Update input visibility based on current viewport
   
-  // Use enhanced scaling with verification
-  const scalingSuccess = applyOptimalScaling(maxRows);
-  if (!scalingSuccess) {
-    fitBoardToContainer(maxRows);
+  // Use enhanced scaling system on resize
+  if (window.enhancedScaling) {
+    const scalingResult = window.enhancedScaling.applyOptimalScaling(maxRows);
+    if (!scalingResult.success) {
+      console.warn('Enhanced scaling failed on resize, using fallback');
+      const fallbackResult = applyOptimalScaling(maxRows);
+      if (!fallbackResult) {
+        fitBoardToContainer(maxRows);
+      }
+    }
+  } else {
+    // Fallback if enhanced scaling not available
+    const scalingSuccess = applyOptimalScaling(maxRows);
+    if (!scalingSuccess) {
+      fitBoardToContainer(maxRows);
+    }
   }
   
   adjustKeyboardForViewport();
@@ -1348,10 +1370,23 @@ window.addEventListener('orientationchange', () => {
   applyLayoutMode();
   updateInputVisibility(); // Update input visibility on orientation change
   
-  // Use enhanced scaling with verification
-  const scalingSuccess = applyOptimalScaling(maxRows);
-  if (!scalingSuccess) {
-    fitBoardToContainer(maxRows);
+  // Use enhanced scaling system on orientation change
+  if (window.enhancedScaling) {
+    // Enhanced scaling handles orientation changes automatically
+    const scalingResult = window.enhancedScaling.applyOptimalScaling(maxRows);
+    if (!scalingResult.success) {
+      console.warn('Enhanced scaling failed on orientation change, using fallback');
+      const fallbackResult = applyOptimalScaling(maxRows);
+      if (!fallbackResult) {
+        fitBoardToContainer(maxRows);
+      }
+    }
+  } else {
+    // Fallback if enhanced scaling not available
+    const scalingSuccess = applyOptimalScaling(maxRows);
+    if (!scalingSuccess) {
+      fitBoardToContainer(maxRows);
+    }
   }
   
   adjustKeyboardForViewport();
@@ -1372,10 +1407,22 @@ window.addEventListener('orientationchange', () => {
     updateVH();
     updateInputVisibility(); // Update input visibility on delayed orientation change
     
-    // Use enhanced scaling with verification
-    const scalingSuccess = applyOptimalScaling(maxRows);
-    if (!scalingSuccess) {
-      fitBoardToContainer(maxRows);
+    // Use enhanced scaling system on delayed orientation change
+    if (window.enhancedScaling) {
+      const scalingResult = window.enhancedScaling.applyOptimalScaling(maxRows);
+      if (!scalingResult.success) {
+        console.warn('Enhanced scaling failed on delayed orientation change, using fallback');
+        const fallbackResult = applyOptimalScaling(maxRows);
+        if (!fallbackResult) {
+          fitBoardToContainer(maxRows);
+        }
+      }
+    } else {
+      // Fallback if enhanced scaling not available
+      const scalingSuccess = applyOptimalScaling(maxRows);
+      if (!scalingSuccess) {
+        fitBoardToContainer(maxRows);
+      }
     }
     
     adjustKeyboardForViewport();
