@@ -35,21 +35,28 @@ WordSquad is a multiplayer word guessing game inspired by Wordle, built with Fla
 
 ### Frontend Development
 - Use semantic HTML with accessibility considerations
-- Implement modern fluid responsive design using:
-  - Container queries for component-based responsiveness
-  - Modern viewport units (dvh, svh, lvh) for better mobile support
-  - Fluid scaling with clamp() functions for adaptive sizing
-  - Dynamic CSS custom properties for tile and component sizing
+- Implement **hybrid responsive design** combining:
+  - **Traditional media queries** (600px, 900px breakpoints) for established mobile/tablet/desktop modes
+  - **Modern container queries** for component-based responsiveness  
+  - **Modern viewport units** (dvh, svh, lvh) for better mobile support
+  - **Fluid scaling** with clamp() functions for adaptive sizing
+  - **Dynamic CSS custom properties** for tile and component sizing
 - Use CSS custom properties for theming and consistency
 - Organize JavaScript into ES6 modules with clear separation of concerns
+- Implement modular manager classes for complex functionality (DOM, network, state)
 - Handle both touch and keyboard input for cross-platform compatibility
+- Include comprehensive chat system with real-time messaging
 
 ### Game Logic
-- Each lobby maintains independent state (guesses, chat, scoreboard)
+- Each lobby maintains independent state (guesses, chat, scoreboard, game history)
 - Point system based on Scrabble tile values with bonuses/penalties
 - Support for "Hard Mode" requiring discovered letters in future guesses
-- Daily Double feature for hint mechanics
+- Daily Double feature for hint mechanics with letter revelation
 - Player activity tracking with auto-fade for inactive users
+- Real-time chat system with emoji integration
+- Lobby management (create, join, leave, kick players)
+- Game history preservation across multiple rounds
+- Network-based lobby discovery for local play
 
 ## Common Patterns
 
@@ -74,9 +81,24 @@ eventSource.onmessage = (event) => {
 
 ### Responsive Scaling
 ```css
-/* Modern fluid responsive pattern with container queries */
+/* Hybrid responsive design - traditional + modern */
+
+/* Traditional media query approach (responsive.css) */
+@media (max-width: 600px) {
+  :root {
+    --tile-size: min(8vmin, 32px);
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  :root {
+    --tile-size: min(8vmin, 42px);
+  }
+}
+
+/* Modern container query approach (modern-responsive.css) */
 .game-container {
-  /* Base styles with fluid scaling */
+  container-type: inline-size;
   --tile-size: clamp(32px, 8vw, 70px);
   --container-padding: clamp(0.5rem, 2vw, 2rem);
 }
@@ -121,8 +143,12 @@ eventSource.onmessage = (event) => {
 ## Common Tasks
 When working on this project, you'll often need to:
 1. Add new game features while maintaining lobby independence
-2. Update fluid responsive layouts using container queries and modern CSS
-3. Implement real-time features using the SSE stream
-4. Add new API endpoints following the RESTful lobby pattern
-5. Update tests to cover new functionality
-6. Ensure accessibility and cross-platform compatibility
+2. Update hybrid responsive layouts using both traditional breakpoints and modern container queries
+3. Implement real-time features using the SSE stream for live updates
+4. Add new API endpoints following the RESTful `/lobby/<id>/` pattern
+5. Update modular JavaScript architecture with new manager classes
+6. Integrate chat functionality with real-time messaging
+7. Handle lobby management (creation, joining, leaving, player removal)
+8. Update tests to cover new functionality across frontend and backend
+9. Ensure accessibility and cross-platform compatibility
+10. Manage game state persistence and history across multiple rounds

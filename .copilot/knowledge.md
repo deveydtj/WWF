@@ -9,7 +9,24 @@
 - `POST /lobby/<id>/guess` - Submit a word guess
 - `POST /lobby/<id>/reset` - Start new round (requires host token)
 - `POST /lobby/<id>/kick` - Remove player (requires host token)
+- `POST /lobby/<id>/leave` - Leave the current lobby
 - `GET /lobby/<id>/stream` - Server-Sent Events stream
+- `GET /lobby/<id>/chat` - Get chat messages
+- `POST /lobby/<id>/chat` - Send chat message
+
+### Lobby Discovery and Creation
+- `POST /lobby` - Create new lobby
+- `GET /lobbies` - List all active lobbies
+- `GET /lobbies/network` - List lobbies from same network
+
+### Game Features
+- `POST /hint` - Daily Double hint selection (global endpoint)
+- `POST /lobby/<id>/hint` - Daily Double hint selection (lobby-specific)
+
+### System Endpoints
+- `GET /health` - Health check for monitoring
+- `POST /internal/purge` - Cleanup idle lobbies (maintenance)
+- `POST /admin/notify-update` - Notify clients of server updates
 
 ### Request/Response Patterns
 All POST requests should include `player_id` in the JSON body. The server responds with updated game state or error messages.
@@ -26,6 +43,9 @@ All POST requests should include `player_id` in the JSON body. The server respon
 - `uiNotifications.js` - Visual feedback and animations
 - `audioManager.js` - Sound effects and jingles
 - `hintManager.js` - Hint selection and logic
+- `chat.js` - Chat functionality and UI
+- `keyboard.js` - Virtual keyboard implementation
+- `history.js` - Game history management
 
 ### Manager Classes
 - `domManager` - Centralized DOM element access
@@ -33,22 +53,57 @@ All POST requests should include `player_id` in the JSON body. The server respon
 - `gameStateManager` - Game state transitions
 - `eventListenersManager` - Event handling coordination
 - `appInitializer` - Application bootstrap
+- `leaderboardManager` - Leaderboard state and display
+- `optionsManager` - Game options and settings
+- `panelManager` - Side panel state management
+- `resetManager` - Game reset functionality
+
+### Specialized Modules
+- `boardContainer.js` - Board container and scaling
+- `boardScalingTests.js` - Scaling test utilities for debugging
+- `enhancedScaling.js` - Advanced responsive scaling logic
+- `popupPositioning.js` - Dynamic popup positioning
+- `hintBadge.js` - Hint badge UI component
 
 ## CSS Architecture
 
-### Modern Responsive Design
-- **Fluid scaling**: Container queries and clamp() functions for adaptive layouts
-- **Modern viewport units**: dvh, svh, lvh for better mobile viewport handling  
-- **Dynamic sizing**: CSS custom properties with fluid scaling factors
-- **Component-based**: Container queries enable component-level responsiveness
+### Hybrid Responsive Design System
+The project uses a **hybrid approach** combining traditional media queries with modern responsive techniques:
+
+#### Traditional Media Query System (`responsive.css`)
+- **Mobile**: ≤600px with comprehensive mobile optimizations
+- **Medium**: 601-900px (tablet/medium screens)  
+- **Large**: 901-1199px (desktop)
+- **Extra Large**: 1200px+ with scaling limits
+
+#### Modern Responsive System (`modern-responsive.css`)
+- **Container queries**: Component-based responsiveness
+- **Modern viewport units**: dvh, svh, lvh for better mobile viewport handling
+- **Fluid scaling**: clamp() functions for adaptive sizing
+- **Dynamic CSS properties**: Responsive tile and component sizing
+- **Intrinsic design patterns**: aspect-ratio and intrinsic sizing
+
+#### CSS Architecture Files
+- `base.css` - Core styles and CSS custom properties
+- `theme.css` - Color themes and design tokens  
+- `layout.css` - Panel positioning and core layout
+- `responsive.css` - Traditional breakpoint-based responsive design
+- `modern-responsive.css` - Container queries and modern responsive patterns
+- `animations.css` - Transitions and animation effects
 
 ### Key CSS Classes
-- `.game-container` - Main game wrapper
+- `.game-container` - Main game wrapper with container queries
 - `.board` - Game board grid
 - `.tile` - Individual letter tiles
 - `.side-panel` - Chat and leaderboard panels
 - `.emoji-modal` - Player selection modal
 - `.message-popup` - Notification overlay
+- `.keyboard` - Virtual keyboard container
+- `.key` - Individual keyboard keys
+- `.chat-container` - Chat message container
+- `.chat-message` - Individual chat messages
+- `.leaderboard-entry` - Player score entries
+- `.hint-badge` - Daily Double hint indicators
 
 ## Game State Structure
 
@@ -64,14 +119,34 @@ All POST requests should include `player_id` in the JSON body. The server respon
       last_active: "2023-01-01T00:00:00Z"
     }
   },
+  leaderboard: [
+    { emoji: "😀", score: 15, player_id: "player1" }
+  ],
   game_over: false,
   winner: null,
   board_full: false,
-  chat: [],
+  chat: [
+    {
+      emoji: "😀", 
+      text: "Good game!", 
+      timestamp: "2023-01-01T00:00:00Z",
+      player_id: "player1"
+    }
+  ],
+  past_games: [
+    ["ABOUT", "APRIL", "APPLE"]  // Previous completed games
+  ],
   definition: "A fruit...",
   daily_double: {
     active: false,
-    hint_used: false
+    hint_used: false,
+    winner_emoji: null,
+    revealed_letters: []
+  },
+  metadata: {
+    created_at: "2023-01-01T00:00:00Z",
+    last_activity: "2023-01-01T00:00:00Z",
+    host_token: "unique-host-identifier"
   }
 }
 ```
