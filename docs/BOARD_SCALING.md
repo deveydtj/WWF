@@ -95,21 +95,11 @@ The system is automatically integrated into the existing game:
    - Checks optimal tile size calculations
    - Validates device compatibility
 
-2. **Manual Test Page** (`test-scaling.html`):
-   - Interactive testing interface
-   - Real-time viewport information
-   - Device simulation testing
-   - Debug output and visual indicators
-
 ### Running Tests
 
 ```bash
-# Run Cypress tests (when Cypress is available)
+# Run Cypress tests
 npm run cypress
-
-# Manual testing
-# Open http://localhost:5173/test-scaling.html in browser
-# Use the interactive testing buttons
 ```
 
 ## Supported Device Sizes
