@@ -1,5 +1,7 @@
 # WordSquad
 
+> A multiplayer word guessing game inspired by Wordle with real-time chat, emoji leaderboards, and responsive design.
+
 WordSquad is a small multiplayer adaptation of Word. The frontend lives under the
 `frontend/` directory while `backend/server.py` provides a Flask API. The
 server supports **multiple lobbies**, each identified by a six character code.
@@ -7,7 +9,7 @@ Every lobby maintains its own guesses, chat log and scoreboard while sharing
 the same application code. See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for a diagram
 of the overall flow.
 
-## Game Features
+## 🎮 Game Features
 
 - **Emoji leaderboard:** choose a unique emoji to represent yourself and compete for the
   highest score.
@@ -32,7 +34,7 @@ of the overall flow.
 - **Hint badge** shows next to your emoji while a Daily Double hint is unused.
 - **Accessible color contrast** ensures text is readable in light and dark modes.
 
-## Requirements
+## 💻 Requirements
 
 - Python **3.12.x**
 - Node.js **20.x**
@@ -48,7 +50,7 @@ pip install Flask Flask-Cors
 Run `./scripts/setup.sh` to verify that Python, Node.js and required assets are present
 before starting development.
 
-## Running the server
+## 🚀 Running the server
 
 From the project root, run:
 
@@ -273,7 +275,11 @@ WordSquad is production-ready with comprehensive security features and monitorin
 
 For detailed deployment instructions and security verification steps, see the complete documentation in the `docs/` directory.
 
-## Repository Practices
+## 🤖 AI Development Support
+
+This repository is optimized for GitHub Copilot and AI-assisted development. See [`.copilot/README.md`](.copilot/README.md) for detailed configuration and usage guidelines.
+
+## 🏗️ Repository Practices
 
 - Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
 - Pull requests must pass status checks for Pytest, Cypress, and `terraform plan` before merging to `main`.
