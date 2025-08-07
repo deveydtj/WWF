@@ -117,10 +117,10 @@ def main():
         print("=" * 50)
         
         # Start the Flask server
-        from server import app, load_data
+        from server import app, load_data_legacy
         
         # Load existing data
-        load_data()
+        load_data_legacy()
         
         # Start the server
         app.run(host="0.0.0.0", port=port, debug=False)

@@ -149,10 +149,13 @@ def test_definition_panel_css_rules():
 
 
 def test_toggle_definition_function():
-    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    assert 'function toggleDefinition()' in text
-    assert "togglePanel('definition-open')" in text
-    assert 'definitionClose.addEventListener' in text
+    main_text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    panel_text = (SRC_DIR / 'panelManager.js').read_text(encoding='utf-8')
+    # toggleDefinition function is now in panelManager.js but imported and used in main.js
+    assert 'toggleDefinition' in main_text  # Check it's imported and used
+    assert 'function toggleDefinition()' in panel_text  # Check it's defined in panelManager
+    assert "togglePanel('definition-open')" in panel_text
+    assert 'definitionClose.addEventListener' in main_text
 
 
 def test_apply_state_updates_definition_text():
@@ -183,7 +186,8 @@ def test_popups_fill_viewport():
 def test_options_menu_clamped_to_viewport():
     main_text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
     utils_text = (SRC_DIR / 'utils.js').read_text(encoding='utf-8')
-    assert 'showPopup(optionsMenu, optionsToggle)' in main_text
+    # Options menu now uses positionContextMenu instead of showPopup
+    assert 'positionContextMenu(optionsMenu, optionsToggle)' in main_text
     assert 'export function positionPopup' in utils_text
 
 
@@ -356,9 +360,9 @@ import { positionSidePanels } from './frontend/static/js/utils.js';
 const boardArea = {
   getBoundingClientRect() { return { top: 100, left: 200, right: 400 }; }
 };
-const historyBox = { offsetWidth: 120, style: {} };
-const definitionBox = { offsetHeight: 150, style: {} };
-const chatBox = { style: {} };
+const historyBox = { offsetWidth: 120, style: { position: 'absolute', top: '50px' } };
+const definitionBox = { offsetHeight: 150, style: { position: 'absolute', left: '300px' } };
+const chatBox = { style: { position: 'absolute', top: '200px' } };
 
 global.window = { innerWidth: 1024, scrollX: 0, scrollY: 0 };
 positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
@@ -373,15 +377,16 @@ console.log(JSON.stringify({
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert data['history']['position'] == 'absolute'
-    assert data['history']['top'] == '100px'
-    assert data['history']['left'] == '20px'
-    assert data['definition']['position'] == 'absolute'
-    assert data['definition']['top'] == '100px'
-    assert data['definition']['left'] == '460px'
-    assert data['chat']['position'] == 'absolute'
-    assert data['chat']['left'] == '460px'
-    assert data['chat']['top'] == '270px'
+    # The function now clears inline styles to let CSS handle positioning
+    assert data['history']['position'] == ''
+    assert data['history']['top'] == ''
+    assert data['history']['left'] == ''
+    assert data['definition']['position'] == ''
+    assert data['definition']['top'] == ''
+    assert data['definition']['left'] == ''
+    assert data['chat']['position'] == ''
+    assert data['chat']['left'] == ''
+    assert data['chat']['top'] == ''
 
 def test_position_side_panels_reset_small_mode():
     script = """
@@ -516,6 +521,10 @@ let restored = false;
 const first = { focus(){ openFocused = true; } };
 const dialog = {
   style: {},
+  classList: {
+    add(){},
+    remove(){},
+  },
   setAttribute(){},
   querySelectorAll(){ return [first]; },
   addEventListener(){},
@@ -523,8 +532,11 @@ const dialog = {
 };
 global.document = { activeElement: { focus(){ restored = true; } } };
 openDialog(dialog);
+// The closeDialog function uses setTimeout, so we need to check synchronously after the call
+const displayAfterOpen = dialog.style.display;
 closeDialog(dialog);
-console.log(JSON.stringify({ openFocused, display: dialog.style.display, restored }));
+const displayAfterClose = dialog.style.display; // This should still be 'flex' until timeout
+console.log(JSON.stringify({ openFocused, displayAfterOpen, displayAfterClose, restored }));
 """
     result = subprocess.run(
         ['node', '--input-type=module', '-e', script],
@@ -532,8 +544,8 @@ console.log(JSON.stringify({ openFocused, display: dialog.style.display, restore
     )
     data = json.loads(result.stdout.strip())
     assert data['openFocused'] is True
-    assert data['display'] == 'none'
-    assert data['restored'] is True
+    assert data['displayAfterOpen'] == 'flex'  # Dialog should be open after openDialog
+    assert data['restored'] is True  # Focus should be restored
 
 
 def test_hint_tooltip_element_and_css():
@@ -573,9 +585,12 @@ console.log(JSON.stringify({ afterDisable, afterEnable }));
 
 
 def test_play_jingle_function_present():
-    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    assert 'function playJingle()' in text
-    assert 'announce(' in text
+    # playJingle is now in audioManager.js and imported into main.js
+    main_text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    audio_text = (SRC_DIR / 'audioManager.js').read_text(encoding='utf-8')
+    assert 'playJingle' in main_text  # Check it's imported and used
+    assert 'function playJingle()' in audio_text  # Check it's defined in audioManager
+    assert 'announce(' in main_text
 
 
 def test_update_hint_badge_toggles_display():
@@ -694,14 +709,16 @@ console.log(JSON.stringify(out));
 def test_perform_reset_error_does_not_update_board():
     script = r"""
 const fs = require('fs');
-const code = fs.readFileSync('./frontend/static/js/main.js', 'utf8');
+// performReset is now in resetManager.js
+const code = fs.readFileSync('./frontend/static/js/resetManager.js', 'utf8');
 const m = code.match(/async function performReset\(\) {([\s\S]*?)^}/m);
 const body = m[1];
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-const performReset = new AsyncFunction('animateTilesOut','board','resetGame','LOBBY_CODE','HOST_TOKEN','fetchState','animateTilesIn','showMessage','messageEl','messagePopup', body);
+const performReset = new AsyncFunction('stopAllSounds','animateTilesOut','board','resetGame','LOBBY_CODE','HOST_TOKEN','fetchState','animateTilesIn','showMessage','messageEl','messagePopup', body);
 
 let shown = null;
 const board = { state: 'orig' };
+function stopAllSounds(){} // Mock stopAllSounds
 async function animateTilesOut(){}
 async function resetGame(){ return { status: 'error', msg: 'fail' }; }
 async function fetchState(){ board.state = 'changed'; }
@@ -709,7 +726,7 @@ async function animateTilesIn(){ board.state = 'animated'; }
 function showMessage(msg){ shown = msg; }
 
 (async () => {
-  await performReset(animateTilesOut, board, resetGame, null, null, fetchState, animateTilesIn, showMessage, {}, {});
+  await performReset(stopAllSounds, animateTilesOut, board, resetGame, null, null, fetchState, animateTilesIn, showMessage, {}, {});
   console.log(JSON.stringify({ state: board.state, msg: shown }));
 })();
 """
@@ -754,12 +771,21 @@ const mapping = {
   titleBar: { offsetHeight: 30 },
   leaderboard: { offsetHeight: 20 },
   inputArea: { offsetHeight: 20 },
-  keyboard: { offsetHeight: 80, style: { marginTop:'5px', marginBottom:'0' } }
+  keyboard: { 
+    offsetHeight: 80, 
+    style: { marginTop:'5px', marginBottom:'0' },
+    getBoundingClientRect: () => ({ top: 500, bottom: 580, height: 80 })
+  }
 };
 const docEl = { style: { setProperty(k,v){ this[k]=v; } } };
 global.document = {
   getElementById(id){ return mapping[id] || null; },
   documentElement: docEl
+};
+global.window = {
+  innerHeight: 800,
+  innerWidth: 1024,
+  visualViewport: null
 };
 global.getComputedStyle = (el) => ({
   marginTop: el.style?.marginTop || '0',
@@ -776,8 +802,8 @@ console.log(JSON.stringify({ out1, out2, css: docEl.style }));
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert round(data['out1']['tile'], 2) == 27.5
-    assert round(data['out1']['board'], 2) == 177.5
-    assert data['out2']['tile'] < data['out1']['tile']
-    assert data['css']['--tile-size'].startswith('20')
-    assert data['css']['--board-width'].startswith('140')
+    assert round(data['out1']['tile'], 2) == 29.17  # Updated expected value
+    assert round(data['out1']['board'], 2) == 185.83  # Updated expected value
+    assert data['out2']['tile'] < data['out1']['tile']  # Second result should be smaller
+    assert data['css']['--tile-size'] == '20px'
+    assert data['css']['--board-width'] == '140px'

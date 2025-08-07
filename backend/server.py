@@ -9,18 +9,25 @@ import string
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-# Import configuration validation
+# Import our modules
 try:
+    from .models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
+    from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS, WORDS
+    from .data_persistence import init_persistence, save_data, load_data
+    from .analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from .config import validate_production_config, get_config_summary
 except ImportError:
     # Handle running as script instead of module
+    from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
+    from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS, WORDS
+    from data_persistence import init_persistence, save_data, load_data
+    from analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from config import validate_production_config, get_config_summary
 
 try:
@@ -63,8 +70,6 @@ except Exception:  # pragma: no cover - optional dependency
     redis = None
     ConnectionPool = None
 
-logger = logging.getLogger(__name__)
-
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
 app = Flask(__name__)
@@ -101,6 +106,8 @@ def configure_logging():
     )
 
 configure_logging()
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
@@ -139,17 +146,6 @@ if REDIS_URL and redis is not None:
         logger.warning("Redis connection failed: %s", e)
         redis_client = None
 
-# Standard Scrabble letter values used for scoring
-SCRABBLE_SCORES = {
-    **{letter: 1 for letter in "aeilnorstu"},
-    **{letter: 2 for letter in "dg"},
-    **{letter: 3 for letter in "bcmp"},
-    **{letter: 4 for letter in "fhvwy"},
-    "k": 5,
-    **{letter: 8 for letter in "jx"},
-    **{letter: 10 for letter in "qz"},
-}
-
 # Lobby management constants
 LOBBY_TTL = 30 * 60  # 30 minutes
 LOBBY_CREATION_LIMIT = 5
@@ -162,40 +158,8 @@ API_RATE_WINDOW = 60  # seconds
 GUESS_RATE_LIMIT = 30  # guesses per minute per player
 GUESS_RATE_WINDOW = 60  # seconds
 
-
-# ---- Globals ----
-WORDS: list[str] = []
-WORDS_LOADED: bool = False
-
-
-def _init_assets() -> None:
-    """Load the word list and validate the definitions cache."""
-    global WORDS, WORDS_LOADED
-    try:
-        with open(WORDS_FILE) as f:
-            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
-        WORDS_LOADED = True
-        logger.info(f"Loaded {len(WORDS)} words from {WORDS_FILE}")
-    except Exception as e:  # pragma: no cover - startup validation
-        logger.error("Startup abort: could not load word list '%s': %s", WORDS_FILE, e)
-        raise SystemExit(1)
-    if not WORDS:
-        logger.error("Startup abort: word list '%s' contains no words", WORDS_FILE)
-        raise SystemExit(1)
-    try:
-        with open(OFFLINE_DEFINITIONS_FILE) as f:
-            json.load(f)
-    except Exception as e:  # pragma: no cover - startup validation
-        logger.error(
-            "Startup abort: could not parse definitions file '%s': %s",
-            OFFLINE_DEFINITIONS_FILE,
-            e,
-        )
-        raise SystemExit(1)
-
-
-# Initialize assets and validate configuration
-_init_assets()
+# Initialize game assets 
+init_game_assets(WORDS_FILE, OFFLINE_DEFINITIONS_FILE)
 
 # Validate production configuration
 try:
@@ -208,84 +172,7 @@ except Exception as e:
     else:
         logger.warning("Continuing in development mode despite configuration issues")
 
-
-@dataclass
-class GameState:
-    leaderboard: dict = field(default_factory=dict)
-    ip_to_emoji: dict = field(default_factory=dict)
-    player_map: dict = field(default_factory=dict)  # player_id -> emoji mapping
-    winner_emoji: str | None = None
-    target_word: str = ""
-    guesses: list = field(default_factory=list)
-    is_over: bool = False
-    found_greens: set = field(default_factory=set)
-    found_yellows: set = field(default_factory=set)
-    past_games: list = field(default_factory=list)
-    definition: str | None = None
-    last_word: str | None = None
-    last_definition: str | None = None
-    win_timestamp: float | None = None
-    chat_messages: list = field(default_factory=list)
-    chat_rate_limits: dict = field(default_factory=dict)  # player_id -> last_message_time
-    listeners: set = field(default_factory=set)
-    daily_double_index: int | None = None
-    daily_double_winners: set = field(default_factory=set)
-    daily_double_pending: dict = field(default_factory=dict)
-    host_token: str | None = None
-    phase: str = "waiting"
-    last_activity: float = field(default_factory=time.time)
-
-
 emoji_lock = threading.Lock()  # guard emoji selection operations
-
-# Color variants for duplicate emojis
-EMOJI_VARIANTS = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"]
-
-
-def get_emoji_variant(base_emoji: str, existing_emojis: set) -> str:
-    """
-    Generate a variant of the base emoji if duplicates exist.
-
-    Args:
-        base_emoji: The base emoji string (e.g., "🐶")
-        existing_emojis: Set of existing emoji keys in the leaderboard
-
-    Returns:
-        A unique emoji variant string (e.g., "🐶-red", "🐶-blue")
-    """
-    # If base emoji is not taken, return it as-is
-    if base_emoji not in existing_emojis:
-        return base_emoji
-
-    # Try each color variant until we find an available one
-    for variant in EMOJI_VARIANTS:
-        variant_emoji = f"{base_emoji}-{variant}"
-        if variant_emoji not in existing_emojis:
-            return variant_emoji
-
-    # If all predefined variants are taken, use numbered variants
-    counter = len(EMOJI_VARIANTS) + 1
-    while True:
-        variant_emoji = f"{base_emoji}-{counter}"
-        if variant_emoji not in existing_emojis:
-            return variant_emoji
-        counter += 1
-
-
-def get_base_emoji(emoji_variant: str) -> str:
-    """
-    Extract the base emoji from a variant.
-
-    Args:
-        emoji_variant: Either a base emoji or variant (e.g., "🐶" or "🐶-red")
-
-    Returns:
-        The base emoji string (e.g., "🐶")
-    """
-    if "-" in emoji_variant:
-        return emoji_variant.split("-")[0]
-    return emoji_variant
-
 
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
@@ -303,6 +190,27 @@ REMOVAL_COOLDOWN = 30.0  # seconds to prevent recreation after removal
 DEFAULT_LOBBY = "DEFAULT"
 current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
 
+# Initialize data persistence layer
+init_persistence(redis_client, GAME_FILE, LOBBIES_FILE, DEFAULT_LOBBY, LOBBIES)
+
+# Initialize analytics
+init_analytics(ANALYTICS_FILE)
+
+
+# Create backward compatible wrappers for persistence functions
+def save_data_legacy(s: GameState | None = None):
+    """Backward compatible wrapper for save_data."""
+    if s is None:
+        s = current_state
+    save_data(s, _lobby_id(s))
+
+
+def load_data_legacy(s: GameState | None = None):
+    """Backward compatible wrapper for load_data."""
+    if s is None:
+        s = current_state
+    load_data(s, _lobby_id(s), _reset_state)
+
 
 def get_lobby(code: str) -> GameState:
     """Return the GameState for ``code``, creating it if needed."""
@@ -317,10 +225,10 @@ def get_lobby(code: str) -> GameState:
 
         lobby = _reset_state(GameState())
         LOBBIES[code] = lobby
-        load_data(lobby)
+        load_data(lobby, _lobby_id(lobby), _reset_state)
         if not lobby.target_word:
             pick_new_word(lobby)
-            save_data(lobby)
+            save_data(lobby, _lobby_id(lobby))
     return lobby
 
 
@@ -364,13 +272,6 @@ def _with_lobby(code: str, func):
         return func()
     finally:
         current_state = prev
-
-
-def sanitize_definition(text: str) -> str:
-    """Remove HTML tags and extra whitespace from a definition."""
-    text = re.sub(r"<[^>]*>", "", text)
-    text = html.unescape(text)
-    return " ".join(text.split())
 
 
 def _reset_state(s: GameState | None = None) -> GameState:
@@ -417,220 +318,7 @@ def _lobby_id(s: GameState) -> str:
     return DEFAULT_LOBBY
 
 
-def save_data(s: GameState | None = None):
-    if s is None:
-        s = current_state
-    code = _lobby_id(s)
-    data = {
-        "leaderboard": s.leaderboard,
-        "ip_to_emoji": s.ip_to_emoji,
-        "player_map": s.player_map,
-        "winner_emoji": s.winner_emoji,
-        "target_word": s.target_word,
-        "guesses": s.guesses,
-        "is_over": s.is_over,
-        "found_greens": list(s.found_greens),
-        "found_yellows": list(s.found_yellows),
-        "past_games": s.past_games,
-        "definition": s.definition,
-        "last_word": s.last_word,
-        "last_definition": s.last_definition,
-        "win_timestamp": s.win_timestamp,
-        "chat_messages": s.chat_messages,
-        "daily_double_index": s.daily_double_index,
-        "daily_double_winners": list(s.daily_double_winners),
-        "daily_double_pending": s.daily_double_pending,
-        "host_token": s.host_token,
-        "phase": s.phase,
-        "last_activity": s.last_activity,
-    }
-    if redis_client:
-        try:
-            redis_client.set(f"wwf:{code}", json.dumps(data))
-        except Exception as e:  # pragma: no cover - redis failures
-            logger.warning("Redis save failed: %s", e)
-    if code == DEFAULT_LOBBY:
-        with open(GAME_FILE, "w") as f:
-            json.dump(data, f)
-    else:
-        try:
-            all_data = {}
-            if LOBBIES_FILE.exists():
-                with open(LOBBIES_FILE) as f:
-                    all_data = json.load(f)
-        except Exception:
-            all_data = {}
-        all_data[code] = data
-        try:
-            with open(LOBBIES_FILE, "w") as f:
-                json.dump(all_data, f)
-        except Exception as e:  # pragma: no cover - persistence errors
-            logger.warning("Lobby save failed: %s", e)
-
-
-def load_data(s: GameState | None = None):
-    global WORDS, WORDS_LOADED
-    if s is None:
-        s = current_state
-
-    code = _lobby_id(s)
-
-    # Only load word list if not already loaded (performance optimization)
-    if not WORDS_LOADED:
-        with open(WORDS_FILE) as f:
-            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
-        WORDS_LOADED = True
-        logger.info(f"Loaded {len(WORDS)} words into memory cache")
-
-    data = None
-    if redis_client:
-        try:
-            blob = redis_client.get(f"wwf:{code}")
-            if blob:
-                data = json.loads(blob)
-        except Exception as e:  # pragma: no cover - redis failures
-            logger.warning("Redis load failed: %s", e)
-
-    if data is None and code == DEFAULT_LOBBY and os.path.exists(GAME_FILE):
-        with open(GAME_FILE) as f:
-            try:
-                data = json.load(f)
-            except Exception:
-                _reset_state(s)
-                data = None
-    elif data is None and code != DEFAULT_LOBBY and os.path.exists(LOBBIES_FILE):
-        try:
-            with open(LOBBIES_FILE) as f:
-                data_all = json.load(f)
-            data = data_all.get(code)
-        except Exception:
-            data = None
-
-    if not data:
-        _reset_state(s)
-        return
-
-    try:
-        s.leaderboard = data.get("leaderboard", {})
-        s.ip_to_emoji = data.get("ip_to_emoji", {})
-        s.player_map = data.get("player_map", {})
-        s.winner_emoji = data.get("winner_emoji")
-        s.target_word = data.get("target_word", "")
-        s.guesses[:] = data.get("guesses", [])
-        s.is_over = data.get("is_over", False)
-        s.found_greens = set(data.get("found_greens", []))
-        s.found_yellows = set(data.get("found_yellows", []))
-        s.past_games[:] = data.get("past_games", [])
-        s.definition = data.get("definition")
-        s.last_word = data.get("last_word")
-        s.last_definition = data.get("last_definition")
-        s.win_timestamp = data.get("win_timestamp")
-        s.chat_messages[:] = data.get("chat_messages", [])
-        s.daily_double_index = data.get("daily_double_index")
-        s.daily_double_winners = set(data.get("daily_double_winners", []))
-        s.daily_double_pending = data.get("daily_double_pending", {})
-        s.host_token = data.get("host_token")
-        s.phase = data.get("phase", "waiting")
-        s.last_activity = data.get("last_activity", time.time())
-    except Exception:
-        _reset_state(s)
-
-
 # ---- Game Logic ----
-
-
-def generate_lobby_code() -> str:
-    """Return a random six-character lobby code."""
-    alphabet = string.ascii_uppercase + string.digits
-    return "".join(random.choices(alphabet, k=6))
-
-
-def pick_new_word(s: GameState | None = None):
-    """Choose a new target word and reset all in-memory game current_state."""
-    if s is None:
-        s = current_state
-    s.target_word = random.choice(WORDS)
-    s.guesses.clear()
-    s.is_over = False
-    s.winner_emoji = None
-    s.found_greens = set()
-    s.found_yellows = set()
-    s.definition = None
-    s.win_timestamp = None
-    if MAX_ROWS > 1:
-        s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
-    else:
-        s.daily_double_index = None
-    s.daily_double_winners.clear()
-    for player in list(s.daily_double_pending.keys()):
-        s.daily_double_pending[player] = 0
-    s.phase = "waiting"
-    s.last_activity = time.time()
-
-
-def fetch_definition(word):
-    """Look up a word's definition online with an offline JSON fallback."""
-    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0 "
-            "Gecko/20100101 Firefox/109.0"
-        )
-    }
-    logger.info(f"Fetching definition for '{word}'")
-    try:
-        logger.info(f"Trying online dictionary API for '{word}'")
-        resp = requests.get(url, headers=headers, timeout=3)  # Reduced from 5 to 3 seconds
-        resp.raise_for_status()
-        data = resp.json()
-        if isinstance(data, list) and data:
-            meanings = data[0].get("meanings")
-            if meanings:
-                defs = meanings[0].get("definitions")
-                if defs:
-                    definition = defs[0].get("definition")
-                    if definition:
-                        definition = sanitize_definition(definition)
-                    logger.info(f"Online definition for '{word}': {definition}")
-                    return definition
-    except requests.RequestException as e:
-        logger.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
-        try:
-            with open(OFFLINE_DEFINITIONS_FILE) as f:
-                offline = json.load(f)
-            definition = offline.get(word)
-            if definition:
-                definition = sanitize_definition(definition)
-                logger.info(f"Offline definition for '{word}': {definition}")
-            else:
-                logger.info(f"No offline definition found for '{word}'")
-            return definition
-        except Exception as e2:
-            logger.info(f"Offline lookup failed for '{word}': {e2}")
-    except Exception as e:
-        logger.info(f"Unexpected error fetching definition for '{word}': {e}")
-    logger.info(f"No definition found for '{word}'")
-    return None
-
-
-def _definition_worker(word: str, s: GameState) -> None:
-    """Background task to fetch a word's definition and persist it."""
-    s.definition = fetch_definition(word)
-    logger.info(f"Definition lookup complete for '{word}': {s.definition or 'None'}")
-    s.last_word = word
-    s.last_definition = s.definition
-    save_data(s)
-    broadcast_state(s)
-
-
-def start_definition_lookup(word: str, s: GameState | None = None) -> threading.Thread:
-    """Start asynchronous definition lookup for the solved word."""
-    if s is None:
-        s = current_state
-    t = threading.Thread(target=_definition_worker, args=(word, s))
-    t.daemon = True
-    t.start()
-    return t
 
 
 def get_client_ip():
@@ -792,44 +480,6 @@ def broadcast_server_update_notification(message: str = "Server is being updated
     logger.info(f"Server update notification sent to {total_clients} clients across {len(LOBBIES)} lobbies")
 
 
-def _log_event(event: str, **fields) -> None:
-    """Write a structured analytics event to ``ANALYTICS_FILE``."""
-    entry = {"event": event, "timestamp": time.time(), **fields}
-    try:
-        with open(ANALYTICS_FILE, "a") as f:
-            f.write(json.dumps(entry) + "\n")
-    except Exception as e:  # pragma: no cover - logging failures shouldn't break API
-        logger.info(f"Failed to log analytics event: {e}")
-
-
-def log_daily_double_used(emoji: str, ip: str) -> None:
-    """Append a Daily Double usage event to the analytics log."""
-    _log_event("daily_double_used", emoji=emoji, ip=ip)
-
-
-def log_lobby_created(lobby_id: str, ip: str) -> None:
-    """Log creation of a new lobby."""
-    _log_event("lobby_created", lobby_id=lobby_id, ip=ip)
-
-
-def log_lobby_joined(lobby_id: str, emoji: str, ip: str) -> None:
-    """Log a player joining ``lobby_id``."""
-    _log_event("lobby_joined", lobby_id=lobby_id, emoji=emoji, ip=ip)
-
-
-def log_lobby_finished(lobby_id: str, ip: str | None = None) -> None:
-    """Log a lobby finishing or being reset."""
-    data = {"lobby_id": lobby_id}
-    if ip:
-        data["ip"] = ip
-    _log_event("lobby_finished", **data)
-
-
-def log_player_kicked(lobby_id: str, emoji: str) -> None:
-    """Log a player being kicked from ``lobby_id``."""
-    _log_event("player_kicked", lobby_id=lobby_id, emoji=emoji)
-
-
 # ---- API Routes ----
 
 
@@ -868,7 +518,7 @@ def state():
         ):
             current_state.leaderboard[e]["last_active"] = time.time()
             current_state.last_activity = time.time()
-            save_data()
+            save_data_legacy()
             emoji = e
     else:
         try:
@@ -952,7 +602,7 @@ def set_emoji():
         current_state.ip_to_emoji[ip] = emoji_variant
         current_state.player_map[player_id] = emoji_variant
         current_state.last_activity = now
-        save_data()
+        save_data_legacy()
 
     logger.info(
         "Emoji %s (variant: %s) mapped to player %s (ip %s) new=%s",
@@ -1111,14 +761,14 @@ def guess_word():
 
     if over:
         current_state.phase = "finished"
-        start_definition_lookup(current_state.target_word, current_state)
+        start_definition_lookup(current_state.target_word, current_state, save_data, broadcast_state)
 
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
         points_delta -= 1
 
     current_state.leaderboard[emoji]["score"] += points_delta
-    save_data()
+    save_data_legacy()
     # — attach this turn’s points so client can render a history
     new_entry["points"] = points_delta
 
@@ -1176,7 +826,7 @@ def select_hint():
 
     row = current_state.daily_double_pending.pop(emoji)
     letter = current_state.target_word[col]
-    save_data()
+    save_data_legacy()
     log_daily_double_used(emoji, ip)
     return jsonify(
         {
@@ -1220,7 +870,7 @@ def chat():
             {"emoji": emoji, "text": text, "ts": current_time}
         )
         current_state.last_activity = current_time
-        save_data()
+        save_data_legacy()
         broadcast_state()
         return jsonify({"status": "ok"})
     return jsonify({"messages": current_state.chat_messages})
@@ -1234,7 +884,7 @@ def reset_game():
     current_state.past_games.append(list(current_state.guesses))
     pick_new_word(current_state)
     current_state.last_activity = time.time()
-    save_data()
+    save_data_legacy()
     broadcast_state()
     log_lobby_finished(_lobby_id(current_state), get_client_ip())
     logger.info("Lobby %s reset complete", _lobby_id(current_state))
@@ -1266,7 +916,7 @@ def lobby_create():
     token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
     state.host_token = token
     LOBBIES[code] = state
-    save_data(state)
+    save_data(state, _lobby_id(state))
     log_lobby_created(code, ip)
     logger.info("Lobby %s created host=%s", code, ip)
     return jsonify({"id": code, "host_token": token})
@@ -1476,7 +1126,7 @@ def leave_lobby():
 
     # Save state and broadcast changes
     current_state.last_activity = time.time()
-    save_data()
+    save_data_legacy()
     broadcast_state()
 
     return jsonify({"status": "ok"})
@@ -1550,6 +1200,10 @@ def notify_server_update():
 @app.route("/health")
 def health() -> Any:
     """Enhanced health check for production readiness."""
+    try:
+        from .game_logic import WORDS
+    except ImportError:
+        from game_logic import WORDS
     missing = []
     warnings = []
     
@@ -1696,10 +1350,10 @@ def spa_fallback_route(requested_path: str):
 
 
 if __name__ == "__main__":
-    load_data()
+    load_data_legacy()
     if not current_state.target_word:
         pick_new_word(current_state)
-        save_data()
+        save_data_legacy()
 
     # Launch a background thread that periodically purges idle lobbies
     def _purge_loop() -> None:
