@@ -48,7 +48,10 @@ def init_game_assets(words_file: Path, offline_definitions_file: Path) -> None:
     
     try:
         with open(words_file) as f:
-            WORDS = [line.strip().lower() for line in f if len(line.strip()) == 5]
+            # Clear the existing list and extend it with new words
+            # This preserves the list object that was imported by other modules
+            WORDS.clear()
+            WORDS.extend([line.strip().lower() for line in f if len(line.strip()) == 5])
         WORDS_LOADED = True
         logger.info(f"Loaded {len(WORDS)} words from {words_file}")
     except Exception as e:  # pragma: no cover - startup validation
