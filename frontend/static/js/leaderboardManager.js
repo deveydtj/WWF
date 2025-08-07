@@ -183,7 +183,7 @@ function renderPlayerSidebar() {
 }
 
 function renderEmojiStamps(guesses) {
-  const stampsDiv = document.getElementById('emojiStamps');
+  const stampsDiv = document.getElementById('stampContainer');
   if (!stampsDiv) return;
   
   stampsDiv.innerHTML = '';
@@ -194,6 +194,10 @@ function renderEmojiStamps(guesses) {
     const stamp = document.createElement('div');
     stamp.className = 'emoji-stamp';
     stamp.setAttribute('data-guess-index', index);
+    // Position stamp to center on the corresponding row
+    // Each row is: tile height + gap, centered on the tile
+    stamp.style.top = `calc(${index} * (var(--tile-size) + var(--tile-gap)) + var(--tile-size) / 2)`;
+    stamp.style.transform = 'translateY(-50%)';
     
     const emojiSpan = document.createElement('span');
     emojiSpan.textContent = getBaseEmoji(guess.emoji);

@@ -37,18 +37,98 @@
   pointer-events: none;
   z-index: 5;
   display: none;
+  /* Ensure container has proper dimensions */
+  width: auto;
+  height: 100%;
 }
 
 body[data-mode='medium'] #stampContainer {
   display: block;
 }
 
-.board-stamp {
+/* Emoji stamps next to board */
+.emoji-stamp {
   position: absolute;
-  left: calc(50% - var(--board-width) / 2 - 40px); /* Position to the left of the board */
-  transform: translateY(-50%);
-  font-size: 32px;
+  left: calc(50% - var(--board-width) / 2 - 10px - 100px); /* 10px gap from board edge, then stamp width */
+  font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* No background - transparent */
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 2px;
+  /* Black stroke around the emoji shape itself for better visibility */
+  -webkit-text-stroke: 2px black;
+  text-stroke: 2px black;
+  /* Flat 2D appearance - no 3D shadows or borders */
+  box-shadow: none;
+  border: none;
+  /* Add subtle drop shadow for contrast but keep it flat */
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Dark mode stamp styling */
+@media (prefers-color-scheme: dark) {
+  .emoji-stamp {
+    /* Keep transparent background */
+    background: transparent;
+    /* Black text stroke works well in dark mode too */
+    -webkit-text-stroke: 2px black;
+    text-stroke: 2px black;
+    color: #fff;
+    /* Adjust drop shadow for dark mode */
+    filter: drop-shadow(1px 1px 2px rgba(255, 255, 255, 0.2));
+  }
+}
+
+.stamp-word {
+  font-size: calc(var(--tile-size) * 0.25); /* Scale with tile size */
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #333;
+  /* Add text shadow for better readability without background */
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+@media (prefers-color-scheme: dark) {
+  .stamp-word {
+    color: #fff;
+    /* Adjust text shadow for dark mode */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Responsive stamp positioning */
+@media (max-width: 1400px) {
+  .emoji-stamp {
+    left: calc(50% - var(--board-width) / 2 - 10px - 80px); /* Maintain 10px gap, closer to board on medium screens */
+  }
+}
+
+@media (max-width: 1200px) {
+  .emoji-stamp {
+    left: calc(50% - var(--board-width) / 2 - 10px - 60px); /* Maintain 10px gap, even closer on smaller screens */
+  }
+}
+
+@media (max-width: 900px) {
+  .emoji-stamp {
+    left: calc(50% - var(--board-width) / 2 - 10px - 40px); /* Maintain 10px gap, close to board on tablet */
+  }
+}
+
+@media (max-width: 600px) {
+  .emoji-stamp {
+    left: 10px; /* Fixed position on mobile to avoid clipping */
+    transform: none !important; /* Override inline transform on mobile */
+    position: relative;
+    margin: 2px 0;
+    display: inline-block;
+  }
 }
 
 /* Keep stamps in their normal position - history panel will move to accommodate */

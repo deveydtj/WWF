@@ -324,7 +324,10 @@ function applyState(state) {
   }
   renderLeaderboard();
   renderPlayerSidebar();
-  updateHintBadge(titleHintBadge, dailyDoubleAvailable);
+  // Show hint badge when server indicates available OR when we have an unused hint from localStorage
+  const hasUnusedHint = dailyDoubleRow !== null && dailyDoubleHint === null;
+  const isSelecting = document.body.classList.contains('hint-selecting');
+  updateHintBadge(titleHintBadge, dailyDoubleAvailable || hasUnusedHint, isSelecting);
 
   if (state.chat_messages) {
     renderChat(chatMessagesEl, state.chat_messages);
@@ -744,7 +747,9 @@ initHintManager({
   messageEl,
   messagePopup,
   getDailyDoubleState: () => ({ dailyDoubleRow, dailyDoubleHint }),
-  setDailyDoubleState: (row, hint) => { dailyDoubleRow = row; dailyDoubleHint = hint; }
+  setDailyDoubleState: (row, hint) => { dailyDoubleRow = row; dailyDoubleHint = hint; },
+  updateHintBadge,
+  titleHintBadge
 });
 
 // Initialize and use enhanced scaling system
@@ -962,6 +967,9 @@ board.addEventListener('keydown', async (e) => {
     e.preventDefault();
     document.body.classList.remove('hint-selecting');
     tiles.forEach(t => (t.tabIndex = -1));
+    // Update badge to show normal state
+    const hasUnusedHint = dailyDoubleRow !== null && dailyDoubleHint === null;
+    updateHintBadge(titleHintBadge, dailyDoubleAvailable || hasUnusedHint, false);
   }
 });
 

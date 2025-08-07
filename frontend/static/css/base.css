@@ -200,6 +200,33 @@ h1 {
   margin: 5px 0;
 }
 
+#pointsPopup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 8px;
+  z-index: 150;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.points-positive {
+  background: #28a745;
+  color: white;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.points-negative {
+  background: #dc3545;
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
 #ariaLive {
   position: absolute;
   width: 1px;
