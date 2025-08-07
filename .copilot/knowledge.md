@@ -38,25 +38,26 @@ All POST requests should include `player_id` in the JSON body. The server respon
 - `emoji.js` - Player emoji management and modal
 - `api.js` - Server communication and API calls  
 - `utils.js` - UI utilities and helper functions
-- `stateManager.js` - Application state management
-- `hintState.js` - Daily Double hint persistence
-- `uiNotifications.js` - Visual feedback and animations
-- `audioManager.js` - Sound effects and jingles
-- `hintManager.js` - Hint selection and logic
 - `chat.js` - Chat functionality and UI
 - `keyboard.js` - Virtual keyboard implementation
 - `history.js` - Game history management
+- `config.js` - Configuration constants
+- `hintState.js` - Daily Double hint persistence
+- `uiNotifications.js` - Visual feedback and animations
 
 ### Manager Classes
-- `domManager` - Centralized DOM element access
-- `networkManager` - Network state and reconnection
-- `gameStateManager` - Game state transitions
-- `eventListenersManager` - Event handling coordination
-- `appInitializer` - Application bootstrap
-- `leaderboardManager` - Leaderboard state and display
-- `optionsManager` - Game options and settings
-- `panelManager` - Side panel state management
-- `resetManager` - Game reset functionality
+- `domManager.js` - Centralized DOM element access
+- `networkManager.js` - Network state and reconnection
+- `gameStateManager.js` - Game state transitions
+- `stateManager.js` - Application state management
+- `eventListenersManager.js` - Event handling coordination
+- `appInitializer.js` - Application bootstrap
+- `leaderboardManager.js` - Leaderboard state and display
+- `optionsManager.js` - Game options and settings
+- `panelManager.js` - Side panel state management
+- `resetManager.js` - Game reset functionality
+- `audioManager.js` - Sound effects and jingles
+- `hintManager.js` - Hint selection and logic
 
 ### Specialized Modules
 - `boardContainer.js` - Board container and scaling
@@ -90,6 +91,12 @@ The project uses a **hybrid approach** combining traditional media queries with 
 - `responsive.css` - Traditional breakpoint-based responsive design
 - `modern-responsive.css` - Container queries and modern responsive patterns
 - `animations.css` - Transitions and animation effects
+- `components/board.css` - Game board styling
+- `components/keyboard.css` - Virtual keyboard styling
+- `components/modals.css` - Modal dialog styling
+- `components/panels.css` - Side panel styling
+- `components/leaderboard.css` - Player leaderboard styling
+- `components/buttons.css` - Button component styling
 
 ### Key CSS Classes
 - `.game-container` - Main game wrapper with container queries

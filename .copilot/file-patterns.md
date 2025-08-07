@@ -17,17 +17,44 @@ frontend/                   # Client-side application
 ├── game.html              # Main game interface template
 ├── landing.js             # Landing page functionality
 ├── landing.css            # Landing page styles
+├── vite.config.js         # Frontend build configuration
+├── package.json           # Frontend dependencies and scripts
 ├── static/
 │   ├── css/
-│   │   ├── theme.css      # Color themes and CSS variables
-│   │   └── layout.css     # Responsive layout rules
+│   │   ├── base.css       # Core styles and CSS custom properties
+│   │   ├── theme.css      # Color themes and design tokens
+│   │   ├── layout.css     # Panel positioning and core layout
+│   │   ├── responsive.css # Traditional breakpoint-based responsive design
+│   │   ├── modern-responsive.css # Container queries and modern responsive patterns
+│   │   ├── animations.css # Transitions and animation effects
+│   │   └── components/    # Component-specific styles
+│   │       ├── board.css      # Game board components
+│   │       ├── keyboard.css   # Virtual keyboard
+│   │       ├── modals.css     # Modal dialogs
+│   │       ├── panels.css     # Side panels (chat/leaderboard)
+│   │       ├── leaderboard.css # Player leaderboard
+│   │       └── buttons.css    # Button components
 │   └── js/
-│       ├── main.js        # Application entry point
-│       ├── api.js         # Server communication
-│       ├── board.js       # Game board rendering
-│       ├── emoji.js       # Player emoji management
-│       ├── utils.js       # Common utilities
-│       └── [managers/]    # Modular architecture
+│       ├── main.js            # Application entry point
+│       ├── api.js             # Server communication
+│       ├── board.js           # Game board rendering
+│       ├── emoji.js           # Player emoji management
+│       ├── utils.js           # Common utilities
+│       ├── chat.js            # Chat functionality
+│       ├── keyboard.js        # Virtual keyboard
+│       ├── config.js          # Configuration constants
+│       ├── hintState.js       # Daily Double hint persistence
+│       ├── hintManager.js     # Hint selection and logic
+│       ├── uiNotifications.js # Visual feedback and animations
+│       ├── audioManager.js    # Sound effects and jingles
+│       ├── history.js         # Game history management
+│       ├── boardContainer.js  # Board container and scaling
+│       ├── domManager.js      # Centralized DOM element access
+│       ├── networkManager.js  # Network state and reconnection
+│       ├── eventListenersManager.js # Event handling coordination
+│       ├── panelManager.js    # Side panel state management
+│       ├── resetManager.js    # Game reset functionality
+│       └── [other managers]   # Additional modular architecture
 └── cypress/               # End-to-end tests
 
 docs/                      # Project documentation

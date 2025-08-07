@@ -1,0 +1,69 @@
+name: Setup WordSquad Dependencies
+description: Pre-install all dependencies required for building and testing WordSquad
+
+steps:
+  # Install system packages and tools
+  - name: Install system dependencies
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y gnupg software-properties-common curl unzip
+
+  # Install Node.js
+  - name: Install Node.js LTS
+    run: |
+      curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo bash -
+      sudo apt-get install -y nodejs
+
+  # Install Python dependencies
+  - name: Install Python backend dependencies
+    run: pip install -r backend/requirements.txt
+
+  # Install and setup frontend dependencies
+  - name: Install frontend dependencies
+    run: |
+      cd frontend
+      npm install
+      cd ..
+
+  # Install Cypress for E2E testing
+  - name: Install Cypress
+    run: |
+      cd frontend
+      npx cypress install
+      cd ..
+
+  # Install display server for headless testing
+  - name: Install display server for headless testing
+    run: |
+      sudo apt-get install -y xvfb libgtk-3-0 libnss3 libgbm-dev libdrm2 libasound2 libatk-bridge2.0-0 gconf-service libxshmfence1
+
+  # Install Terraform for infrastructure testing (optional)
+  - name: Install Terraform
+    run: |
+      if ! terraform --version 2>/dev/null | grep -q "1.4.6"; then
+        curl -Lo /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
+        sudo unzip -o /tmp/terraform.zip -d /usr/local/bin
+        sudo chmod +x /usr/local/bin/terraform
+      fi
+
+environment:
+  CYPRESS_CACHE_FOLDER: .cache/Cypress
+  TF_IN_AUTOMATION: "1"
+  PYTHONPATH: "backend:$PYTHONPATH"
+
+# Verify installation
+verify:
+  - name: Verify Python dependencies
+    run: python -c "import flask, flask_cors, pytest, requests, redis, gunicorn, gevent"
+  
+  - name: Verify Node.js setup  
+    run: node --version && npm --version
+  
+  - name: Verify frontend build
+    run: |
+      cd frontend
+      npm run build
+      cd ..
+  
+  - name: Verify backend tests
+    run: python -m pytest --version
