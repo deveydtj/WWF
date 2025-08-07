@@ -203,12 +203,8 @@ function renderEmojiStamps(guesses) {
     emojiSpan.textContent = getBaseEmoji(guess.emoji);
     applyEmojiVariantStyling(emojiSpan, guess.emoji);
     
-    const wordSpan = document.createElement('span');
-    wordSpan.className = 'stamp-word';
-    wordSpan.textContent = guess.word || '';
-    
+    // No word labels - just the emoji
     stamp.appendChild(emojiSpan);
-    stamp.appendChild(wordSpan);
     
     stampsDiv.appendChild(stamp);
   });
