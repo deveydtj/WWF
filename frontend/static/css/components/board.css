@@ -45,10 +45,55 @@ body[data-mode='medium'] #stampContainer {
 
 .board-stamp {
   position: absolute;
-  left: calc(50% - var(--board-width) / 2 - 40px); /* Position to the left of the board */
+  left: calc(50% - var(--board-width) / 2 - 100px); /* Position further left to avoid history panel */
   transform: translateY(-50%);
-  font-size: 32px;
+  font-size: 24px;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-color);
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+  white-space: nowrap;
+}
+
+.stamp-word {
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--text-color);
+}
+
+/* Responsive stamp positioning */
+@media (max-width: 1400px) {
+  .board-stamp {
+    left: calc(50% - var(--board-width) / 2 - 80px); /* Closer to board on medium screens */
+  }
+}
+
+@media (max-width: 1200px) {
+  .board-stamp {
+    left: calc(50% - var(--board-width) / 2 - 60px); /* Even closer on smaller screens */
+  }
+}
+
+@media (max-width: 900px) {
+  .board-stamp {
+    left: calc(50% - var(--board-width) / 2 - 40px); /* Close to board on tablet */
+  }
+}
+
+@media (max-width: 600px) {
+  .board-stamp {
+    left: 10px; /* Fixed position on mobile to avoid clipping */
+    transform: none;
+    position: relative;
+    margin: 2px 0;
+    display: inline-block;
+  }
 }
 
 /* Keep stamps in their normal position - history panel will move to accommodate */
