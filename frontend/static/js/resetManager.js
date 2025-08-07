@@ -77,7 +77,9 @@ function updateResetButton() {
     holdReset.onclick = null;
     holdReset.onmousedown = startHoldReset;
     holdReset.ontouchstart = (e) => {
-      e.preventDefault();
+      if (e.cancelable) {
+        e.preventDefault();
+      }
       startHoldReset();
     };
   }
