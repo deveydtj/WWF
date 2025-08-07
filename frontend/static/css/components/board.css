@@ -2,7 +2,7 @@
    Board and Tiles - Game board layout and tile styles
    ───────────────────────────────────────────── */
 
-/* Board area container - make room for stamps */
+/* Board area container - centered layout */
 #boardArea {
   display: flex;
   justify-content: center;
@@ -11,8 +11,6 @@
   width: 100%;
   position: relative;
   flex: 0 0 auto; /* Only take space needed, don't expand */
-  /* Add padding to make room for stamps */
-  padding-left: 60px;
 }
 
 /* Large screen board area - constrain width to leave space for side panels */
@@ -36,7 +34,7 @@
 #stampContainer {
   position: absolute;
   top: 0;
-  left: 10px; /* Simple: 10px from the left edge of boardArea */
+  left: calc(50% - var(--board-width) / 2 - 50px); /* Position stamps to left of board */
   pointer-events: none;
   z-index: 5;
   display: none;
@@ -52,7 +50,7 @@ body[data-mode='medium'] #stampContainer {
 /* Emoji stamps next to board */
 .emoji-stamp {
   position: absolute;
-  right: 0; /* Align to right edge of stamp container */
+  right: 10px; /* 10px gap from stamps to board */
   font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   line-height: 1;
   display: flex;
@@ -82,16 +80,14 @@ body[data-mode='medium'] #stampContainer {
 
 
 /* Responsive adjustments */
-@media (max-width: 600px) {
-  #boardArea {
-    padding-left: 35px; /* Less padding on mobile */
-  }
-  
+@media (max-width: 600px) {  
   #stampContainer {
+    left: calc(50% - var(--board-width) / 2 - 40px); /* Closer on mobile */
     width: 30px; /* Smaller on mobile */
   }
   
   .emoji-stamp {
+    right: 8px; /* Smaller gap on mobile */
     font-size: calc(var(--tile-size) * 0.7); /* Smaller stamps on mobile */
   }
 }
