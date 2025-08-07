@@ -87,7 +87,15 @@ function renderLeaderboard() {
   
   const myEmoji = getMyEmoji();
   const sortedEntries = leaderboard
-    .map(([emoji, data]) => ({ emoji, ...data }))
+    .map(item => {
+      // Handle both formats: server format {emoji, score, last_active} and old tuple format [emoji, data]
+      if (Array.isArray(item)) {
+        const [emoji, data] = item;
+        return { emoji, ...data };
+      } else {
+        return item; // Already in the correct format
+      }
+    })
     .sort((a, b) => (b.score || 0) - (a.score || 0));
   
   leaderboardDiv.innerHTML = '';
@@ -152,7 +160,14 @@ function renderLeaderboard() {
   
   // Update previous leaderboard state
   prevLeaderboard = Object.fromEntries(
-    leaderboard.map(([emoji, data]) => [emoji, { ...data }])
+    leaderboard.map(item => {
+      if (Array.isArray(item)) {
+        const [emoji, data] = item;
+        return [emoji, { ...data }];
+      } else {
+        return [item.emoji, { score: item.score, last_active: item.last_active, hint_count: item.hint_count }];
+      }
+    })
   );
   
   // Start auto-scroll timer after rendering
@@ -245,7 +260,15 @@ function getLeaderboard() {
 
 function getPlayerRank(emoji) {
   const sortedEntries = leaderboard
-    .map(([e, data]) => ({ emoji: e, score: data.score || 0 }))
+    .map(item => {
+      // Handle both formats: server format {emoji, score, last_active} and old tuple format [emoji, data]
+      if (Array.isArray(item)) {
+        const [e, data] = item;
+        return { emoji: e, score: data.score || 0 };
+      } else {
+        return { emoji: item.emoji, score: item.score || 0 };
+      }
+    })
     .sort((a, b) => b.score - a.score);
   
   return sortedEntries.findIndex(entry => entry.emoji === emoji) + 1;

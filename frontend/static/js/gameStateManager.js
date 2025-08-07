@@ -6,7 +6,7 @@
 import { updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints } from './board.js';
 import { renderHistory } from './history.js';
 import { renderChat } from './chat.js';
-import { renderLeaderboard, renderPlayerSidebar, renderEmojiStamps } from './leaderboardManager.js';
+import { updateLeaderboard, renderPlayerSidebar, renderEmojiStamps } from './leaderboardManager.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState } from './hintState.js';
 import { showMessage, setGameInputDisabled } from './utils.js';
@@ -89,7 +89,7 @@ class GameStateManager {
     this._handleWaitingOverlay(state);
     
     // Render UI components
-    renderLeaderboard();
+    updateLeaderboard(this.leaderboard);
     renderPlayerSidebar();
     
     // Update hint badge
