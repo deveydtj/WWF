@@ -194,8 +194,8 @@ function renderEmojiStamps(guesses) {
     const stamp = document.createElement('div');
     stamp.className = 'emoji-stamp';
     stamp.setAttribute('data-guess-index', index);
-    // Position stamp to center on the corresponding row
-    // Each row is: tile height + gap, centered on the tile
+    
+    // Simple row-based positioning using CSS calc
     stamp.style.top = `calc(${index} * (var(--tile-size) + var(--tile-gap)) + var(--tile-size) / 2)`;
     stamp.style.transform = 'translateY(-50%)';
     
