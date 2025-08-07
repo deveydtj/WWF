@@ -85,9 +85,6 @@ class GameStateManager {
     // Check if player was removed
     this._checkPlayerRemoval();
     
-    // Update player count
-    this._updatePlayerCount();
-    
     // Handle waiting overlay
     this._handleWaitingOverlay(state);
     
@@ -141,16 +138,6 @@ class GameStateManager {
         this.prevActiveEmojis.includes(this.myEmoji) && 
         !this.activeEmojis.includes(this.myEmoji)) {
       showMessage('You were removed from the lobby.', this.messageHandlers);
-    }
-  }
-
-  /**
-   * Update player count display
-   * @private
-   */
-  _updatePlayerCount() {
-    if (this.domManager) {
-      this.domManager.setPlayerCount(this.activeEmojis.length);
     }
   }
 

@@ -10,6 +10,7 @@ let leaderboard = [];
 let prevLeaderboard = {};
 let leaderboardScrolling = false;
 let leaderboardScrollTimeout = null;
+let autoScrollTimeout = null;
 
 function centerLeaderboardOnMe() {
   const myEmoji = getMyEmoji();
@@ -21,37 +22,63 @@ function centerLeaderboardOnMe() {
   const myEntry = leaderboardDiv.querySelector(`[data-emoji="${myEmoji}"]`);
   if (!myEntry) return;
   
-  myEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Calculate position to center the entry
+  const containerWidth = leaderboardDiv.clientWidth;
+  const entryLeft = myEntry.offsetLeft;
+  const entryWidth = myEntry.offsetWidth;
+  const scrollLeft = entryLeft - (containerWidth / 2) + (entryWidth / 2);
+  
+  leaderboardDiv.scrollTo({
+    left: Math.max(0, scrollLeft),
+    behavior: 'smooth'
+  });
 }
 
-function setupMobileLeaderboard() {
+function startAutoScrollTimer() {
+  // Clear any existing timeout
+  clearTimeout(autoScrollTimeout);
+  
+  // Set new timeout for 5 seconds
+  autoScrollTimeout = setTimeout(() => {
+    if (!leaderboardScrolling) {
+      centerLeaderboardOnMe();
+    }
+  }, 5000);
+}
+
+function setupLeaderboardScrolling() {
   const leaderboardDiv = document.getElementById('leaderboard');
   if (!leaderboardDiv) return;
   
-  // Add scroll detection for mobile
+  // Add scroll detection
   leaderboardDiv.addEventListener('scroll', () => {
     leaderboardScrolling = true;
     
+    // Clear existing timers
     clearTimeout(leaderboardScrollTimeout);
+    clearTimeout(autoScrollTimeout);
+    
+    // Mark as not scrolling after a short delay
     leaderboardScrollTimeout = setTimeout(() => {
       leaderboardScrolling = false;
-    }, 1000);
+      // Start the auto-scroll timer after user stops scrolling
+      startAutoScrollTimer();
+    }, 500);
   });
   
-  // Auto-center on me button for mobile
-  const centerBtn = document.createElement('button');
-  centerBtn.textContent = '📍 Find Me';
-  centerBtn.className = 'center-me-btn';
-  centerBtn.onclick = centerLeaderboardOnMe;
-  centerBtn.setAttribute('aria-label', 'Scroll to my position in leaderboard');
+  // Start initial auto-scroll timer
+  startAutoScrollTimer();
+}
+
+function setupMobileLeaderboard() {
+  // Setup scrolling for the new header-based leaderboard
+  setupLeaderboardScrolling();
   
-  // Only show on mobile
-  if (window.innerWidth <= 600) {
-    const leaderboardContainer = leaderboardDiv.parentElement;
-    if (leaderboardContainer) {
-      leaderboardContainer.appendChild(centerBtn);
-    }
-  }
+  const leaderboardDiv = document.getElementById('leaderboard');
+  if (!leaderboardDiv) return;
+  
+  // Remove old mobile-specific functionality as leaderboard is now in header
+  // The leaderboard will work consistently across all screen sizes
 }
 
 function renderLeaderboard() {
@@ -128,13 +155,9 @@ function renderLeaderboard() {
     leaderboard.map(([emoji, data]) => [emoji, { ...data }])
   );
   
-  // Auto-scroll to current player on mobile (but not if user is manually scrolling)
-  if (window.innerWidth <= 600 && !leaderboardScrolling && myEmoji) {
-    setTimeout(() => {
-      if (!leaderboardScrolling) {
-        centerLeaderboardOnMe();
-      }
-    }, 100);
+  // Start auto-scroll timer after rendering
+  if (myEmoji) {
+    startAutoScrollTimer();
   }
 }
 
@@ -231,6 +254,7 @@ function getPlayerRank(emoji) {
 export {
   centerLeaderboardOnMe,
   setupMobileLeaderboard,
+  setupLeaderboardScrolling,
   renderLeaderboard,
   renderPlayerSidebar,
   renderEmojiStamps,

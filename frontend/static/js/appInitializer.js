@@ -10,7 +10,7 @@ import { loadHintState } from './hintState.js';
 import { GAME_NAME } from './config.js';
 import { StateManager, STATES } from './stateManager.js';
 import { initAudio, stopAllSounds, isSoundEnabled } from './audioManager.js';
-import { setupMobileLeaderboard, renderEmojiStamps } from './leaderboardManager.js';
+import { setupMobileLeaderboard, setupLeaderboardScrolling, renderEmojiStamps } from './leaderboardManager.js';
 import { initResetManager } from './resetManager.js';
 import { updatePanelVisibility } from './panelManager.js';
 import { initHintManager, updateHintState } from './hintManager.js';

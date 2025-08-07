@@ -68,6 +68,7 @@ WordSquad is a multiplayer word guessing game inspired by Wordle, built with Fla
 4. Daily Double feature for hint mechanics with letter revelation
 5. Real-time chat system with emoji integration
 6. Network-based lobby discovery for local play
+7. **Leaderboard positioned in lobby header** with horizontal scrolling and auto-scroll to user
 
 ## Common Patterns
 
