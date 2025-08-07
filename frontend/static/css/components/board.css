@@ -37,9 +37,9 @@
   pointer-events: none;
   z-index: 5;
   display: none;
-  /* Ensure container has proper dimensions */
+  /* Ensure container has proper dimensions matching the board */
   width: auto;
-  height: 100%;
+  height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* 6 rows with gaps between them */
 }
 
 body[data-mode='medium'] #stampContainer {
