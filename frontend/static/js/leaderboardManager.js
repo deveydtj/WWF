@@ -192,9 +192,12 @@ function renderEmojiStamps(guesses) {
     if (!guess.emoji) return;
     
     const stamp = document.createElement('div');
-    stamp.className = 'board-stamp';
+    stamp.className = 'emoji-stamp';
     stamp.setAttribute('data-guess-index', index);
-    stamp.style.top = `${(index + 1) * 40}px`; // Stack stamps vertically
+    // Position stamp to center on the corresponding row
+    // Each row is: tile height + gap, centered on the tile
+    stamp.style.top = `calc(${index} * (var(--tile-size) + var(--tile-gap)) + var(--tile-size) / 2)`;
+    stamp.style.transform = 'translateY(-50%)';
     
     const emojiSpan = document.createElement('span');
     emojiSpan.textContent = getBaseEmoji(guess.emoji);
