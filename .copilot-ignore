@@ -1,0 +1,30 @@
+# Files and directories to exclude from GitHub Copilot analysis
+
+# Dependencies and build artifacts
+node_modules/
+venv/
+.venv/
+dist/
+build/
+*.min.js
+*.min.css
+
+# Data files and caches
+*.json
+*.log
+*.cache
+
+# Test outputs and coverage
+.pytest_cache/
+.coverage
+coverage/
+cypress/screenshots/
+cypress/videos/
+
+# Environment and config files
+.env
+.env.local
+.env.production
+
+# Generated files
+backend/static/

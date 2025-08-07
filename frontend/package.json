@@ -1,7 +1,9 @@
 {
-  "name": "wwf-frontend",
+  "name": "wordsquad-frontend",
   "version": "1.0.0",
+  "description": "Frontend for WordSquad - A multiplayer word guessing game with responsive design, real-time chat, and social gameplay features",
   "type": "module",
+  "keywords": ["wordle", "multiplayer", "game", "responsive", "real-time"],
   "devDependencies": {
     "vite": "^7.0.4"
   },
@@ -10,5 +12,10 @@
     "build": "vite build",
     "postbuild": "rm -rf ../backend/static/* && cp -r dist/* ../backend/static/",
     "cypress": "cypress run --headless"
-  }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }

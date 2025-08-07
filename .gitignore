@@ -15,3 +15,9 @@ backend/static/*.html
 # Terraform state
 .terraform/
 .terraform.lock.hcl
+
+# Node.js (root level)
+node_modules/
+npm-debug.log*
+package-lock.json
+.npm

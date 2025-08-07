@@ -1,0 +1,44 @@
+{
+  "name": "wordsquad",
+  "version": "1.0.0",
+  "description": "WordSquad - A multiplayer word guessing game inspired by Wordle with real-time chat, emoji leaderboards, and responsive design",
+  "main": "backend/server.py",
+  "private": true,
+  "keywords": [
+    "wordle",
+    "multiplayer",
+    "game",
+    "flask",
+    "javascript",
+    "responsive",
+    "real-time",
+    "websockets",
+    "sse"
+  ],
+  "author": "WordSquad Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deveydtj/WWF"
+  },
+  "engines": {
+    "node": ">=20.x",
+    "python": ">=3.12.x"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "start": "python backend/server.py",
+    "dev": "python backend/server.py",
+    "test": "python -m pytest -v",
+    "build": "cd frontend && npm run build",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "setup": "./scripts/setup.sh"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  }
+}
