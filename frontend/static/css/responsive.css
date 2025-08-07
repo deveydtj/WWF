@@ -287,6 +287,16 @@
     font-size: 16px;
   }
 
+  /* Points popup mobile positioning */
+  #pointsPopup {
+    top: 20%;
+    font-size: 20px;
+    padding: 10px 16px;
+    /* Better mobile positioning */
+    max-width: calc(100vw - 40px);
+    text-align: center;
+  }
+
   /* Enhanced mobile keyboard adjustments with virtual keyboard support */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
