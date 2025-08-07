@@ -10,7 +10,11 @@ import threading
 import time
 from pathlib import Path
 
-from .models import GameState
+try:
+    from .models import GameState
+except ImportError:
+    # Handle running as script instead of module
+    from models import GameState
 
 logger = logging.getLogger(__name__)
 
