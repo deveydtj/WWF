@@ -37,6 +37,9 @@
   pointer-events: none;
   z-index: 5;
   display: none;
+  /* Ensure container has proper dimensions */
+  width: auto;
+  height: 100%;
 }
 
 body[data-mode='medium'] #stampContainer {
@@ -46,18 +49,22 @@ body[data-mode='medium'] #stampContainer {
 /* Emoji stamps next to board */
 .emoji-stamp {
   position: absolute;
-  left: calc(50% - var(--board-width) / 2 - 100px); /* Position further left to avoid history panel */
-  font-size: 24px;
+  left: calc(50% - var(--board-width) / 2 - 10px - 100px); /* 10px gap from board edge, then stamp width */
+  font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   line-height: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 6px 10px;
-  border-radius: 4px;
-  border: 2px solid #ddd;
-  /* Stamp-like appearance: flat with subtle drop shadow */
-  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.15);
+  gap: 6px;
+  /* No background - transparent */
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 2px;
+  /* White stroke around the stamp for 2D stamp appearance */
+  border: 2px solid white;
+  /* Flat 2D appearance - no 3D shadows */
+  box-shadow: none;
+  /* Add subtle drop shadow for contrast but keep it flat */
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
   white-space: nowrap;
   pointer-events: none;
 }
@@ -65,41 +72,49 @@ body[data-mode='medium'] #stampContainer {
 /* Dark mode stamp styling */
 @media (prefers-color-scheme: dark) {
   .emoji-stamp {
-    background: rgba(60, 60, 60, 0.95);
-    border-color: #555;
+    /* Keep transparent background */
+    background: transparent;
+    /* White border still works well in dark mode */
+    border-color: white;
     color: #fff;
+    /* Adjust drop shadow for dark mode */
+    filter: drop-shadow(1px 1px 2px rgba(255, 255, 255, 0.2));
   }
 }
 
 .stamp-word {
-  font-size: 14px;
+  font-size: calc(var(--tile-size) * 0.25); /* Scale with tile size */
   font-weight: bold;
   text-transform: uppercase;
   color: #333;
+  /* Add text shadow for better readability without background */
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 @media (prefers-color-scheme: dark) {
   .stamp-word {
     color: #fff;
+    /* Adjust text shadow for dark mode */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   }
 }
 
 /* Responsive stamp positioning */
 @media (max-width: 1400px) {
   .emoji-stamp {
-    left: calc(50% - var(--board-width) / 2 - 80px); /* Closer to board on medium screens */
+    left: calc(50% - var(--board-width) / 2 - 10px - 80px); /* Maintain 10px gap, closer to board on medium screens */
   }
 }
 
 @media (max-width: 1200px) {
   .emoji-stamp {
-    left: calc(50% - var(--board-width) / 2 - 60px); /* Even closer on smaller screens */
+    left: calc(50% - var(--board-width) / 2 - 10px - 60px); /* Maintain 10px gap, even closer on smaller screens */
   }
 }
 
 @media (max-width: 900px) {
   .emoji-stamp {
-    left: calc(50% - var(--board-width) / 2 - 40px); /* Close to board on tablet */
+    left: calc(50% - var(--board-width) / 2 - 10px - 40px); /* Maintain 10px gap, close to board on tablet */
   }
 }
 
