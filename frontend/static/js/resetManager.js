@@ -26,6 +26,9 @@ let board = null;
 let messageEl = null;
 let messagePopup = null;
 
+// Touch event handler reference for proper cleanup
+let touchStartHandler = null;
+
 // Initialize reset manager with required dependencies
 function initResetManager(dependencies) {
   gameState = dependencies.gameState;
@@ -64,6 +67,12 @@ async function quickResetHandler() {
 }
 
 function updateResetButton() {
+  // Clean up previous touchstart listener to avoid multiple listeners
+  if (touchStartHandler) {
+    holdReset.removeEventListener('touchstart', touchStartHandler);
+    touchStartHandler = null;
+  }
+
   if (gameState.is(STATES.GAME_OVER)) {
     holdResetText.textContent = 'Reset';
     holdResetProgress.style.width = '0%';
@@ -76,10 +85,14 @@ function updateResetButton() {
     holdResetProgress.style.opacity = '0.9';
     holdReset.onclick = null;
     holdReset.onmousedown = startHoldReset;
-    holdReset.ontouchstart = (e) => {
+    holdReset.ontouchstart = null; // Clear the property
+    
+    // Create and add touchstart event listener with passive: false to make it cancelable
+    touchStartHandler = (e) => {
       e.preventDefault();
       startHoldReset();
     };
+    holdReset.addEventListener('touchstart', touchStartHandler, { passive: false });
   }
 }
 
