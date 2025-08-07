@@ -107,9 +107,9 @@
     display: none;
   }
 
-  /* Hide input field in mobile/light mode - users will use on-screen keyboard only */
-  body:not(.dark-mode) #inputArea {
-    display: none;
+  /* Hide input field on mobile - users will use on-screen keyboard only */
+  #inputArea {
+    display: none !important;
   }
 
   /* Panel positioning for mobile */
