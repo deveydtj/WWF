@@ -238,14 +238,6 @@ docker compose up --build
 Visit <http://localhost:5001> to use the app. AWS deployments use this same
 configuration.
 
-## Continuous Integration
-
-All pushes and pull requests trigger the **CI/CD** workflow under
-`.github/workflows/ci.yml`. The workflow installs Python and Node dependencies,
-runs the Pytest suite and Cypress end-to-end tests, then builds the Docker image
-and pushes it to Amazon ECR. When changes land on `main` the workflow also
-invalidates the CloudFront cache so the latest frontend assets are served.
-
 ## Infrastructure as Code
 
 Terraform templates in `infra/terraform` provision the AWS resources needed for
