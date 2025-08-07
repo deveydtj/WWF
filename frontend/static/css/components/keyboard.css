@@ -15,6 +15,15 @@
   margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
 }
 
+/* Mobile devices should use full width */
+@media (max-width: 600px) {
+  #keyboard {
+    max-width: 100%; /* Allow full width on mobile */
+    width: 100%;
+    display: block; /* Change to block for better width control */
+  }
+}
+
 /* Ensure keyboard container has proper flexbox behavior */
 #gameColumn {
   display: flex;
