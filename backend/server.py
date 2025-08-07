@@ -18,14 +18,14 @@ from flask_cors import CORS
 # Import our modules
 try:
     from .models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
-    from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
+    from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS, WORDS
     from .data_persistence import init_persistence, save_data, load_data
     from .analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from .config import validate_production_config, get_config_summary
 except ImportError:
     # Handle running as script instead of module
     from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
-    from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS
+    from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS, WORDS
     from data_persistence import init_persistence, save_data, load_data
     from analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from config import validate_production_config, get_config_summary
