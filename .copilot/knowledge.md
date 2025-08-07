@@ -36,10 +36,11 @@ All POST requests should include `player_id` in the JSON body. The server respon
 
 ## CSS Architecture
 
-### Layout Modes
-- **Light Mode** (≤600px): Vertical stack, bottom panels
-- **Medium Mode** (601-900px): Side panels, medium tiles  
-- **Full Mode** (>900px): Full layout, large tiles
+### Modern Responsive Design
+- **Fluid scaling**: Container queries and clamp() functions for adaptive layouts
+- **Modern viewport units**: dvh, svh, lvh for better mobile viewport handling  
+- **Dynamic sizing**: CSS custom properties with fluid scaling factors
+- **Component-based**: Container queries enable component-level responsiveness
 
 ### Key CSS Classes
 - `.game-container` - Main game wrapper
@@ -109,7 +110,7 @@ Tests use jsdom for DOM simulation and check module exports, function behavior, 
 
 ### Frontend Issues  
 - Verify module imports are correctly referenced
-- Check responsive breakpoint behavior in DevTools
+- Check container query and fluid scaling behavior in DevTools
 - Monitor network requests in browser console
 
 ## Performance Considerations

@@ -35,10 +35,11 @@ WordSquad is a multiplayer word guessing game inspired by Wordle, built with Fla
 
 ### Frontend Development
 - Use semantic HTML with accessibility considerations
-- Implement responsive design with three breakpoints:
-  - Light Mode: ≤600px (mobile)
-  - Medium Mode: 601-900px (tablet)
-  - Full Mode: >900px (desktop)
+- Implement modern fluid responsive design using:
+  - Container queries for component-based responsiveness
+  - Modern viewport units (dvh, svh, lvh) for better mobile support
+  - Fluid scaling with clamp() functions for adaptive sizing
+  - Dynamic CSS custom properties for tile and component sizing
 - Use CSS custom properties for theming and consistency
 - Organize JavaScript into ES6 modules with clear separation of concerns
 - Handle both touch and keyboard input for cross-platform compatibility
@@ -73,17 +74,23 @@ eventSource.onmessage = (event) => {
 
 ### Responsive Scaling
 ```css
-/* Mobile-first responsive pattern */
+/* Modern fluid responsive pattern with container queries */
 .game-container {
-  /* Mobile styles */
+  /* Base styles with fluid scaling */
+  --tile-size: clamp(32px, 8vw, 70px);
+  --container-padding: clamp(0.5rem, 2vw, 2rem);
 }
 
-@media (min-width: 601px) {
-  /* Medium mode styles */
+@container (min-width: 400px) {
+  .game-container {
+    --tile-size: clamp(48px, 6vw, 60px);
+  }
 }
 
-@media (min-width: 901px) {
-  /* Full mode styles */
+@container (min-width: 768px) {
+  .game-container {
+    --tile-size: clamp(60px, 4vw, 70px);
+  }
 }
 ```
 
@@ -114,7 +121,7 @@ eventSource.onmessage = (event) => {
 ## Common Tasks
 When working on this project, you'll often need to:
 1. Add new game features while maintaining lobby independence
-2. Update responsive layouts across all three breakpoint modes
+2. Update fluid responsive layouts using container queries and modern CSS
 3. Implement real-time features using the SSE stream
 4. Add new API endpoints following the RESTful lobby pattern
 5. Update tests to cover new functionality
