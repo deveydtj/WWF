@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-items: center;
   margin-bottom: calc(18px * var(--ui-scale));
   gap: calc(18px * var(--ui-scale));
   padding: 0 0 calc(8px * var(--ui-scale)) 0;
@@ -15,7 +16,13 @@
   width: 100%;
   flex: 0 0 auto;
   max-height: 80px; /* Prevent leaderboard from growing too much */
-  overflow-x: auto;
+  /* Ensure leaderboard is properly positioned */
+  position: relative;
+  z-index: 10;
+  /* Center it horizontally and ensure visibility */
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .leaderboard-entry {
