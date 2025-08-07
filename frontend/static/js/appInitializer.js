@@ -30,6 +30,7 @@ import {
   ensureInputFieldVisibility,
   enableClickOffDismiss
 } from './utils.js';
+import { updateInputVisibility } from './uiNotifications.js';
 import { updateHintBadge } from './hintBadge.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 

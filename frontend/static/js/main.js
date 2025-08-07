@@ -36,6 +36,10 @@ window.LOBBY_CODE = LOBBY_CODE;
 
 // Initialize the application
 async function initializeApp() {
+  // Setup the submit guess handler BEFORE app initialization
+  // so it's available during keyboard setup
+  window.submitGuessHandler = submitGuessHandler;
+
   // Initialize with all managers
   const success = await appInitializer.initialize({
     domManager,
@@ -48,9 +52,6 @@ async function initializeApp() {
     console.error('Failed to initialize application');
     return;
   }
-
-  // Setup the submit guess handler for the app initializer
-  window.submitGuessHandler = submitGuessHandler;
 
   console.log('🚀 Application initialized successfully');
 }
