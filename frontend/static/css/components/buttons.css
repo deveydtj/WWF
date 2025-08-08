@@ -6,6 +6,7 @@
 #resetWrapper {
   display: inline-block;
   position: relative;
+  flex: 0 0 auto; /* Prevent flexbox from shrinking the wrapper */
 }
 
 #holdReset {
