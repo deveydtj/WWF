@@ -14,6 +14,7 @@ The leaderboard displays player scores and status in real-time during gameplay. 
 - **Requirement**: The leaderboard MUST be horizontally scrollable when there are more players than can fit in the available space
 - **Implementation**: Use `overflow-x: auto` with smooth scrolling behavior
 - **Touch Support**: Support touch/swipe scrolling on mobile devices
+- **Interaction Restriction**: Leaderboard entries MUST NOT respond to click/tap events - scrolling is the only supported interaction
 
 ### FR-3: Auto-Scroll Back Feature
 - **Requirement**: The leaderboard MUST automatically scroll back to show the current user's position
@@ -74,12 +75,17 @@ The leaderboard displays player scores and status in real-time during gameplay. 
 - Apply proper styling for different emoji types
 - Consistent sizing and positioning
 
+### EF-4: Interaction Restrictions
+- **No Click Events**: Leaderboard entries do not respond to click or tap events
+- **Scroll Only**: Users can only interact by scrolling/swiping to view different entries
+- **Non-Interactive**: Prevents accidental activation and JavaScript errors from missing functions
+
 ## Implementation Notes
 
 ### Files Modified
 - `frontend/game.html` - **COMPLETED**: Moved leaderboard div to lobby header, removed playerCount
 - `frontend/static/css/components/leaderboard.css` - **COMPLETED**: Updated positioning and scrolling styles
-- `frontend/static/js/leaderboardManager.js` - **COMPLETED**: Added 5-second auto-scroll functionality
+- `frontend/static/js/leaderboardManager.js` - **COMPLETED**: Added 5-second auto-scroll functionality, **REMOVED** click event handlers from leaderboard entries
 - `frontend/static/js/domManager.js` - **COMPLETED**: Removed player count functionality
 
 ### Key Functions
