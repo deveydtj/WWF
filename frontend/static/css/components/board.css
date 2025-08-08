@@ -205,35 +205,43 @@ body.hint-selecting .tile:not(.hint-target) {
   align-items: center;
   justify-content: center;
   margin: 5px auto;
-  width: max-content;
+  width: var(--board-width);
   flex: 0 0 auto;
+  gap: calc(var(--tile-gap) * 2);
 }
 
 #guessInput,
 #submitGuess {
   border: none;
-  padding: 12px 15px;
-  font-size: 18px;
-  border-radius: 10px;
+  font-size: calc(var(--tile-size) * 0.3);
+  border-radius: calc(var(--tile-size) * 0.15);
   background-color: var(--bg-color);
-  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
-              inset -3px -3px 6px var(--inset-shadow-light);
   color: var(--text-color);
   outline: none;
   transition: box-shadow 0.2s, background-color 0.3s, color 0.3s;
 }
 
 #guessInput {
-  width: clamp(10rem, 40vw, 11.25rem);
-  margin-right: 0.625rem;
+  /* Calculate input width: board width minus 2 buttons and gaps */
+  width: calc(var(--board-width) - (var(--uniform-button-width) * 2) - (var(--tile-gap) * 4));
+  height: var(--uniform-button-height);
+  padding: 0 calc(var(--tile-size) * 0.2);
   text-transform: uppercase;
+  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+              inset -3px -3px 6px var(--inset-shadow-light);
 }
 
 #submitGuess {
+  width: var(--uniform-button-width);
+  height: var(--uniform-button-height);
   cursor: pointer;
   font-weight: 500;
   box-shadow: 5px 5px 10px var(--shadow-color-dark),
               -5px -5px 10px var(--shadow-color-light);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #submitGuess:active {

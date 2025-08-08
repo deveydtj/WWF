@@ -107,11 +107,6 @@
     display: none;
   }
 
-  /* Hide input field on mobile - users will use on-screen keyboard only */
-  #inputArea {
-    display: none !important;
-  }
-
   /* Panel positioning for mobile */
   #historyBox {
     position: fixed;
@@ -248,39 +243,15 @@
                 -3px -3px 6px var(--shadow-color-light);
   }
 
+  /* Mobile input area - now uses unified button sizing */
   #inputArea {
     display: flex;
-    flex-direction: column;
-    margin-bottom: 3px; /* Reduced to keep keyboard closer to board */
-    width: 100%;
+    flex-direction: row;
     align-items: center;
-  }
-
-  #guessInput {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-
-  #submitGuess {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-  }
-
-  /* When both reset and guess buttons are visible on mobile, make them consistent */
-  body.dark-mode #submitGuess,
-  body:not(.dark-mode) #submitGuess {
-    width: calc(clamp(4rem, 20vw, 4.5rem) * var(--ui-scale));
-    height: calc(2rem * var(--ui-scale));
-    padding: 0; /* Remove padding since we're using explicit width/height */
-    font-size: calc(0.875rem * var(--ui-scale));
+    justify-content: center;
+    margin-bottom: 3px;
+    width: var(--board-width);
+    gap: calc(var(--tile-gap) * 1.5);
   }
 
   #messagePopup {
@@ -361,23 +332,7 @@
     min-width: calc(var(--tile-size) * 1.2);
   }
 
-  /* Mobile reset button */
-  #resetWrapper {
-    margin-left: 0;
-  }
-  
-  #holdReset {
-    width: calc(clamp(4rem, 20vw, 4.5rem) * var(--ui-scale));
-    height: calc(2rem * var(--ui-scale));
-    font-size: calc(0.875rem * var(--ui-scale));
-    border-radius: 8px;
-    box-shadow: 3px 3px 6px var(--shadow-color-dark),
-                -3px -3px 6px var(--shadow-color-light);
-  }
-  
-  #holdResetProgress {
-    border-radius: 8px;
-  }
+  /* Mobile reset button - now uses unified sizing */
 
   .leaderboard-entry {
     font-size: calc(1em * var(--ui-scale));
@@ -540,17 +495,7 @@
   /* Keep input area visible but more compact on ultra small screens */
   #inputArea {
     margin-bottom: 3px;
-    gap: 4px;
-  }
-  
-  #guessInput {
-    padding: 6px;
-    font-size: 14px;
-  }
-  
-  #submitGuess {
-    padding: 6px 8px;
-    font-size: 12px;
+    gap: calc(var(--tile-gap));
   }
 }
 
@@ -679,16 +624,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px; /* Reduced margin to save space */
+    margin-bottom: 8px;
+    width: var(--board-width);
+    gap: calc(var(--tile-gap) * 2);
     flex: 0 0 auto; /* Don't allow input area to shrink */
-  }
-
-  /* Make reset and guess buttons same size on medium screens */
-  #submitGuess {
-    width: calc(clamp(4.5rem, 16vw, 5.5rem) * var(--ui-scale));
-    height: calc(clamp(2rem, 5vh, 2.5rem) * var(--ui-scale));
-    padding: 0; /* Remove padding since we're using explicit width/height */
-    font-size: calc(16px * var(--ui-scale));
   }
 }
 
@@ -708,23 +647,7 @@
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
   }
 
-  /* Reduce input field and button size for large screens */
-  #guessInput,
-  #submitGuess {
-    padding: 8px 12px;
-    font-size: 16px;
-  }
-
-  #guessInput {
-    width: clamp(8rem, 20vw, 10rem);
-  }
-
-  /* Make reset and guess buttons same size on large screens */
-  #submitGuess {
-    width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
-    height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
-    padding: 0; /* Remove padding since we're using explicit width/height */
-  }
+  /* Large screens use unified button sizing */
 }
 
 /* Very large screens (min-width: 1551px) */
@@ -740,21 +663,5 @@
     margin: 0 auto;
   }
 
-  /* Even smaller input sizing for very large screens */
-  #guessInput,
-  #submitGuess {
-    padding: 8px 12px;
-    font-size: 16px;
-  }
-
-  #guessInput {
-    width: clamp(8rem, 15vw, 9rem);
-  }
-
-  /* Make reset and guess buttons same size on very large screens */
-  #submitGuess {
-    width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
-    height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
-    padding: 0; /* Remove padding since we're using explicit width/height */
-  }
+  /* Very large screens use unified button sizing */
 }

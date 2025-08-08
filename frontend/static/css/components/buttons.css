@@ -2,24 +2,23 @@
    Buttons - Button styles and reset functionality
    ───────────────────────────────────────────── */
 
-/* Hold-to-Reset Neumorphic Button */
+/* Reset button wrapper - now in input area */
 #resetWrapper {
   display: inline-block;
   position: relative;
-  margin-left: 10px;
 }
 
 #holdReset {
-  width: calc(clamp(5rem, 18vw, 6.25rem) * var(--ui-scale));
-  height: calc(clamp(2.25rem, 6vh, 2.8rem) * var(--ui-scale));
+  width: var(--uniform-button-width);
+  height: var(--uniform-button-height);
   border: none;
-  border-radius: 12px;
-  font-size: calc(18px * var(--ui-scale));
+  border-radius: calc(var(--tile-size) * 0.15);
+  font-size: calc(var(--tile-size) * 0.3);
   font-weight: 500;
   background: var(--bg-color);
   color: var(--text-color);
-  box-shadow: 5px 5px 14px var(--shadow-color-dark),
-              -5px -5px 14px var(--shadow-color-light);
+  box-shadow: 5px 5px 10px var(--shadow-color-dark),
+              -5px -5px 10px var(--shadow-color-light);
   transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.2s;
   cursor: pointer;
   outline: none;
@@ -27,6 +26,9 @@
   overflow: hidden;
   z-index: 1;
   user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #holdReset:active {
@@ -44,7 +46,7 @@
   width: 0%;
   background: var(--absent-shadow-light);
   opacity: 0.9;
-  border-radius: 12px;
+  border-radius: calc(var(--tile-size) * 0.15);
   pointer-events: none;
   z-index: 0;
   transition: width 0.1s linear;
