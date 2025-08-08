@@ -9,7 +9,10 @@ import { updateBoard } from './board.js';
  */
 export function handleVirtualKey(event, {guessInput, submitGuessHandler, isAnimating}, updateBoardFromTyping) {
   if (event.target.classList.contains('key') && !guessInput.disabled && !isAnimating()) {
-    event.preventDefault();
+    // Only prevent default if the event is cancelable to avoid browser intervention warnings
+    if (event.cancelable) {
+      event.preventDefault();
+    }
     const key = event.target.dataset.key;
     const currentValue = guessInput.value;
     if (key === 'Enter') {

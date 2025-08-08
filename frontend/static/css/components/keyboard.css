@@ -62,6 +62,11 @@
   align-items: center;
   justify-content: center;
   padding: 0 5px;
+  /* Prevent text selection on keyboard buttons */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .key.wide { 
