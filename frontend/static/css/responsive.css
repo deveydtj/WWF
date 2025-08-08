@@ -243,15 +243,9 @@
                 -3px -3px 6px var(--shadow-color-light);
   }
 
-  /* Mobile input area - now uses unified button sizing */
+  /* Mobile input area - HIDDEN on mobile since users should use on-screen keyboard */
   #inputArea {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 3px;
-    width: var(--board-width);
-    gap: calc(var(--tile-gap) * 1.5);
+    display: none !important; /* Hide input area on mobile - users should use on-screen keyboard */
   }
 
   #messagePopup {
@@ -645,6 +639,14 @@
     --tile-size: var(--current-tile-size, 60px) !important;
     --tile-gap: 7px !important;
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4) !important;
+    /* Ensure UI scale doesn't become too small in this range */
+    --ui-scale: max(var(--current-scale-factor, 1), 0.9);
+  }
+
+  /* Ensure leaderboard emojis maintain minimum size */
+  .player-emoji {
+    font-size: max(calc(1.2em * var(--ui-scale)), 1.1em) !important;
+    min-width: 1.2em;
   }
 
   /* Large screens use unified button sizing */
