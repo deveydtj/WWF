@@ -30,6 +30,10 @@
   --ui-scale: var(--current-scale-factor, 1);
   --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   
+  /* Uniform button sizing - ensures buttons are same size */
+  --uniform-button-width: calc(var(--tile-size) * 1.8);
+  --uniform-button-height: calc(var(--tile-size) * 0.8);
+  
   /* Modern viewport support */
   --viewport-height: var(--dynamic-viewport-height, 100vh);
   --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));

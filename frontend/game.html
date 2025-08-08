@@ -121,12 +121,6 @@
     <div id="gameColumn">
       <div id="titleBar">
         <div class="mobile-title-row">
-          <div id="resetWrapper">
-            <button id="holdReset">
-              <span id="holdResetText">Reset</span>
-              <span id="holdResetProgress"></span>
-            </button>
-          </div>
           <h1 id="gameTitle"></h1>
           <div class="mobile-leaderboard-container">
             <!-- Leaderboard will be moved here on mobile -->
@@ -149,6 +143,12 @@
       <div id="inputArea">
         <input type="text" id="guessInput" maxlength="5" autocomplete="off">
         <button id="submitGuess">Guess</button>
+        <div id="resetWrapper">
+          <button id="holdReset">
+            <span id="holdResetText">Reset</span>
+            <span id="holdResetProgress"></span>
+          </button>
+        </div>
       </div>
 
       <p id="message" role="status" aria-live="polite"></p>
