@@ -148,13 +148,6 @@ function renderLeaderboard() {
     entry.appendChild(emojiSpan);
     entry.appendChild(scoreSpan);
     
-    // Add click handler for admin actions (if applicable)
-    entry.addEventListener('click', () => {
-      if (entry.getAttribute('data-player-id') !== getMyPlayerId()) {
-        // Could add admin/host functionality here
-      }
-    });
-    
     leaderboardDiv.appendChild(entry);
   });
   
