@@ -29,7 +29,13 @@ The leaderboard displays player scores and status in real-time during gameplay. 
   - Must not block input controls
 - **Max Height**: Limited to prevent vertical space conflicts
 
-### FR-5: Player Identification
+### FR-5: Centering Layout
+- **Requirement**: The leaderboard entries MUST be centered within the available space in the lobby header
+- **Implementation**: Use `justify-content: center` to center entries horizontally
+- **Behavior**: When few players are present, entries appear centered; when overflow occurs, scrolling is still available
+- **Justification**: Provides balanced visual layout and better use of header space
+
+### FR-6: Player Identification
 - **Requirement**: The current user's entry MUST be clearly highlighted
 - **Visual Treatment**: Special styling (border, background, or other distinguishing features)
 - **Always Visible**: When auto-scrolling, center on current user's position
