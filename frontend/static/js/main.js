@@ -25,7 +25,6 @@ import './boardScalingTests.js';
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
 let myPlayerId = getMyPlayerId();
-let showEmojiModalOnNextFetch = false;
 
 // Get lobby code from URL
 const LOBBY_CODE = (() => {
@@ -157,11 +156,13 @@ async function submitGuessHandler() {
   }
 }
 
-// Handle emoji modal logic
+// Handle emoji modal logic - only for users without an emoji
 function handleEmojiModal(activeEmojis) {
   const haveMy = activeEmojis.includes(myEmoji);
   
-  if (!myEmoji || !haveMy || showEmojiModalOnNextFetch) {
+  // Only show the emoji modal if the user doesn't have an emoji at all
+  // Users who want to change their emoji should exit to the landing page
+  if (!myEmoji) {
     showEmojiModal(activeEmojis, {
       onChosen: e => { 
         myEmoji = e; 
@@ -181,7 +182,8 @@ function handleEmojiModal(activeEmojis) {
       })
     });
     showEmojiModalOnNextFetch = false;
-  } else if (!skipAutoClose) {
+  } else {
+    // Close any existing modal if user already has an emoji
     closeDialog(document.getElementById('emojiModal'));
   }
 }
