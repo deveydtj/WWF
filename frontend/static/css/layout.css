@@ -385,31 +385,3 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   outline: 2px dashed var(--text-color);
   outline-offset: -2px;
 }
-
-/* Waiting overlay with pointer events */
-#waitingOverlay {
-  pointer-events: none;
-  opacity: 0.8;
-  transition: opacity 0.3s ease-out;
-}
-
-#waitingOverlay.fade-out {
-  opacity: 0;
-  animation: fadeOutOverlay 0.5s ease-out;
-}
-
-.waiting-overlay {
-  pointer-events: none;
-  opacity: 0.8;
-  transition: opacity 0.3s ease-out;
-}
-
-.waiting-overlay.fade-out {
-  opacity: 0;
-  animation: fadeOutOverlay 0.5s ease-out;
-}
-
-@keyframes fadeOutOverlay {
-  from { opacity: 0.8; }
-  to { opacity: 0; }
-}

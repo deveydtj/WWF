@@ -65,7 +65,6 @@ class DOMManager {
     this.elements.leaveLobby = document.getElementById('leaveLobby');
     
     // Modal and popup elements
-    this.elements.waitingOverlay = document.getElementById('waitingOverlay');
     this.elements.closeCallPopup = document.getElementById('closeCallPopup');
     this.elements.closeCallText = document.getElementById('closeCallText');
     this.elements.closeCallOk = document.getElementById('closeCallOk');
