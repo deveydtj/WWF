@@ -111,10 +111,7 @@ class AppInitializer {
       // 8. Setup window event handlers
       this._setupWindowEvents();
       
-      // 9. Setup waiting overlay
-      this._setupWaitingOverlay();
-      
-      // 10. Initialize panels and layout
+      // 9. Initialize panels and layout
       this._initializePanelsAndLayout();
       
       // 11. Initialize network and game state
@@ -486,29 +483,6 @@ class AppInitializer {
         fitBoardToContainer(maxRows);
       }
     }
-  }
-
-  /**
-   * Setup waiting overlay
-   * @private
-   */
-  _setupWaitingOverlay() {
-    const waitingOverlay = this.domManager.get('waitingOverlay');
-    if (!waitingOverlay) return;
-
-    document.addEventListener('click', () => {
-      if (waitingOverlay.style.display !== 'none') {
-        waitingOverlay.classList.add('fade-out');
-        waitingOverlay.addEventListener(
-          'animationend',
-          () => {
-            waitingOverlay.style.display = 'none';
-            waitingOverlay.classList.remove('fade-out');
-          },
-          { once: true }
-        );
-      }
-    });
   }
 
   /**

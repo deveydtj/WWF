@@ -75,27 +75,6 @@
   font-size: 16px;
 }
 
-/* Waiting Overlay */
-#waitingOverlay {
-  background: rgba(0, 0, 0, 0.33);
-  position: fixed;
-  z-index: 100;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-color);
-  font-size: 1.2rem;
-  pointer-events: none;
-}
-
-#waitingOverlay.fade-out {
-  animation: fadeOutOverlay 0.3s forwards;
-}
-
 /* Info Popup */
 #infoPopup {
   background: rgba(0, 0, 0, 0.33);

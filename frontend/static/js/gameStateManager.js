@@ -36,9 +36,6 @@ class GameStateManager {
     this.dailyDoubleHint = null;
     this.dailyDoubleAvailable = false;
     
-    // UI flags
-    this.waitingOverlayDismissed = false;
-    
     // Dependencies (to be injected)
     this.gameState = null;
     this.domManager = null;
@@ -84,9 +81,6 @@ class GameStateManager {
     
     // Check if player was removed
     this._checkPlayerRemoval();
-    
-    // Handle waiting overlay
-    this._handleWaitingOverlay(state);
     
     // Render UI components
     updateLeaderboard(this.leaderboard);
@@ -138,26 +132,6 @@ class GameStateManager {
         this.prevActiveEmojis.includes(this.myEmoji) && 
         !this.activeEmojis.includes(this.myEmoji)) {
       showMessage('You were removed from the lobby.', this.messageHandlers);
-    }
-  }
-
-  /**
-   * Handle waiting overlay visibility
-   * @private
-   */
-  _handleWaitingOverlay(state) {
-    const waitingOverlay = this.domManager ? this.domManager.get('waitingOverlay') : null;
-    if (!waitingOverlay) return;
-    
-    if (state.phase !== 'waiting') {
-      this.waitingOverlayDismissed = false;
-    }
-    
-    if (state.phase === 'waiting' && !this.waitingOverlayDismissed) {
-      waitingOverlay.classList.remove('fade-out');
-      waitingOverlay.style.display = 'flex';
-    } else if (!waitingOverlay.classList.contains('fade-out')) {
-      waitingOverlay.style.display = 'none';
     }
   }
 
