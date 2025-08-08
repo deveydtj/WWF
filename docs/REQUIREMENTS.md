@@ -19,7 +19,7 @@ overview and should be kept up to date as features evolve.
 - **Multiplayer:** Each player selects a unique emoji avatar. Selection is stored
   with `localStorage` and posted to the server. The emoji picker disables
   emojis already in use.
-- **Leaderboard:** Horizontal list of current players with emoji and score. The
+- **Leaderboard:** Horizontally centered list of current players with emoji and score. The
   current player's entry is scrolled into view. Inactive players (idle for more
   than five minutes) appear dimmed.
 - **History Panel:** Lists all guesses from all players with emoji, tile results,

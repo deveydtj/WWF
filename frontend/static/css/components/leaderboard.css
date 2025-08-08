@@ -7,22 +7,36 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  margin-bottom: calc(18px * var(--ui-scale));
-  gap: calc(18px * var(--ui-scale));
-  padding: 0 0 calc(8px * var(--ui-scale)) 0;
+  gap: calc(8px * var(--ui-scale));
+  padding: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  width: 100%;
-  flex: 0 0 auto;
-  max-height: 80px; /* Prevent leaderboard from growing too much */
+  flex: 1;
+  max-height: 60px; /* Fit within header */
   /* Ensure leaderboard is properly positioned */
   position: relative;
   z-index: 10;
-  /* Center it horizontally and ensure visibility */
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--shadow-color-dark) transparent;
+}
+
+#leaderboard::-webkit-scrollbar {
+  height: 4px;
+}
+
+#leaderboard::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#leaderboard::-webkit-scrollbar-thumb {
+  background: var(--shadow-color-dark);
+  border-radius: 2px;
+}
+
+#leaderboard::-webkit-scrollbar-thumb:hover {
+  background: var(--text-color-light);
 }
 
 .leaderboard-entry {
@@ -32,10 +46,11 @@
   box-shadow: 2px 2px 8px var(--shadow-color-dark),
               -2px -2px 8px var(--shadow-color-light);
   border-radius: 10px;
-  padding: calc(7px * var(--ui-scale)) calc(15px * var(--ui-scale));
-  margin: 0 5px;
-  font-size: calc(1.25em * var(--ui-scale));
-  min-width: calc(50px * var(--ui-scale));
+  padding: calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale));
+  font-size: calc(1.1em * var(--ui-scale));
+  min-width: calc(60px * var(--ui-scale));
+  white-space: nowrap;
+  flex-shrink: 0; /* Prevent entries from shrinking */
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
@@ -43,15 +58,40 @@
   animation: lb-flash 0.4s ease;
 }
 
-.leaderboard-entry.me {
+.leaderboard-entry.current-player {
   border: 2px solid var(--correct-bg);
   box-shadow: 0 0 0 2px var(--correct-shadow-light);
+  background: var(--correct-shadow-light);
 }
 
 .leaderboard-entry.inactive {
   opacity: 0.45;
   filter: grayscale(0.8);
   transition: opacity 0.4s, filter 0.4s;
+}
+
+.player-emoji {
+  margin-right: calc(6px * var(--ui-scale));
+  font-size: calc(1.2em * var(--ui-scale));
+}
+
+.player-score {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.score-increase {
+  animation: score-pop 0.5s ease;
+}
+
+@keyframes score-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+@keyframes lb-flash {
+  0%, 100% { background: var(--bg-color); }
+  50% { background: var(--correct-shadow-light); }
 }
 
 .hint-badge {

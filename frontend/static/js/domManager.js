@@ -60,7 +60,6 @@ class DOMManager {
     // Game title and header elements
     this.elements.gameTitle = document.getElementById('gameTitle');
     this.elements.lobbyCodeEl = document.getElementById('lobbyCode');
-    this.elements.playerCountEl = document.getElementById('playerCount');
     this.elements.lobbyHeader = document.getElementById('lobbyHeader');
     this.elements.copyLobbyLink = document.getElementById('copyLobbyLink');
     this.elements.leaveLobby = document.getElementById('leaveLobby');
@@ -150,17 +149,6 @@ class DOMManager {
     const lobbyHeader = this.get('lobbyHeader');
     if (lobbyHeader) {
       lobbyHeader.style.display = 'none';
-    }
-  }
-
-  /**
-   * Set player count text
-   * @param {number} count - Number of players
-   */
-  setPlayerCount(count) {
-    const playerCountEl = this.get('playerCountEl');
-    if (playerCountEl) {
-      playerCountEl.textContent = `${count} player${count !== 1 ? 's' : ''}`;
     }
   }
 

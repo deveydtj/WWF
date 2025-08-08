@@ -238,7 +238,7 @@ def test_lobby_header_elements_exist():
     text = GAME.read_text(encoding='utf-8')
     assert '<div id="lobbyHeader"' in text
     assert '<span id="lobbyCode"' in text
-    assert '<span id="playerCount"' in text
+    assert '<div id="leaderboard"' in text
     assert '<button id="copyLobbyLink"' in text
 
 def test_lobby_header_css_present():

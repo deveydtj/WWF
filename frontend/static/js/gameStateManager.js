@@ -6,7 +6,7 @@
 import { updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints } from './board.js';
 import { renderHistory } from './history.js';
 import { renderChat } from './chat.js';
-import { renderLeaderboard, renderPlayerSidebar, renderEmojiStamps } from './leaderboardManager.js';
+import { updateLeaderboard, renderPlayerSidebar, renderEmojiStamps } from './leaderboardManager.js';
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState } from './hintState.js';
 import { showMessage, setGameInputDisabled } from './utils.js';
@@ -85,14 +85,11 @@ class GameStateManager {
     // Check if player was removed
     this._checkPlayerRemoval();
     
-    // Update player count
-    this._updatePlayerCount();
-    
     // Handle waiting overlay
     this._handleWaitingOverlay(state);
     
     // Render UI components
-    renderLeaderboard();
+    updateLeaderboard(this.leaderboard);
     renderPlayerSidebar();
     
     // Update hint badge
@@ -141,16 +138,6 @@ class GameStateManager {
         this.prevActiveEmojis.includes(this.myEmoji) && 
         !this.activeEmojis.includes(this.myEmoji)) {
       showMessage('You were removed from the lobby.', this.messageHandlers);
-    }
-  }
-
-  /**
-   * Update player count display
-   * @private
-   */
-  _updatePlayerCount() {
-    if (this.domManager) {
-      this.domManager.setPlayerCount(this.activeEmojis.length);
     }
   }
 
