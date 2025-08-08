@@ -182,14 +182,28 @@ function renderPlayerSidebar() {
   
   const myEmoji = getMyEmoji();
   
-  // Find current player's data
-  const myData = leaderboard.find(([emoji]) => emoji === myEmoji);
+  // Find current player's data - handle both formats: server format {emoji, score, last_active} and old tuple format [emoji, data]
+  const myData = leaderboard.find(item => {
+    if (Array.isArray(item)) {
+      const [emoji] = item;
+      return emoji === myEmoji;
+    } else {
+      return item.emoji === myEmoji;
+    }
+  });
   if (!myData) {
     sidebarDiv.innerHTML = '<div class="no-player">No player data</div>';
     return;
   }
   
-  const [, { score = 0, hint_count = 0, last_active }] = myData;
+  // Extract data from either format
+  let score = 0, hint_count = 0, last_active;
+  if (Array.isArray(myData)) {
+    const [, data] = myData;
+    ({ score = 0, hint_count = 0, last_active } = data);
+  } else {
+    ({ score = 0, hint_count = 0, last_active } = myData);
+  }
   
   // Create player info display
   const playerInfo = document.createElement('div');
