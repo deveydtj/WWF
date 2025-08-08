@@ -3,7 +3,7 @@
  * Handles player list, emoji rendering, and leaderboard interactions.
  */
 
-import { getMyEmoji, applyEmojiVariantStyling, getBaseEmoji } from './emoji.js';
+import { getMyEmoji, applyEmojiVariantStyling, getBaseEmoji, getMyPlayerId } from './emoji.js';
 import { updateHintBadge } from './hintBadge.js';
 
 let leaderboard = [];
