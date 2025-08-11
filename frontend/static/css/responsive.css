@@ -99,6 +99,11 @@
     font-size: 18px !important;
   }
 
+  /* Hide duplicate host control buttons on mobile - they're now in the mobile menu */
+  #hostControls {
+    display: none !important;
+  }
+
   /* Hide player count in mobile/light mode to save space */
   #playerCount {
     display: none;

@@ -45,7 +45,7 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 90;
+  z-index: 9999; /* Increased z-index to appear above virtual keyboard */
   opacity: 0;
   transition: opacity 0.3s ease;
 }
