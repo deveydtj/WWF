@@ -41,6 +41,7 @@ class AppInitializer {
     this.networkManager = null;
     this.gameStateManager = null;
     this.eventListenersManager = null;
+    this.mobileMenuManager = null;
     
     // App state
     this.myEmoji = null;
@@ -63,6 +64,7 @@ class AppInitializer {
     this.networkManager = managers.networkManager;
     this.gameStateManager = managers.gameStateManager;
     this.eventListenersManager = managers.eventListenersManager;
+    this.mobileMenuManager = managers.mobileMenuManager;
     
     // Initialize game state
     this.gameState = new StateManager();
@@ -251,6 +253,15 @@ class AppInitializer {
       updateHintBadge: updateHintBadge,
       titleHintBadge: this.domManager.get('titleHintBadge')
     });
+
+    // Initialize mobile menu manager
+    if (this.mobileMenuManager) {
+      this.mobileMenuManager.initialize({
+        domManager: this.domManager,
+        lobbyCode: this.lobbyCode,
+        messageHandlers
+      });
+    }
   }
 
   /**

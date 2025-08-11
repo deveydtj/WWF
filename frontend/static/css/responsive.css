@@ -83,23 +83,20 @@
   }
 
   #optionsToggle {
-    display: block !important;
-    position: fixed !important;
-    top: 50px !important; /* Moved down to avoid lobby header */
-    right: 10px !important; /* Back to right edge */
-    left: auto !important; /* Override any left positioning */
-    z-index: 70 !important;
-    font-size: 18px !important; /* Smaller to fit better on mobile */
+    display: none !important; /* Hidden on mobile - replaced by mobile menu */
   }
   
   #chatNotify {
+    display: none !important; /* Hidden on mobile - replaced by mobile menu */
+  }
+
+  #mobileMenuToggle {
     display: block !important;
     position: fixed !important;
-    top: 90px !important; /* Positioned below options button with spacing */
-    right: 10px !important; /* Aligned with options button */
-    left: auto !important; /* Override any left positioning */
+    top: 50px !important;
+    right: 10px !important;
     z-index: 70 !important;
-    font-size: 18px !important; /* Smaller to fit better on mobile */
+    font-size: 18px !important;
   }
 
   /* Hide player count in mobile/light mode to save space */
