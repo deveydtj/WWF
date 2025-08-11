@@ -104,6 +104,11 @@
     display: none !important;
   }
 
+  /* Hide lobby code on mobile since it's now in the title */
+  #lobbyCode {
+    display: none !important;
+  }
+
   /* Hide player count in mobile/light mode to save space */
   #playerCount {
     display: none;
@@ -245,7 +250,17 @@
                 -3px -3px 6px var(--shadow-color-light);
   }
 
-  /* Mobile input area - HIDDEN on mobile since users should use on-screen keyboard */
+  /* Mobile reset button positioning - move to top left */
+  #resetWrapper {
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    z-index: 80 !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
+
+  /* Hide input area on mobile since users should use on-screen keyboard */
   #inputArea {
     display: none !important; /* Hide input area on mobile - users should use on-screen keyboard */
   }
@@ -370,19 +385,28 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     width: 100%;
     gap: 0.5rem;
+    position: relative;
   }
   
   #titleBar .mobile-title-row h1 {
-    flex: 1;
-    margin: 0 8px;
+    margin: 0;
     text-align: center;
+    /* Scale down title to always fit on one line */
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
   }
   
   #titleBar .mobile-leaderboard-container {
-    flex: 1;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     min-width: 0;
     overflow: hidden;
     max-width: 200px;
