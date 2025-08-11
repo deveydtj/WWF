@@ -138,12 +138,28 @@ class AppInitializer {
   }
 
   /**
+   * Update game title based on screen size and lobby code
+   * @private
+   */
+  _updateGameTitle() {
+    const isMobile = window.innerWidth <= 600;
+    let title = GAME_NAME;
+    
+    // On mobile, include lobby code in the title if available
+    if (isMobile && this.lobbyCode) {
+      title = `${GAME_NAME} - ${this.lobbyCode}`;
+    }
+    
+    this.domManager.setGameTitle(title);
+  }
+
+  /**
    * Initialize basic UI elements
    * @private
    */
   _initializeBasicUI() {
-    // Set game title
-    this.domManager.setGameTitle(GAME_NAME);
+    // Set game title based on screen size
+    this._updateGameTitle();
     
     // Setup lobby header
     if (this.lobbyCode) {
@@ -392,6 +408,7 @@ class AppInitializer {
   _setupWindowEvents() {
     // Resize handler
     window.addEventListener('resize', () => {
+      this._updateGameTitle(); // Update title for mobile/desktop
       repositionResetButton();
       updatePanelVisibility();
       updateChatPanelPosition();
@@ -435,6 +452,7 @@ class AppInitializer {
     let orientationTimeout;
 
     const handleOrientationChange = () => {
+      this._updateGameTitle(); // Update title for mobile/desktop
       updateVH();
       
       const boardArea = this.domManager.get('boardArea');
