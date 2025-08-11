@@ -93,7 +93,7 @@
   #mobileMenuToggle {
     display: block !important;
     position: fixed !important;
-    top: 50px !important;
+    top: 10px !important;
     right: 10px !important;
     z-index: 70 !important;
     font-size: 18px !important;
