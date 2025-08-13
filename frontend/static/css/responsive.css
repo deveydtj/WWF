@@ -581,38 +581,7 @@
     display: block;
   }
 
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 80;
-  }
-
-  body[data-mode='medium'] #chatBox {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    transform-origin: center center;
-  }
-  
-  body[data-mode='medium']:not(.history-open) #historyBox,
-  body[data-mode='medium']:not(.definition-open) #definitionBox,
-  body[data-mode='medium']:not(.chat-open) #chatBox {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
+  /* Medium mode panel positioning is handled in layout.css */
 
   :root {
     /* Medium screens: Use smaller tiles to prevent input field from being hidden */
