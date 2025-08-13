@@ -2,6 +2,8 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 .venv/
+venv/
+env/
 game_persist.json
 analytics.log
 lobbies.json
@@ -21,3 +23,32 @@ node_modules/
 npm-debug.log*
 package-lock.json
 .npm
+
+# Build artifacts and temporary files
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+
+# Backup and temporary files
+*~
+*.bak
+*.backup
+*_old*
+*.orig
+*.tmp
+
+# IDE and OS files
+.DS_Store
+.vscode/
+*.swp
+*.swo
+
+# Test artifacts
+test-*.html
+*.test.js.backup
