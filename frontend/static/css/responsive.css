@@ -166,7 +166,7 @@
     opacity: 0;
     transform-origin: bottom center;
     transform: scale(0);
-    z-index: 50;
+    z-index: 10000; /* Increased z-index to appear above virtual keyboards */
     display: flex;
     flex-direction: column;
     pointer-events: none;
