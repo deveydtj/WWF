@@ -646,6 +646,25 @@
     width: clamp(14rem, 30vw, 17rem);
   }
 
+  /* Fix medium mode panel positioning to prevent space above lobbyHeader */
+  body[data-mode='medium'] #historyBox {
+    position: absolute !important;
+    top: 10px !important;
+    left: 0 !important;
+  }
+
+  body[data-mode='medium'] #definitionBox {
+    position: absolute !important;
+    top: 10px !important;
+    right: 0 !important;
+  }
+
+  body[data-mode='medium'] #chatBox {
+    position: absolute !important;
+    top: 10px !important;
+    right: 0 !important;
+  }
+
   /* Override base positioning for medium mode */
   #optionsToggle {
     display: block;
