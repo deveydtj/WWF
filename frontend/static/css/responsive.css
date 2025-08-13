@@ -83,23 +83,30 @@
   }
 
   #optionsToggle {
-    display: block !important;
-    position: fixed !important;
-    top: 50px !important; /* Moved down to avoid lobby header */
-    right: 10px !important; /* Back to right edge */
-    left: auto !important; /* Override any left positioning */
-    z-index: 70 !important;
-    font-size: 18px !important; /* Smaller to fit better on mobile */
+    display: none !important; /* Hidden on mobile - replaced by mobile menu */
   }
   
   #chatNotify {
+    display: none !important; /* Hidden on mobile - replaced by mobile menu */
+  }
+
+  #mobileMenuToggle {
     display: block !important;
     position: fixed !important;
-    top: 90px !important; /* Positioned below options button with spacing */
-    right: 10px !important; /* Aligned with options button */
-    left: auto !important; /* Override any left positioning */
+    top: 10px !important;
+    right: 10px !important;
     z-index: 70 !important;
-    font-size: 18px !important; /* Smaller to fit better on mobile */
+    font-size: 18px !important;
+  }
+
+  /* Hide duplicate host control buttons on mobile - they're now in the mobile menu */
+  #hostControls {
+    display: none !important;
+  }
+
+  /* Hide lobby code on mobile since it's now in the title */
+  #lobbyCode {
+    display: none !important;
   }
 
   /* Hide player count in mobile/light mode to save space */
@@ -159,7 +166,7 @@
     opacity: 0;
     transform-origin: bottom center;
     transform: scale(0);
-    z-index: 50;
+    z-index: 10000; /* Increased z-index to appear above virtual keyboards */
     display: flex;
     flex-direction: column;
     pointer-events: none;
@@ -197,7 +204,8 @@
   body.chat-open #chatBox {
     display: flex;
     max-height: 40vh;
-    max-width: calc(98% - 20px);
+    max-width: calc(95% - 20px);
+    margin-left: 10px;
     padding: 36px 8px 8px;
     overflow: hidden;
     border-radius: 0;
@@ -243,7 +251,17 @@
                 -3px -3px 6px var(--shadow-color-light);
   }
 
-  /* Mobile input area - HIDDEN on mobile since users should use on-screen keyboard */
+  /* Mobile reset button positioning - move to top left */
+  #resetWrapper {
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    z-index: 80 !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
+
+  /* Hide input area on mobile since users should use on-screen keyboard */
   #inputArea {
     display: none !important; /* Hide input area on mobile - users should use on-screen keyboard */
   }
@@ -368,19 +386,28 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     width: 100%;
     gap: 0.5rem;
+    position: relative;
   }
   
   #titleBar .mobile-title-row h1 {
-    flex: 1;
-    margin: 0 8px;
+    margin: 0;
     text-align: center;
+    /* Scale down title to always fit on one line */
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
   }
   
   #titleBar .mobile-leaderboard-container {
-    flex: 1;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     min-width: 0;
     overflow: hidden;
     max-width: 200px;

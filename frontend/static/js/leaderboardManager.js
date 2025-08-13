@@ -174,6 +174,11 @@ function renderLeaderboard() {
   if (myEmoji) {
     startAutoScrollTimer();
   }
+  
+  // Dispatch event to notify mobile menu manager about player count changes
+  document.dispatchEvent(new CustomEvent('playersUpdated', {
+    detail: { playerCount: leaderboard.length }
+  }));
 }
 
 function renderPlayerSidebar() {
@@ -232,6 +237,11 @@ function renderPlayerSidebar() {
   
   sidebarDiv.innerHTML = '';
   sidebarDiv.appendChild(playerInfo);
+  
+  // Dispatch event to notify mobile menu manager about player count changes
+  document.dispatchEvent(new CustomEvent('playersUpdated', {
+    detail: { playerCount: leaderboard.length }
+  }));
 }
 
 function renderEmojiStamps(guesses) {

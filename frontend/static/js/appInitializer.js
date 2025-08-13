@@ -41,6 +41,7 @@ class AppInitializer {
     this.networkManager = null;
     this.gameStateManager = null;
     this.eventListenersManager = null;
+    this.mobileMenuManager = null;
     
     // App state
     this.myEmoji = null;
@@ -63,6 +64,7 @@ class AppInitializer {
     this.networkManager = managers.networkManager;
     this.gameStateManager = managers.gameStateManager;
     this.eventListenersManager = managers.eventListenersManager;
+    this.mobileMenuManager = managers.mobileMenuManager;
     
     // Initialize game state
     this.gameState = new StateManager();
@@ -136,12 +138,28 @@ class AppInitializer {
   }
 
   /**
+   * Update game title based on screen size and lobby code
+   * @private
+   */
+  _updateGameTitle() {
+    const isMobile = window.innerWidth <= 600;
+    let title = GAME_NAME;
+    
+    // On mobile, include lobby code in the title if available
+    if (isMobile && this.lobbyCode) {
+      title = `${GAME_NAME} - ${this.lobbyCode}`;
+    }
+    
+    this.domManager.setGameTitle(title);
+  }
+
+  /**
    * Initialize basic UI elements
    * @private
    */
   _initializeBasicUI() {
-    // Set game title
-    this.domManager.setGameTitle(GAME_NAME);
+    // Set game title based on screen size
+    this._updateGameTitle();
     
     // Setup lobby header
     if (this.lobbyCode) {
@@ -251,6 +269,15 @@ class AppInitializer {
       updateHintBadge: updateHintBadge,
       titleHintBadge: this.domManager.get('titleHintBadge')
     });
+
+    // Initialize mobile menu manager
+    if (this.mobileMenuManager) {
+      this.mobileMenuManager.initialize({
+        domManager: this.domManager,
+        lobbyCode: this.lobbyCode,
+        messageHandlers
+      });
+    }
   }
 
   /**
@@ -381,6 +408,7 @@ class AppInitializer {
   _setupWindowEvents() {
     // Resize handler
     window.addEventListener('resize', () => {
+      this._updateGameTitle(); // Update title for mobile/desktop
       repositionResetButton();
       updatePanelVisibility();
       updateChatPanelPosition();
@@ -424,6 +452,7 @@ class AppInitializer {
     let orientationTimeout;
 
     const handleOrientationChange = () => {
+      this._updateGameTitle(); // Update title for mobile/desktop
       updateVH();
       
       const boardArea = this.domManager.get('boardArea');

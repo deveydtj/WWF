@@ -16,6 +16,7 @@ import domManager from './domManager.js';
 import networkManager from './networkManager.js';
 import gameStateManager from './gameStateManager.js';
 import eventListenersManager from './eventListenersManager.js';
+import mobileMenuManager from './mobileMenuManager.js';
 import appInitializer from './appInitializer.js';
 
 // Import board scaling test utilities for debugging
@@ -44,7 +45,8 @@ async function initializeApp() {
     domManager,
     networkManager,
     gameStateManager,
-    eventListenersManager
+    eventListenersManager,
+    mobileMenuManager
   });
 
   if (!success) {

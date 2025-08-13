@@ -96,8 +96,8 @@
 
 .close-btn {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 2px;
+  right: 2px;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -278,9 +278,9 @@ body.dark-mode .close-btn:active {
 }
 
 #chatClose {
-  position: sticky;
-  top: 5px;
-  right: 5px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
   align-self: flex-end;
 }
 
