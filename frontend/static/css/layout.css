@@ -11,18 +11,24 @@
   align-items: flex-start;
   justify-content: center;
   position: relative;
+  /* Smooth transitions for layout mode changes */
+  transition: flex-direction 0.3s ease, gap 0.3s ease;
 }
 
 .layout-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Smooth transitions for panel visibility */
+  transition: width 0.3s ease, opacity 0.3s ease;
 }
 
 #leftPanel {
   width: 280px;
   min-width: 280px;
   position: relative;
+  /* Smooth panel transitions */
+  transition: width 0.3s ease, display 0.3s ease;
 }
 
 #centerPanel {
@@ -30,32 +36,19 @@
   max-width: calc(var(--board-width) + 100px); /* Allow some buffer around board */
   min-width: var(--board-width);
   position: relative;
+  /* Smooth panel transitions */
+  transition: width 0.3s ease, max-width 0.3s ease, min-width 0.3s ease;
 }
 
 #rightPanel {
   width: 280px;
   min-width: 280px;
   position: relative;
+  /* Smooth panel transitions */
+  transition: width 0.3s ease, display 0.3s ease;
 }
 
-/* Mobile: revert to single column */
-@media (max-width: 600px) {
-  #gameLayoutContainer {
-    flex-direction: column;
-    gap: 0;
-  }
-  
-  #leftPanel,
-  #rightPanel {
-    display: none; /* Panels will use fixed positioning overlay on mobile */
-  }
-  
-  #centerPanel {
-    width: 100%;
-    max-width: none;
-    min-width: auto;
-  }
-}
+/* Mobile layout will be handled in responsive.css to avoid conflicts */
 
 /* Panel positioning and layout */
 #historyBox {
@@ -235,67 +228,7 @@ body.chat-open #chatBox {
   transition: opacity 0.3s;
 }
 
-/* Mobile devices (max-width: 600px) */
-@media (max-width: 600px) {
-  #historyBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-  }
-
-  #definitionBox {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-  }
-
-  #chatBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
-  }
-}
+/* Mobile panel positioning moved to responsive.css to avoid conflicts */
 
 /* Medium mode (tablet size) - use proper three-panel layout */
 body[data-mode='medium'] #historyBox {
