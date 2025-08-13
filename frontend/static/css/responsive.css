@@ -2,26 +2,99 @@
    Responsive Design - Enhanced mobile and screen size adaptations
    ───────────────────────────────────────────── */
 
-/* Modern container-based responsive design */
-@container app (max-width: 600px) {
-  /* Mobile layout optimizations */
-  #appContainer {
-    padding: 5px;
-    min-height: var(--keyboard-safe-height, 100vh);
-  }
+/* Mobile layout optimizations now consolidated in main media query below to avoid conflicts */
 
+/* Enhanced mobile devices (max-width: 600px) with improved keyboard handling */
+@media (max-width: 600px) {
+  /* Mobile scaling variables */
   :root {
     /* Mobile scaling - use enhanced scaling values when available */
     --tile-size: var(--current-tile-size, min(8vmin, 32px));
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
-}
 
-/* Enhanced mobile devices (max-width: 600px) with improved keyboard handling */
-@media (max-width: 600px) {
+  /* Layout container mobile behavior */
+  #gameLayoutContainer {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  #leftPanel,
+  #rightPanel {
+    display: none; /* Panels will use fixed positioning overlay on mobile */
+  }
+  
+  #centerPanel {
+    width: 100%;
+    max-width: none;
+    min-width: auto;
+  }
+
   #appContainer {
     padding: 5px;
     min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
+  }
+
+  /* Mobile panel positioning */
+  #historyBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 0;
+    overflow-y: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+    top: auto; /* Reset top for mobile */
+    height: auto; /* Reset height for mobile */
+  }
+
+  #definitionBox {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 0;
+    overflow-y: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+    top: auto; /* Reset top for mobile */
+    height: auto; /* Reset height for mobile */
+  }
+
+  #chatBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    transform-origin: bottom center;
+    transform: scale(0);
+    z-index: 50;
+    pointer-events: none;
+    top: auto; /* Reset top for mobile */
+    height: auto; /* Reset height for mobile */
   }
 
   /* Enhanced keyboard handling with modern viewport units */
