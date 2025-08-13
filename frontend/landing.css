@@ -200,11 +200,19 @@ a:focus {
   transform: scale(0.98);
 }
 
-/* Header layout - three columns with centered title */
-header {
+/* Header layout - constrained width with three columns */
+#mainHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: min(90vw, 25rem);
   position: relative;
 }
 
@@ -334,7 +342,7 @@ header {
 }
 
 @media (max-width: 480px) {
-  header {
+  .header-container {
     flex-direction: column;
     gap: 0.5rem;
   }
