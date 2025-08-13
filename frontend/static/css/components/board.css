@@ -13,10 +13,12 @@
   flex: 0 0 auto; /* Only take space needed, don't expand */
 }
 
-/* Large screen board area - constrain width to leave space for side panels */
+/* Large screen board area - properly constrain within the game column */
 @media (min-width: 1200px) {
   #boardArea {
-    max-width: calc(100% - 600px); /* Leave 300px on each side for panels */
+    /* Don't constrain width - let it use the full game column space */
+    width: 100%;
+    max-width: 100%; /* Use full width of parent container (gameColumn) */
     margin: 5px auto 0;
   }
 }
