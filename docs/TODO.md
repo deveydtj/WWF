@@ -121,6 +121,127 @@ No outstanding tasks.
 ## Polish
 
 
+## Layout Overhaul (Issue #377)
+
+**Comprehensive todo list for fixing the major layout issues in WordSquad's Full and Medium layout modes.**
+
+### Current Layout System Analysis
+The WordSquad game uses a three-mode responsive layout system:
+- **Light Mode** (≤600px): Mobile/vertical stack layout - working correctly ✅
+- **Medium Mode** (601px-900px): Significant panel positioning and layout issues ❌
+- **Full Mode** (>900px): Panel layout problems and board scaling conflicts ❌
+
+### 1. Panel Layout System Overhaul
+- [ ] **Fix Medium Mode Panel Positioning**
+  - [ ] Remove incorrect fixed center positioning (`transform: translate(-50%, -50%)`) from Medium mode
+  - [ ] Implement proper three-panel layout system for Medium mode
+  - [ ] Ensure panels are positioned within designated containers, not using absolute centering
+  
+- [ ] **Fix Full Mode Panel Layout**
+  - [ ] Properly position panels within left and right panel containers
+  - [ ] Remove conflicting CSS rules between `layout.css` and `responsive.css`
+  - [ ] Ensure panels scale appropriately for larger screens
+
+- [ ] **Implement Consistent Three-Panel Architecture**
+  - [ ] Define clear left, center, and right panel zones
+  - [ ] Establish proper panel width calculations for each breakpoint
+  - [ ] Create unified panel positioning logic across all layout modes
+
+### 2. Board Scaling and Container Measurement Fixes
+- [ ] **Resolve Board Scaling Verification Failures**
+  - [ ] Fix console warnings about board scaling verification
+  - [ ] Debug enhanced scaling system viewport fitting calculations
+  - [ ] Ensure board container measurement system consistency across screen sizes
+
+- [ ] **Improve Board Responsiveness**
+  - [ ] Fix board scaling conflicts in Full mode
+  - [ ] Ensure proper board centering in all layout modes
+  - [ ] Validate board size calculations for different viewport dimensions
+
+### 3. Input Area and Button Layout Standardization
+- [ ] **Implement Uniform Button Layout Requirements**
+  - [ ] Standardize button sizing across all responsive breakpoints
+  - [ ] Fix input area width alignment issues
+  - [ ] Ensure consistent spacing and padding for input components
+
+- [ ] **Cross-Breakpoint Input Consistency**
+  - [ ] Verify input area layout in Light, Medium, and Full modes
+  - [ ] Test button interactions and visual feedback across all screen sizes
+  - [ ] Implement proper input area scaling for different devices
+
+### 4. Responsive Design Conflict Resolution
+- [ ] **CSS Rule Conflict Resolution**
+  - [ ] Audit overlapping rules between `layout.css` and `responsive.css`
+  - [ ] Remove conflicting responsive rules causing unpredictable behavior
+  - [ ] Establish clear CSS rule priority and organization
+
+- [ ] **Window Resize Behavior Fixes**
+  - [ ] Fix layout mode switching issues during window resize
+  - [ ] Ensure smooth transitions between layout modes
+  - [ ] Test dynamic breakpoint crossing scenarios
+
+### 5. Panel Animation and Z-Index Improvements
+- [ ] **Panel Transition Animations**
+  - [ ] Implement smooth panel transitions when switching layout modes
+  - [ ] Add appropriate easing and timing for panel movements
+  - [ ] Ensure animations don't interfere with layout calculations
+
+- [ ] **Z-Index Management**
+  - [ ] Establish proper z-index hierarchy for panel stacking
+  - [ ] Fix any panel overlap issues
+  - [ ] Ensure modal and overlay elements appear above panels correctly
+
+### 6. Leaderboard Integration Testing
+- [ ] **Leaderboard Layout in Different Modes**
+  - [ ] Test leaderboard positioning in Light mode (should remain working)
+  - [ ] Verify leaderboard integration in Medium mode three-panel layout
+  - [ ] Ensure leaderboard fits properly in Full mode panel system
+
+- [ ] **Cross-Component Integration**
+  - [ ] Test leaderboard with chat panel interactions
+  - [ ] Verify leaderboard doesn't interfere with board scaling
+  - [ ] Ensure proper leaderboard scrolling in all layout modes
+
+### 7. Cross-Device Layout Validation
+- [ ] **Device-Specific Testing**
+  - [ ] Test on various tablet sizes (Medium mode primary targets)
+  - [ ] Validate layout on different desktop resolutions (Full mode)
+  - [ ] Ensure mobile layout (Light mode) remains unaffected
+
+- [ ] **Browser Compatibility Testing**
+  - [ ] Test layout across major browsers (Chrome, Firefox, Safari, Edge)
+  - [ ] Verify CSS Grid and Flexbox support consistency
+  - [ ] Test responsive units (vw, vh, vmin, vmax) behavior
+
+### 8. Performance Optimization and CSS Cleanup
+- [ ] **CSS Performance Audit**
+  - [ ] Remove duplicate or unused CSS rules
+  - [ ] Optimize CSS selector specificity
+  - [ ] Minimize layout recalculations during mode switches
+
+- [ ] **Code Organization**
+  - [ ] Reorganize responsive CSS for better maintainability
+  - [ ] Document layout mode breakpoints and their purposes
+  - [ ] Create clear commenting for complex layout calculations
+
+### Validation Checklist
+- [ ] **Layout Mode Testing**
+  - [ ] Verify Light mode (≤600px) still works correctly
+  - [ ] Test Medium mode (601px-900px) three-panel layout
+  - [ ] Validate Full mode (>900px) panel positioning
+  - [ ] Test smooth transitions between all modes during window resize
+
+- [ ] **Component Integration Testing**
+  - [ ] Game board positioning and scaling in all modes
+  - [ ] Chat panel functionality across breakpoints
+  - [ ] Leaderboard display and scrolling behavior
+  - [ ] Input area and button layout consistency
+
+- [ ] **Performance Validation**
+  - [ ] No console warnings or errors related to layout
+  - [ ] Smooth resize performance without layout thrashing
+  - [ ] Proper CSS rule cascade without conflicts
+
 ## Upcoming Milestones
 
 ### Project Hygiene
