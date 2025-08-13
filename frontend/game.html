@@ -163,85 +163,99 @@
       </div>
     </div>
 
+    <!-- Three-panel layout for non-mobile -->
+    <div id="gameLayoutContainer">
+      <!-- Left Panel -->
+      <div id="leftPanel" class="layout-panel">
+        <!-- History box will be positioned here for non-mobile -->
+      </div>
 
-
-    <div id="gameColumn">
-      <div id="titleBar">
-        <div class="mobile-title-row">
-          <h1 id="gameTitle"></h1>
-          <div class="mobile-leaderboard-container">
-            <!-- Leaderboard will be moved here on mobile -->
+      <!-- Center Panel -->
+      <div id="centerPanel" class="layout-panel">
+        <div id="gameColumn">
+          <div id="titleBar">
+            <div class="mobile-title-row">
+              <h1 id="gameTitle"></h1>
+              <div class="mobile-leaderboard-container">
+                <!-- Leaderboard will be moved here on mobile -->
+              </div>
+              <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
+            </div>
           </div>
-          <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
-        </div>
-      </div>
 
-      <!-- Board -->
-      <div id="boardArea">
-        <div id="board" role="grid" aria-label="Guess grid"></div>
-        <div id="stampContainer"></div>
-        <div id="hintTooltip" class="hint-tooltip" role="status"></div>
-        <button id="optionsToggle" title="More Options">⚙️</button>
-        <button id="chatNotify" title="Open Chat">💬</button>
-        <button id="mobileMenuToggle" class="mobile-only-button" title="Menu">☰</button>
-        <div id="chatMessagePopup"></div>
-      </div>
+          <!-- Board -->
+          <div id="boardArea">
+            <div id="board" role="grid" aria-label="Guess grid"></div>
+            <div id="stampContainer"></div>
+            <div id="hintTooltip" class="hint-tooltip" role="status"></div>
+            <button id="optionsToggle" title="More Options">⚙️</button>
+            <button id="chatNotify" title="Open Chat">💬</button>
+            <button id="mobileMenuToggle" class="mobile-only-button" title="Menu">☰</button>
+            <div id="chatMessagePopup"></div>
+          </div>
 
-      <!-- Guess Input -->
-      <div id="inputArea">
-        <input type="text" id="guessInput" maxlength="5" autocomplete="off">
-        <button id="submitGuess">Guess</button>
-        <div id="resetWrapper">
-          <button id="holdReset">
-            <span id="holdResetText">Reset</span>
-            <span id="holdResetProgress"></span>
-          </button>
-        </div>
-      </div>
+          <!-- Guess Input -->
+          <div id="inputArea">
+            <input type="text" id="guessInput" maxlength="5" autocomplete="off">
+            <button id="submitGuess">Guess</button>
+            <div id="resetWrapper">
+              <button id="holdReset">
+                <span id="holdResetText">Reset</span>
+                <span id="holdResetProgress"></span>
+              </button>
+            </div>
+          </div>
 
-      <p id="message" role="status" aria-live="polite"></p>
-      <div id="messagePopup" role="status" aria-live="polite"></div>
-      <div id="pointsPopup" role="status" aria-live="polite"></div>
-      <div id="ariaLive" aria-live="polite"></div>
+          <p id="message" role="status" aria-live="polite"></p>
+          <div id="messagePopup" role="status" aria-live="polite"></div>
+          <div id="pointsPopup" role="status" aria-live="polite"></div>
+          <div id="ariaLive" aria-live="polite"></div>
 
-      <!-- Keyboard -->
-      <div id="keyboard" role="group" aria-label="On-screen keyboard">
-        <div class="keyboard-row">
-          <button class="key" data-key="q">Q</button>
-          <button class="key" data-key="w">W</button>
-          <button class="key" data-key="e">E</button>
-          <button class="key" data-key="r">R</button>
-        <button class="key" data-key="t">T</button>
-        <button class="key" data-key="y">Y</button>
-        <button class="key" data-key="u">U</button>
-        <button class="key" data-key="i">I</button>
-        <button class="key" data-key="o">O</button>
-        <button class="key" data-key="p">P</button>
+          <!-- Keyboard -->
+          <div id="keyboard" role="group" aria-label="On-screen keyboard">
+            <div class="keyboard-row">
+              <button class="key" data-key="q">Q</button>
+              <button class="key" data-key="w">W</button>
+              <button class="key" data-key="e">E</button>
+              <button class="key" data-key="r">R</button>
+            <button class="key" data-key="t">T</button>
+            <button class="key" data-key="y">Y</button>
+            <button class="key" data-key="u">U</button>
+            <button class="key" data-key="i">I</button>
+            <button class="key" data-key="o">O</button>
+            <button class="key" data-key="p">P</button>
+          </div>
+          <div class="keyboard-row">
+            <button class="key" data-key="a">A</button>
+            <button class="key" data-key="s">S</button>
+            <button class="key" data-key="d">D</button>
+            <button class="key" data-key="f">F</button>
+            <button class="key" data-key="g">G</button>
+            <button class="key" data-key="h">H</button>
+            <button class="key" data-key="j">J</button>
+            <button class="key" data-key="k">K</button>
+            <button class="key" data-key="l">L</button>
+          </div>
+          <div class="keyboard-row">
+            <button class="key wide" data-key="Enter">Guess</button>
+            <button class="key" data-key="z">Z</button>
+            <button class="key" data-key="x">X</button>
+            <button class="key" data-key="c">C</button>
+            <button class="key" data-key="v">V</button>
+            <button class="key" data-key="b">B</button>
+            <button class="key" data-key="n">N</button>
+            <button class="key" data-key="m">M</button>
+            <button class="key" data-key="Backspace">Bksp</button>
+          </div>
+          </div> <!-- end keyboard -->
+        </div> <!-- end gameColumn -->
+      </div> <!-- end centerPanel -->
+
+      <!-- Right Panel -->
+      <div id="rightPanel" class="layout-panel">
+        <!-- Chat and definition boxes will be positioned here for non-mobile -->
       </div>
-      <div class="keyboard-row">
-        <button class="key" data-key="a">A</button>
-        <button class="key" data-key="s">S</button>
-        <button class="key" data-key="d">D</button>
-        <button class="key" data-key="f">F</button>
-        <button class="key" data-key="g">G</button>
-        <button class="key" data-key="h">H</button>
-        <button class="key" data-key="j">J</button>
-        <button class="key" data-key="k">K</button>
-        <button class="key" data-key="l">L</button>
-      </div>
-      <div class="keyboard-row">
-        <button class="key wide" data-key="Enter">Guess</button>
-        <button class="key" data-key="z">Z</button>
-        <button class="key" data-key="x">X</button>
-        <button class="key" data-key="c">C</button>
-        <button class="key" data-key="v">V</button>
-        <button class="key" data-key="b">B</button>
-        <button class="key" data-key="n">N</button>
-        <button class="key" data-key="m">M</button>
-        <button class="key wide" data-key="Backspace">Bksp</button>
-      </div>
-      </div> <!-- end keyboard -->
-    </div> <!-- end gameColumn -->
+    </div> <!-- end gameLayoutContainer -->
   </div>
 
   <script type="module" src="static/js/main.js"></script>

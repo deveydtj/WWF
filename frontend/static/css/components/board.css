@@ -34,7 +34,7 @@
 #stampContainer {
   position: absolute;
   top: 0;
-  left: calc(50% - var(--board-width) / 2 - 140px); /* Position stamps further left to completely avoid history panel overlap */
+  left: calc(-80px - 10px); /* Position stamps to the left of the board with 10px gap */
   pointer-events: none;
   z-index: 5;
   display: none;
