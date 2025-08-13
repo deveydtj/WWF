@@ -230,7 +230,8 @@ body.hint-selecting .tile:not(.hint-target) {
   box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
               inset -3px -3px 6px var(--inset-shadow-light);
   flex: 1 1 auto; /* Allow input to grow/shrink as needed */
-  min-width: 0; /* Allow input to shrink below content size if needed */
+  /* Ensure minimum width for 5 characters: font-size * char-width-ratio * 5-chars + padding */
+  min-width: calc((var(--tile-size) * 0.3) * 0.6 * 5 + var(--tile-size) * 0.4);
 }
 
 #submitGuess {
