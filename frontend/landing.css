@@ -200,17 +200,16 @@ a:focus {
   transform: scale(0.98);
 }
 
-/* Responsive header tweaks */
+/* Header layout - three columns with centered title */
 header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
-#emojiDisplay,
-#darkToggle {
-  position: absolute;
+/* Left column - emoji button */
+#emojiDisplay {
   font-size: 1.5rem;
   padding: 0.5rem;
   border: none;
@@ -221,16 +220,35 @@ header {
   box-shadow: 3px 3px 6px var(--shadow-color-dark),
               -3px -3px 6px var(--shadow-color-light);
   transition: all 0.1s ease;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
 }
 
-#emojiDisplay {
-  left: calc(50% - min(45vw, 12.5rem) + 1.5rem);
+/* Center column - title */
+#logo {
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+}
+
+/* Right column - dark toggle and nav */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
 }
 
 #darkToggle {
-  right: calc(50% - min(45vw, 12.5rem) + 1.5rem);
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+              -3px -3px 6px var(--shadow-color-light);
+  transition: all 0.1s ease;
 }
 
 #emojiDisplay:hover,
@@ -243,7 +261,7 @@ header {
 #darkToggle:active {
   box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
               inset -2px -2px 4px var(--inset-shadow-light);
-  transform: translateY(-50%) scale(0.98);
+  transform: scale(0.98);
 }
 
 /* Emoji Modal Styles */
@@ -320,21 +338,20 @@ header {
     flex-direction: column;
     gap: 0.5rem;
   }
+  
   header h1 {
     font-size: 1.5rem;
   }
+  
   header img,
   .scores img {
     width: 24px;
     height: 24px;
   }
   
-  #emojiDisplay {
-    left: calc(50% - min(45vw, 10rem) + 1rem);
-  }
-  
-  #darkToggle {
-    right: calc(50% - min(45vw, 10rem) + 1rem);
+  .header-right {
+    flex-direction: row;
+    gap: 1rem;
   }
   
   #heroCard {
