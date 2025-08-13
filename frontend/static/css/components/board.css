@@ -34,13 +34,14 @@
 #stampContainer {
   position: absolute;
   top: 0;
-  left: calc(-80px - 10px); /* Position stamps to the left of the board with 10px gap */
+  left: calc(-40px - 10px); /* Position stamps just to the left of the board within center panel */
   pointer-events: none;
   z-index: 5;
   display: none;
   /* Dynamic width to accommodate any emoji characters */
   width: fit-content; /* Let container grow with emoji content */
-  min-width: 80px; /* Minimum width for consistent positioning */
+  min-width: 40px; /* Minimum width to fit in available space */
+  max-width: 40px; /* Constrain width to fit in limited space */
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
 }
 
@@ -54,7 +55,7 @@
 /* Emoji stamps next to board */
 .emoji-stamp {
   position: absolute;
-  right: 10px; /* 10px gap from stamps to board */
+  right: 5px; /* 5px gap from stamps to board */
   font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   line-height: 1;
   display: flex;
