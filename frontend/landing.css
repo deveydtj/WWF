@@ -200,23 +200,26 @@ a:focus {
   transform: scale(0.98);
 }
 
-/* Header layout - constrained width with three columns */
+/* Header layout - aligned with How to Play button and inner content */
 #mainHeader {
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .header-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: min(90vw, 25rem);
+  justify-content: center;
+  width: 100%;
   position: relative;
 }
 
-/* Left column - emoji button */
+/* Left column - emoji button positioned to align with lobby inner content */
 #emojiDisplay {
   font-size: 1.5rem;
   padding: 0.5rem;
@@ -228,7 +231,8 @@ a:focus {
   box-shadow: 3px 3px 6px var(--shadow-color-dark),
               -3px -3px 6px var(--shadow-color-light);
   transition: all 0.1s ease;
-  flex-shrink: 0;
+  position: absolute;
+  left: calc(50% - min(45vw, 12.5rem) + 1.5rem);
 }
 
 /* Center column - title */
@@ -238,12 +242,13 @@ a:focus {
   flex-grow: 1;
 }
 
-/* Right column - dark toggle and nav */
+/* Right column - dark toggle and nav positioned to align with lobby inner content */
 .header-right {
   display: flex;
   align-items: center;
   gap: 1rem;
-  flex-shrink: 0;
+  position: absolute;
+  right: calc(50% - min(45vw, 12.5rem) + 1.5rem);
 }
 
 #darkToggle {
