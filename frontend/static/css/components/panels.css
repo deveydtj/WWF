@@ -278,7 +278,7 @@ body.dark-mode .close-btn:active {
 }
 
 #chatClose {
-  position: sticky;
+  position: absolute;
   top: 2px;
   right: 2px;
   align-self: flex-end;
