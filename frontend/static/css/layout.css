@@ -2,11 +2,63 @@
    Layout - Responsive positioning and panel layouts
    ───────────────────────────────────────────── */
 
+/* Three-panel layout structure for non-mobile */
+#gameLayoutContainer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+}
+
+.layout-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#leftPanel {
+  width: 280px;
+  min-width: 280px;
+  position: relative;
+}
+
+#centerPanel {
+  flex: 1;
+  max-width: calc(var(--board-width) + 100px); /* Allow some buffer around board */
+  min-width: var(--board-width);
+  position: relative;
+}
+
+#rightPanel {
+  width: 280px;
+  min-width: 280px;
+  position: relative;
+}
+
+/* Mobile: revert to single column */
+@media (max-width: 600px) {
+  #gameLayoutContainer {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  #leftPanel,
+  #rightPanel {
+    display: none; /* Panels will use fixed positioning overlay on mobile */
+  }
+  
+  #centerPanel {
+    width: 100%;
+    max-width: none;
+    min-width: auto;
+  }
+}
+
 /* Panel positioning and layout */
 #historyBox {
-  position: absolute;
-  top: 10px;
-  left: calc(50% - var(--board-width) / 2 - 280px);
   width: 260px;
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
@@ -24,12 +76,12 @@
   transform: scale(0);
   transition: opacity 0.3s, transform 0.3s;
   pointer-events: none;
+  /* Position within left panel on non-mobile */
+  position: relative;
+  top: 10px;
 }
 
 #definitionBox {
-  position: absolute;
-  top: 10px;
-  right: calc(50% - var(--board-width) / 2 - 280px);
   width: 260px;
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
@@ -47,12 +99,12 @@
   transform: scale(0);
   transition: opacity 0.3s, transform 0.3s;
   pointer-events: none;
+  /* Position within right panel on non-mobile */
+  position: relative;
+  top: 10px;
 }
 
 #chatBox {
-  position: absolute;
-  top: 10px;
-  right: calc(50% - var(--board-width) / 2 - 280px);
   width: 260px;
   height: calc(100vh - 160px);
   background: var(--bg-color);
@@ -72,6 +124,9 @@
   transform: scale(0);
   transition: opacity 0.3s, transform 0.3s;
   pointer-events: none;
+  /* Position within right panel on non-mobile */
+  position: relative;
+  top: 10px;
 }
 
 /* Panel visibility states */
@@ -198,6 +253,7 @@ body.chat-open #chatBox {
     transform: scale(0);
     z-index: 50;
     pointer-events: none;
+    top: auto; /* Reset top for mobile */
   }
 
   #definitionBox {
@@ -216,6 +272,7 @@ body.chat-open #chatBox {
     transform: scale(0);
     z-index: 50;
     pointer-events: none;
+    top: auto; /* Reset top for mobile */
   }
 
   #chatBox {
@@ -235,6 +292,8 @@ body.chat-open #chatBox {
     transform: scale(0);
     z-index: 50;
     pointer-events: none;
+    top: auto; /* Reset top for mobile */
+    height: auto; /* Reset height for mobile */
   }
 }
 
@@ -284,7 +343,7 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   line-height: 1;
   position: absolute;
   top: 36px;
-  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  right: calc(-36px - 10px); /* Position to the right of the board with 10px gap */
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.3s, transform 0.3s;
@@ -319,7 +378,7 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   line-height: 1;
   position: absolute;
   top: 0;
-  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  right: calc(-36px - 10px); /* Position to the right of the board with 10px gap */
 }
 
 /* Extra small mobile adjustments */
