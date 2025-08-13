@@ -34,17 +34,21 @@
 #stampContainer {
   position: absolute;
   top: 0;
-  left: calc(50% - var(--board-width) / 2 - 70px); /* Position stamps to left of board with more space for emoji width */
+  left: calc(50% - var(--board-width) / 2 - 140px); /* Position stamps further left to completely avoid history panel overlap */
   pointer-events: none;
   z-index: 5;
   display: none;
-  /* Simple explicit dimensions - increased width to accommodate emoji characters */
-  width: 60px; /* Increased width for emoji stamp area to prevent overflow */
+  /* Dynamic width to accommodate any emoji characters */
+  width: fit-content; /* Let container grow with emoji content */
+  min-width: 80px; /* Minimum width for consistent positioning */
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
 }
 
-body[data-mode='medium'] #stampContainer {
-  display: block;
+/* Show stamps on everything except mobile */
+@media (min-width: 601px) {
+  #stampContainer {
+    display: block;
+  }
 }
 
 /* Emoji stamps next to board */
@@ -82,8 +86,7 @@ body[data-mode='medium'] #stampContainer {
 /* Responsive adjustments */
 @media (max-width: 600px) {  
   #stampContainer {
-    left: calc(50% - var(--board-width) / 2 - 55px); /* Adjusted for larger container on mobile */
-    width: 45px; /* Increased width on mobile to accommodate emoji characters */
+    display: none !important; /* Hide stamps completely on mobile */
   }
   
   .emoji-stamp {
