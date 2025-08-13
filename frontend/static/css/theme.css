@@ -46,35 +46,13 @@ body.dark-mode {
   --error-color: #ff7b7b;
 }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+/* Body styling removed - handled in base.css to avoid duplication */
 
+/* Message color states - theme-specific styling */
 #message.positive { color: var(--correct-bg); }
 #message.negative { color: var(--error-color); }
 
-* {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-#definitionBox,
-#chatBox,
-#shareBox,
-#shareLink {
-  user-select: text;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-}
+/* User selection rules removed - handled in base.css to avoid duplication */
 
 .visually-hidden {
   position: absolute;

@@ -2,9 +2,40 @@
    Responsive Design - Enhanced mobile and screen size adaptations
    ───────────────────────────────────────────── */
 
-/* Mobile layout optimizations now consolidated in main media query below to avoid conflicts */
+/* 
+ * LAYOUT BREAKPOINT SYSTEM DOCUMENTATION
+ * =====================================
+ * 
+ * WordSquad uses a three-mode responsive layout system:
+ * 
+ * 1. LIGHT MODE (≤600px) - Mobile/Vertical Stack Layout
+ *    - Single-column vertical layout optimized for phones
+ *    - Panels use fixed positioning overlays
+ *    - Tile size: min(8vmin, 32px) for touch accessibility
+ *    - Keyboard handling with dynamic viewport height support
+ * 
+ * 2. MEDIUM MODE (601px-900px) - Tablet Three-Panel Layout  
+ *    - Three-panel horizontal layout for tablets
+ *    - Left, center, and right panel zones defined
+ *    - Tile size: min(8vmin, 42px) for balanced touch/precision
+ *    - Panel animations and overlay system
+ * 
+ * 3. FULL MODE (>900px) - Desktop Layout
+ *    - Full three-panel desktop experience
+ *    - Larger tile sizes for precision input
+ *    - Advanced panel positioning and scaling
+ *    - Multiple sub-breakpoints for ultra-wide displays
+ * 
+ * Performance Optimizations:
+ * - Consolidated media queries to minimize layout recalculations
+ * - CSS custom properties for efficient scaling adjustments
+ * - 0.3s transition timing for smooth mode switches
+ * - Minimal layout thrashing during window resize
+ */
 
-/* Enhanced mobile devices (max-width: 600px) with improved keyboard handling */
+/* ═══════════════════════════════════════════════
+   LIGHT MODE: Mobile Layout (≤600px)
+   ═══════════════════════════════════════════════ */
 @media (max-width: 600px) {
   /* Mobile scaling variables */
   :root {
@@ -593,8 +624,17 @@
   }
 }
 
-/* Medium screens (601px - 900px) */
+/* ═══════════════════════════════════════════════
+   MEDIUM MODE: Tablet Three-Panel Layout (601px-900px) 
+   ═══════════════════════════════════════════════ */
 @media (min-width: 601px) and (max-width: 900px) {
+  /* 
+   * Medium Mode Layout Calculations:
+   * - Three-panel horizontal layout with left/center/right zones
+   * - Panel transitions with 0.3s timing for smooth UX
+   * - Tile size optimized for tablet touch precision: min(8vmin, 42px)
+   * - Panel overlays with transform scaling for space efficiency
+   */
   /* Hide player count in medium mode to save space and prevent input field overlap */
   #playerCount {
     display: none;
@@ -694,16 +734,34 @@
   }
 }
 
-/* Large screens - intermediate breakpoint (901px - 1199px) */
+/* ═══════════════════════════════════════════════
+   FULL MODE: Desktop Layout (>900px)
+   ═══════════════════════════════════════════════ */
+
+/* Full Mode - Standard Desktop (901px-1199px) */
 @media (min-width: 901px) and (max-width: 1199px) {
+  /* 
+   * Full Mode Standard Desktop Calculations:
+   * - Three-panel desktop layout with full panel visibility
+   * - Tile size: min(9vmin, 48px) for precision mouse/trackpad input  
+   * - Enhanced board scaling with proper panel positioning
+   * - Optimized for 1024x768 to 1200x800 displays
+   */
   :root {
     --tile-size: var(--current-tile-size, min(9vmin, 48px));
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 }
 
-/* Large screens - problem range (1200px - 1550px) */
+/* Full Mode - Large Desktop (1200px-1550px) */
 @media (min-width: 1200px) and (max-width: 1550px) {
+  /* 
+   * Full Mode Large Desktop Calculations:
+   * - Enhanced tile sizing for larger displays: 50px fixed
+   * - UI scale protection to prevent overly small interface elements
+   * - Emoji size optimization for better readability
+   * - Optimized for 1440p and similar high-resolution displays
+   */
   :root {
     --tile-size: var(--current-tile-size, 60px) !important;
     --tile-gap: 7px !important;
@@ -721,8 +779,15 @@
   /* Large screens use unified button sizing */
 }
 
-/* Very large screens (min-width: 1551px) */
+/* Full Mode - Ultra-Wide Desktop (≥1551px) */
 @media (min-width: 1551px) {
+  /* 
+   * Full Mode Ultra-Wide Desktop Calculations:
+   * - Maximum tile size: 65px for optimal visibility without excess
+   * - Fixed gap sizing: 6px for consistent spacing
+   * - UI scale maintained for ultra-wide displays
+   * - Designed for 4K, ultrawide, and multi-monitor setups
+   */
   :root {
     --tile-size: var(--current-tile-size, 65px) !important;
     --tile-gap: 6px !important;
