@@ -16,7 +16,7 @@
   max-height: 60px; /* Fit within header */
   /* Ensure leaderboard is properly positioned */
   position: relative;
-  z-index: 10;
+  z-index: var(--z-leaderboard);
   /* Scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: var(--shadow-color-dark) transparent;
