@@ -57,6 +57,43 @@ overview and should be kept up to date as features evolve.
 - On first load the client hydrates state from `GET /lobby/<id>/state` and subscribes to `/lobby/<id>/stream` with polling fallback.
 - Reconnecting with a stored emoji reclaims it via `POST /lobby/<id>/emoji`.
 
+### 2.1. Layout System Architecture
+
+WordSquad uses a responsive three-panel layout system that adapts to different viewport sizes:
+
+**Layout Modes:**
+- **Light Mode** (≤600px): Mobile-first single-column layout
+  - Side panels hidden by default
+  - Panels appear as overlay modals when activated
+  - Game board and controls stack vertically
+  - Input optimized for touch and virtual keyboards
+
+- **Medium Mode** (601px-900px): Tablet and small desktop layout
+  - Three-panel container structure (`#leftPanel`, `#centerPanel`, `#rightPanel`)
+  - Panels positioned within their designated containers using relative positioning
+  - History panel in left container, game board in center, definition/chat in right
+  - Panels scale appropriately with viewport size
+  - No fixed viewport centering or overlay behavior
+
+- **Full Mode** (>900px): Large desktop layout
+  - Full three-panel layout with adequate space for side panels
+  - Panels positioned absolutely with calculated offsets relative to game board
+  - Advanced positioning logic accounts for available space around game board
+  - Optimal panel width (280px) and spacing for comfortable interaction
+
+**Panel System:**
+- **History Panel** (`#historyBox`): Shows guess history, positioned in left panel area
+- **Definition Panel** (`#definitionBox`): Shows word definitions, positioned in right panel area  
+- **Chat Panel** (`#chatBox`): Real-time chat functionality, positioned in right panel area
+- All panels support smooth scaling transitions and maintain proper z-index hierarchy
+- Panel visibility controlled via CSS classes (`history-open`, `definition-open`, `chat-open`)
+
+**Technical Requirements:**
+- CSS-based layout switching using `body[data-mode]` attributes set by JavaScript
+- Viewport-aware panel positioning without conflicting CSS rules
+- Proper transform origins and animation timing for smooth panel transitions
+- Consistent behavior across layout mode changes during window resizing
+
 ## 3. Server Integration
 
 - **Endpoints:**
