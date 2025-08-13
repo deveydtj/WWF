@@ -50,7 +50,7 @@
     opacity: 0;
     transform-origin: bottom center;
     transform: scale(0);
-    z-index: 50;
+    z-index: var(--z-mobile-menu);
     pointer-events: none;
     top: auto; /* Reset top for mobile */
     height: auto; /* Reset height for mobile */
@@ -70,7 +70,7 @@
     opacity: 0;
     transform-origin: bottom center;
     transform: scale(0);
-    z-index: 50;
+    z-index: var(--z-mobile-menu);
     pointer-events: none;
     top: auto; /* Reset top for mobile */
     height: auto; /* Reset height for mobile */
@@ -91,7 +91,7 @@
     opacity: 0;
     transform-origin: bottom center;
     transform: scale(0);
-    z-index: 50;
+    z-index: var(--z-mobile-menu);
     pointer-events: none;
     top: auto; /* Reset top for mobile */
     height: auto; /* Reset height for mobile */

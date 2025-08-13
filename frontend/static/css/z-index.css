@@ -1,0 +1,57 @@
+/* ─────────────────────────────────────────────
+   Z-Index Hierarchy - Centralized z-index management
+   ───────────────────────────────────────────── */
+
+/* 
+   WordSquad Z-Index Hierarchy
+   ===========================
+   
+   Level 1: Background/Base (1-9)
+   Level 2: UI Components (10-19)  
+   Level 3: Panels (20-39)
+   Level 4: Interactive Elements (40-59)
+   Level 5: Modals and Popups (60-79)
+   Level 6: System Overlays (80-99)
+   Level 7: Mobile/Touch Overlays (100+)
+*/
+
+:root {
+  /* Level 1: Background/Base (1-9) */
+  --z-button-base: 1;
+  --z-button-hover: 2;
+  --z-board-tile: 5;
+  --z-board-overlay: 6;
+  
+  /* Level 2: UI Components (10-19) */
+  --z-keyboard: 10;
+  --z-leaderboard: 10;
+  --z-ui-component: 15;
+  
+  /* Level 3: Panels (20-39) */
+  --z-panel-base: 20;
+  --z-panel-content: 25;
+  --z-panel-notification: 30;
+  --z-panel-interactive: 35;
+  
+  /* Level 4: Interactive Elements (40-59) */
+  --z-options-menu: 40;
+  --z-dropdown: 45;
+  --z-tooltip: 50;
+  --z-chat-popup: 55;
+  
+  /* Level 5: Modals and Popups (60-79) */
+  --z-modal-backdrop: 60;
+  --z-modal-content: 65;
+  --z-popup-message: 70;
+  --z-high-priority-modal: 75;
+  
+  /* Level 6: System Overlays (80-99) */
+  --z-loading-overlay: 80;
+  --z-system-message: 85;
+  --z-critical-alert: 90;
+  
+  /* Level 7: Mobile/Touch Overlays (100+) */
+  --z-mobile-menu: 100;
+  --z-virtual-keyboard: 200;
+  --z-emergency-overlay: 999;
+}

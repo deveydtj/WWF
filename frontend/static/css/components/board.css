@@ -38,7 +38,7 @@
   top: 0;
   left: calc(-40px - 10px); /* Position stamps just to the left of the board within center panel */
   pointer-events: none;
-  z-index: 5;
+  z-index: var(--z-board-tile);
   display: none;
   /* Dynamic width to accommodate any emoji characters */
   width: fit-content; /* Let container grow with emoji content */
@@ -105,7 +105,7 @@
   width: 0;
   height: 0;
   pointer-events: none;
-  z-index: 6;
+  z-index: var(--z-board-overlay);
 }
 
 .confetti-piece {
