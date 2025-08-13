@@ -219,6 +219,19 @@ export function positionPopupEnhanced(popup, anchor, options = {}) {
  * @returns {Object} Positioning result
  */
 export function positionContextMenu(popup, anchor) {
+  // In full mode, center the options menu instead of using edge positioning
+  const currentMode = document.body.dataset.mode;
+  if (currentMode === 'full') {
+    popup.style.position = 'fixed';
+    popup.style.top = '50%';
+    popup.style.left = '50%';
+    popup.style.transform = 'translate(-50%, -50%)';
+    popup.style.zIndex = '80';
+    // Force important to override any CSS that might be interfering
+    popup.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+    return { strategy: 'center-fixed', position: { left: '50%', top: '50%' } };
+  }
+  
   return positionPopupEnhanced(popup, anchor, {
     preferredStrategies: ['right', 'left', 'bottom', 'top', 'center']
   });
