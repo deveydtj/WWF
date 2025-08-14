@@ -227,3 +227,26 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* Score popup slide animations from reset button */
+@keyframes scoreSlideFromReset {
+  0% {
+    opacity: 0;
+    transform: translateX(0) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(20px) scale(1);
+  }
+}
+
+@keyframes scoreSlideToReset {
+  0% {
+    opacity: 1;
+    transform: translateX(20px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0) scale(0.8);
+  }
+}
