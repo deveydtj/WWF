@@ -200,57 +200,27 @@ a:focus {
   transform: scale(0.98);
 }
 
-/* Header layout - aligned with How to Play button and inner content */
-#mainHeader {
+/* Header Layout - Clean and Simple */
+header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
-  max-width: 600px;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  padding: 0.5rem 1rem;
 }
 
-.header-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  position: relative;
-}
-
-/* Left column - emoji button positioned to align with lobby inner content */
-#emojiDisplay {
-  font-size: 1.5rem;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 8px;
-  background: var(--bg-color);
-  color: var(--text-color);
-  cursor: pointer;
-  box-shadow: 3px 3px 6px var(--shadow-color-dark),
-              -3px -3px 6px var(--shadow-color-light);
-  transition: all 0.1s ease;
-  position: absolute;
-  left: calc(50% - min(45vw, 12.5rem) + 1.5rem);
-}
-
-/* Center column - title */
 #logo {
+  font-size: 1.8rem;
   margin: 0;
+  color: var(--text-color);
   text-align: center;
-  flex-grow: 1;
+  flex: 1;
 }
 
-/* Right column - dark toggle and nav positioned to align with lobby inner content */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  position: absolute;
-  right: calc(50% - min(45vw, 12.5rem) + 1.5rem);
-}
-
+#emojiDisplay,
 #darkToggle {
   font-size: 1.5rem;
   padding: 0.5rem;
@@ -262,6 +232,26 @@ a:focus {
   box-shadow: 3px 3px 6px var(--shadow-color-dark),
               -3px -3px 6px var(--shadow-color-light);
   transition: all 0.1s ease;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+nav a {
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.1s ease;
+  font-size: 0.9rem;
+}
+
+nav a:hover {
+  background: var(--present-bg);
+  color: white;
 }
 
 #emojiDisplay:hover,
@@ -347,24 +337,23 @@ a:focus {
 }
 
 @media (max-width: 480px) {
-  .header-container {
+  header {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem;
+    padding: 1rem;
   }
   
-  header h1 {
+  #logo {
     font-size: 1.5rem;
   }
   
-  header img,
-  .scores img {
-    width: 24px;
-    height: 24px;
+  nav {
+    gap: 0.5rem;
   }
   
-  .header-right {
-    flex-direction: row;
-    gap: 1rem;
+  nav a {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
   }
   
   #heroCard {
