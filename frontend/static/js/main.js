@@ -59,6 +59,7 @@ async function initializeApp() {
 
 // Handle guess submission from input or keyboard
 async function submitGuessHandler() {
+  console.log('🎮 submitGuessHandler called');
   const gameState = gameStateManager.gameState;
   if (gameState?.is(STATES.GAME_OVER)) return;
   
@@ -100,7 +101,34 @@ async function submitGuessHandler() {
     } catch {}
   }
   
-  const resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
+  let resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
+  
+  // If we get a 403 error, it might be due to player ID mismatch
+  // Try to re-register the emoji and retry the guess once
+  if (resp && resp.status === 'error' && resp.msg && resp.msg.includes('pick an emoji')) {
+    console.log('🔧 Player ID mismatch detected, re-registering emoji...');
+    try {
+      const emojiResp = await sendEmoji(myEmoji, null, LOBBY_CODE);
+      if (emojiResp && emojiResp.status === 'ok') {
+        // Update our local state with the corrected information
+        if (emojiResp.player_id) {
+          myPlayerId = emojiResp.player_id;
+          setMyPlayerId(emojiResp.player_id);
+        }
+        if (emojiResp.emoji) {
+          myEmoji = emojiResp.emoji;
+          setMyEmoji(emojiResp.emoji);
+        }
+        eventListenersManager.updatePlayerInfo(myEmoji, myPlayerId);
+        console.log('🔧 Re-registration successful, retrying guess...');
+        // Retry the guess with the updated information
+        resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
+      }
+    } catch (retryError) {
+      console.error('Failed to retry guess after emoji re-registration:', retryError);
+    }
+  }
+  
   guessInput.value = '';
   
   if (resp.status === 'ok') {
