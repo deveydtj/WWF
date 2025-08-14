@@ -27,23 +27,34 @@ function showPointsDelta(delta) {
   if (delta === 0) return;
   
   const popup = document.getElementById('pointsPopup');
-  if (!popup) return;
+  const resetButton = document.getElementById('holdReset') || document.getElementById('resetWrapper');
+  if (!popup || !resetButton) return;
+  
+  // Get reset button position
+  const resetRect = resetButton.getBoundingClientRect();
+  
+  // Position popup to start under the reset button (hidden)
+  popup.style.top = `${resetRect.top + resetRect.height / 2 - 20}px`;
+  popup.style.left = `${resetRect.right}px`;
+  popup.style.transform = 'translateX(0) scale(0.8)';
   
   const sign = delta > 0 ? '+' : '';
   popup.textContent = `${sign}${delta}`;
   popup.className = delta > 0 ? 'points-positive' : 'points-negative';
   popup.style.display = 'block';
   
-  // Animate the popup
-  popup.style.opacity = '1';
-  popup.style.transform = 'translateY(-10px)';
+  // Reset any existing animation
+  popup.style.animation = '';
+  
+  // Animate the popup sliding out from reset button
+  popup.style.animation = 'scoreSlideFromReset 0.4s ease-out forwards';
   
   setTimeout(() => {
-    popup.style.opacity = '0';
-    popup.style.transform = 'translateY(-20px)';
+    // Animate the popup sliding back to reset button
+    popup.style.animation = 'scoreSlideToReset 0.4s ease-in forwards';
     setTimeout(() => {
       popup.style.display = 'none';
-    }, 300);
+    }, 400);
   }, 1500);
 }
 

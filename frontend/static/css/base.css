@@ -209,9 +209,7 @@ h1 {
 #pointsPopup {
   display: none;
   position: fixed;
-  top: 25%;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Position will be set dynamically by JavaScript relative to reset button */
   font-size: 24px;
   font-weight: bold;
   padding: 12px 20px;
@@ -223,20 +221,9 @@ h1 {
   border: 2px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  /* Subtle animation entrance */
-  animation: pointsPopupEntrance 0.5s ease-out;
 }
 
-@keyframes pointsPopupEntrance {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px) scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-}
+
 
 .points-positive {
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
