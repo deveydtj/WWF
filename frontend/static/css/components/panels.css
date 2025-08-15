@@ -441,7 +441,7 @@ body.players-open #playerSidebar {
     transform-origin: right center !important;
   }
   
-  body #chatBox {
+  body:not([data-mode='medium']) #chatBox {
     position: absolute !important;
     /* Dynamic top position will be set by JavaScript based on definition panel height */
     right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Match definition panel position */

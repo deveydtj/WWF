@@ -142,8 +142,20 @@ class MobileMenuManager {
       chatBtn.addEventListener('click', () => {
         this.close();
         setManualPanelToggle('chat', !document.body.classList.contains('chat-open'));
+        const willBeOpen = !document.body.classList.contains('chat-open');
         togglePanel('chat-open');
-        hideChatNotify();
+        
+        // Only hide the notification when opening chat, show it when closing
+        if (willBeOpen) {
+          hideChatNotify();
+        } else {
+          // Show the chat notify icon when closing the chat panel
+          const chatNotify = document.getElementById('chatNotify');
+          if (chatNotify) {
+            chatNotify.style.display = 'block';
+          }
+        }
+        
         if (document.body.classList.contains('chat-open')) {
           this._focusChatInput();
         }
