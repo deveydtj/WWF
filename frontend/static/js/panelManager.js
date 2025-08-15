@@ -53,9 +53,18 @@ function updatePanelVisibility() {
 // Toggle one of the side panels while closing any others in medium mode
 function togglePanel(panelClass) {
   if (document.body.dataset.mode === 'medium') {
+    const wasChatOpen = document.body.classList.contains('chat-open');
     ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
       if (c !== panelClass) document.body.classList.remove(c);
     });
+    
+    // If chat was open and is being closed due to another panel opening, restore the chat notification icon
+    if (wasChatOpen && panelClass !== 'chat-open') {
+      const chatNotify = document.getElementById('chatNotify');
+      if (chatNotify) {
+        chatNotify.style.display = 'block';
+      }
+    }
   }
   document.body.classList.toggle(panelClass);
   positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
