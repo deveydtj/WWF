@@ -10,10 +10,11 @@
   gap: calc(8px * var(--ui-scale));
   padding: 0;
   overflow-x: auto;
+  overflow-y: hidden; /* Prevent vertical scrolling and clipping */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   flex: 1;
-  max-height: 60px; /* Fit within header */
+  max-height: 70px; /* Increased to prevent emoji clipping */
   /* Ensure leaderboard is properly positioned */
   position: relative;
   z-index: var(--z-leaderboard);
