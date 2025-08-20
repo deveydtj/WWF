@@ -15,12 +15,16 @@
   margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
 }
 
-/* Mobile devices should use full width */
+/* Mobile devices should match board width exactly */
 @media (max-width: 600px) {
-  #keyboard {
-    max-width: 100%; /* Allow full width on mobile */
-    width: 100%;
-    display: block; /* Change to block for better width control */
+  #appContainer #keyboard {
+    max-width: none; /* Remove max-width constraint on mobile */
+    width: var(--board-width) !important; /* Match the board width exactly */
+    display: block !important; /* Change to block for better width control */
+    margin: 0 auto !important; /* Center the keyboard when it's narrower than container */
+    /* Override any scaling transforms from responsive.css to maintain exact board width */
+    transform: none !important;
+    transform-origin: center center !important;
   }
 }
 

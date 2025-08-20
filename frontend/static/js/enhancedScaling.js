@@ -306,11 +306,52 @@ export class CSSScalingManager {
     // Apply accessibility enhancements
     this.applyAccessibilityScaling(scalingResult);
     
+    // Measure actual board width and sync --board-width variable (especially important for mobile)
+    this.syncBoardWidth();
+    
     return true;
+  }
+
+  syncBoardWidth() {
+    // Wait a frame for CSS to be applied, then measure actual board width
+    setTimeout(() => {
+      const board = document.getElementById('board');
+      if (board) {
+        const actualBoardWidth = board.getBoundingClientRect().width;
+        this.setProperty('--board-width', `${actualBoardWidth}px`);
+        console.log(`🔧 Synced --board-width to actual board width: ${actualBoardWidth}px`);
+      }
+    requestAnimationFrame(() => {
+      const board = document.getElementById('board');
+      if (board) {
+        const actualBoardWidth = board.getBoundingClientRect().width;
+        this.setProperty('--board-width', `${actualBoardWidth}px`);
+        console.log(`🔧 Synced --board-width to actual board width: ${actualBoardWidth}px`);
+      }
+    });
   }
 
   updateKeyboardScaling(scalingResult) {
     const { scaleFactor, viewport } = scalingResult;
+    
+    // On mobile devices (≤600px), disable keyboard scaling to allow exact board width matching
+    if (viewport.availableWidth <= 600) {
+      // Set keyboard scale to 1 (no scaling) for exact board width alignment
+      this.setProperty('--keyboard-scale', 1);
+      this.setProperty('--keyboard-height', 'auto');
+      console.log(`🔧 Mobile mode: Disabled keyboard scaling for exact board width alignment (viewport: ${viewport.availableWidth}px)`);
+      
+      // Apply minimum height without scaling
+      const keyboard = document.getElementById('keyboard');
+      if (keyboard) {
+        const minHeight = Math.max(100, viewport.availableHeight * 0.15); // Less aggressive minimum
+        keyboard.style.minHeight = `${minHeight}px`;
+        keyboard.style.maxHeight = `${Math.min(180, viewport.availableHeight * 0.35)}px`;
+        // Ensure transform is none for exact width matching
+        keyboard.style.transform = 'none';
+      }
+      return;
+    }
     
     if (viewport.needsCompactMode) {
       // On very small displays, ensure keyboard doesn't get too small
