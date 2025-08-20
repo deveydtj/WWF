@@ -8,7 +8,7 @@ import os
 import sys
 import json
 import time
-import signal
+
 import socket
 import subprocess
 from pathlib import Path
