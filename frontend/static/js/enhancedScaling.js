@@ -321,7 +321,14 @@ export class CSSScalingManager {
         this.setProperty('--board-width', `${actualBoardWidth}px`);
         console.log(`🔧 Synced --board-width to actual board width: ${actualBoardWidth}px`);
       }
-    }, 0);
+    requestAnimationFrame(() => {
+      const board = document.getElementById('board');
+      if (board) {
+        const actualBoardWidth = board.getBoundingClientRect().width;
+        this.setProperty('--board-width', `${actualBoardWidth}px`);
+        console.log(`🔧 Synced --board-width to actual board width: ${actualBoardWidth}px`);
+      }
+    });
   }
 
   updateKeyboardScaling(scalingResult) {
