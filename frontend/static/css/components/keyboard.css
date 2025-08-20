@@ -17,13 +17,14 @@
 
 /* Mobile devices should match board width exactly */
 @media (max-width: 600px) {
-  #keyboard {
-    max-width: none; /* Remove max-width constraint on mobile */
-    width: var(--board-width); /* Match the board width exactly */
-    display: block; /* Change to block for better width control */
-    margin: 0 auto; /* Center the keyboard when it's narrower than container */
-    /* Ensure keyboard aligns with board when transforms are applied */
-    transform-origin: center center;
+  #appContainer #keyboard {
+    max-width: none !important; /* Remove max-width constraint on mobile */
+    width: var(--board-width) !important; /* Match the board width exactly */
+    display: block !important; /* Change to block for better width control */
+    margin: 0 auto !important; /* Center the keyboard when it's narrower than container */
+    /* Override any scaling transforms from responsive.css to maintain exact board width */
+    transform: none !important;
+    transform-origin: center center !important;
   }
 }
 
