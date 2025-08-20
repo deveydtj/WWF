@@ -15,12 +15,13 @@
   margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
 }
 
-/* Mobile devices should use full width */
+/* Mobile devices should match board width */
 @media (max-width: 600px) {
   #keyboard {
     max-width: 100%; /* Allow full width on mobile */
-    width: 100%;
+    width: var(--board-width); /* Match the board width exactly */
     display: block; /* Change to block for better width control */
+    margin: 0 auto; /* Center the keyboard when it's narrower than container */
   }
 }
 
