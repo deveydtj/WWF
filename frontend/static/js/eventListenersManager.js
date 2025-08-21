@@ -69,45 +69,80 @@ class EventListenersManager {
     const definitionBox = this.domManager.get('definitionBox');
     const chatBox = this.domManager.get('chatBox');
 
+    // Debounce flag to prevent rapid clicking issues during animations
+    let isAnimating = false;
+
     if (historyClose) {
       historyClose.addEventListener('click', () => {
+        if (isAnimating) return;
+        isAnimating = true;
+        
         setManualPanelToggle('history', false);
         document.body.classList.remove('history-open');
-        // Delay position update until after close animation completes (0.3s + buffer)
+        // Delay position update until after close animation completes
+        // Use shorter delay for users with reduced motion preferences
+        const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
         setTimeout(() => {
           positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-        }, 320);
+          
+          // Return focus to a logical element after panel closes
+          const mainElement = document.getElementById('wordInput') || document.getElementById('guessInput');
+          if (mainElement && !document.activeElement?.closest('#chatBox, #historyBox, #definitionBox')) {
+            mainElement.focus();
+          }
+          
+          isAnimating = false;
+        }, animationDelay);
       });
     }
 
     if (definitionClose) {
       definitionClose.addEventListener('click', () => {
+        if (isAnimating) return;
+        isAnimating = true;
+        
         setManualPanelToggle('definition', false);
         document.body.classList.remove('definition-open');
-        // Delay position updates until after close animation completes (0.3s + buffer)
+        // Delay position updates until after close animation completes
+        // Use shorter delay for users with reduced motion preferences
+        const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
         setTimeout(() => {
           positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
           updateChatPanelPosition();
-        }, 320);
+          
+          // Return focus to a logical element after panel closes
+          const mainElement = document.getElementById('wordInput') || document.getElementById('guessInput');
+          if (mainElement && !document.activeElement?.closest('#chatBox, #historyBox, #definitionBox')) {
+            mainElement.focus();
+          }
+          
+          isAnimating = false;
+        }, animationDelay);
       });
     }
 
     if (chatClose) {
       chatClose.addEventListener('click', () => {
+        if (isAnimating) return;
+        isAnimating = true;
+        
         this.chatInputFocusProtection = false;
         this.userIntentionallyLeftChat = false;
         setManualPanelToggle('chat', false);
         document.body.classList.remove('chat-open');
         
-        // Show the chat notification icon immediately
-        if (chatNotify) {
-          chatNotify.style.display = 'block';
-        }
-        
-        // Delay position update until after close animation completes (0.3s + buffer)
+        // Delay both position update and notification display until after close animation completes
+        // Use shorter delay for users with reduced motion preferences
+        const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
         setTimeout(() => {
           positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-        }, 320);
+          
+          // Show the chat notification icon after positioning is complete
+          if (chatNotify) {
+            chatNotify.style.display = 'block';
+          }
+          isAnimating = false;
+        }, animationDelay);
       });
     }
 
@@ -528,6 +563,26 @@ class EventListenersManager {
    * @private
    */
   _setupWindowEventListeners() {
+    // Enhanced resize handling to prevent animation conflicts
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      // Clear any pending timeouts to prevent animation conflicts during resize
+      clearTimeout(resizeTimeout);
+      
+      // Debounce resize events to prevent excessive position calculations
+      resizeTimeout = setTimeout(() => {
+        const boardArea = this.domManager.get('boardArea');
+        const historyBox = this.domManager.get('historyBox');
+        const definitionBox = this.domManager.get('definitionBox');
+        const chatBox = this.domManager.get('chatBox');
+        
+        if (boardArea && historyBox && definitionBox && chatBox) {
+          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+          updateChatPanelPosition();
+        }
+      }, 150);
+    });
+
     window.addEventListener('beforeunload', () => {
       if (this.networkManager) {
         this.networkManager.cleanup();

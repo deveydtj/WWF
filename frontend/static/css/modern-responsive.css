@@ -160,6 +160,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  
+  /* Ensure panel transitions still work but are instantaneous */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Enhanced contrast mode */

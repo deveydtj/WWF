@@ -761,6 +761,18 @@
    FULL MODE: Desktop Layout (>900px)
    ═══════════════════════════════════════════════ */
 
+/* Set proper transform origins for desktop panel animations */
+@media (min-width: 901px) {
+  #historyBox {
+    transform-origin: left center !important;
+  }
+  
+  #definitionBox,
+  #chatBox {
+    transform-origin: right center !important;
+  }
+}
+
 /* Full Mode - Standard Desktop (901px-1199px) */
 @media (min-width: 901px) and (max-width: 1199px) {
   /* 
