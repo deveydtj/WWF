@@ -4,7 +4,6 @@
 
 /* Option toggles and menu */
 #optionsToggle {
-  display: block;
   font-size: 28px;
   background: none;
   border: none;
@@ -15,10 +14,14 @@
   position: absolute;
   top: 0;
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  width: 38px; /* Constrain width to prevent expanding too wide */
+  height: 38px; /* Match width for consistent button size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #chatNotify {
-  display: block;
   font-size: 26px;
   background: none;
   border: none;
@@ -29,6 +32,11 @@
   position: absolute;
   top: 36px;
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  width: 38px; /* Constrain width to match options button */
+  height: 38px; /* Match width for consistent button size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
@@ -86,12 +94,19 @@
 
 #optionsMenu button {
   display: block;
-  margin: 6px 0;
+  margin: 12px 0; /* Increase margin for better spacing */
+  padding: 8px 12px; /* Add horizontal padding for better touch targets */
   background: none;
   border: none;
   cursor: pointer;
   font-size: 18px;
   color: var(--text-color-light);
+  border-radius: 6px; /* Add subtle border radius */
+  transition: background-color 0.2s ease; /* Add hover effect */
+}
+
+#optionsMenu button:hover {
+  background-color: var(--shadow-color-light);
 }
 
 .close-btn {

@@ -670,7 +670,6 @@
 
   /* Override base positioning for medium mode */
   #optionsToggle {
-    display: block;
     left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
     right: auto !important;
   }
