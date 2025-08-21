@@ -255,6 +255,7 @@ body.dark-mode .close-btn:active {
     inset 2px 2px 5px var(--shadow-color-dark),
     inset -2px -2px 5px var(--shadow-color-light);
   transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: right center; /* Consistent with media query override */
 }
 
 #chatMessages {
