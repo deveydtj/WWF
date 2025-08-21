@@ -32,8 +32,14 @@ function resetOptionsMenuPositioning() {
 
 // Helper function to close options menu with cleanup
 function closeOptionsMenu() {
-  resetOptionsMenuPositioning();
+  // Start the close dialog animation first
   closeDialog(optionsMenu);
+  
+  // Reset positioning after the close animation completes (300ms)
+  // This prevents the menu from jumping to upper left during the animation
+  setTimeout(() => {
+    resetOptionsMenuPositioning();
+  }, 300);
 }
 
 export {
