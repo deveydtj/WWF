@@ -92,7 +92,12 @@
   overflow-y: auto;
 }
 
-#optionsMenu button {
+/* Ensure close button is properly positioned and visible */
+#optionsMenu .close-btn {
+  z-index: calc(var(--z-options-menu) + 1);
+}
+
+#optionsMenu button:not(.close-btn) {
   display: inline-block; /* Prevent full-width expansion */
   margin: 4px 8px; /* Better horizontal spacing between buttons */
   padding: 8px 12px; /* Balanced padding for good touch targets */
@@ -108,7 +113,7 @@
   min-width: 0; /* Reset any inherited min-width */
 }
 
-#optionsMenu button:hover {
+#optionsMenu button:not(.close-btn):hover {
   background-color: var(--shadow-color-light);
 }
 
