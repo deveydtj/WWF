@@ -23,6 +23,7 @@ def load_server():
             self.headers = Headers()
             self.remote_addr = "127.0.0.1"
             self.json = None
+            self.endpoint = None
 
         def get_json(self, silent=False):
             return self.json
