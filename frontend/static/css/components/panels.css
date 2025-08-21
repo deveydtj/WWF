@@ -4,7 +4,6 @@
 
 /* Option toggles and menu */
 #optionsToggle {
-  display: block;
   font-size: 28px;
   background: none;
   border: none;
@@ -15,10 +14,14 @@
   position: absolute;
   top: 0;
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  width: 38px; /* Constrain width to prevent expanding too wide */
+  height: 38px; /* Match width for consistent button size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #chatNotify {
-  display: block;
   font-size: 26px;
   background: none;
   border: none;
@@ -29,6 +32,11 @@
   position: absolute;
   top: 36px;
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
+  width: 38px; /* Constrain width to match options button */
+  height: 38px; /* Match width for consistent button size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
@@ -84,14 +92,29 @@
   overflow-y: auto;
 }
 
-#optionsMenu button {
-  display: block;
-  margin: 6px 0;
+/* Ensure close button is properly positioned and visible */
+#optionsMenu .close-btn {
+  z-index: calc(var(--z-options-menu) + 1);
+}
+
+#optionsMenu button:not(.close-btn) {
+  display: inline-block; /* Prevent full-width expansion */
+  margin: 4px 8px; /* Better horizontal spacing between buttons */
+  padding: 8px 12px; /* Balanced padding for good touch targets */
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px; /* Slightly smaller font for better fit */
   color: var(--text-color-light);
+  border-radius: 6px; /* Slightly more rounded for modern look */
+  transition: background-color 0.2s ease; /* Add hover effect */
+  white-space: nowrap; /* Prevent text wrapping */
+  width: auto; /* Let content determine width */
+  min-width: 0; /* Reset any inherited min-width */
+}
+
+#optionsMenu button:not(.close-btn):hover {
+  background-color: var(--shadow-color-light);
 }
 
 .close-btn {
@@ -255,6 +278,7 @@ body.dark-mode .close-btn:active {
     inset 2px 2px 5px var(--shadow-color-dark),
     inset -2px -2px 5px var(--shadow-color-light);
   transition: transform 0.3s ease, opacity 0.3s ease;
+  /* Transform origin set in responsive CSS for proper mobile/desktop behavior */
 }
 
 #chatMessages {

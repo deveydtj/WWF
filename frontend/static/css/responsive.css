@@ -665,11 +665,11 @@
     right: 0 !important;
     left: auto !important; /* Ensure left is not set by other rules */
     width: clamp(14rem, 30vw, 17rem) !important; /* Match other medium mode panels */
+    transform-origin: right center !important; /* Consistent with large screen mode */
   }
 
   /* Override base positioning for medium mode */
   #optionsToggle {
-    display: block;
     left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
     right: auto !important;
   }
@@ -759,6 +759,18 @@
 /* ═══════════════════════════════════════════════
    FULL MODE: Desktop Layout (>900px)
    ═══════════════════════════════════════════════ */
+
+/* Set proper transform origins for desktop panel animations */
+@media (min-width: 901px) {
+  #historyBox {
+    transform-origin: left center !important;
+  }
+  
+  #definitionBox,
+  #chatBox {
+    transform-origin: right center !important;
+  }
+}
 
 /* Full Mode - Standard Desktop (901px-1199px) */
 @media (min-width: 901px) and (max-width: 1199px) {
