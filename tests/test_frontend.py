@@ -111,7 +111,12 @@ def test_index_html_uses_module_script():
 
 def test_main_js_imports_modules():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    for mod in ['board.js', 'history.js', 'emoji.js', 'api.js', 'keyboard.js', 'utils.js']:
+    # Check for core modules that are directly imported in main.js
+    for mod in ['board.js', 'emoji.js', 'api.js', 'utils.js']:
+        assert f"./{mod}" in text, f"main.js should import {mod}"
+    
+    # Check for manager modules that replace direct imports
+    for mod in ['domManager.js', 'networkManager.js', 'gameStateManager.js', 'eventListenersManager.js']:
         assert f"./{mod}" in text, f"main.js should import {mod}"
 
 
@@ -740,15 +745,16 @@ function showMessage(msg){ shown = msg; }
 
 
 def test_beforeunload_closes_event_source():
-    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    assert re.search(r"beforeunload[^{]*\{[^\}]*eventSource\.close", text, re.DOTALL)
+    # Check that beforeunload handler exists in eventListenersManager and calls networkManager.cleanup()
+    text = (SRC_DIR / 'eventListenersManager.js').read_text(encoding='utf-8')
+    assert re.search(r"beforeunload[^{]*\{[^\}]*networkManager\.cleanup", text, re.DOTALL)
 
 
 def test_leave_lobby_closes_event_source():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    # Updated to handle async function
-    m = re.search(r"leaveLobby\.addEventListener\('click',\s*async\s*\(\)\s*=>\s*\{.*?eventSource\.close", text, re.DOTALL)
-    assert m, "eventSource.close not found in leaveLobby event listener"
+    # Updated to check for networkManager.cleanup() in leaveLobby handler
+    m = re.search(r"leaveLobby\.addEventListener\('click',\s*async\s*\(\)\s*=>\s*\{.*?networkManager\.cleanup", text, re.DOTALL)
+    assert m, "networkManager.cleanup() not found in leaveLobby event listener"
 
 
 def test_leave_lobby_clears_stored_lobby():
