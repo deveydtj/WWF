@@ -93,16 +93,17 @@
 }
 
 #optionsMenu button {
-  display: block;
-  margin: 12px 0; /* Increase margin for better spacing */
-  padding: 8px 12px; /* Add horizontal padding for better touch targets */
+  display: inline-block; /* Change from block to inline-block to prevent full-width expansion */
+  margin: 8px 6px; /* Balanced spacing - slightly more than original but not excessive */
+  padding: 6px 10px; /* Modest padding for better touch targets without excessive width */
   background: none;
   border: none;
   cursor: pointer;
   font-size: 18px;
   color: var(--text-color-light);
-  border-radius: 6px; /* Add subtle border radius */
+  border-radius: 4px; /* Subtle border radius */
   transition: background-color 0.2s ease; /* Add hover effect */
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 #optionsMenu button:hover {
