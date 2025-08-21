@@ -73,7 +73,10 @@ class EventListenersManager {
       historyClose.addEventListener('click', () => {
         setManualPanelToggle('history', false);
         document.body.classList.remove('history-open');
-        positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+        // Delay position update until after close animation completes (0.3s + buffer)
+        setTimeout(() => {
+          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+        }, 320);
       });
     }
 
@@ -81,8 +84,11 @@ class EventListenersManager {
       definitionClose.addEventListener('click', () => {
         setManualPanelToggle('definition', false);
         document.body.classList.remove('definition-open');
-        positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-        updateChatPanelPosition();
+        // Delay position updates until after close animation completes (0.3s + buffer)
+        setTimeout(() => {
+          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+          updateChatPanelPosition();
+        }, 320);
       });
     }
 
@@ -92,12 +98,16 @@ class EventListenersManager {
         this.userIntentionallyLeftChat = false;
         setManualPanelToggle('chat', false);
         document.body.classList.remove('chat-open');
-        positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
         
-        // Show the chat notification icon when closing the chat panel
+        // Show the chat notification icon immediately
         if (chatNotify) {
           chatNotify.style.display = 'block';
         }
+        
+        // Delay position update until after close animation completes (0.3s + buffer)
+        setTimeout(() => {
+          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
+        }, 320);
       });
     }
 
