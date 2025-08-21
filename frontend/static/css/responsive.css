@@ -665,6 +665,7 @@
     right: 0 !important;
     left: auto !important; /* Ensure left is not set by other rules */
     width: clamp(14rem, 30vw, 17rem) !important; /* Match other medium mode panels */
+    transform-origin: right center !important; /* Consistent with large screen mode */
   }
 
   /* Override base positioning for medium mode */

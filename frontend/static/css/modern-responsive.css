@@ -231,10 +231,12 @@
 
   body[data-mode='medium'] #historyBox {
     left: 0 !important;
+    transform-origin: left center !important;
   }
 
   body[data-mode='medium'] #definitionBox,
   body[data-mode='medium'] #chatBox {
     right: 0 !important;
+    transform-origin: right center !important;
   }
 }
