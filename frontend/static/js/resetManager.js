@@ -124,16 +124,16 @@ function morphResetButton() {
   // Save original transition
   const originalTransition = holdReset.style.transition;
   
-  // Add smooth scaling transition
+  // Add smooth horizontal scaling transition
   holdReset.style.transition = 'transform 0.3s ease-out';
   
-  // Scale up and change text
-  holdReset.style.transform = 'scale(1.15)';
+  // Stretch horizontally and change text
+  holdReset.style.transform = 'scaleX(1.3)';
   holdResetText.textContent = 'Game Reset';
   
   // After 1.5 seconds, scale back and change text back
   setTimeout(() => {
-    holdReset.style.transform = 'scale(1)';
+    holdReset.style.transform = 'scaleX(1)';
     holdResetText.textContent = 'Reset';
     
     // Reset transition after animation completes
