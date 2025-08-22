@@ -54,7 +54,6 @@ async function performReset() {
   }
   await fetchState();
   await animateTilesIn(board);
-  showMessage('Game reset!', { messageEl, messagePopup });
   return resp;
 }
 
@@ -105,6 +104,9 @@ function startHoldReset() {
       setTimeout(() => {
         holdResetProgress.style.width = '0%';
       }, 350);
+      
+      // Start button morphing animation instead of showing popup
+      morphResetButton();
       performReset();
     }
   }, 20);
@@ -115,6 +117,30 @@ function stopHoldReset() {
   holdResetProgress.style.transition = 'width 0.15s';
   holdResetProgress.style.width = '0%';
   holdResetProgress.style.opacity = '0.9';
+}
+
+// Morph the reset button to show "Game Reset" and then back to "Reset"
+function morphResetButton() {
+  // Save original transition
+  const originalTransition = holdReset.style.transition;
+  
+  // Add smooth scaling transition
+  holdReset.style.transition = 'transform 0.3s ease-out';
+  
+  // Scale up and change text
+  holdReset.style.transform = 'scale(1.15)';
+  holdResetText.textContent = 'Game Reset';
+  
+  // After 1.5 seconds, scale back and change text back
+  setTimeout(() => {
+    holdReset.style.transform = 'scale(1)';
+    holdResetText.textContent = 'Reset';
+    
+    // Reset transition after animation completes
+    setTimeout(() => {
+      holdReset.style.transition = originalTransition;
+    }, 300);
+  }, 1500);
 }
 
 export {
