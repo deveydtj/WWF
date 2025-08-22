@@ -19,6 +19,7 @@
   /* Level 1: Background/Base (1-9) */
   --z-button-base: 1;
   --z-button-hover: 2;
+  --z-title-bar: 5;
   --z-board-tile: 5;
   --z-board-overlay: 6;
   

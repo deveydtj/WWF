@@ -87,12 +87,12 @@ function showPointsDelta(delta) {
   
   // Animate the popup based on device type
   if (isMobile) {
-    // Mobile: slide out from under leaderboard tile
-    popup.style.animation = 'scoreSlideFromLeaderboard 0.4s ease-out forwards';
+    // Mobile: slide out from under leaderboard tile with quick ease-in at start
+    popup.style.animation = 'scoreSlideFromLeaderboard 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
     
     setTimeout(() => {
-      // Animate the popup sliding back under leaderboard tile
-      popup.style.animation = 'scoreSlideToLeaderboard 0.4s ease-in forwards';
+      // Animate the popup sliding back under leaderboard tile with quick ease-out at end
+      popup.style.animation = 'scoreSlideToLeaderboard 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards';
       setTimeout(() => {
         popup.style.display = 'none';
       }, 400);
