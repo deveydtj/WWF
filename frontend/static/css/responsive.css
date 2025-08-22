@@ -365,6 +365,13 @@
     margin: 0 !important;
   }
 
+  /* Mobile header uniformity - match hamburger menu button height */
+  #holdReset {
+    height: 44px !important;
+    width: 44px !important;
+    font-size: 14px !important;
+  }
+
   /* Hide input area on mobile since users should use on-screen keyboard */
   #inputArea {
     display: none !important; /* Hide input area on mobile - users should use on-screen keyboard */
@@ -553,6 +560,11 @@
     min-width: calc(35px * var(--ui-scale));
     white-space: nowrap;
     flex-shrink: 0;
+    /* Mobile header uniformity - match hamburger menu button height */
+    height: 44px !important;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
   }
 }
 
