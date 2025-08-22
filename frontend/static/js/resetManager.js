@@ -128,21 +128,40 @@ function morphResetButton() {
   // Add smooth width transition
   holdReset.style.transition = 'width 0.3s ease-out';
   
-  // Increase width to accommodate "Game Reset" text and change text
+  // Increase width to accommodate "Game Reset" text
   const currentWidth = holdReset.offsetWidth;
   const newWidth = Math.max(currentWidth * 1.3, currentWidth + 40); // Ensure minimum expansion
   holdReset.style.width = newWidth + 'px';
-  holdResetText.textContent = 'Game Reset';
+  
+  // Animate text change: fade out "Reset", then fade in "Game Reset"
+  holdResetText.style.transition = 'opacity 0.15s ease-out';
+  holdResetText.style.opacity = '0';
+  
+  // After text fades out, change it and fade back in
+  setTimeout(() => {
+    holdResetText.textContent = 'Game Reset';
+    holdResetText.style.opacity = '1';
+  }, 150);
   
   // After 1.5 seconds, return to original width and change text back
   setTimeout(() => {
+    // Start width transition back
     holdReset.style.width = originalWidth;
-    holdResetText.textContent = 'Reset';
     
-    // Reset transition after animation completes
+    // Fade out "Game Reset" text
+    holdResetText.style.opacity = '0';
+    
+    // After text fades out, change back to "Reset" and fade in
     setTimeout(() => {
-      holdReset.style.transition = originalTransition;
-    }, 300);
+      holdResetText.textContent = 'Reset';
+      holdResetText.style.opacity = '1';
+      
+      // Reset all transitions after animation completes
+      setTimeout(() => {
+        holdReset.style.transition = originalTransition;
+        holdResetText.style.transition = '';
+      }, 150);
+    }, 150);
   }, 1500);
 }
 
