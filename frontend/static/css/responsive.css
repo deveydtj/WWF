@@ -360,9 +360,17 @@
     position: fixed !important;
     top: 10px !important;
     left: 10px !important;
-    z-index: 80 !important;
+    z-index: 85 !important; /* Higher than leaderboard to ensure it's always on top */
     order: unset !important;
     margin: 0 !important;
+  }
+
+  /* Mobile header uniformity - match hamburger menu button height */
+  #holdReset {
+    height: 44px !important;
+    width: 44px !important;
+    font-size: 14px !important;
+    z-index: 85 !important; /* Ensure button itself is above leaderboard */
   }
 
   /* Hide input area on mobile since users should use on-screen keyboard */
@@ -515,6 +523,7 @@
     min-width: 0;
     overflow: hidden;
     max-width: 200px;
+    z-index: 70; /* Below reset button (85) but above other UI elements */
   }
   
   #titleBar .mobile-leaderboard-container #leaderboard {
@@ -547,12 +556,20 @@
   
   /* Ensure leaderboard entries are appropriately sized for mobile inline */
   #titleBar .mobile-leaderboard-container .leaderboard-entry {
-    font-size: calc(0.9em * var(--ui-scale));
-    padding: calc(4px * var(--ui-scale)) calc(8px * var(--ui-scale));
+    /* Limit scaling to prevent tiles from exceeding 44px height */
+    font-size: min(calc(0.9em * var(--ui-scale)), 14px);
+    padding: min(calc(4px * var(--ui-scale)), 6px) min(calc(8px * var(--ui-scale)), 8px);
     margin: 0 2px;
     min-width: calc(35px * var(--ui-scale));
     white-space: nowrap;
     flex-shrink: 0;
+    /* Mobile header uniformity - match hamburger menu button height */
+    height: 44px !important;
+    max-height: 44px !important; /* Enforce maximum height */
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    overflow: hidden; /* Prevent content overflow */
   }
 }
 
