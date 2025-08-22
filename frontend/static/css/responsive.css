@@ -364,6 +364,8 @@
     order: unset !important;
     margin: 0 !important;
     pointer-events: auto !important; /* Ensure it can receive touch events */
+    /* Create new stacking context to ensure proper layering */
+    isolation: isolate !important;
   }
 
   /* Mobile header uniformity - match hamburger menu button height */
@@ -375,6 +377,8 @@
     position: relative !important; /* Ensure proper stacking context */
     pointer-events: auto !important; /* Ensure it can receive touch events */
     touch-action: manipulation !important; /* Optimize for touch interaction */
+    /* Create new stacking context to isolate from other elements */
+    isolation: isolate !important;
   }
 
   /* Hide input area on mobile since users should use on-screen keyboard */

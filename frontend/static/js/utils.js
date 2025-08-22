@@ -85,14 +85,23 @@ export function shakeInput(input) {
 
 /**
  * Move the reset button based on viewport width.
+ * On mobile, move to appContainer for proper z-index stacking instead of titleBar.
  */
 export function repositionResetButton() {
   const resetWrapper = document.getElementById('resetWrapper');
   const titleBar = document.getElementById('titleBar');
   const inputArea = document.getElementById('inputArea');
+  const appContainer = document.getElementById('appContainer');
+  
   if (window.innerWidth <= 600) {
-    if (!titleBar.contains(resetWrapper)) {
-      titleBar.insertBefore(resetWrapper, titleBar.firstChild);
+    // Move to appContainer instead of titleBar to avoid stacking context issues
+    if (!appContainer.contains(resetWrapper) || titleBar.contains(resetWrapper)) {
+      // Remove from titleBar if it's there (from previous logic)
+      if (titleBar.contains(resetWrapper)) {
+        titleBar.removeChild(resetWrapper);
+      }
+      // Add to appContainer as first child for proper z-index stacking
+      appContainer.insertBefore(resetWrapper, appContainer.firstChild);
     }
   } else if (!inputArea.contains(resetWrapper)) {
     inputArea.appendChild(resetWrapper);
