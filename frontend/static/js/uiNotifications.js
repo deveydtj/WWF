@@ -91,8 +91,8 @@ function showPointsDelta(delta) {
     popup.style.animation = 'scoreSlideFromLeaderboard 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
     
     setTimeout(() => {
-      // Animate the popup sliding back under leaderboard tile with quick ease-out at end
-      popup.style.animation = 'scoreSlideToLeaderboard 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards';
+      // Animate the popup sliding back under leaderboard tile with bounce effect
+      popup.style.animation = 'scoreSlideToLeaderboard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
       setTimeout(() => {
         popup.style.display = 'none';
       }, 400);
