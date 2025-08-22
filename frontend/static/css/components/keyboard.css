@@ -15,6 +15,15 @@
   margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
 }
 
+/* Keyboard key text and icon handling for mobile */
+.key-text {
+  display: inline;
+}
+
+.key-icon {
+  display: none;
+}
+
 /* Mobile devices should match board width exactly */
 @media (max-width: 600px) {
   #appContainer #keyboard {
@@ -25,6 +34,15 @@
     /* Override any scaling transforms from responsive.css to maintain exact board width */
     transform: none !important;
     transform-origin: center center !important;
+  }
+  
+  /* Show icon instead of text on mobile for space efficiency */
+  .key-text {
+    display: none;
+  }
+  
+  .key-icon {
+    display: inline;
   }
 }
 
