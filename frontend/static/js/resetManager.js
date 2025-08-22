@@ -121,19 +121,22 @@ function stopHoldReset() {
 
 // Morph the reset button to show "Game Reset" and then back to "Reset"
 function morphResetButton() {
-  // Save original transition
+  // Save original styles
   const originalTransition = holdReset.style.transition;
+  const originalWidth = holdReset.style.width;
   
-  // Add smooth horizontal scaling transition
-  holdReset.style.transition = 'transform 0.3s ease-out';
+  // Add smooth width transition
+  holdReset.style.transition = 'width 0.3s ease-out';
   
-  // Stretch horizontally and change text
-  holdReset.style.transform = 'scaleX(1.3)';
+  // Increase width to accommodate "Game Reset" text and change text
+  const currentWidth = holdReset.offsetWidth;
+  const newWidth = Math.max(currentWidth * 1.3, currentWidth + 40); // Ensure minimum expansion
+  holdReset.style.width = newWidth + 'px';
   holdResetText.textContent = 'Game Reset';
   
-  // After 1.5 seconds, scale back and change text back
+  // After 1.5 seconds, return to original width and change text back
   setTimeout(() => {
-    holdReset.style.transform = 'scaleX(1)';
+    holdReset.style.width = originalWidth;
     holdResetText.textContent = 'Reset';
     
     // Reset transition after animation completes

@@ -360,7 +360,7 @@
     position: fixed !important;
     top: 10px !important;
     left: 10px !important;
-    z-index: 85 !important; /* Higher than leaderboard to ensure it's always on top */
+    z-index: 150 !important; /* Much higher than leaderboard to ensure it's always on top */
     order: unset !important;
     margin: 0 !important;
   }
@@ -370,7 +370,7 @@
     height: 44px !important;
     width: 44px !important;
     font-size: 14px !important;
-    z-index: 85 !important; /* Ensure button itself is above leaderboard */
+    z-index: 150 !important; /* Ensure button itself is above leaderboard */
   }
 
   /* Hide input area on mobile since users should use on-screen keyboard */
