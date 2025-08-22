@@ -25,6 +25,7 @@
   /* Level 2: UI Components (10-19) */
   --z-keyboard: 10;
   --z-leaderboard: 10;
+  --z-points-popup-mobile: 9;
   --z-ui-component: 15;
   
   /* Level 3: Panels (20-39) */
