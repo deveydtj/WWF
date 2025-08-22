@@ -30,6 +30,9 @@ import {
   ensureInputFieldVisibility,
   enableClickOffDismiss
 } from './utils.js';
+
+// Expose repositionResetButton to global scope for debugging and manual calls
+window.repositionResetButton = repositionResetButton;
 import { updateInputVisibility } from './uiNotifications.js';
 import { updateHintBadge } from './hintBadge.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
@@ -409,6 +412,7 @@ class AppInitializer {
     // Resize handler
     window.addEventListener('resize', () => {
       this._updateGameTitle(); // Update title for mobile/desktop
+      console.log('🔧 Calling repositionResetButton from resize handler');
       repositionResetButton();
       updatePanelVisibility();
       updateChatPanelPosition();
@@ -524,6 +528,7 @@ class AppInitializer {
     const definitionBox = this.domManager.get('definitionBox');
     const chatBox = this.domManager.get('chatBox');
     
+    console.log('🔧 Calling repositionResetButton from _initializePanelsAndLayout');
     repositionResetButton();
     positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
     renderEmojiStamps([]);
