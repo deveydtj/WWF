@@ -104,8 +104,13 @@ def sanitize_definition(text: str) -> str:
     """Clean up a dictionary definition for safe display."""
     if not text:
         return ""
-    # Basic HTML escaping and cleanup
-    return re.sub(r'[<>&"]', lambda m: {'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;'}[m.group()], text)
+    # Strip HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Convert common HTML entities
+    text = text.replace('&nbsp;', ' ').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
+    # Normalize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
 
 def fetch_definition(word: str):

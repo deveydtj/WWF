@@ -23,6 +23,7 @@ def load_server():
             self.headers = Headers()
             self.remote_addr = "127.0.0.1"
             self.json = None
+            self.endpoint = None
 
         def get_json(self, silent=False):
             return self.json
@@ -47,6 +48,10 @@ def load_server():
                 return func
 
             return decorator
+
+        def after_request(self, func):
+            """Mock implementation of Flask's after_request decorator."""
+            return func
 
         def run(self, *a, **kw):
             pass
@@ -272,6 +277,10 @@ def test_state_post_updates_last_active_and_persists(tmp_path, server_env):
 
     game_file = tmp_path / 'game.json'
     server.GAME_FILE = str(game_file)
+    
+    # Update the persistence module's GAME_FILE variable to match
+    import backend.data_persistence
+    backend.data_persistence.GAME_FILE = game_file
 
     before = server.current_state.leaderboard['😀']['last_active']
     request.method = 'POST'
@@ -413,7 +422,7 @@ def test_pick_new_word_resets_state(server_env, monkeypatch):
     # Deterministic word selection
     monkeypatch.setattr(server.random, 'choice', lambda words: 'crane')
 
-    server.pick_new_word()
+    server.pick_new_word(server.current_state)
 
     assert server.current_state.target_word == 'crane'
     assert server.current_state.guesses == []
@@ -639,7 +648,7 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
         'last_definition': server.current_state.last_definition,
     }
 
-    server.save_data()
+    server.save_data_legacy()
 
     server.current_state.leaderboard = {}
     server.current_state.ip_to_emoji = {}
@@ -655,7 +664,7 @@ def test_save_and_load_round_trip(tmp_path, server_env, monkeypatch):
     server.current_state.last_word = None
     server.current_state.last_definition = None
 
-    server.load_data()
+    server.load_data_legacy()
 
     assert server.current_state.leaderboard == expected['leaderboard']
     assert server.current_state.ip_to_emoji == expected['ip_to_emoji']
@@ -833,6 +842,10 @@ def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
     server.current_state.daily_double_index = 0
     log_file = tmp_path / 'analytics.log'
     monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
+    
+    # Update the analytics module's ANALYTICS_FILE variable to match
+    import backend.analytics
+    backend.analytics.ANALYTICS_FILE = log_file
 
     request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
@@ -861,9 +874,9 @@ def test_reconnect_with_active_daily_double(tmp_path, server_env, monkeypatch):
     request.remote_addr = '1'
     server.guess_word()
 
-    server.save_data()
+    server.save_data_legacy()
     server._reset_state()
-    server.load_data()
+    server.load_data_legacy()
 
     request.method = 'POST'
     request.json = {'emoji': '😀', 'player_id': 'p1'}
@@ -1052,6 +1065,10 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     server, request = server_env
     log_file = tmp_path / 'analytics.log'
     monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
+    
+    # Update the analytics module's ANALYTICS_FILE variable to match
+    import backend.analytics
+    backend.analytics.ANALYTICS_FILE = log_file
 
     request.remote_addr = '1'
     resp = server.lobby_create()
@@ -1092,6 +1109,10 @@ def test_reset_game_logs_finished(tmp_path, server_env, monkeypatch):
     server, _ = server_env
     log_file = tmp_path / 'analytics.log'
     monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
+    
+    # Update the analytics module's ANALYTICS_FILE variable to match
+    import backend.analytics
+    backend.analytics.ANALYTICS_FILE = log_file
 
     server.reset_game()
 

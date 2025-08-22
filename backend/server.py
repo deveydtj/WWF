@@ -342,6 +342,15 @@ def _lobby_id(s: GameState) -> str:
     return DEFAULT_LOBBY
 
 
+def _definition_worker(word: str, s: GameState) -> None:
+    """Background task to fetch a word's definition and persist it."""
+    s.definition = fetch_definition(word)
+    s.last_word = word
+    s.last_definition = s.definition
+    save_data_legacy(s)
+    broadcast_state(s)
+
+
 # ---- Game Logic ----
 
 
@@ -785,7 +794,10 @@ def guess_word():
 
     if over:
         current_state.phase = "finished"
-        start_definition_lookup(current_state.target_word, current_state, save_data, broadcast_state)
+        # Fetch definition synchronously when game ends
+        current_state.definition = fetch_definition(current_state.target_word)
+        current_state.last_word = current_state.target_word
+        current_state.last_definition = current_state.definition
 
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
