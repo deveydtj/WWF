@@ -259,14 +259,14 @@
   }
   100% {
     opacity: 1;
-    transform: translateX(-50%) translateY(-30px) scale(1);
+    transform: translateX(-50%) translateY(50px) scale(1);
   }
 }
 
 @keyframes scoreSlideToLeaderboard {
   0% {
     opacity: 1;
-    transform: translateX(-50%) translateY(-30px) scale(1);
+    transform: translateX(-50%) translateY(50px) scale(1);
   }
   100% {
     opacity: 0;

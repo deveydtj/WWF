@@ -64,7 +64,7 @@ function showPointsDelta(delta) {
   // Position popup based on device type
   if (isMobile) {
     // Position popup to start under the leaderboard tile (hidden)
-    popup.style.top = `${anchorRect.top + anchorRect.height / 2 - 20}px`;
+    popup.style.top = `${anchorRect.top + anchorRect.height / 2 - 10}px`;
     popup.style.left = `${anchorRect.left + anchorRect.width / 2}px`;
     popup.style.transform = 'translateX(-50%) scale(0.8)';
     // Set z-index one below leaderboard tile
