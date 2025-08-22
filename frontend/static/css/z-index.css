@@ -19,12 +19,14 @@
   /* Level 1: Background/Base (1-9) */
   --z-button-base: 1;
   --z-button-hover: 2;
+  --z-title-bar: 5;
   --z-board-tile: 5;
   --z-board-overlay: 6;
   
   /* Level 2: UI Components (10-19) */
   --z-keyboard: 10;
   --z-leaderboard: 10;
+  --z-points-popup-mobile: 9;
   --z-ui-component: 15;
   
   /* Level 3: Panels (20-39) */

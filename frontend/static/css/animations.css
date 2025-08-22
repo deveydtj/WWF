@@ -250,3 +250,26 @@
     transform: translateX(0) scale(0.8);
   }
 }
+
+/* Mobile leaderboard slide animations */
+@keyframes scoreSlideFromLeaderboard {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(50px) scale(1);
+  }
+}
+
+@keyframes scoreSlideToLeaderboard {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(50px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0) scale(0.8);
+  }
+}

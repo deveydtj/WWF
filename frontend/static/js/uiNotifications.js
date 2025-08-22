@@ -4,6 +4,8 @@
  */
 
 import { playClick } from './audioManager.js';
+import { isMobileView } from './utils.js';
+import { getMyEmoji } from './emoji.js';
 
 function updateInputVisibility() {
   const guessInput = document.getElementById('guessInput');
@@ -27,16 +29,53 @@ function showPointsDelta(delta) {
   if (delta === 0) return;
   
   const popup = document.getElementById('pointsPopup');
-  const resetButton = document.getElementById('holdReset') || document.getElementById('resetWrapper');
-  if (!popup || !resetButton) return;
+  if (!popup) return;
   
-  // Get reset button position
-  const resetRect = resetButton.getBoundingClientRect();
+  // Check if we're in mobile view
+  const isMobile = isMobileView();
   
-  // Position popup to start under the reset button (hidden)
-  popup.style.top = `${resetRect.top + resetRect.height / 2 - 20}px`;
-  popup.style.left = `${resetRect.right}px`;
-  popup.style.transform = 'translateX(0) scale(0.8)';
+  let anchorElement, anchorRect;
+  
+  if (isMobile) {
+    // On mobile, use the current player's leaderboard entry as anchor
+    const myEmoji = getMyEmoji();
+    if (myEmoji) {
+      const leaderboardDiv = document.getElementById('leaderboard');
+      const myEntry = leaderboardDiv?.querySelector(`[data-emoji="${myEmoji}"]`);
+      if (myEntry) {
+        anchorElement = myEntry;
+        anchorRect = myEntry.getBoundingClientRect();
+      }
+    }
+    
+    // Fallback to reset button if leaderboard entry not found
+    if (!anchorElement) {
+      anchorElement = document.getElementById('holdReset') || document.getElementById('resetWrapper');
+      anchorRect = anchorElement?.getBoundingClientRect();
+    }
+  } else {
+    // Desktop: use reset button as before
+    anchorElement = document.getElementById('holdReset') || document.getElementById('resetWrapper');
+    anchorRect = anchorElement?.getBoundingClientRect();
+  }
+  
+  if (!anchorElement || !anchorRect) return;
+  
+  // Position popup based on device type
+  if (isMobile) {
+    // Position popup to start under the leaderboard tile (hidden)
+    popup.style.top = `${anchorRect.top + anchorRect.height / 2 - 10}px`;
+    popup.style.left = `${anchorRect.left + anchorRect.width / 2}px`;
+    popup.style.transform = 'translateX(-50%) scale(0.8)';
+    // Set z-index one below leaderboard tile
+    popup.style.zIndex = 'var(--z-points-popup-mobile)';
+  } else {
+    // Desktop: position next to reset button as before
+    popup.style.top = `${anchorRect.top + anchorRect.height / 2 - 20}px`;
+    popup.style.left = `${anchorRect.right}px`;
+    popup.style.transform = 'translateX(0) scale(0.8)';
+    popup.style.zIndex = '150';
+  }
   
   const sign = delta > 0 ? '+' : '';
   popup.textContent = `${sign}${delta}`;
@@ -46,16 +85,30 @@ function showPointsDelta(delta) {
   // Reset any existing animation
   popup.style.animation = '';
   
-  // Animate the popup sliding out from reset button
-  popup.style.animation = 'scoreSlideFromReset 0.4s ease-out forwards';
-  
-  setTimeout(() => {
-    // Animate the popup sliding back to reset button
-    popup.style.animation = 'scoreSlideToReset 0.4s ease-in forwards';
+  // Animate the popup based on device type
+  if (isMobile) {
+    // Mobile: slide out from under leaderboard tile with quick ease-in at start
+    popup.style.animation = 'scoreSlideFromLeaderboard 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
+    
     setTimeout(() => {
-      popup.style.display = 'none';
-    }, 400);
-  }, 1500);
+      // Animate the popup sliding back under leaderboard tile with same animation as slide-out
+      popup.style.animation = 'scoreSlideToLeaderboard 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 400);
+    }, 1500);
+  } else {
+    // Desktop: slide from reset button as before
+    popup.style.animation = 'scoreSlideFromReset 0.4s ease-out forwards';
+    
+    setTimeout(() => {
+      // Animate the popup sliding back to reset button
+      popup.style.animation = 'scoreSlideToReset 0.4s ease-in forwards';
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 400);
+    }, 1500);
+  }
 }
 
 function showHintTooltip(text) {
