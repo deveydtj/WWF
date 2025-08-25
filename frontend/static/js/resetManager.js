@@ -19,6 +19,7 @@ let holdProgress = null;
 let isButtonPressed = false;
 let morphTimeout = null;
 let isDisplayingGameReset = false;
+let eventListenersDisabled = false;
 
 // External dependencies that need to be set
 let gameState = null;
@@ -117,6 +118,11 @@ function startHoldReset() {
 }
 
 function stopHoldReset() {
+  // If event listeners are disabled (during morphing), ignore all mouse/touch events
+  if (eventListenersDisabled) {
+    return;
+  }
+  
   isButtonPressed = false;
   clearInterval(holdProgress);
   holdResetProgress.style.transition = 'width 0.15s';
@@ -138,6 +144,9 @@ function morphResetButton() {
     clearTimeout(morphTimeout);
     morphTimeout = null;
   }
+  
+  // Disable event listeners during the entire morphing process
+  eventListenersDisabled = true;
   
   // Save original styles
   const originalTransition = holdReset.style.transition;
@@ -192,6 +201,9 @@ function morphResetButton() {
       setTimeout(() => {
         holdReset.style.transition = originalTransition;
         holdResetText.style.transition = '';
+        
+        // Re-enable event listeners after morphing is completely done
+        eventListenersDisabled = false;
       }, 200);
     }, 200);
   }
