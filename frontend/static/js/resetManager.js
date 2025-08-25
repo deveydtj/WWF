@@ -143,8 +143,11 @@ function morphResetButton() {
   // Remove all event listeners from the display button by replacing it with a clean clone
   const cleanDisplayButton = displayButton.cloneNode(true);
   
-  // Position the display button exactly over the original button
+  // Get computed styles from the original button to ensure exact matching
+  const computedStyle = window.getComputedStyle(holdReset);
   const rect = holdReset.getBoundingClientRect();
+  
+  // Position the display button exactly over the original button with computed styles
   cleanDisplayButton.style.position = 'fixed';
   cleanDisplayButton.style.top = rect.top + 'px';
   cleanDisplayButton.style.left = rect.left + 'px';
@@ -153,10 +156,34 @@ function morphResetButton() {
   cleanDisplayButton.style.zIndex = '1001'; // Higher than original button
   cleanDisplayButton.style.pointerEvents = 'none'; // Completely disable interaction
   
+  // Copy essential computed styles to prevent size snapping
+  cleanDisplayButton.style.fontSize = computedStyle.fontSize;
+  cleanDisplayButton.style.fontWeight = computedStyle.fontWeight;
+  cleanDisplayButton.style.padding = computedStyle.padding;
+  cleanDisplayButton.style.borderRadius = computedStyle.borderRadius;
+  cleanDisplayButton.style.boxShadow = computedStyle.boxShadow;
+  cleanDisplayButton.style.background = computedStyle.background;
+  cleanDisplayButton.style.color = computedStyle.color;
+  
   // Get the text element in the display button
   const displayText = cleanDisplayButton.querySelector('#holdResetText') || cleanDisplayButton;
   if (displayText && displayText.id === 'holdResetText') {
     displayText.id = 'holdResetDisplayText'; // Avoid ID conflicts
+  }
+  
+  // Hide the progress bar on the duplicate to prevent green overlay interference
+  const displayProgress = cleanDisplayButton.querySelector('#holdResetProgress');
+  if (displayProgress) {
+    displayProgress.style.opacity = '0'; // Hide the progress bar completely
+    displayProgress.style.width = '0%'; // Reset width to prevent background interference
+  }
+  
+  // Enhance text visibility with better styling
+  if (displayText) {
+    displayText.style.position = 'relative';
+    displayText.style.zIndex = '10'; // Ensure text is above any background elements
+    displayText.style.color = computedStyle.color; // Use original text color
+    displayText.style.textShadow = '0 1px 2px rgba(0,0,0,0.1)'; // Add subtle text shadow for contrast
   }
   
   // Hide the original button completely during display
@@ -169,7 +196,7 @@ function morphResetButton() {
   const originalWidth = rect.width;
   const newWidth = Math.max(originalWidth * 1.3, originalWidth + 40);
   
-  // Animate width expansion
+  // Animate width expansion smoothly
   cleanDisplayButton.style.transition = 'width 0.3s ease-out';
   cleanDisplayButton.style.width = newWidth + 'px';
   
@@ -197,6 +224,7 @@ function morphResetButton() {
     morphTimeout = null;
     
     // Start width transition back
+    displayBtn.style.transition = 'width 0.3s ease-out';
     displayBtn.style.width = origWidth + 'px';
     
     // Fade out "Game Reset" text
