@@ -125,10 +125,20 @@ function stopHoldReset() {
   
   // Don't interrupt the "Game Reset" display phase - let it complete its 3-second duration
   // The morphTimeout will handle reverting the button after the full display time
+  // If "Game Reset" is currently being displayed, don't allow any interruption
+  if (isDisplayingGameReset) {
+    return; // Exit early to prevent any interference with the guaranteed display period
+  }
 }
 
 // Morph the reset button to show "Game Reset" and then back to "Reset"
 function morphResetButton() {
+  // Clear any existing timeout to prevent conflicts
+  if (morphTimeout) {
+    clearTimeout(morphTimeout);
+    morphTimeout = null;
+  }
+  
   // Save original styles
   const originalTransition = holdReset.style.transition;
   const originalWidth = holdReset.style.width;
@@ -152,14 +162,16 @@ function morphResetButton() {
     holdResetText.style.opacity = '1';
     isDisplayingGameReset = true;
     
-    // Always keep "Game Reset" visible for 3 seconds, regardless of user interaction
+    // Always keep "Game Reset" visible for 3 seconds, completely independent of user interaction
+    // This timeout cannot be interrupted by any user action
     morphTimeout = setTimeout(() => {
       revertResetButton();
     }, 3000);
   }, 300);
   
-  // Helper function to revert the button state
+  // Helper function to revert the button state - completely isolated during display phase
   function revertResetButton() {
+    // Clear the timeout reference since we're now reverting
     morphTimeout = null;
     isDisplayingGameReset = false;
     
@@ -183,39 +195,6 @@ function morphResetButton() {
       }, 200);
     }, 200);
   }
-}
-
-// Helper function to revert button state (accessible from stopHoldReset)
-function revertResetButton() {
-  // Don't revert if we're still in the display phase - let the main timeout handle it
-  if (isDisplayingGameReset) {
-    return;
-  }
-  
-  // Start width transition back - find original width from computed styles
-  const computedStyle = window.getComputedStyle(holdReset);
-  const currentWidth = holdReset.offsetWidth;
-  
-  // Estimate original width (reverse the 1.3x expansion)
-  const originalWidth = Math.round(currentWidth / 1.3);
-  holdReset.style.width = originalWidth + 'px';
-  
-  // Fade out "Game Reset" text
-  holdResetText.style.transition = 'opacity 0.2s ease-out';
-  holdResetText.style.opacity = '0';
-  
-  // After text fades out, change back to "Reset" and fade in
-  setTimeout(() => {
-    holdResetText.textContent = 'Reset';
-    holdResetText.style.transition = 'opacity 0.2s ease-in';
-    holdResetText.style.opacity = '1';
-    
-    // Reset all transitions after animation completes
-    setTimeout(() => {
-      holdReset.style.transition = '';
-      holdResetText.style.transition = '';
-    }, 200);
-  }, 200);
 }
 
 export {
