@@ -360,9 +360,12 @@
     position: fixed !important;
     top: 10px !important;
     left: 10px !important;
-    z-index: 85 !important; /* Higher than leaderboard to ensure it's always on top */
+    z-index: 999 !important; /* Extremely high z-index to ensure it's always on top */
     order: unset !important;
     margin: 0 !important;
+    pointer-events: auto !important; /* Ensure it can receive touch events */
+    /* Create new stacking context to ensure proper layering */
+    isolation: isolate !important;
   }
 
   /* Mobile header uniformity - match hamburger menu button height */
@@ -370,7 +373,12 @@
     height: 44px !important;
     width: 44px !important;
     font-size: 14px !important;
-    z-index: 85 !important; /* Ensure button itself is above leaderboard */
+    z-index: 999 !important; /* Ensure button itself is above leaderboard */
+    position: relative !important; /* Ensure proper stacking context */
+    pointer-events: auto !important; /* Ensure it can receive touch events */
+    touch-action: manipulation !important; /* Optimize for touch interaction */
+    /* Create new stacking context to isolate from other elements */
+    isolation: isolate !important;
   }
 
   /* Hide input area on mobile since users should use on-screen keyboard */

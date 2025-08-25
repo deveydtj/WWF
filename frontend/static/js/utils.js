@@ -85,17 +85,43 @@ export function shakeInput(input) {
 
 /**
  * Move the reset button based on viewport width.
+ * On mobile, move to appContainer for proper z-index stacking instead of titleBar.
  */
 export function repositionResetButton() {
   const resetWrapper = document.getElementById('resetWrapper');
   const titleBar = document.getElementById('titleBar');
   const inputArea = document.getElementById('inputArea');
+  const appContainer = document.getElementById('appContainer');
+  
+  // Validate required elements exist
+  if (!resetWrapper || !appContainer || !inputArea) {
+    console.warn('repositionResetButton: Missing required elements', {
+      resetWrapper: !!resetWrapper,
+      appContainer: !!appContainer,
+      inputArea: !!inputArea
+    });
+    return;
+  }
+  
   if (window.innerWidth <= 600) {
-    if (!titleBar.contains(resetWrapper)) {
-      titleBar.insertBefore(resetWrapper, titleBar.firstChild);
+    // Move to appContainer as direct child (not inside inputArea which is hidden on mobile)
+    if (resetWrapper.parentElement !== appContainer) {
+      // Remove from current parent (inputArea or titleBar)
+      if (resetWrapper.parentElement) {
+        resetWrapper.parentElement.removeChild(resetWrapper);
+      }
+      // Add to appContainer as first child for proper z-index stacking
+      appContainer.insertBefore(resetWrapper, appContainer.firstChild);
+      console.log('✅ Moved reset button to appContainer for mobile layout');
     }
-  } else if (!inputArea.contains(resetWrapper)) {
+  } else if (resetWrapper.parentElement !== inputArea) {
+    // Move back to inputArea for desktop
+    if (resetWrapper.parentElement) {
+      resetWrapper.parentElement.removeChild(resetWrapper);
+    }
+    // Add back to inputArea for desktop
     inputArea.appendChild(resetWrapper);
+    console.log('✅ Moved reset button to inputArea for desktop layout');
   }
 }
 
