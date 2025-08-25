@@ -57,6 +57,14 @@
   }
 }
 
+/* Ultra-wide screen stamp positioning adjustment for better clearance */
+@media (min-width: 1800px) {
+  #stampContainer {
+    /* Increase minimum left position to ensure stamps stay clear of expanded panels */
+    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 60px);
+  }
+}
+
 /* Emoji stamps next to board */
 .emoji-stamp {
   position: absolute;
