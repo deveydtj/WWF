@@ -16,6 +16,8 @@ const holdResetText = document.getElementById('holdResetText');
 
 // Reset state tracking
 let holdProgress = null;
+let isButtonPressed = false;
+let morphTimeout = null;
 
 // External dependencies that need to be set
 let gameState = null;
@@ -86,6 +88,7 @@ function updateResetButton() {
 
 // Animate the hold-to-reset progress bar and trigger a reset when complete
 function startHoldReset() {
+  isButtonPressed = true;
   let heldTime = 0;
   const holdDuration = 2000;
   holdResetProgress.style.width = '0%';
@@ -113,10 +116,18 @@ function startHoldReset() {
 }
 
 function stopHoldReset() {
+  isButtonPressed = false;
   clearInterval(holdProgress);
   holdResetProgress.style.transition = 'width 0.15s';
   holdResetProgress.style.width = '0%';
   holdResetProgress.style.opacity = '0.9';
+  
+  // If we're in the middle of a morph animation and user releases, 
+  // immediately start the revert process
+  if (morphTimeout && holdResetText.textContent === 'Game Reset') {
+    clearTimeout(morphTimeout);
+    revertResetButton();
+  }
 }
 
 // Morph the reset button to show "Game Reset" and then back to "Reset"
@@ -142,10 +153,20 @@ function morphResetButton() {
     holdResetText.textContent = 'Game Reset';
     holdResetText.style.transition = 'opacity 0.25s ease-in';
     holdResetText.style.opacity = '1';
+    
+    // Keep "Game Reset" visible for 3 seconds, but only if user is still holding
+    morphTimeout = setTimeout(() => {
+      // Only revert automatically if the user is still holding the button
+      if (isButtonPressed) {
+        revertResetButton();
+      }
+    }, 3000);
   }, 300);
   
-  // Keep "Game Reset" visible for 3 seconds before reverting
-  setTimeout(() => {
+  // Helper function to revert the button state
+  function revertResetButton() {
+    morphTimeout = null;
+    
     // Start width transition back
     holdReset.style.width = originalWidth;
     
@@ -165,7 +186,35 @@ function morphResetButton() {
         holdResetText.style.transition = '';
       }, 200);
     }, 200);
-  }, 3000);
+  }
+}
+
+// Helper function to revert button state (accessible from stopHoldReset)
+function revertResetButton() {
+  // Start width transition back - find original width from computed styles
+  const computedStyle = window.getComputedStyle(holdReset);
+  const currentWidth = holdReset.offsetWidth;
+  
+  // Estimate original width (reverse the 1.3x expansion)
+  const originalWidth = Math.round(currentWidth / 1.3);
+  holdReset.style.width = originalWidth + 'px';
+  
+  // Fade out "Game Reset" text
+  holdResetText.style.transition = 'opacity 0.2s ease-out';
+  holdResetText.style.opacity = '0';
+  
+  // After text fades out, change back to "Reset" and fade in
+  setTimeout(() => {
+    holdResetText.textContent = 'Reset';
+    holdResetText.style.transition = 'opacity 0.2s ease-in';
+    holdResetText.style.opacity = '1';
+    
+    // Reset all transitions after animation completes
+    setTimeout(() => {
+      holdReset.style.transition = '';
+      holdResetText.style.transition = '';
+    }, 200);
+  }, 200);
 }
 
 export {
