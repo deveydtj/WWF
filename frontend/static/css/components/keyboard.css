@@ -15,13 +15,13 @@
   margin-bottom: env(safe-area-inset-bottom, 0px); /* Respect safe areas */
 }
 
-/* Keyboard key text and icon handling for mobile */
+/* Keyboard key text and icon handling - always show icon */
 .key-text {
-  display: inline;
+  display: none;
 }
 
 .key-icon {
-  display: none;
+  display: inline;
 }
 
 /* Mobile devices should match board width exactly */
@@ -34,15 +34,6 @@
     /* Override any scaling transforms from responsive.css to maintain exact board width */
     transform: none !important;
     transform-origin: center center !important;
-  }
-  
-  /* Show icon instead of text on mobile for space efficiency */
-  .key-text {
-    display: none;
-  }
-  
-  .key-icon {
-    display: inline;
   }
 }
 
