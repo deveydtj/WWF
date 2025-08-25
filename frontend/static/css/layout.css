@@ -39,7 +39,7 @@
 
 #centerPanel {
   flex: 1;
-  max-width: calc(var(--board-width) + 100px); /* Allow some buffer around board */
+  max-width: calc(var(--board-width) + 150px); /* Allow buffer around board plus stamp space (40px + 10px gap) */
   min-width: var(--board-width);
   position: relative;
   /* Enhanced panel transitions for responsive scaling */
