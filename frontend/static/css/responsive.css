@@ -860,3 +860,10 @@
 
   /* Very large screens use unified button sizing */
 }
+
+/* Extra-Wide Desktop (≥1800px) - Additional spacing for stamp positioning */
+@media (min-width: 1800px) {
+  #centerPanel {
+    max-width: calc(var(--board-width) + 250px) !important; /* Extra buffer at very wide resolutions to prevent stamp/panel overlap */
+  }
+}

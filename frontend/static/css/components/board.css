@@ -36,9 +36,12 @@
 #stampContainer {
   position: absolute;
   top: 0;
-  left: calc(-40px - 10px); /* Position stamps just to the left of the board within center panel */
+  /* Position stamps exactly 10px to the left of the board edge */
+  /* Calculate from center: 50% - (half board width + 40px stamp width + 10px gap) */
+  /* Add max() to ensure stamps never go completely off-screen */
+  left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 10px);
   pointer-events: none;
-  z-index: var(--z-board-tile);
+  z-index: var(--z-panel-interactive); /* Ensure stamps appear above history panel */
   display: none;
   /* Dynamic width to accommodate any emoji characters */
   width: fit-content; /* Let container grow with emoji content */
@@ -51,6 +54,14 @@
 @media (min-width: 601px) {
   #stampContainer {
     display: block;
+  }
+}
+
+/* Ultra-wide screen stamp positioning adjustment for better clearance */
+@media (min-width: 1800px) {
+  #stampContainer {
+    /* Increase minimum left position to ensure stamps stay clear of expanded panels */
+    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 60px);
   }
 }
 

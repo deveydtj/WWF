@@ -39,7 +39,7 @@
 
 #centerPanel {
   flex: 1;
-  max-width: calc(var(--board-width) + 100px); /* Allow some buffer around board */
+  max-width: calc(var(--board-width) + 200px); /* Allow extra buffer around board plus stamp space to prevent history panel overlap at ultra-wide resolutions */
   min-width: var(--board-width);
   position: relative;
   /* Enhanced panel transitions for responsive scaling */
