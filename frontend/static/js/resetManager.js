@@ -18,6 +18,7 @@ const holdResetText = document.getElementById('holdResetText');
 let holdProgress = null;
 let isButtonPressed = false;
 let morphTimeout = null;
+let isDisplayingGameReset = false;
 
 // External dependencies that need to be set
 let gameState = null;
@@ -122,12 +123,8 @@ function stopHoldReset() {
   holdResetProgress.style.width = '0%';
   holdResetProgress.style.opacity = '0.9';
   
-  // If we're in the middle of a morph animation and user releases, 
-  // immediately start the revert process
-  if (morphTimeout && holdResetText.textContent === 'Game Reset') {
-    clearTimeout(morphTimeout);
-    revertResetButton();
-  }
+  // Don't interrupt the "Game Reset" display phase - let it complete its 3-second duration
+  // The morphTimeout will handle reverting the button after the full display time
 }
 
 // Morph the reset button to show "Game Reset" and then back to "Reset"
@@ -153,19 +150,18 @@ function morphResetButton() {
     holdResetText.textContent = 'Game Reset';
     holdResetText.style.transition = 'opacity 0.25s ease-in';
     holdResetText.style.opacity = '1';
+    isDisplayingGameReset = true;
     
-    // Keep "Game Reset" visible for 3 seconds, but only if user is still holding
+    // Always keep "Game Reset" visible for 3 seconds, regardless of user interaction
     morphTimeout = setTimeout(() => {
-      // Only revert automatically if the user is still holding the button
-      if (isButtonPressed) {
-        revertResetButton();
-      }
+      revertResetButton();
     }, 3000);
   }, 300);
   
   // Helper function to revert the button state
   function revertResetButton() {
     morphTimeout = null;
+    isDisplayingGameReset = false;
     
     // Start width transition back
     holdReset.style.width = originalWidth;
@@ -191,6 +187,11 @@ function morphResetButton() {
 
 // Helper function to revert button state (accessible from stopHoldReset)
 function revertResetButton() {
+  // Don't revert if we're still in the display phase - let the main timeout handle it
+  if (isDisplayingGameReset) {
+    return;
+  }
+  
   // Start width transition back - find original width from computed styles
   const computedStyle = window.getComputedStyle(holdReset);
   const currentWidth = holdReset.offsetWidth;
