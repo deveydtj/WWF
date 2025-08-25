@@ -194,28 +194,34 @@ function morphResetButton() {
   
   // Start the animation sequence
   const originalWidth = rect.width;
-  const newWidth = Math.max(originalWidth * 1.3, originalWidth + 40);
+  const newWidth = Math.max(originalWidth * 1.5, originalWidth + 50); // Slightly more expansion for better visual effect
   
-  // Animate width expansion smoothly
-  cleanDisplayButton.style.transition = 'width 0.3s ease-out';
-  cleanDisplayButton.style.width = newWidth + 'px';
+  // Initial setup - ensure button starts at original size
+  cleanDisplayButton.style.width = originalWidth + 'px';
   
-  // Animate text change: fade out "Reset"
+  // Animate text change: fade out "Reset" first
   if (displayText) {
     displayText.style.transition = 'opacity 0.2s ease-out';
     displayText.style.opacity = '0';
     
-    // Change text and fade in "Game Reset"
+    // After text fades out, start width expansion and text change simultaneously
     setTimeout(() => {
-      displayText.textContent = 'Game Reset';
-      displayText.style.transition = 'opacity 0.25s ease-in';
-      displayText.style.opacity = '1';
+      // Start width expansion with a more noticeable easing
+      cleanDisplayButton.style.transition = 'width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      cleanDisplayButton.style.width = newWidth + 'px';
+      
+      // Change text and fade in "Game Reset" slightly after width animation starts
+      setTimeout(() => {
+        displayText.textContent = 'Game Reset';
+        displayText.style.transition = 'opacity 0.3s ease-in';
+        displayText.style.opacity = '1';
+      }, 100); // Small delay to let width animation start first
       
       // Display "Game Reset" for exactly 3 seconds with no possibility of interruption
       morphTimeout = setTimeout(() => {
         revertResetButton(cleanDisplayButton, displayText, originalWidth);
       }, 3000);
-    }, 300);
+    }, 200);
   }
   
   // Helper function to revert to original button
@@ -223,31 +229,45 @@ function morphResetButton() {
     // Clear the timeout reference since we're now reverting
     morphTimeout = null;
     
-    // Start width transition back
-    displayBtn.style.transition = 'width 0.3s ease-out';
-    displayBtn.style.width = origWidth + 'px';
-    
-    // Fade out "Game Reset" text
+    // Fade out "Game Reset" text first
     if (displayTxt) {
       displayTxt.style.transition = 'opacity 0.2s ease-out';
       displayTxt.style.opacity = '0';
       
-      // After text fades out, show original button and remove display button
+      // After text fades out, change to "Reset" and start width transition
       setTimeout(() => {
-        // Show the original button
-        holdReset.style.visibility = 'visible';
+        displayTxt.textContent = 'Reset';
         
-        // Remove the display button from DOM
-        if (displayBtn.parentNode) {
-          displayBtn.parentNode.removeChild(displayBtn);
-        }
+        // Start width transition back with smooth easing
+        displayBtn.style.transition = 'width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        displayBtn.style.width = origWidth + 'px';
         
-        // Reset any state flags
-        isDisplayingGameReset = false;
-        eventListenersDisabled = false;
+        // Fade in "Reset" text slightly after width animation starts
+        setTimeout(() => {
+          displayTxt.style.transition = 'opacity 0.25s ease-in';
+          displayTxt.style.opacity = '1';
+        }, 100);
+        
+        // Wait for animations to complete before removing display button
+        setTimeout(() => {
+          // Show the original button
+          holdReset.style.visibility = 'visible';
+          
+          // Remove the display button from DOM
+          if (displayBtn.parentNode) {
+            displayBtn.parentNode.removeChild(displayBtn);
+          }
+          
+          // Reset any state flags
+          isDisplayingGameReset = false;
+          eventListenersDisabled = false;
+        }, 400); // Wait for width animation to complete
       }, 200);
     } else {
       // Fallback if no display text found
+      displayBtn.style.transition = 'width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      displayBtn.style.width = origWidth + 'px';
+      
       setTimeout(() => {
         holdReset.style.visibility = 'visible';
         if (displayBtn.parentNode) {
@@ -255,7 +275,7 @@ function morphResetButton() {
         }
         isDisplayingGameReset = false;
         eventListenersDisabled = false;
-      }, 200);
+      }, 400);
     }
   }
 }
