@@ -118,23 +118,14 @@ function startHoldReset() {
 }
 
 function stopHoldReset() {
-  // If event listeners are disabled (during morphing), ignore all mouse/touch events
-  if (eventListenersDisabled) {
-    return;
-  }
+  // During display phase, the original button is hidden so no interaction is possible
+  // This function can be simplified since the display button has no event listeners
   
   isButtonPressed = false;
   clearInterval(holdProgress);
   holdResetProgress.style.transition = 'width 0.15s';
   holdResetProgress.style.width = '0%';
   holdResetProgress.style.opacity = '0.9';
-  
-  // Don't interrupt the "Game Reset" display phase - let it complete its 3-second duration
-  // The morphTimeout will handle reverting the button after the full display time
-  // If "Game Reset" is currently being displayed, don't allow any interruption
-  if (isDisplayingGameReset) {
-    return; // Exit early to prevent any interference with the guaranteed display period
-  }
 }
 
 // Morph the reset button to show "Game Reset" and then back to "Reset"
@@ -145,67 +136,99 @@ function morphResetButton() {
     morphTimeout = null;
   }
   
-  // Disable event listeners during the entire morphing process
-  eventListenersDisabled = true;
+  // Create a duplicate button to display "Game Reset" without any interaction
+  const displayButton = holdReset.cloneNode(true);
+  displayButton.id = 'holdResetDisplay'; // Give it a unique ID
   
-  // Save original styles
-  const originalTransition = holdReset.style.transition;
-  const originalWidth = holdReset.style.width;
+  // Remove all event listeners from the display button by replacing it with a clean clone
+  const cleanDisplayButton = displayButton.cloneNode(true);
   
-  // Add smooth width transition
-  holdReset.style.transition = 'width 0.3s ease-out';
+  // Position the display button exactly over the original button
+  const rect = holdReset.getBoundingClientRect();
+  cleanDisplayButton.style.position = 'fixed';
+  cleanDisplayButton.style.top = rect.top + 'px';
+  cleanDisplayButton.style.left = rect.left + 'px';
+  cleanDisplayButton.style.width = rect.width + 'px';
+  cleanDisplayButton.style.height = rect.height + 'px';
+  cleanDisplayButton.style.zIndex = '1001'; // Higher than original button
+  cleanDisplayButton.style.pointerEvents = 'none'; // Completely disable interaction
   
-  // Increase width to accommodate "Game Reset" text
-  const currentWidth = holdReset.offsetWidth;
-  const newWidth = Math.max(currentWidth * 1.3, currentWidth + 40); // Ensure minimum expansion
-  holdReset.style.width = newWidth + 'px';
+  // Get the text element in the display button
+  const displayText = cleanDisplayButton.querySelector('#holdResetText') || cleanDisplayButton;
+  if (displayText && displayText.id === 'holdResetText') {
+    displayText.id = 'holdResetDisplayText'; // Avoid ID conflicts
+  }
   
-  // Animate text change: fade out "Reset" more slowly
-  holdResetText.style.transition = 'opacity 0.2s ease-out';
-  holdResetText.style.opacity = '0';
+  // Hide the original button completely during display
+  holdReset.style.visibility = 'hidden';
   
-  // Wait longer before changing text and fade in "Game Reset" more deliberately
-  setTimeout(() => {
-    holdResetText.textContent = 'Game Reset';
-    holdResetText.style.transition = 'opacity 0.25s ease-in';
-    holdResetText.style.opacity = '1';
-    isDisplayingGameReset = true;
+  // Insert the display button into the DOM
+  document.body.appendChild(cleanDisplayButton);
+  
+  // Start the animation sequence
+  const originalWidth = rect.width;
+  const newWidth = Math.max(originalWidth * 1.3, originalWidth + 40);
+  
+  // Animate width expansion
+  cleanDisplayButton.style.transition = 'width 0.3s ease-out';
+  cleanDisplayButton.style.width = newWidth + 'px';
+  
+  // Animate text change: fade out "Reset"
+  if (displayText) {
+    displayText.style.transition = 'opacity 0.2s ease-out';
+    displayText.style.opacity = '0';
     
-    // Always keep "Game Reset" visible for 3 seconds, completely independent of user interaction
-    // This timeout cannot be interrupted by any user action
-    morphTimeout = setTimeout(() => {
-      revertResetButton();
-    }, 3000);
-  }, 300);
+    // Change text and fade in "Game Reset"
+    setTimeout(() => {
+      displayText.textContent = 'Game Reset';
+      displayText.style.transition = 'opacity 0.25s ease-in';
+      displayText.style.opacity = '1';
+      
+      // Display "Game Reset" for exactly 3 seconds with no possibility of interruption
+      morphTimeout = setTimeout(() => {
+        revertResetButton(cleanDisplayButton, displayText, originalWidth);
+      }, 3000);
+    }, 300);
+  }
   
-  // Helper function to revert the button state - completely isolated during display phase
-  function revertResetButton() {
+  // Helper function to revert to original button
+  function revertResetButton(displayBtn, displayTxt, origWidth) {
     // Clear the timeout reference since we're now reverting
     morphTimeout = null;
-    isDisplayingGameReset = false;
     
     // Start width transition back
-    holdReset.style.width = originalWidth;
+    displayBtn.style.width = origWidth + 'px';
     
     // Fade out "Game Reset" text
-    holdResetText.style.transition = 'opacity 0.2s ease-out';
-    holdResetText.style.opacity = '0';
-    
-    // After text fades out, change back to "Reset" and fade in
-    setTimeout(() => {
-      holdResetText.textContent = 'Reset';
-      holdResetText.style.transition = 'opacity 0.2s ease-in';
-      holdResetText.style.opacity = '1';
+    if (displayTxt) {
+      displayTxt.style.transition = 'opacity 0.2s ease-out';
+      displayTxt.style.opacity = '0';
       
-      // Reset all transitions after animation completes
+      // After text fades out, show original button and remove display button
       setTimeout(() => {
-        holdReset.style.transition = originalTransition;
-        holdResetText.style.transition = '';
+        // Show the original button
+        holdReset.style.visibility = 'visible';
         
-        // Re-enable event listeners after morphing is completely done
+        // Remove the display button from DOM
+        if (displayBtn.parentNode) {
+          displayBtn.parentNode.removeChild(displayBtn);
+        }
+        
+        // Reset any state flags
+        isDisplayingGameReset = false;
         eventListenersDisabled = false;
       }, 200);
-    }, 200);
+    } else {
+      // Fallback if no display text found
+      setTimeout(() => {
+        holdReset.style.visibility = 'visible';
+        if (displayBtn.parentNode) {
+          displayBtn.parentNode.removeChild(displayBtn);
+        }
+        isDisplayingGameReset = false;
+        eventListenersDisabled = false;
+      }, 200);
+    }
   }
 }
 
