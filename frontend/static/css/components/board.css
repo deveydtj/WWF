@@ -38,7 +38,8 @@
   top: 0;
   /* Position stamps exactly 10px to the left of the board edge */
   /* Calculate from center: 50% - (half board width + 40px stamp width + 10px gap) */
-  left: calc(50% - (var(--board-width) / 2) - 40px - 10px);
+  /* Add max() to ensure stamps never go completely off-screen */
+  left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 10px);
   pointer-events: none;
   z-index: var(--z-board-tile);
   display: none;
