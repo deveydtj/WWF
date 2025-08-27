@@ -54,6 +54,14 @@
   }
 }
 
+/* Medium screen stamp positioning fix to prevent overlap with history panel */
+@media (min-width: 601px) and (max-width: 900px) {
+  #stampContainer {
+    /* Use a safer left positioning to prevent overlap with history panel */
+    left: max(10px, calc(50% - var(--board-width) / 2 - 60px));
+  }
+}
+
 /* Emoji stamps next to board */
 .emoji-stamp {
   position: absolute;
