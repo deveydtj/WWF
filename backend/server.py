@@ -712,10 +712,39 @@ def guess_word():
         emoji not in current_state.leaderboard
         or current_state.leaderboard[emoji].get("player_id") != player_id
     ):
-        return (
-            jsonify({"status": "error", "msg": "Please pick an emoji before playing."}),
-            403,
-        )
+        # Check if this might be a player reconnecting after server restart
+        # If the emoji exists in leaderboard but player_id doesn't match,
+        # and the IP matches the emoji's registered IP, re-register the player
+        # Additional safety: both player_ids should look like UUIDs (server restart scenario)
+        if (emoji in current_state.leaderboard and 
+            current_state.leaderboard[emoji].get("ip") == ip and
+            player_id is not None and
+            len(player_id) == 32 and  # UUID hex string length
+            all(c in '0123456789abcdef' for c in player_id)):  # Valid hex chars
+            old_player_id = current_state.leaderboard[emoji].get("player_id")
+            # Also check that old player_id looks like a UUID for safety
+            if (old_player_id and len(old_player_id) == 32 and 
+                all(c in '0123456789abcdef' for c in old_player_id)):
+                # This looks like a server restart scenario - player exists but player_id doesn't match
+                # Update the player_id to re-register them automatically
+                current_state.leaderboard[emoji]["player_id"] = player_id
+                # Update player_map
+                current_state.player_map.pop(old_player_id, None)
+                current_state.player_map[player_id] = emoji
+                logger.info(
+                    "Auto-reconnected player %s (old_id=%s, new_id=%s) after server restart", 
+                    emoji, old_player_id, player_id
+                )
+            else:
+                return (
+                    jsonify({"status": "error", "msg": "Please pick an emoji before playing."}),
+                    403,
+                )
+        else:
+            return (
+                jsonify({"status": "error", "msg": "Please pick an emoji before playing."}),
+                403,
+            )
 
     current_state.leaderboard[emoji]["last_active"] = now
 
@@ -847,7 +876,26 @@ def select_hint():
         emoji not in current_state.leaderboard
         or current_state.leaderboard[emoji].get("player_id") != player_id
     ):
-        return jsonify({"status": "error", "msg": "Invalid player."}), 403
+        # Check if this might be a player reconnecting after server restart
+        if (emoji in current_state.leaderboard and 
+            current_state.leaderboard[emoji].get("ip") == ip and
+            player_id is not None and
+            len(player_id) == 32 and  # UUID hex string length
+            all(c in '0123456789abcdef' for c in player_id)):  # Valid hex chars
+            old_player_id = current_state.leaderboard[emoji].get("player_id")
+            if (old_player_id and len(old_player_id) == 32 and 
+                all(c in '0123456789abcdef' for c in old_player_id)):
+                # Auto-reconnect the player
+                current_state.leaderboard[emoji]["player_id"] = player_id
+                current_state.player_map.pop(old_player_id, None)
+                current_state.player_map[player_id] = emoji
+                logger.info(
+                    "Auto-reconnected player %s for hint selection after server restart", emoji
+                )
+            else:
+                return jsonify({"status": "error", "msg": "Invalid player."}), 403
+        else:
+            return jsonify({"status": "error", "msg": "Invalid player."}), 403
 
     if emoji not in current_state.daily_double_pending:
         return jsonify({"status": "error", "msg": "No hint available."}), 400
@@ -894,7 +942,27 @@ def chat():
             emoji not in current_state.leaderboard
             or current_state.leaderboard[emoji].get("player_id") != player_id
         ):
-            return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
+            # Check if this might be a player reconnecting after server restart
+            ip = get_client_ip()
+            if (emoji in current_state.leaderboard and 
+                current_state.leaderboard[emoji].get("ip") == ip and
+                player_id is not None and
+                len(player_id) == 32 and  # UUID hex string length
+                all(c in '0123456789abcdef' for c in player_id)):  # Valid hex chars
+                old_player_id = current_state.leaderboard[emoji].get("player_id")
+                if (old_player_id and len(old_player_id) == 32 and 
+                    all(c in '0123456789abcdef' for c in old_player_id)):
+                    # Auto-reconnect the player
+                    current_state.leaderboard[emoji]["player_id"] = player_id
+                    current_state.player_map.pop(old_player_id, None)
+                    current_state.player_map[player_id] = emoji
+                    logger.info(
+                        "Auto-reconnected player %s for chat after server restart", emoji
+                    )
+                else:
+                    return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
+            else:
+                return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
             
         # Rate limiting: 1 message per second per player
         last_message_time = current_state.chat_rate_limits.get(player_id, 0)
@@ -1139,7 +1207,23 @@ def leave_lobby():
     # Verify player_id matches
     stored_player_id = current_state.leaderboard[emoji].get("player_id")
     if stored_player_id != player_id:
-        return jsonify({"status": "error", "msg": "Invalid player credentials"}), 403
+        # Check if this might be a player reconnecting after server restart
+        ip = get_client_ip()
+        if (current_state.leaderboard[emoji].get("ip") == ip and
+            player_id is not None and
+            len(player_id) == 32 and  # UUID hex string length
+            all(c in '0123456789abcdef' for c in player_id) and  # Valid hex chars
+            stored_player_id and len(stored_player_id) == 32 and 
+            all(c in '0123456789abcdef' for c in stored_player_id)):
+            # Auto-reconnect the player before allowing them to leave
+            current_state.leaderboard[emoji]["player_id"] = player_id
+            current_state.player_map.pop(stored_player_id, None)
+            current_state.player_map[player_id] = emoji
+            logger.info(
+                "Auto-reconnected player %s for leave request after server restart", emoji
+            )
+        else:
+            return jsonify({"status": "error", "msg": "Invalid player credentials"}), 403
 
     # Remove the player from the lobby
     ip = current_state.leaderboard[emoji]["ip"]

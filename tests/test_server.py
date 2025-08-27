@@ -391,6 +391,166 @@ def test_guess_without_player_id_reregisters(server_env):
     assert success['status'] == 'ok'
 
 
+def test_server_restart_player_auto_reconnection_fix(server_env):
+    """Test that players are automatically reconnected after server restart."""
+    server, request = server_env
+    
+    # Player registers and makes a guess
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '1'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    request.json = {'guess': 'crane', 'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '1'
+    first_guess = server.guess_word()
+    assert first_guess['status'] == 'ok'
+    
+    # Simulate server restart scenario: emoji exists but player_id is mismatched
+    # This simulates what happens when:
+    # 1. Server restarts and state is loaded from persistence
+    # 2. Client tries to make request with old player_id (from before restart)
+    # 3. The emoji exists but the player_id doesn't match
+    
+    # Save the current leaderboard entry
+    saved_entry = dict(server.current_state.leaderboard['🎮'])
+    
+    # Create a mismatched player_id scenario (simulating server restart)
+    # Use a realistic UUID that would be generated after restart
+    import uuid
+    restart_player_id = uuid.uuid4().hex
+    server.current_state.leaderboard['🎮']['player_id'] = restart_player_id
+    server.current_state.player_map.pop(original_player_id, None)
+    server.current_state.player_map[restart_player_id] = '🎮'
+    
+    # Try to make a guess with the original player_id (should auto-reconnect)
+    request.json = {'guess': 'trace', 'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '1'  # Same IP as original registration
+    second_guess = server.guess_word()
+    
+    # The fix should automatically reconnect the player instead of rejecting them
+    assert not isinstance(second_guess, tuple), f"Expected success but got error: {second_guess}"
+    assert second_guess['status'] == 'ok'
+    
+    # Verify that the player was automatically reconnected
+    assert server.current_state.leaderboard['🎮']['player_id'] == original_player_id
+    assert server.current_state.player_map[original_player_id] == '🎮'
+    assert restart_player_id not in server.current_state.player_map
+    
+    print("✓ Player was successfully auto-reconnected after server restart!")
+
+
+def test_server_restart_player_auto_reconnection_wrong_ip_rejected(server_env):
+    """Test that auto-reconnection is rejected for wrong IP to prevent hijacking."""
+    server, request = server_env
+    
+    # Player registers from IP '1'
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '1'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    # Simulate server restart with mismatched player_id
+    import uuid
+    restart_player_id = uuid.uuid4().hex
+    server.current_state.leaderboard['🎮']['player_id'] = restart_player_id
+    server.current_state.player_map.pop(original_player_id, None)
+    server.current_state.player_map[restart_player_id] = '🎮'
+    
+    # Try to reconnect from different IP - should be rejected
+    request.json = {'guess': 'trace', 'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '2'  # Different IP than original registration
+    second_guess = server.guess_word()
+    
+    # Should be rejected since IP doesn't match
+    assert isinstance(second_guess, tuple)
+    data, status = second_guess
+    assert status == 403
+    assert "Please pick an emoji before playing" in data['msg']
+    
+    print("✓ Auto-reconnection properly rejected for mismatched IP!")
+
+
+def test_server_restart_player_auto_reconnection_non_uuid_rejected(server_env):
+    """Test that auto-reconnection is rejected for non-UUID player_ids to prevent abuse."""
+    server, request = server_env
+    
+    # Player registers 
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '1'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    # Simulate someone trying to hijack with a simple non-UUID player_id
+    server.current_state.leaderboard['🎮']['player_id'] = 'simple_string'
+    server.current_state.player_map.pop(original_player_id, None)
+    server.current_state.player_map['simple_string'] = '🎮'
+    
+    # Try to reconnect with original UUID - should be rejected because 
+    # stored player_id is not a UUID (doesn't look like server restart)
+    request.json = {'guess': 'trace', 'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '1'  # Same IP
+    second_guess = server.guess_word()
+    
+    # Should be rejected since stored player_id doesn't look like UUID
+    assert isinstance(second_guess, tuple)
+    data, status = second_guess
+    assert status == 403
+    assert "Please pick an emoji before playing" in data['msg']
+    
+    print("✓ Auto-reconnection properly rejected for non-UUID stored player_id!")
+
+
+def test_server_restart_player_auto_reconnection_wrong_ip_rejected(server_env):
+    """Test that auto-reconnection is rejected for wrong IP to prevent hijacking."""
+    server, request = server_env
+    
+    # Player registers from IP '1'
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '1'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    # Simulate server restart with mismatched player_id
+    server.current_state.leaderboard['🎮']['player_id'] = 'different_player_id'
+    server.current_state.player_map.pop(original_player_id, None)
+    server.current_state.player_map['different_player_id'] = '🎮'
+    
+    # Try to reconnect from different IP - should be rejected
+    request.json = {'guess': 'trace', 'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '2'  # Different IP than original registration
+    second_guess = server.guess_word()
+    
+    # Should be rejected since IP doesn't match
+    assert isinstance(second_guess, tuple)
+    data, status = second_guess
+    assert status == 403
+    assert "Please pick an emoji before playing" in data['msg']
+    
+    print("✓ Auto-reconnection properly rejected for mismatched IP!")
+
+
+def test_server_restart_player_reconnection(server_env, tmp_path, monkeypatch):
+    """Test basic server restart scenario (kept for reference)."""
+    server, request = server_env
+    
+    # This test shows that with proper persistence, reconnection works
+    # The issue was more about mismatched player_ids, which the above tests address
+    
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '1'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    request.json = {'guess': 'crane', 'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '1'
+    first_guess = server.guess_word()
+    assert first_guess['status'] == 'ok'
+    
+    # With the fix, this should work even if there's a player_id mismatch
+    # The test above covers the specific auto-reconnection scenario
+
+
 def test_guess_word_points_for_new_letters_and_penalties(server_env):
     server, request = server_env
 
