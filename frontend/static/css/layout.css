@@ -30,16 +30,18 @@
 #leftPanel {
   width: 280px;
   min-width: 280px;
+  height: calc(100vh - 140px); /* Explicit height for proper content sizing */
   position: relative;
   /* Enhanced panel transitions with transform support */
   transition: width 0.3s ease-in-out, 
+              height 0.3s ease-in-out,
               opacity 0.3s ease-in-out,
               transform 0.3s ease-in-out;
 }
 
 #centerPanel {
   flex: 1;
-  max-width: calc(var(--board-width) + 200px); /* Allow extra buffer around board plus stamp space to prevent history panel overlap at ultra-wide resolutions */
+  max-width: calc(var(--board-width) + 80px); /* Reduced buffer since stamps are now in leftPanel */
   min-width: var(--board-width);
   position: relative;
   /* Enhanced panel transitions for responsive scaling */
@@ -52,9 +54,11 @@
 #rightPanel {
   width: 280px;
   min-width: 280px;
+  height: calc(100vh - 140px); /* Explicit height for proper content sizing */
   position: relative;
   /* Enhanced panel transitions with transform support */
   transition: width 0.3s ease-in-out, 
+              height 0.3s ease-in-out,
               opacity 0.3s ease-in-out,
               transform 0.3s ease-in-out;
 }

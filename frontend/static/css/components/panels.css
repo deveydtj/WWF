@@ -445,15 +445,18 @@ body.players-open #playerSidebar {
   }
   
   /* Large screen panel positioning - align with board level and add gaps */
+  /* History panel positioning disabled since stamps are now inside leftPanel */
+  /*
   body #historyBox {
     position: absolute !important;
-    top: 140px !important; /* Move down to align with board level */
-    left: calc(50% - var(--board-width) / 2 - 365px) !important; /* Move further left to give room for stamps */
+    top: 140px !important;
+    left: calc(50% - var(--board-width) / 2 - 365px) !important;
     right: auto !important;
-    width: 215px !important; /* Reduced to ensure 5px gap with stamp container */
+    width: 215px !important;
     max-height: calc(100vh - 240px) !important;
     transform-origin: left center !important;
   }
+  */
   
   body #definitionBox {
     position: absolute !important;
