@@ -39,7 +39,7 @@
   display: none;
   /* Position to the right side of leftPanel */
   top: 20px; /* Align with history panel vertical position */
-  right: 10px; /* 10px gap from right edge of leftPanel */
+  right: 15px; /* 15px from right edge to create 5px gap from history panel */
   pointer-events: none;
   z-index: var(--z-panel-interactive); /* Ensure stamps appear above other elements */
   /* Dynamic width to accommodate any emoji characters */
