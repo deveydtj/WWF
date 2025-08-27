@@ -63,7 +63,7 @@
 
 /* Panel positioning and layout */
 #historyBox {
-  width: 260px;
+  width: 220px; /* Reduced from 260px to allow space for stamps */
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;

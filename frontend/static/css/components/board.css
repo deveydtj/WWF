@@ -34,12 +34,12 @@
 
 /* Board stamps and confetti */
 #stampContainer {
-  /* Position stamps between left panel and center panel */
+  /* Position stamps within left panel to the right of history panel */
   position: absolute;
   display: none;
-  /* Position in gap between leftPanel and centerPanel */
-  top: 90px; /* Align with board vertical position */
-  left: calc(280px + 10px); /* Position just right of leftPanel (280px) with 10px gap */
+  /* Position to the right side of leftPanel */
+  top: 20px; /* Align with history panel vertical position */
+  right: 10px; /* 10px gap from right edge of leftPanel */
   pointer-events: none;
   z-index: var(--z-panel-interactive); /* Ensure stamps appear above other elements */
   /* Dynamic width to accommodate any emoji characters */
@@ -51,14 +51,6 @@
 @media (min-width: 601px) {
   #stampContainer {
     display: block;
-  }
-}
-
-/* Ultra-wide screen stamp positioning adjustment for better clearance */
-@media (min-width: 1800px) {
-  #stampContainer {
-    /* Maintain position relative to left panel on ultra-wide screens */
-    left: calc(280px + 20px); /* Increase gap to 20px on ultra-wide screens */
   }
 }
 
