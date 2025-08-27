@@ -34,12 +34,12 @@
 
 /* Board stamps and confetti */
 #stampContainer {
-  /* Position stamps within left panel to the right of history panel */
+  /* Position stamps within center panel to the left of the board */
   position: absolute;
   display: none;
-  /* Position to the right side of leftPanel */
-  top: 20px; /* Align with history panel vertical position */
-  right: 20px; /* 20px from right edge ensures 5px gap from 215px history panel */
+  /* Position to the left of the board area */
+  top: 0; /* Align with board area top */
+  left: calc(50% - var(--board-width) / 2 - 60px); /* 60px to the left of board for proper gap */
   pointer-events: none;
   z-index: var(--z-panel-interactive); /* Ensure stamps appear above other elements */
   /* Dynamic width to accommodate any emoji characters */
