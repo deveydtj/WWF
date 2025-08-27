@@ -28,8 +28,8 @@
 }
 
 #leftPanel {
-  width: 280px;
-  min-width: 280px;
+  width: 330px;
+  min-width: 330px;
   position: relative;
   /* Enhanced panel transitions with transform support */
   transition: width 0.3s ease-in-out, 

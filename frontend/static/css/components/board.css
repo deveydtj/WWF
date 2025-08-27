@@ -37,9 +37,9 @@
   /* Position stamps within the left panel, beside the history panel */
   position: absolute;
   display: none;
-  /* Position to align with board height */
+  /* Position to align with board height and beside history panel */
   top: 90px; /* Align with board vertical position */
-  right: 20px; /* Position from right edge of left panel */
+  right: 10px; /* Position from right edge of left panel with gap */
   pointer-events: none;
   z-index: var(--z-panel-interactive); /* Ensure stamps appear above history panel */
   /* Dynamic width to accommodate any emoji characters */
