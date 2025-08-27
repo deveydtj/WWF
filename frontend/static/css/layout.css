@@ -4,13 +4,12 @@
 
 /* Three-panel layout structure for non-mobile */
 #gameLayoutContainer {
-  display: flex;
+  position: relative;
   width: 100%;
   height: 100%;
-  gap: 10px;
+  display: flex;
+  justify-content: center; /* Center the center panel */
   align-items: flex-start;
-  justify-content: center;
-  position: relative;
   /* Enhanced transitions for smooth layout mode changes */
   transition: flex-direction 0.3s ease-in-out, 
               gap 0.3s ease-in-out,
@@ -31,7 +30,9 @@
   width: 280px;
   min-width: 280px;
   height: calc(100vh - 140px); /* Explicit height for proper content sizing */
-  position: relative;
+  position: absolute;
+  right: calc(100% + 5px); /* Position 5px to the left of center panel */
+  top: 0;
   /* Enhanced panel transitions with transform support */
   transition: width 0.3s ease-in-out, 
               height 0.3s ease-in-out,
@@ -55,7 +56,9 @@
   width: 280px;
   min-width: 280px;
   height: calc(100vh - 140px); /* Explicit height for proper content sizing */
-  position: relative;
+  position: absolute;
+  left: calc(100% + 5px); /* Position 5px to the right of center panel */
+  top: 0;
   /* Enhanced panel transitions with transform support */
   transition: width 0.3s ease-in-out, 
               height 0.3s ease-in-out,
