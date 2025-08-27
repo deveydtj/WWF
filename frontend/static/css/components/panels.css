@@ -450,7 +450,7 @@ body.players-open #playerSidebar {
     top: 140px !important; /* Move down to align with board level */
     left: calc(50% - var(--board-width) / 2 - 365px) !important; /* Move further left to give room for stamps */
     right: auto !important;
-    width: 220px !important; /* Reduced to match layout.css and allow room for stamps */
+    width: 215px !important; /* Reduced to ensure 5px gap with stamp container */
     max-height: calc(100vh - 240px) !important;
     transform-origin: left center !important;
   }
