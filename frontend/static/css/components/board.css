@@ -35,7 +35,10 @@
 /* Board stamps and confetti */
 #stampContainer {
   position: absolute;
-  top: 0;
+  /* Position stamps to align with the boardArea top */
+  /* The boardArea starts at 132px from centerPanel top (75px), 
+     so we need to offset by 57px to align with the board */
+  top: 57px; /* Calculated offset to align with board position */
   /* Position stamps exactly 10px to the left of the board edge */
   /* Calculate from center: 50% - (half board width + 40px stamp width + 10px gap) */
   /* Add max() to ensure stamps never go completely off-screen */
