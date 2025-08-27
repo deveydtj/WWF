@@ -34,22 +34,16 @@
 
 /* Board stamps and confetti */
 #stampContainer {
+  /* Position stamps within the left panel, beside the history panel */
   position: absolute;
-  /* Position stamps to align with the boardArea top */
-  /* The boardArea starts at 132px from centerPanel top (75px), 
-     so we need to offset by 57px to align with the board */
-  top: 57px; /* Calculated offset to align with board position */
-  /* Position stamps exactly 10px to the left of the board edge */
-  /* Calculate from center: 50% - (half board width + 40px stamp width + 10px gap) */
-  /* Add max() to ensure stamps never go completely off-screen */
-  left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 10px);
+  display: none;
+  /* Position to align with board height */
+  top: 90px; /* Align with board vertical position */
+  right: 20px; /* Position from right edge of left panel */
   pointer-events: none;
   z-index: var(--z-panel-interactive); /* Ensure stamps appear above history panel */
-  display: none;
   /* Dynamic width to accommodate any emoji characters */
-  width: fit-content; /* Let container grow with emoji content */
-  min-width: 40px; /* Minimum width to fit in available space */
-  max-width: 40px; /* Constrain width to fit in limited space */
+  width: 40px; /* Fixed width for stamps */
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
 }
 
