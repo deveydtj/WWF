@@ -4,11 +4,11 @@
 
 /* Option toggles and menu */
 #optionsToggle {
-  font-size: 28px;
+  font-size: 24px; /* Standardized font size for consistent emoji sizing */
   background: var(--bg-color);
   border: none;
   cursor: pointer;
-  padding: 5px;
+  padding: 0; /* Remove padding to ensure exact centering */
   color: var(--text-color-light);
   line-height: 1;
   position: absolute;
@@ -26,11 +26,11 @@
 }
 
 #chatNotify {
-  font-size: 26px;
+  font-size: 24px; /* Standardized font size for consistent emoji sizing */
   background: var(--bg-color);
   border: none;
   cursor: pointer;
-  padding: 5px;
+  padding: 0; /* Remove padding to ensure exact centering */
   color: var(--text-color-light);
   line-height: 1;
   position: absolute;
