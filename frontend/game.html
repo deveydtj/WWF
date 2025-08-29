@@ -127,12 +127,7 @@
       </div>
     </div>
 
-    <!-- Game History Panel -->
-    <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
-      <button id="historyClose" class="close-btn">✖</button>
-      <h3 id="historyHeading">History</h3>
-      <ul id="historyList"></ul>
-    </div>
+
 
     <!-- Leaderboard moved to lobbyHeader -->
     <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
@@ -168,7 +163,12 @@
     <div id="gameLayoutContainer">
       <!-- Left Panel -->
       <div id="leftPanel" class="layout-panel">
-        <!-- History box will be positioned here for non-mobile -->
+        <!-- History panel positioned here for non-mobile -->
+        <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
+          <button id="historyClose" class="close-btn">✖</button>
+          <h3 id="historyHeading">History</h3>
+          <ul id="historyList"></ul>
+        </div>
       </div>
 
       <!-- Center Panel -->
