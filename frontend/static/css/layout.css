@@ -31,7 +31,7 @@
   min-width: 280px;
   height: calc(100vh - 140px); /* Explicit height for proper content sizing */
   position: absolute;
-  right: calc(100% + 5px); /* Position 5px to the left of center panel */
+  right: 5px; /* Position 5px to the left of center panel */
   top: 0;
   /* Enhanced panel transitions with transform support */
   transition: width 0.3s ease-in-out, 
