@@ -14,8 +14,8 @@
   position: absolute;
   top: 0;
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
-  width: 38px; /* Constrain width to prevent expanding too wide */
-  height: 38px; /* Match width for consistent button size */
+  width: 40px; /* Constrain width to prevent expanding too wide */
+  height: 40px; /* Match width for consistent button size */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,8 +36,8 @@
   position: absolute;
   top: 36px;
   left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
-  width: 38px; /* Constrain width to match options button */
-  height: 38px; /* Match width for consistent button size */
+  width: 40px; /* Constrain width to match options button */
+  height: 40px; /* Match width for consistent button size */
   display: flex;
   align-items: center;
   justify-content: center;
