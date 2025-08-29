@@ -42,7 +42,7 @@
 
 #centerPanel {
   flex: 1;
-  max-width: calc(var(--board-width) + 140px); /* Increased buffer to account for 60px stamp positioning + 80px original buffer */
+  max-width: calc(var(--board-width) + 180px); /* Increased buffer to properly contain 60px stamp offset + 40px stamp width + adequate spacing */
   min-width: var(--board-width);
   position: relative;
   /* Enhanced panel transitions for responsive scaling */

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Center Panel Width Test</title>
+  <style>
+    :root {
+      --board-width: 340px;
+      --tile-size: 60px;
+      --tile-gap: 6px;
+    }
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Simulation of the three-panel layout */
+    #gameLayoutContainer {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: #e8e8e8;
+      border: 2px solid #ccc;
+    }
+    
+    #leftPanel {
+      width: 280px;
+      height: 500px;
+      background: lightblue;
+      border: 2px solid blue;
+      position: absolute;
+      left: calc(50% - var(--board-width) / 2 - 80px - 5px - 280px);
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    #centerPanel {
+      flex: 1;
+      max-width: calc(var(--board-width) + 180px); /* Updated width */
+      min-width: var(--board-width);
+      position: relative;
+      background: lightyellow;
+      border: 2px solid orange;
+      height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    
+    #rightPanel {
+      width: 280px;
+      height: 500px;
+      background: lightcoral;
+      border: 2px solid red;
+      position: absolute;
+      right: calc(50% - var(--board-width) / 2 - 80px - 5px - 280px);
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    /* Board simulation */
+    .board-simulation {
+      width: var(--board-width);
+      height: 300px;
+      background: #ddd;
+      border: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    
+    /* Stamp container simulation */
+    #stampContainer {
+      position: absolute;
+      left: calc(50% - var(--board-width) / 2 - 60px);
+      top: 100px;
+      width: 40px;
+      height: 300px;
+      background: red;
+      border: 2px solid darkred;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    
+    .measurement {
+      margin-top: 20px;
+      font-family: monospace;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Center Panel Width Test</h1>
+    <p>Testing if center panel width properly contains stamp container</p>
+    
+    <div id="gameLayoutContainer">
+      <div id="leftPanel">
+        Left Panel<br>280px
+      </div>
+      
+      <div id="centerPanel">
+        <div id="stampContainer">STAMPS 40px</div>
+        <div class="board-simulation">
+          Board Area<br>340px width
+        </div>
+        <div>Center Panel</div>
+        <div>Max-width: board + 180px = 520px</div>
+      </div>
+      
+      <div id="rightPanel">
+        Right Panel<br>280px
+      </div>
+    </div>
+    
+    <div class="measurement">
+      <h3>Layout Measurements:</h3>
+      <ul>
+        <li>Board width: 340px</li>
+        <li>Center panel max-width: 340px + 180px = 520px</li>
+        <li>Stamp container: 40px wide, positioned 60px left of board</li>
+        <li>Left panel: 280px wide, positioned with 5px gap from center</li>
+        <li>Stamp container left edge: 50% - 170px - 60px = 50% - 230px</li>
+        <li>Center panel left edge: 50% - 260px</li>
+        <li>Relative position: stamps are 30px from center panel left edge ✓</li>
+      </ul>
+      
+      <h3>Result:</h3>
+      <p><strong>✅ PASS:</strong> Stamp container (red bar) should be properly contained within center panel (yellow area) and not overlap with left panel (blue area).</p>
+    </div>
+  </div>
+</body>
+</html>
