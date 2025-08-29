@@ -5,7 +5,7 @@
 /* Option toggles and menu */
 #optionsToggle {
   font-size: 28px;
-  background: none;
+  background: var(--bg-color);
   border: none;
   cursor: pointer;
   padding: 5px;
@@ -19,11 +19,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+  transition: color 0.2s ease, box-shadow 0.2s ease;
 }
 
 #chatNotify {
   font-size: 26px;
-  background: none;
+  background: var(--bg-color);
   border: none;
   cursor: pointer;
   padding: 5px;
@@ -39,8 +43,22 @@
   justify-content: center;
   opacity: 1;
   transform: scale(1);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, color 0.2s ease, box-shadow 0.2s ease;
   z-index: var(--z-panel-notification);
+  border-radius: 8px;
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+}
+
+#optionsToggle:hover,
+#chatNotify:hover {
+  color: var(--text-color);
+}
+
+#optionsToggle:active,
+#chatNotify:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
 }
 
 #chatNotify.visible {
