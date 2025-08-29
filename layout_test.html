@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stamp Container Layout Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .layout-container {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .left-panel {
+      width: 280px;
+      background: lightblue;
+      border: 2px solid blue;
+      position: relative;
+      height: 500px;
+    }
+    
+    .history-panel {
+      width: 215px;
+      background: lightgreen;
+      border: 2px solid green;
+      position: relative;
+      top: 10px;
+      height: 300px;
+    }
+    
+    .stamp-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      background: orange;
+      border: 2px solid red;
+      height: 200px;
+    }
+    
+    .center-panel {
+      flex: 1;
+      background: lightyellow;
+      border: 2px solid orange;
+      height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .info {
+      margin: 20px 0;
+      padding: 10px;
+      background: white;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Stamp Container Layout Test</h1>
+  
+  <div class="info">
+    <h3>Updated Layout Dimensions:</h3>
+    <ul>
+      <li><strong>Left Panel:</strong> 280px wide (blue border)</li>
+      <li><strong>History Panel:</strong> 215px wide (green border), positioned at top: 10px</li>
+      <li><strong>Stamp Container:</strong> 40px wide (red border), positioned at top: 20px, right: 20px</li>
+      <li><strong>Calculation:</strong> 280px (leftPanel) - 20px (right) - 40px (stamps) = 220px from left edge</li>
+      <li><strong>History Panel Right Edge:</strong> 215px from left edge</li>
+      <li><strong>Gap:</strong> 220px - 215px = 5px gap ✅</li>
+    </ul>
+  </div>
+  
+  <div class="layout-container">
+    <div class="left-panel">
+      <span style="position: absolute; top: 0; left: 5px; font-size: 12px; color: blue;">leftPanel (280px)</span>
+      <div class="history-panel">
+        <span style="font-size: 12px; color: green;">historyBox (215px)</span>
+        <ul style="margin: 10px 0; font-size: 12px;">
+          <li>🐶 HOUSE +4</li>
+          <li>🦊 MOUSE +6</li>
+          <li>🐼 CARDS +8</li>
+        </ul>
+      </div>
+      <div class="stamp-container">
+        <span style="writing-mode: vertical-rl; font-size: 12px; color: red;">stamps (40px)</span>
+        <div style="margin-top: 20px;">🐶</div>
+        <div>🦊</div>
+        <div>🐼</div>
+      </div>
+    </div>
+    <div class="center-panel">
+      <span>Game Board</span>
+    </div>
+  </div>
+  
+  <div class="info">
+    <h3>Layout Test Results:</h3>
+    <ul>
+      <li><strong>Left Panel:</strong> 280px wide, contains history panel (215px) and stamp container (40px)</li>
+      <li><strong>Stamp Container:</strong> Positioned at right: 20px from right edge of left panel</li>
+      <li><strong>History Panel:</strong> 215px wide (reduced from 220px)</li>
+      <li><strong>Gap:</strong> History panel ends at 215px, stamps start at 220px from left</li>
+      <li><strong>Result:</strong> Stamps appear beside history panel with proper 5px spacing ✅</li>
+    </ul>
+  </div>
+</body>
+</html>

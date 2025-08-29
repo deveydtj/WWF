@@ -34,19 +34,16 @@
 
 /* Board stamps and confetti */
 #stampContainer {
+  /* Position stamps within center panel to the left of the board */
   position: absolute;
-  top: 0;
-  /* Position stamps exactly 10px to the left of the board edge */
-  /* Calculate from center: 50% - (half board width + 40px stamp width + 10px gap) */
-  /* Add max() to ensure stamps never go completely off-screen */
-  left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 10px);
-  pointer-events: none;
-  z-index: var(--z-panel-interactive); /* Ensure stamps appear above history panel */
   display: none;
+  /* Position to the left of the board area */
+  top: 0; /* Align with board area top */
+  left: calc(50% - var(--board-width) / 2 - 60px); /* 60px to the left of board for proper gap */
+  pointer-events: none;
+  z-index: var(--z-panel-interactive); /* Ensure stamps appear above other elements */
   /* Dynamic width to accommodate any emoji characters */
-  width: fit-content; /* Let container grow with emoji content */
-  min-width: 40px; /* Minimum width to fit in available space */
-  max-width: 40px; /* Constrain width to fit in limited space */
+  width: 40px; /* Fixed width for stamps */
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
 }
 
@@ -57,11 +54,11 @@
   }
 }
 
-/* Ultra-wide screen stamp positioning adjustment for better clearance */
-@media (min-width: 1800px) {
+/* Medium screen stamp positioning fix to prevent overlap with history panel */
+@media (min-width: 601px) and (max-width: 900px) {
   #stampContainer {
-    /* Increase minimum left position to ensure stamps stay clear of expanded panels */
-    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 60px);
+    /* Use a safer left positioning to prevent overlap with history panel */
+    left: max(10px, calc(50% - var(--board-width) / 2 - 60px));
   }
 }
 
