@@ -184,10 +184,13 @@ class EventListenersManager {
 
     if (optionsToggle && optionsMenu) {
       optionsToggle.addEventListener('click', () => {
-        if (optionsMenu.style.display === 'flex' || optionsMenu.style.display === 'block') {
+        if (optionsMenu.style.display === 'flex' || optionsMenu.style.display === 'block' || optionsMenu.classList.contains('show')) {
           closeOptionsMenu();
           return;
         }
+        
+        // Add the "show" class required by ModalAccessibilityManager
+        optionsMenu.classList.add('show');
         
         const currentMode = document.body.dataset.mode;
         if (currentMode === 'medium') {
@@ -201,6 +204,11 @@ class EventListenersManager {
         } else {
           optionsMenu.style.display = 'block';
           positionContextMenu(optionsMenu, optionsToggle);
+        }
+        
+        // Call modalAccessibilityManager to set modal as visible
+        if (window.modalAccessibilityManager) {
+          window.modalAccessibilityManager.setModalVisible(optionsMenu);
         }
         
         openDialog(optionsMenu);

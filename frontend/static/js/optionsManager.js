@@ -32,6 +32,20 @@ function resetOptionsMenuPositioning() {
 
 // Helper function to close options menu with cleanup
 function closeOptionsMenu() {
+  const optionsMenu = document.getElementById('optionsMenu');
+  if (!optionsMenu) return;
+  
+  // Remove the "show" class required by ModalAccessibilityManager
+  optionsMenu.classList.remove('show');
+  
+  // Set display to none as required by task
+  optionsMenu.style.display = 'none';
+  
+  // Call modalAccessibilityManager to set modal as hidden
+  if (window.modalAccessibilityManager) {
+    window.modalAccessibilityManager.setModalHidden(optionsMenu);
+  }
+  
   // Start the close dialog animation first
   closeDialog(optionsMenu);
   

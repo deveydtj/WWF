@@ -92,6 +92,13 @@
   overflow-y: auto;
 }
 
+/* Ensure options menu is visible when "show" class is present - required by ModalAccessibilityManager */
+#optionsMenu.show {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
 /* Ensure close button is properly positioned and visible */
 #optionsMenu .close-btn {
   z-index: calc(var(--z-options-menu) + 1);
