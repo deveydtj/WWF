@@ -135,7 +135,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  z-index: 1000;
+  z-index: var(--z-close-button);
   transition: color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -173,23 +173,12 @@ body.dark-mode .close-btn:active {
               0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
-/* History Panel */
+/* History Panel - positioning moved to panel-positioning.css */
 #historyBox {
-  position: absolute;
-  top: 100px;
-  left: 20px;
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  /* Only styling properties, no positioning */
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background: var(--bg-color);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow:
-    inset 2px 2px 5px var(--shadow-color-dark),
-    inset -2px -2px 5px var(--shadow-color-light);
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 #historyBox::-webkit-scrollbar {
@@ -238,47 +227,24 @@ body.dark-mode .close-btn:active {
   text-align: center;
 }
 
-/* Definition Panel */
+/* Definition Panel - positioning moved to panel-positioning.css */
 #definitionBox {
-  position: absolute;
-  top: 100px;
-  right: 20px;
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  /* Only styling properties, no positioning */
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background: var(--bg-color);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow:
-    inset 2px 2px 5px var(--shadow-color-dark),
-    inset -2px -2px 5px var(--shadow-color-light);
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 #definitionBox::-webkit-scrollbar {
   display: none;
 }
 
-/* Chat Panel */
+/* Chat Panel - positioning moved to panel-positioning.css */
 #chatBox {
-  position: absolute;
-  top: 100px;
-  left: calc(100% + 20px);
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  /* Only styling properties, no positioning */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-color);
-  padding: 36px 10px 10px;
-  border-radius: 8px;
-  box-shadow:
-    inset 2px 2px 5px var(--shadow-color-dark),
-    inset -2px -2px 5px var(--shadow-color-light);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  /* Transform origin set in responsive CSS for proper mobile/desktop behavior */
 }
 
 #chatMessages {
@@ -380,7 +346,7 @@ body.dark-mode .close-btn:active {
   border-radius: 8px;
   max-height: 90vh;
   overflow-y: auto;
-  z-index: 60;
+  z-index: var(--z-player-sidebar);
   pointer-events: none;
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
@@ -444,74 +410,5 @@ body.players-open #playerSidebar {
     position: relative;
   }
   
-  /* Large screen panel positioning - align with board level and add gaps */
-  /* History panel positioning disabled since stamps are now inside leftPanel */
-  /*
-  body #historyBox {
-    position: absolute !important;
-    top: 140px !important;
-    left: calc(50% - var(--board-width) / 2 - 365px) !important;
-    right: auto !important;
-    width: 215px !important;
-    max-height: calc(100vh - 240px) !important;
-    transform-origin: left center !important;
-  }
-  */
-  
-  body #definitionBox {
-    position: absolute !important;
-    top: 180px !important; /* Move down further to avoid options gear overlap */
-    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Move further right to avoid options button */
-    left: auto !important;
-    width: 280px !important;
-    max-height: 300px !important; /* Limit height to prevent overlap with chat panel */
-    transform-origin: right center !important;
-  }
-  
-  body:not([data-mode='medium']) #chatBox {
-    position: absolute !important;
-    /* Dynamic top position will be set by JavaScript based on definition panel height */
-    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Match definition panel position */
-    left: auto !important;
-    width: 280px !important;
-    max-height: calc(100vh - 510px) !important; /* Adjust max-height for the new position */
-    transform-origin: right center !important;
-  }
-  
-  body:not(.history-open) #historyBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  body:not(.definition-open) #definitionBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  body:not(.chat-open) #chatBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  /* When panels are open, they should be visible */
-  body.history-open #historyBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  
-  body.definition-open #definitionBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  
-  body.chat-open #chatBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
+  /* Large screen panel positioning - MOVED TO panel-positioning.css */
 }

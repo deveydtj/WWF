@@ -85,7 +85,7 @@
   background: rgba(0, 0, 0, 0.33);
   backdrop-filter: blur(4px);
   position: fixed;
-  z-index: 101;
+  z-index: var(--z-modal-backdrop);
   top: 0;
   left: 0;
   right: 0;
@@ -124,7 +124,7 @@
   background: rgba(0, 0, 0, 0.33);
   backdrop-filter: blur(4px);
   position: fixed;
-  z-index: 101;
+  z-index: var(--z-modal-backdrop);
   top: 0;
   left: 0;
   right: 0;

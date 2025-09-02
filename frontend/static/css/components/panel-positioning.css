@@ -1,0 +1,396 @@
+/* ─────────────────────────────────────────────
+   Panel Positioning - Unified panel layout and interaction system
+   ───────────────────────────────────────────── */
+
+/* 
+ * PANEL SYSTEM ARCHITECTURE
+ * =========================
+ * 
+ * This file provides a single source of truth for panel positioning across all breakpoints.
+ * It replaces conflicting rules across layout.css, panels.css, and responsive.css.
+ * 
+ * Breakpoints:
+ * - Mobile (≤600px): Fixed overlay panels from bottom
+ * - Medium (601px-900px): Absolute positioned panels in designated zones  
+ * - Desktop (≥901px): Three-panel layout with relative positioning
+ * 
+ * Panel States:
+ * - Hidden: opacity: 0, transform: scale(0), pointer-events: none, inert
+ * - Visible: opacity: 1, transform: scale(1), pointer-events: auto, interactive
+ * 
+ * Z-Index Hierarchy (using z-index.css tokens):
+ * - Panels: var(--z-panel-base) through var(--z-panel-interactive)
+ * - Mobile overlays: var(--z-mobile-menu) 
+ * - Chat mobile: var(--z-chat-mobile)
+ */
+
+/* ═══════════════════════════════════════════════
+   PANEL STATE MANAGEMENT - Universal States
+   ═══════════════════════════════════════════════ */
+
+/* Base panel styles - applies to all panels in all modes */
+.panel-base {
+  background: var(--bg-color);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    inset 4px 4px 8px var(--inset-shadow-dark),
+    inset -4px -4px 8px var(--inset-shadow-light),
+    8px 8px 16px var(--shadow-color-dark),
+    -8px -8px 16px var(--shadow-color-light);
+  overflow-y: auto;
+  transition: opacity 0.3s ease-in-out, 
+              transform 0.3s ease-in-out,
+              width 0.3s ease-in-out;
+}
+
+/* Hidden state - applies when panel is closed */
+.panel-hidden {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+/* Visible state - applies when panel is open */
+.panel-visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* Universal panel visibility states - works with existing JavaScript */
+body:not(.history-open) #historyBox {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+body.history-open #historyBox {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+body:not(.definition-open) #definitionBox {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+body.definition-open #definitionBox {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+body:not(.chat-open) #chatBox {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+}
+
+body.chat-open #chatBox {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* Ensure proper focus management for accessibility */
+body:not(.history-open) #historyBox {
+  /* Screen readers should ignore hidden panels */
+  visibility: hidden;
+}
+
+body.history-open #historyBox {
+  /* Ensure visible panels are announced by screen readers */
+  visibility: visible;
+}
+
+body:not(.definition-open) #definitionBox {
+  /* Screen readers should ignore hidden panels */
+  visibility: hidden;
+}
+
+body.definition-open #definitionBox {
+  /* Ensure visible panels are announced by screen readers */
+  visibility: visible;
+}
+
+body:not(.chat-open) #chatBox {
+  /* Screen readers should ignore hidden panels */
+  visibility: hidden;
+}
+
+body.chat-open #chatBox {
+  /* Ensure visible panels are announced by screen readers */
+  visibility: visible;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE MODE: Fixed Overlay Panels (≤600px)
+   ═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  /* Reset any conflicting positioning from other CSS files */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    /* Override any absolute/relative positioning */
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    
+    /* Mobile panel sizing */
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: 0 !important;
+    
+    /* Mobile styling */
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    
+    /* Mobile z-index */
+    z-index: var(--z-mobile-menu) !important;
+    
+    /* Mobile transform origin */
+    transform-origin: bottom center !important;
+    
+    /* Hidden by default */
+    overflow: hidden !important;
+  }
+  
+  #chatBox {
+    /* Chat needs higher z-index for virtual keyboard compatibility */
+    z-index: var(--z-chat-mobile) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Mobile open states */
+  body.history-open #historyBox {
+    max-height: 50vh !important;
+    padding: 8px !important;
+    overflow-y: auto !important;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light) !important;
+  }
+  
+  body.definition-open #definitionBox {
+    max-height: 50vh !important;
+    padding: 8px !important;
+    overflow-y: auto !important;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light) !important;
+  }
+  
+  body.chat-open #chatBox {
+    max-height: 40vh !important;
+    padding: 36px 8px 8px !important;
+    overflow: hidden !important;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MEDIUM MODE: Zone-Based Panels (601px-900px) 
+   ═══════════════════════════════════════════════ */
+@media (min-width: 601px) and (max-width: 900px) {
+  /* Reset mobile positioning and apply medium mode positioning */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    /* Reset mobile overrides */
+    position: absolute !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    
+    /* Medium mode sizing */
+    width: clamp(14rem, 30vw, 17rem) !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: calc(100vh - 160px) !important;
+    
+    /* Medium mode styling */
+    border-radius: 20px !important;
+    padding: 20px !important;
+    box-shadow: 
+      inset 4px 4px 8px var(--inset-shadow-dark),
+      inset -4px -4px 8px var(--inset-shadow-light),
+      8px 8px 16px var(--shadow-color-dark),
+      -8px -8px 16px var(--shadow-color-light) !important;
+    
+    /* Medium mode z-index */
+    z-index: var(--z-panel-base) !important;
+    
+    /* Medium mode transform origin */
+    transform-origin: top left !important;
+    
+    /* Ensure proper overflow */
+    overflow-y: auto !important;
+  }
+  
+  /* Specific positioning for medium mode */
+  #historyBox {
+    top: 10px !important;
+    left: 0 !important;
+  }
+  
+  #definitionBox {
+    top: 10px !important;
+    right: 0 !important;
+    transform-origin: top right !important;
+  }
+  
+  #chatBox {
+    top: 10px !important;
+    right: 0 !important;
+    transform-origin: top right !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   DESKTOP MODE: Three-Panel Layout (≥901px)
+   ═══════════════════════════════════════════════ */
+@media (min-width: 901px) {
+  /* Desktop panels use relative positioning within their containers */
+  #historyBox {
+    /* Positioned within leftPanel */
+    position: relative !important;
+    top: 10px !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    
+    width: 215px !important; /* Allows room for stamps in left panel */
+    max-height: calc(100vh - 160px) !important;
+    
+    z-index: var(--z-panel-base) !important;
+    transform-origin: left center !important;
+  }
+  
+  #definitionBox {
+    /* Positioned within rightPanel or as overlay */
+    position: relative !important;
+    top: 10px !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    
+    width: 260px !important;
+    max-height: calc(100vh - 160px) !important;
+    
+    z-index: var(--z-panel-base) !important;
+    transform-origin: right center !important;
+  }
+  
+  #chatBox {
+    /* Positioned within rightPanel or as overlay */
+    position: relative !important;
+    top: 10px !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    
+    width: 260px !important;
+    height: calc(100vh - 160px) !important;
+    max-height: calc(100vh - 160px) !important;
+    
+    z-index: var(--z-panel-base) !important;
+    transform-origin: right center !important;
+    
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTON POSITIONING - Consistent Across Modes
+   ═══════════════════════════════════════════════ */
+
+/* Options and chat buttons - desktop positioning */
+@media (min-width: 901px) {
+  #optionsToggle,
+  #chatNotify {
+    position: absolute;
+    right: calc(-36px - 10px); /* Position to the right of the board with 10px gap */
+    z-index: var(--z-panel-notification);
+    
+    /* Ensure buttons don't create stacking contexts that interfere with panels */
+    transform: none;
+    isolation: auto;
+  }
+  
+  #optionsToggle {
+    top: 0;
+  }
+  
+  #chatNotify {
+    top: 36px;
+  }
+}
+
+/* Medium mode button positioning */
+@media (min-width: 601px) and (max-width: 900px) {
+  #optionsToggle,
+  #chatNotify {
+    position: absolute;
+    left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
+    right: auto !important;
+    z-index: var(--z-panel-notification);
+  }
+}
+
+/* Mobile buttons are hidden in favor of mobile menu */
+@media (max-width: 600px) {
+  #optionsToggle,
+  #chatNotify {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ACCESSIBILITY ENHANCEMENTS
+   ═══════════════════════════════════════════════ */
+
+/* Ensure proper ARIA states match visual states */
+body:not(.history-open) #historyBox {
+  /* Use CSS to reflect ARIA hidden state */
+}
+
+body.history-open #historyBox {
+  /* Ensure panel is properly announced when opened */
+}
+
+body:not(.definition-open) #definitionBox {
+  /* Use CSS to reflect ARIA hidden state */
+}
+
+body.definition-open #definitionBox {
+  /* Ensure panel is properly announced when opened */
+}
+
+body:not(.chat-open) #chatBox {
+  /* Use CSS to reflect ARIA hidden state */
+}
+
+body.chat-open #chatBox {
+  /* Ensure panel is properly announced when opened */
+}
+
+/* Focus management for panels */
+.panel-visible:focus-within {
+  /* Highlight when panel has focus */
+  outline: 2px solid var(--text-color);
+  outline-offset: 2px;
+}
+
+/* Prevent focus trap in hidden panels */
+.panel-hidden * {
+  /* Remove from tab order when hidden */
+  tab-index: -1;
+}

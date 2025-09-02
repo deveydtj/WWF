@@ -66,67 +66,7 @@
     min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
   }
 
-  /* Mobile panel positioning */
-  #historyBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: var(--z-mobile-menu);
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
-  }
-
-  #definitionBox {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: var(--z-mobile-menu);
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
-  }
-
-  #chatBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: var(--z-mobile-menu);
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
-  }
+  /* Mobile panel positioning - MOVED TO panel-positioning.css for unified control */
 
   /* Enhanced keyboard handling with modern viewport units */
   #keyboard {
@@ -134,7 +74,7 @@
     margin-top: 5px;
     margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
     position: relative;
-    z-index: 100;
+    z-index: var(--z-keyboard);
     flex-shrink: 0;
     transform: scale(var(--keyboard-scale, 1));
     transform-origin: center bottom;
@@ -199,7 +139,7 @@
     position: fixed !important;
     top: 10px !important;
     right: 10px !important;
-    z-index: 70 !important;
+    z-index: var(--z-mobile-menu-toggle) !important;
     font-size: 18px !important;
   }
 
@@ -218,109 +158,9 @@
     display: none;
   }
 
-  /* Panel positioning for mobile */
-  #historyBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-  }
+  /* Panel positioning for mobile - MOVED TO panel-positioning.css */
 
-  #definitionBox {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-  }
-
-  #chatBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 10000; /* Increased z-index to appear above virtual keyboards */
-    display: flex;
-    flex-direction: column;
-    pointer-events: none;
-  }
-
-  /* Open states for mobile panels */
-  body.history-open #historyBox {
-    max-height: 50vh;
-    max-width: calc(98% - 20px);
-    padding: 8px;
-    overflow-y: auto;
-    border-radius: 0;
-    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
-                inset -2px -2px 4px var(--shadow-color-light);
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    pointer-events: auto;
-  }
-
-  body.definition-open #definitionBox {
-    display: block;
-    max-width: calc(98% - 20px);
-    padding: 8px;
-    overflow-y: auto;
-    border-radius: 0;
-    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
-                inset -2px -2px 4px var(--shadow-color-light);
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    pointer-events: auto;
-  }
-
-  body.chat-open #chatBox {
-    display: flex;
-    max-height: 40vh;
-    max-width: calc(95% - 20px);
-    margin-left: 10px;
-    padding: 36px 8px 8px;
-    overflow: hidden;
-    border-radius: 0;
-    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
-                inset -2px -2px 4px var(--shadow-color-light);
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    flex-direction: column;
-    pointer-events: auto;
-  }
+  /* Mobile open states - MOVED TO panel-positioning.css */
 
   #historyBox h3 {
     display: none;
@@ -360,7 +200,7 @@
     position: fixed !important;
     top: 10px !important;
     left: 10px !important;
-    z-index: 999 !important; /* Extremely high z-index to ensure it's always on top */
+    z-index: var(--z-reset-button) !important; /* Extremely high z-index to ensure it's always on top */
     order: unset !important;
     margin: 0 !important;
     pointer-events: auto !important; /* Ensure it can receive touch events */
@@ -373,7 +213,7 @@
     height: 44px !important;
     width: 44px !important;
     font-size: 14px !important;
-    z-index: 999 !important; /* Ensure button itself is above leaderboard */
+    z-index: var(--z-reset-button) !important; /* Ensure button itself is above leaderboard */
     position: relative !important; /* Ensure proper stacking context */
     pointer-events: auto !important; /* Ensure it can receive touch events */
     touch-action: manipulation !important; /* Optimize for touch interaction */
@@ -406,7 +246,7 @@
     margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
     /* Ensure keyboard is always visible above virtual keyboard */
     position: relative;
-    z-index: 100;
+    z-index: var(--z-keyboard);
     flex-shrink: 0;
     transform: scale(var(--keyboard-scale, 1));
     transform-origin: center bottom;
@@ -531,7 +371,7 @@
     min-width: 0;
     overflow: hidden;
     max-width: 200px;
-    z-index: 70; /* Below reset button (85) but above other UI elements */
+    z-index: var(--z-mobile-menu-toggle); /* Below reset button (85) but above other UI elements */
   }
   
   #titleBar .mobile-leaderboard-container #leaderboard {
@@ -671,38 +511,9 @@
     width: clamp(14rem, 30vw, 17rem);
   }
 
-  /* Fix medium mode panel positioning to prevent space above lobbyHeader */
-  body[data-mode='medium'] #historyBox {
-    position: absolute !important;
-    top: 10px !important;
-    left: 0 !important;
-  }
+  /* Medium mode panel positioning - MOVED TO panel-positioning.css */
 
-  body[data-mode='medium'] #definitionBox {
-    position: absolute !important;
-    top: 10px !important;
-    right: 0 !important;
-  }
-
-  body[data-mode='medium'] #chatBox {
-    position: absolute !important;
-    top: 10px !important;
-    right: 0 !important;
-    left: auto !important; /* Ensure left is not set by other rules */
-    width: clamp(14rem, 30vw, 17rem) !important; /* Match other medium mode panels */
-    transform-origin: right center !important; /* Consistent with large screen mode */
-  }
-
-  /* Override base positioning for medium mode */
-  #optionsToggle {
-    left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
-    right: auto !important;
-  }
-  
-  #chatNotify {
-    left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
-    right: auto !important;
-  }
+  /* Button positioning - MOVED TO panel-positioning.css */
 
   /* Fix title bar layout for medium screens - override mobile layout */
   #titleBar {

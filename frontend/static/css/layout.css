@@ -68,62 +68,13 @@
 
 /* Mobile layout will be handled in responsive.css to avoid conflicts */
 
-/* Panel positioning and layout */
-#historyBox {
-  width: 215px; /* Reduced to ensure 5px gap + 40px stamps fit within 280px left panel */
-  max-height: calc(100vh - 160px);
-  background: var(--bg-color);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 
-    inset 4px 4px 8px var(--inset-shadow-dark),
-    inset -4px -4px 8px var(--inset-shadow-light),
-    8px 8px 16px var(--shadow-color-dark),
-    -8px -8px 16px var(--shadow-color-light);
-  overflow-y: auto;
-  z-index: var(--z-panel-base);
-  opacity: 0;
-  transform-origin: top left;
-  transform: scale(0);
-  /* Enhanced panel transition animations */
-  transition: opacity 0.3s ease-in-out, 
-              transform 0.3s ease-in-out,
-              width 0.3s ease-in-out;
-  pointer-events: none;
-  /* Position within left panel on non-mobile */
-  position: relative;
-  top: 10px;
-}
+/* Panel positioning and layout - MOVED TO panel-positioning.css */
 
-#definitionBox {
-  width: 260px;
-  max-height: calc(100vh - 160px);
-  background: var(--bg-color);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 
-    inset 4px 4px 8px var(--inset-shadow-dark),
-    inset -4px -4px 8px var(--inset-shadow-light),
-    8px 8px 16px var(--shadow-color-dark),
-    -8px -8px 16px var(--shadow-color-light);
-  overflow-y: auto;
-  z-index: var(--z-panel-base);
-  opacity: 0;
-  transform-origin: top right;
-  transform: scale(0);
-  /* Enhanced panel transition animations */
-  transition: opacity 0.3s ease-in-out, 
-              transform 0.3s ease-in-out,
-              width 0.3s ease-in-out;
-  pointer-events: none;
-  /* Position within right panel on non-mobile */
-  position: relative;
-  top: 10px;
-}
-
+/* Panels now use unified positioning system */
+#historyBox,
+#definitionBox,
 #chatBox {
-  width: 260px;
-  height: calc(100vh - 160px);
+  /* Base styling only - positioning handled by panel-positioning.css */
   background: var(--bg-color);
   border-radius: 20px;
   padding: 20px;
@@ -132,59 +83,21 @@
     inset -4px -4px 8px var(--inset-shadow-light),
     8px 8px 16px var(--shadow-color-dark),
     -8px -8px 16px var(--shadow-color-light);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
   z-index: var(--z-panel-base);
+  
+  /* Default hidden state */
   opacity: 0;
-  transform-origin: top right;
   transform: scale(0);
-  /* Enhanced panel transition animations */
+  pointer-events: none;
+  
+  /* Smooth transitions */
   transition: opacity 0.3s ease-in-out, 
               transform 0.3s ease-in-out,
               width 0.3s ease-in-out;
-  pointer-events: none;
-  /* Position within right panel on non-mobile */
-  position: relative;
-  top: 10px;
 }
 
-/* Panel visibility states */
-body:not(.history-open) #historyBox {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-
-body:not(.definition-open) #definitionBox {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-
-body:not(.chat-open) #chatBox {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-}
-
-body.history-open #historyBox {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-body.definition-open #definitionBox {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-body.chat-open #chatBox {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
+/* Panel visibility states - MOVED TO panel-positioning.css */
 
 /* Popup modals that fill the viewport */
 #emojiModal {
@@ -289,7 +202,7 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.3s, transform 0.3s;
-  z-index: 60;
+  z-index: var(--z-panel-notification);
 }
 
 #chatNotify.visible {
@@ -367,7 +280,7 @@ body[data-mode='medium']:not(.chat-open) #chatBox {
   font-size: 14px;
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  z-index: var(--z-tooltip);
   pointer-events: none;
   opacity: 0;
   transform: translateY(5px);

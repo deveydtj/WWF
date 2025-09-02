@@ -49,13 +49,13 @@
   opacity: 0.9;
   border-radius: calc(var(--tile-size) * 0.15);
   pointer-events: none;
-  z-index: 0;
+  z-index: var(--z-button-base);
   transition: width 0.1s linear;
 }
 
 #holdResetText {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-button-hover);
 }
 
 /* Emoji choice buttons */
