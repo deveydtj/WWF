@@ -92,8 +92,9 @@ class ModalAccessibilityManager {
    * Set modal to properly hidden state (non-interactive)
    */
   setModalHidden(modal) {
-    modal.style.pointerEvents = 'none';
-    modal.style.opacity = '0';
+    modal.style.setProperty('pointer-events', 'none', 'important');
+    modal.style.setProperty('opacity', '0', 'important');
+    modal.style.setProperty('visibility', 'hidden', 'important');
     modal.setAttribute('aria-hidden', 'true');
     modal.setAttribute('inert', '');
     
@@ -114,8 +115,9 @@ class ModalAccessibilityManager {
    * Set modal to properly visible state (interactive)
    */
   setModalVisible(modal) {
-    modal.style.pointerEvents = 'auto';
-    modal.style.opacity = '1';
+    modal.style.setProperty('pointer-events', 'auto', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
     modal.setAttribute('aria-hidden', 'false');
     modal.removeAttribute('inert');
     
