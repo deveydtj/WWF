@@ -426,3 +426,13 @@ body.chat-open #chatBox {
 #mobileMenuPopup {
   z-index: var(--z-mobile-menu) !important;
 }
+
+/* Universal modal click-blocking prevention - critical fix */
+[role="dialog"][style*="display: none"],
+[role="dialog"][style*="opacity: 0"],
+[id*="Modal"][style*="display: none"],
+[id*="Menu"][style*="display: none"],
+[id*="Popup"][style*="display: none"] {
+  pointer-events: none !important;
+  visibility: hidden !important;
+}

@@ -376,6 +376,7 @@ body.players-open #playerSidebar {
 #optionsMenu,
 #shareModal {
   display: none;
+  pointer-events: none; /* Ensure hidden modals don't intercept clicks */
 }
 
 #chatNotify { 

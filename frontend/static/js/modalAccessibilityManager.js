@@ -26,7 +26,17 @@ class ModalAccessibilityManager {
   constructor() {
     this.modals = new Map();
     this.initializeModalTracking();
+    this.forceAllModalsHidden(); // Force all modals to start hidden
     this.fixExistingModals();
+  }
+
+  /**
+   * Force all tracked modals to start in hidden state
+   */
+  forceAllModalsHidden() {
+    this.modals.forEach((modalData) => {
+      this.setModalHidden(modalData.element);
+    });
   }
 
   /**
@@ -63,8 +73,14 @@ class ModalAccessibilityManager {
       const modal = modalData.element;
       const computedStyle = getComputedStyle(modal);
       
-      // Check if modal is visually hidden but still interactive
-      if (computedStyle.display === 'none' || computedStyle.opacity === '0' || computedStyle.visibility === 'hidden') {
+      // Check if modal is visually hidden or should be treated as hidden by default
+      // All modals should start hidden unless explicitly made visible
+      const isHidden = computedStyle.display === 'none' || 
+                      computedStyle.opacity === '0' || 
+                      computedStyle.visibility === 'hidden' ||
+                      !modal.classList.contains('show');
+      
+      if (isHidden) {
         this.setModalHidden(modal);
       } else {
         this.setModalVisible(modal);
@@ -122,14 +138,22 @@ class ModalAccessibilityManager {
   observeDisplayChanges() {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
           const element = mutation.target;
           if (this.modals.has(`#${element.id}`)) {
             const computedStyle = getComputedStyle(element);
             
-            if (computedStyle.display === 'none' || computedStyle.opacity === '0') {
+            // Check if modal should be hidden
+            const shouldBeHidden = computedStyle.display === 'none' || 
+                                 computedStyle.opacity === '0' ||
+                                 computedStyle.visibility === 'hidden' ||
+                                 !element.classList.contains('show');
+            
+            if (shouldBeHidden) {
               this.setModalHidden(element);
-            } else if (computedStyle.display !== 'none' && computedStyle.opacity !== '0') {
+            } else if (computedStyle.display !== 'none' && 
+                      (computedStyle.opacity === '1' || parseFloat(computedStyle.opacity) > 0) &&
+                      element.classList.contains('show')) {
               this.setModalVisible(element);
             }
           }
