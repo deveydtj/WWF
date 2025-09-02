@@ -360,26 +360,32 @@ body.chat-open #chatBox {
 /* Ensure proper ARIA states match visual states */
 body:not(.history-open) #historyBox {
   /* Use CSS to reflect ARIA hidden state */
+  visibility: hidden;
 }
 
 body.history-open #historyBox {
   /* Ensure panel is properly announced when opened */
+  visibility: visible;
 }
 
 body:not(.definition-open) #definitionBox {
   /* Use CSS to reflect ARIA hidden state */
+  visibility: hidden;
 }
 
 body.definition-open #definitionBox {
   /* Ensure panel is properly announced when opened */
+  visibility: visible;
 }
 
 body:not(.chat-open) #chatBox {
   /* Use CSS to reflect ARIA hidden state */
+  visibility: hidden;
 }
 
 body.chat-open #chatBox {
   /* Ensure panel is properly announced when opened */
+  visibility: visible;
 }
 
 /* Focus management for panels */
@@ -393,4 +399,30 @@ body.chat-open #chatBox {
 .panel-hidden * {
   /* Remove from tab order when hidden */
   tab-index: -1;
+}
+
+/* Modal accessibility fixes */
+[aria-hidden="true"] {
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+[inert] {
+  pointer-events: none !important;
+}
+
+/* Ensure modals use proper z-index tokens */
+#emojiModal,
+#infoPopup,
+#shareModal,
+#closeCallPopup {
+  z-index: var(--z-modal-backdrop) !important;
+}
+
+#optionsMenu {
+  z-index: var(--z-options-menu) !important;
+}
+
+#mobileMenuPopup {
+  z-index: var(--z-mobile-menu) !important;
 }
