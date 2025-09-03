@@ -182,12 +182,28 @@ class EventListenersManager {
     const menuDarkMode = this.domManager.get('menuDarkMode');
     const menuSound = this.domManager.get('menuSound');
 
+    // Debug logging to track event listener setup
+    console.log('🔧 Setting up options event listeners:', {
+      optionsToggle: !!optionsToggle,
+      optionsMenu: !!optionsMenu,
+      optionsToggleId: optionsToggle?.id
+    });
+
     if (optionsToggle && optionsMenu) {
-      optionsToggle.addEventListener('click', () => {
+      // Remove any existing listeners to avoid duplicates
+      optionsToggle.removeEventListener('click', this._optionsToggleHandler);
+      
+      // Define the handler as a class method for proper removal
+      this._optionsToggleHandler = () => {
+        console.log('🔧 Options toggle clicked - executing handler');
+        
         if (optionsMenu.style.display === 'flex' || optionsMenu.style.display === 'block' || optionsMenu.classList.contains('show')) {
+          console.log('🔧 Options menu is open, closing it');
           closeOptionsMenu();
           return;
         }
+        
+        console.log('🔧 Opening options menu');
         
         // Add the "show" class required by ModalAccessibilityManager
         optionsMenu.classList.add('show');
@@ -212,6 +228,15 @@ class EventListenersManager {
         }
         
         openDialog(optionsMenu);
+        console.log('🔧 Options menu opened successfully');
+      };
+      
+      optionsToggle.addEventListener('click', this._optionsToggleHandler);
+      console.log('✅ Options toggle event listener attached successfully');
+    } else {
+      console.error('❌ Failed to setup options event listener - missing elements:', {
+        optionsToggle: !!optionsToggle,
+        optionsMenu: !!optionsMenu
       });
     }
 
