@@ -34,9 +34,12 @@ class ModalAccessibilityManager {
    * Force all tracked modals to start in hidden state
    */
   forceAllModalsHidden() {
+    // Mark as initialization to allow initial setup
+    this.isUpdatingModal = 'init';
     this.modals.forEach((modalData) => {
       this.setModalHidden(modalData.element);
     });
+    this.isUpdatingModal = false;
   }
 
   /**
@@ -69,6 +72,9 @@ class ModalAccessibilityManager {
    * Fix existing modals that have incorrect pointer events
    */
   fixExistingModals() {
+    // Mark as initialization to allow initial setup
+    this.isUpdatingModal = 'init';
+    
     this.modals.forEach((modalData, selector) => {
       const modal = modalData.element;
       const computedStyle = getComputedStyle(modal);
@@ -86,12 +92,19 @@ class ModalAccessibilityManager {
         this.setModalVisible(modal);
       }
     });
+    
+    this.isUpdatingModal = false;
   }
 
   /**
    * Set modal to properly hidden state (non-interactive)
    */
   setModalHidden(modal) {
+    // Prevent recursive calls during observer updates
+    if (this.isUpdatingModal && this.isUpdatingModal !== 'init') {
+      return;
+    }
+    
     // Remove the "show" class first so CSS hides it properly
     modal.classList.remove('show');
     
@@ -111,11 +124,20 @@ class ModalAccessibilityManager {
     modal.setAttribute('aria-hidden', 'true');
     modal.setAttribute('inert', '');
     
-    // Remove focus from modal content when hiding
-    const focusableElements = modal.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    focusableElements.forEach(el => {
-      el.setAttribute('tabindex', '-1');
-    });
+    // Optimize focusable elements handling to prevent timeouts
+    try {
+      const focusableElements = modal.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      // Use requestAnimationFrame to prevent blocking the main thread
+      if (focusableElements.length > 0) {
+        requestAnimationFrame(() => {
+          focusableElements.forEach(el => {
+            el.setAttribute('tabindex', '-1');
+          });
+        });
+      }
+    } catch (error) {
+      console.warn('Error handling focusable elements in modal:', modal.id, error);
+    }
     
     // Update tracking
     const modalEntry = Array.from(this.modals.entries()).find(([, data]) => data.element === modal);
@@ -128,6 +150,11 @@ class ModalAccessibilityManager {
    * Set modal to properly visible state (interactive)
    */
   setModalVisible(modal) {
+    // Prevent recursive calls during observer updates
+    if (this.isUpdatingModal && this.isUpdatingModal !== 'init') {
+      return;
+    }
+    
     // For options menu, remove any conflicting inline display styles
     // and let CSS handle display via #optionsMenu.show rule
     if (modal.id === 'optionsMenu') {
@@ -144,11 +171,20 @@ class ModalAccessibilityManager {
     modal.setAttribute('aria-hidden', 'false');
     modal.removeAttribute('inert');
     
-    // Restore focus capability to modal content
-    const focusableElements = modal.querySelectorAll('[tabindex="-1"]');
-    focusableElements.forEach(el => {
-      el.removeAttribute('tabindex');
-    });
+    // Optimize focusable elements handling to prevent timeouts
+    try {
+      const focusableElements = modal.querySelectorAll('[tabindex="-1"]');
+      // Use requestAnimationFrame to prevent blocking the main thread
+      if (focusableElements.length > 0) {
+        requestAnimationFrame(() => {
+          focusableElements.forEach(el => {
+            el.removeAttribute('tabindex');
+          });
+        });
+      }
+    } catch (error) {
+      console.warn('Error handling focusable elements in modal:', modal.id, error);
+    }
     
     // Update tracking
     const modalEntry = Array.from(this.modals.entries()).find(([, data]) => data.element === modal);
@@ -161,7 +197,15 @@ class ModalAccessibilityManager {
    * Override display style changes to ensure consistency
    */
   observeDisplayChanges() {
+    // Track if we're currently updating modals to prevent infinite loops
+    this.isUpdatingModal = false;
+    
     const observer = new MutationObserver((mutations) => {
+      // Prevent recursive calls that cause timeouts
+      if (this.isUpdatingModal) {
+        return;
+      }
+      
       mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
           const element = mutation.target;
@@ -174,17 +218,28 @@ class ModalAccessibilityManager {
                                  computedStyle.visibility === 'hidden' ||
                                  !element.classList.contains('show');
             
-            if (shouldBeHidden) {
-              this.setModalHidden(element);
-            } else if (computedStyle.display !== 'none' && 
-                      (computedStyle.opacity === '1' || parseFloat(computedStyle.opacity) > 0) &&
-                      element.classList.contains('show')) {
-              this.setModalVisible(element);
+            // Set flag to prevent recursive observer calls
+            this.isUpdatingModal = true;
+            
+            try {
+              if (shouldBeHidden) {
+                this.setModalHidden(element);
+              } else if (computedStyle.display !== 'none' && 
+                        (computedStyle.opacity === '1' || parseFloat(computedStyle.opacity) > 0) &&
+                        element.classList.contains('show')) {
+                this.setModalVisible(element);
+              }
+            } finally {
+              // Always reset the flag, even if an error occurs
+              this.isUpdatingModal = false;
             }
           }
         }
       });
     });
+
+    // Store observer reference for potential cleanup
+    this.observer = observer;
 
     // Observe all tracked modals
     this.modals.forEach((modalData) => {
@@ -238,6 +293,16 @@ class ModalAccessibilityManager {
         }
       });
     });
+  }
+
+  /**
+   * Cleanup method to disconnect observer and prevent memory leaks
+   */
+  cleanup() {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
   }
 
   /**
