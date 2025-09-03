@@ -244,6 +244,34 @@ function renderPlayerSidebar() {
   }));
 }
 
+/**
+ * Calculate and set vertical position for each stamp to align with board rows
+ */
+function alignStampsWithBoardRows() {
+  const stampsDiv = document.getElementById('stampContainer');
+  if (!stampsDiv) return;
+  
+  // Get current CSS variable values
+  const tileSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
+  const tileGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-gap'));
+  
+  if (!tileSize || !tileGap) return; // Skip if CSS variables aren't ready
+  
+  const stamps = stampsDiv.querySelectorAll('.emoji-stamp');
+  stamps.forEach((stamp) => {
+    const rowIndex = parseInt(stamp.getAttribute('data-guess-index'), 10);
+    if (isNaN(rowIndex)) return;
+    
+    // Calculate vertical center of the row
+    const stampHeight = tileSize * 0.8; // Match font-size from CSS
+    const top = (rowIndex * (tileSize + tileGap)) + (tileSize / 2) - (stampHeight / 2);
+    
+    stamp.style.top = `${top}px`;
+    stamp.style.height = `${stampHeight}px`;
+    stamp.style.lineHeight = `${stampHeight}px`;
+  });
+}
+
 function renderEmojiStamps(guesses) {
   const stampsDiv = document.getElementById('stampContainer');
   if (!stampsDiv) return;
@@ -257,10 +285,6 @@ function renderEmojiStamps(guesses) {
     stamp.className = 'emoji-stamp';
     stamp.setAttribute('data-guess-index', index);
     
-    // Simple row-based positioning using CSS calc
-    stamp.style.top = `calc(${index} * (var(--tile-size) + var(--tile-gap)) + var(--tile-size) / 2)`;
-    stamp.style.transform = 'translateY(-50%)';
-    
     const emojiSpan = document.createElement('span');
     emojiSpan.textContent = getBaseEmoji(guess.emoji);
     applyEmojiVariantStyling(emojiSpan, guess.emoji);
@@ -270,6 +294,9 @@ function renderEmojiStamps(guesses) {
     
     stampsDiv.appendChild(stamp);
   });
+  
+  // Align stamps with board rows after rendering
+  alignStampsWithBoardRows();
 }
 
 function updateLeaderboard(newLeaderboard) {
@@ -305,6 +332,7 @@ export {
   renderLeaderboard,
   renderPlayerSidebar,
   renderEmojiStamps,
+  alignStampsWithBoardRows,
   updateLeaderboard,
   getLeaderboard,
   getPlayerRank

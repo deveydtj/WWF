@@ -70,7 +70,6 @@
   position: absolute;
   right: 10px; /* 10px gap from stamps to board */
   font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -12,6 +12,7 @@ import { closeOptionsMenu, showInfo, toggleDarkMode } from './optionsManager.js'
 import { toggleSound } from './audioManager.js';
 import { toggleHintSelection } from './hintManager.js';
 import { sendChatMessage } from './api.js';
+import { alignStampsWithBoardRows } from './leaderboardManager.js';
 
 class EventListenersManager {
   constructor() {
@@ -580,6 +581,9 @@ class EventListenersManager {
           positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
           updateChatPanelPosition();
         }
+        
+        // Re-align stamps with board rows after resize
+        alignStampsWithBoardRows();
       }, 150);
     });
 
