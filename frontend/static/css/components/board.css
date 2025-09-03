@@ -68,7 +68,7 @@
 /* Emoji stamps next to board */
 .emoji-stamp {
   position: absolute;
-  right: 5px; /* 5px gap from stamps to board */
+  right: 10px; /* 10px gap from stamps to board */
   font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   line-height: 1;
   display: flex;
