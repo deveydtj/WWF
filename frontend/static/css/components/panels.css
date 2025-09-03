@@ -91,8 +91,8 @@
   max-height: 90vh;
   overflow-y: auto;
   /* Initial hidden state to prevent click interception on load */
-  display: none;
-  pointer-events: none;
+  display: none !important;
+  pointer-events: none !important;
 }
 
 /* Ensure options menu is visible when "show" class is present - required by ModalAccessibilityManager */

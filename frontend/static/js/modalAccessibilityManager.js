@@ -92,6 +92,7 @@ class ModalAccessibilityManager {
    * Set modal to properly hidden state (non-interactive)
    */
   setModalHidden(modal) {
+    modal.style.setProperty('display', 'none', 'important');
     modal.style.setProperty('pointer-events', 'none', 'important');
     modal.style.setProperty('opacity', '0', 'important');
     modal.style.setProperty('visibility', 'hidden', 'important');
@@ -115,6 +116,7 @@ class ModalAccessibilityManager {
    * Set modal to properly visible state (interactive)
    */
   setModalVisible(modal) {
+    modal.style.setProperty('display', 'block', 'important');
     modal.style.setProperty('pointer-events', 'auto', 'important');
     modal.style.setProperty('opacity', '1', 'important');
     modal.style.setProperty('visibility', 'visible', 'important');
