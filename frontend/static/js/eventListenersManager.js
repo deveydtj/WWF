@@ -208,17 +208,18 @@ class EventListenersManager {
         // Add the "show" class required by ModalAccessibilityManager
         optionsMenu.classList.add('show');
         
+        // Remove any conflicting inline display styles - let CSS handle it via #optionsMenu.show
+        optionsMenu.style.removeProperty('display');
+        
         const currentMode = document.body.dataset.mode;
         if (currentMode === 'medium') {
           // In medium mode, center the options menu on screen
-          optionsMenu.style.display = 'flex';
           optionsMenu.style.position = 'fixed';
           optionsMenu.style.top = '50%';
           optionsMenu.style.left = '50%';
           optionsMenu.style.transform = 'translate(-50%, -50%)';
           optionsMenu.style.zIndex = '80';
         } else {
-          optionsMenu.style.display = 'block';
           positionContextMenu(optionsMenu, optionsToggle);
         }
         

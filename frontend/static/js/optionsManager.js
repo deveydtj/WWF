@@ -38,10 +38,7 @@ function closeOptionsMenu() {
   // Remove the "show" class required by ModalAccessibilityManager
   optionsMenu.classList.remove('show');
   
-  // Set display to none as required by task
-  optionsMenu.style.display = 'none';
-  
-  // Call modalAccessibilityManager to set modal as hidden
+  // Call modalAccessibilityManager to set modal as hidden (it will handle display)
   if (window.modalAccessibilityManager) {
     window.modalAccessibilityManager.setModalHidden(optionsMenu);
   }

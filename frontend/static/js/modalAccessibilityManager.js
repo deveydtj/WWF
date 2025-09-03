@@ -92,7 +92,19 @@ class ModalAccessibilityManager {
    * Set modal to properly hidden state (non-interactive)
    */
   setModalHidden(modal) {
-    modal.style.setProperty('display', 'none', 'important');
+    // Remove the "show" class first so CSS hides it properly
+    modal.classList.remove('show');
+    
+    // For modals with "show" class handling, let CSS handle display, 
+    // otherwise set inline style
+    if (modal.id === 'optionsMenu') {
+      // For options menu, remove any conflicting inline display style
+      // and let CSS handle it via #optionsMenu rule
+      modal.style.removeProperty('display');
+    } else {
+      modal.style.setProperty('display', 'none', 'important');
+    }
+    
     modal.style.setProperty('pointer-events', 'none', 'important');
     modal.style.setProperty('opacity', '0', 'important');
     modal.style.setProperty('visibility', 'hidden', 'important');
@@ -116,7 +128,16 @@ class ModalAccessibilityManager {
    * Set modal to properly visible state (interactive)
    */
   setModalVisible(modal) {
-    modal.style.setProperty('display', 'block', 'important');
+    // For options menu, remove any conflicting inline display styles
+    // and let CSS handle display via #optionsMenu.show rule
+    if (modal.id === 'optionsMenu') {
+      modal.style.removeProperty('display');
+    } else if (!modal.classList.contains('show')) {
+      // Only set display inline style if modal doesn't have "show" class
+      // (which indicates CSS should handle display via CSS rules)
+      modal.style.setProperty('display', 'block', 'important');
+    }
+    
     modal.style.setProperty('pointer-events', 'auto', 'important');
     modal.style.setProperty('opacity', '1', 'important');
     modal.style.setProperty('visibility', 'visible', 'important');
