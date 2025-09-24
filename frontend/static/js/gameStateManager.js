@@ -41,6 +41,12 @@ class GameStateManager {
     this.domManager = null;
     this.myEmoji = null;
     this.messageHandlers = { messageEl: null, messagePopup: null };
+    
+    // Race condition protection for server restart scenarios
+    this.lastRemovalCheckTime = 0;
+    this.removalCheckCooldown = 2000; // 2 seconds cooldown to avoid false positives
+    this.lastGuessTime = 0; // Track when we last made a guess
+    this.postGuessGracePeriod = 3000; // 3 seconds grace period after making a guess
   }
 
   /**
@@ -139,11 +145,52 @@ class GameStateManager {
    * @private
    */
   _checkPlayerRemoval() {
-    if (this.myEmoji && 
-        this.prevActiveEmojis.includes(this.myEmoji) && 
-        !this.activeEmojis.includes(this.myEmoji)) {
-      showMessage('You were removed from the lobby.', this.messageHandlers);
+    // Defensive check to avoid false positives during server restart scenarios
+    if (!this.myEmoji || !this.prevActiveEmojis || !this.activeEmojis) {
+      return;
     }
+    
+    const now = Date.now();
+    const wasActive = this.prevActiveEmojis.includes(this.myEmoji);
+    const isActive = this.activeEmojis.includes(this.myEmoji);
+    
+    // Don't check for removal if we recently made a guess (grace period for auto-reconnection)
+    if ((now - this.lastGuessTime) < this.postGuessGracePeriod) {
+      console.log('🔧 Skipping removal check - within post-guess grace period');
+      return;
+    }
+    
+    // Only show removal message if all conditions are met:
+    // 1. Player was previously active
+    // 2. Player is no longer active
+    // 3. Enough time has passed since last check (avoid race conditions)
+    // 4. We have a substantial previous state (not initial load)
+    if (wasActive && 
+        !isActive && 
+        (now - this.lastRemovalCheckTime) > this.removalCheckCooldown &&
+        this.prevActiveEmojis.length > 0) {
+      
+      // Additional validation: check if this might be a temporary state during auto-reconnection
+      // If the leaderboard still contains our emoji, this might be a race condition
+      const stillInLeaderboard = this.leaderboard.some(entry => entry.emoji === this.myEmoji);
+      
+      if (stillInLeaderboard) {
+        console.log('🔧 Player appears removed from active_emojis but still in leaderboard - likely race condition during auto-reconnection');
+        // Don't show the removal message - this is probably auto-reconnection in progress
+        return;
+      }
+      
+      console.log('🚪 Player confirmed removed from lobby');
+      showMessage('You were removed from the lobby.', this.messageHandlers);
+      this.lastRemovalCheckTime = now;
+    }
+  }
+  
+  /**
+   * Record that a guess was just made (used for race condition protection)
+   */
+  recordGuessAttempt() {
+    this.lastGuessTime = Date.now();
   }
 
   /**

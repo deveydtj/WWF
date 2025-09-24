@@ -103,6 +103,9 @@ async function submitGuessHandler() {
   
   let resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
   
+  // Record the guess attempt to provide grace period for auto-reconnection scenarios
+  gameStateManager.recordGuessAttempt();
+  
   // If we get a 403 error, it might be due to player ID mismatch
   // Try to re-register the emoji and retry the guess once
   if (resp && resp.status === 'error' && resp.msg && resp.msg.includes('pick an emoji')) {
@@ -123,6 +126,9 @@ async function submitGuessHandler() {
         console.log('🔧 Re-registration successful, retrying guess...');
         // Retry the guess with the updated information
         resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
+        
+        // Record the retry attempt as well
+        gameStateManager.recordGuessAttempt();
       }
     } catch (retryError) {
       console.error('Failed to retry guess after emoji re-registration:', retryError);
