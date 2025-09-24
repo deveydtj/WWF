@@ -11,7 +11,8 @@
     "real-time"
   ],
   "devDependencies": {
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "@playwright/test": "^1.55.1"
   },
   "scripts": {
     "dev": "vite",
@@ -23,8 +24,5 @@
     "> 1%",
     "last 2 versions",
     "not dead"
-  ],
-  "dependencies": {
-    "@playwright/test": "^1.55.1"
-  }
+  ]
 }
