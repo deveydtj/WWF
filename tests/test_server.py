@@ -530,6 +530,74 @@ def test_server_restart_player_auto_reconnection_wrong_ip_rejected(server_env):
     print("✓ Auto-reconnection properly rejected for mismatched IP!")
 
 
+def test_state_endpoint_auto_reconnection_fix(server_env):
+    """Test that players are automatically reconnected on /state requests after server restart."""
+    server, request = server_env
+    
+    # Player registers and gets assigned an emoji
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '192.168.1.100'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    # Verify player is registered
+    assert '🎮' in server.current_state.leaderboard
+    assert server.current_state.leaderboard['🎮']['player_id'] == original_player_id
+    assert original_player_id in server.current_state.player_map
+    
+    # Simulate server restart scenario: emoji exists but player_id is mismatched
+    import uuid
+    restart_player_id = uuid.uuid4().hex
+    server.current_state.leaderboard['🎮']['player_id'] = restart_player_id
+    server.current_state.player_map.pop(original_player_id, None)
+    server.current_state.player_map[restart_player_id] = '🎮'
+    
+    # Player makes a state request with their OLD player_id (from before restart)
+    # This should trigger the auto-reconnection logic in the /state endpoint
+    request.json = {'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '192.168.1.100'  # Same IP as original registration
+    request.method = 'POST'
+    state_response = server.state()
+    
+    # Verify auto-reconnection worked - player should be reconnected with original player_id
+    assert server.current_state.leaderboard['🎮']['player_id'] == original_player_id
+    assert original_player_id in server.current_state.player_map
+    assert restart_player_id not in server.current_state.player_map
+    
+    print("✓ Auto-reconnection on /state endpoint successful!")
+
+
+def test_state_endpoint_auto_reconnection_wrong_ip_rejected(server_env):
+    """Test that /state endpoint auto-reconnection is rejected for wrong IP to prevent hijacking."""
+    server, request = server_env
+    
+    # Player registers from specific IP
+    request.json = {'emoji': '🎮', 'player_id': None}
+    request.remote_addr = '192.168.1.100'
+    reg_resp = server.set_emoji()
+    original_player_id = reg_resp['player_id']
+    
+    # Simulate server restart with mismatched player_id
+    import uuid
+    restart_player_id = uuid.uuid4().hex
+    server.current_state.leaderboard['🎮']['player_id'] = restart_player_id
+    server.current_state.player_map.pop(original_player_id, None)
+    server.current_state.player_map[restart_player_id] = '🎮'
+    
+    # Try to reconnect from different IP - should NOT auto-reconnect
+    request.json = {'emoji': '🎮', 'player_id': original_player_id}
+    request.remote_addr = '192.168.1.200'  # Different IP than original registration
+    request.method = 'POST'
+    state_response = server.state()
+    
+    # Verify auto-reconnection was NOT performed due to IP mismatch
+    assert server.current_state.leaderboard['🎮']['player_id'] == restart_player_id  # Should remain unchanged
+    assert restart_player_id in server.current_state.player_map
+    assert original_player_id not in server.current_state.player_map
+    
+    print("✓ /state endpoint auto-reconnection properly rejected for mismatched IP!")
+
+
 def test_server_restart_player_reconnection(server_env, tmp_path, monkeypatch):
     """Test basic server restart scenario (kept for reference)."""
     server, request = server_env
