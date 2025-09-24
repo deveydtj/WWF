@@ -19,8 +19,37 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Will be set by server module to shared requests object
-requests = None
+# Default requests implementation - can be overridden by server module for shared object
+try:
+    import requests
+except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
+    import urllib.request
+    import urllib.error
+
+    class _SimpleResponse:
+        def __init__(self, data: str):
+            self._data = data
+
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self):
+            return json.loads(self._data)
+
+    class _RequestsShim:
+        class RequestException(Exception):
+            pass
+
+        @staticmethod
+        def get(url, headers=None, timeout=5):
+            req = urllib.request.Request(url, headers=headers or {})
+            try:
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    return _SimpleResponse(resp.read().decode("utf-8"))
+            except urllib.error.URLError as e:  # noqa: B904 - fallback shim
+                raise _RequestsShim.RequestException(e) from e
+
+    requests = _RequestsShim()
 
 # Standard Scrabble letter values used for scoring
 SCRABBLE_SCORES = {
