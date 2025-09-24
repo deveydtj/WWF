@@ -101,6 +101,10 @@ async function submitGuessHandler() {
     } catch {}
   }
   
+  // Record the guess attempt BEFORE sending to provide grace period for auto-reconnection scenarios
+  // This protects against SSE updates that arrive while the network request is in flight
+  gameStateManager.recordGuessAttempt();
+  
   let resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
   
   // If we get a 403 error, it might be due to player ID mismatch
@@ -121,6 +125,8 @@ async function submitGuessHandler() {
         }
         eventListenersManager.updatePlayerInfo(myEmoji, myPlayerId);
         console.log('🔧 Re-registration successful, retrying guess...');
+        // Record the retry attempt BEFORE sending to protect against race conditions
+        gameStateManager.recordGuessAttempt();
         // Retry the guess with the updated information
         resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
       }
