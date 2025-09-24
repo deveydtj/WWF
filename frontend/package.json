@@ -3,9 +3,16 @@
   "version": "1.0.0",
   "description": "Frontend for WordSquad - A multiplayer word guessing game with responsive design, real-time chat, and social gameplay features",
   "type": "module",
-  "keywords": ["wordle", "multiplayer", "game", "responsive", "real-time"],
+  "keywords": [
+    "wordle",
+    "multiplayer",
+    "game",
+    "responsive",
+    "real-time"
+  ],
   "devDependencies": {
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "@playwright/test": "^1.55.1"
   },
   "scripts": {
     "dev": "vite",

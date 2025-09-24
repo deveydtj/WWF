@@ -47,7 +47,7 @@ console.log(JSON.stringify(global.localStorage.data));
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert data['dark'] == 'true'
+    assert data['darkMode'] == 'true'
 
 def test_store_and_get_last_lobby():
     script = """
