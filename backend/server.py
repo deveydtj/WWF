@@ -1,3 +1,4 @@
+import collections
 import json
 import logging
 import os
@@ -209,11 +210,11 @@ emoji_lock = threading.Lock()  # guard emoji selection operations
 
 # Lobby dictionary keyed by lobby code
 LOBBIES: dict[str, GameState] = {}
-CREATION_TIMES: dict[str, list[float]] = {}
+CREATION_TIMES: dict[str, collections.deque[float]] = {}
 
 # Enhanced rate limiting tracking
-API_REQUEST_TIMES: dict[str, list[float]] = {}  # IP -> request timestamps
-GUESS_REQUEST_TIMES: dict[str, list[float]] = {}  # player_id -> guess timestamps
+API_REQUEST_TIMES: dict[str, collections.deque[float]] = {}  # IP -> request timestamps
+GUESS_REQUEST_TIMES: dict[str, collections.deque[float]] = {}  # player_id -> guess timestamps
 
 # Track recently removed lobbies to prevent immediate recreation
 RECENTLY_REMOVED_LOBBIES: dict[str, float] = {}
@@ -400,9 +401,11 @@ def get_client_ip():
 def check_api_rate_limit(ip: str) -> bool:
     """Check if the IP has exceeded the API rate limit."""
     now = time.time()
-    times = API_REQUEST_TIMES.setdefault(ip, [])
-    # Remove timestamps older than the window
-    times[:] = [t for t in times if now - t < API_RATE_WINDOW]
+    times = API_REQUEST_TIMES.setdefault(ip, collections.deque())
+    
+    # Remove timestamps older than the window using efficient left-pop
+    while times and now - times[0] >= API_RATE_WINDOW:
+        times.popleft()
     
     if len(times) >= API_RATE_LIMIT:
         return False
@@ -414,9 +417,11 @@ def check_api_rate_limit(ip: str) -> bool:
 def check_guess_rate_limit(player_id: str) -> bool:
     """Check if the player has exceeded the guess rate limit."""
     now = time.time()
-    times = GUESS_REQUEST_TIMES.setdefault(player_id, [])
-    # Remove timestamps older than the window
-    times[:] = [t for t in times if now - t < GUESS_RATE_WINDOW]
+    times = GUESS_REQUEST_TIMES.setdefault(player_id, collections.deque())
+    
+    # Remove timestamps older than the window using efficient left-pop
+    while times and now - times[0] >= GUESS_RATE_WINDOW:
+        times.popleft()
     
     if len(times) >= GUESS_RATE_LIMIT:
         return False
@@ -1084,8 +1089,10 @@ def lobby_create():
     purge_lobbies()
     ip = get_client_ip()
     now = time.time()
-    times = CREATION_TIMES.setdefault(ip, [])
-    times[:] = [t for t in times if now - t < LOBBY_CREATION_WINDOW]
+    times = CREATION_TIMES.setdefault(ip, collections.deque())
+    # Remove timestamps older than the window using efficient left-pop
+    while times and now - times[0] >= LOBBY_CREATION_WINDOW:
+        times.popleft()
     if len(times) >= LOBBY_CREATION_LIMIT:
         return jsonify({"status": "error", "msg": "Rate limit"}), 429
     times.append(now)
