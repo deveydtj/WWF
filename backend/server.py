@@ -182,6 +182,10 @@ API_RATE_WINDOW = 60  # seconds
 GUESS_RATE_LIMIT = 30  # guesses per minute per player
 GUESS_RATE_WINDOW = 60  # seconds
 
+# Performance optimization: rate-limit purge operations
+PURGE_COOLDOWN = 5.0  # Only purge at most once every 5 seconds
+_last_purge_time = 0.0
+
 # Initialize game assets 
 init_game_assets(WORDS_FILE, OFFLINE_DEFINITIONS_FILE)
 
@@ -257,7 +261,34 @@ def get_lobby(code: str) -> GameState:
 
 
 def purge_lobbies() -> None:
-    """Remove lobbies that are finished or idle beyond ``LOBBY_TTL``."""
+    """Remove lobbies that are finished or idle beyond ``LOBBY_TTL``.
+    
+    Performance optimization: Only perform actual purge at most once every
+    PURGE_COOLDOWN seconds to avoid O(n) operations on every lobby request.
+    """
+    global _last_purge_time
+    now = time.time()
+    
+    # Rate limit purge operations - only purge if enough time has passed
+    if now - _last_purge_time < PURGE_COOLDOWN:
+        return
+    
+    _last_purge_time = now
+    _do_purge_lobbies()
+
+
+def force_purge_lobbies() -> None:
+    """Force immediate purge of lobbies, bypassing rate limiting.
+    
+    Used for scheduled cleanup operations and background maintenance.
+    """
+    global _last_purge_time
+    _last_purge_time = time.time()
+    _do_purge_lobbies()
+
+
+def _do_purge_lobbies() -> None:
+    """Internal implementation of lobby purging."""
     now = time.time()
     expired = []
     for cid, state in LOBBIES.items():
@@ -1275,10 +1306,9 @@ def cleanup_lobbies():
     """Purge idle or finished lobbies.
 
     This endpoint is intended for the scheduled Lambda job defined in the
-    Terraform configuration. It simply calls ``purge_lobbies`` and returns a
-    small status payload.
+    Terraform configuration. It forces immediate purge bypassing rate limiting.
     """
-    purge_lobbies()
+    force_purge_lobbies()
     return jsonify({"status": "ok"})
 
 
@@ -1480,7 +1510,7 @@ if __name__ == "__main__":
         while True:
             time.sleep(600)
             try:
-                purge_lobbies()
+                force_purge_lobbies()
             except Exception as e:  # pragma: no cover - best effort cleanup
                 logger.warning("Purge thread error: %s", e)
 
