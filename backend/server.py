@@ -504,7 +504,14 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
     }
 
     if emoji is not None:
+        # Include player-specific daily double status when requested for a specific player
         payload["daily_double_available"] = emoji in s.daily_double_pending
+    else:
+        # For broadcasts (SSE), include daily double status for all active players
+        payload["daily_double_status"] = {
+            player: player in s.daily_double_pending
+            for player in s.leaderboard.keys()
+        }
 
     return payload
 
@@ -942,6 +949,7 @@ def select_hint():
     row = current_state.daily_double_pending.pop(emoji)
     letter = current_state.target_word[col]
     save_data_legacy()
+    broadcast_state()  # Notify other players that daily double was used
     log_daily_double_used(emoji, ip)
     return jsonify(
         {

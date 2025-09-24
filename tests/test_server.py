@@ -1073,6 +1073,70 @@ def test_daily_double_carries_over_on_win(server_env):
     assert '😀' not in server.current_state.daily_double_pending
 
 
+def test_broadcast_state_includes_daily_double_status(server_env):
+    server, request = server_env
+    
+    # Setup multiple players, one with daily double
+    server.current_state.daily_double_pending['😀'] = 1
+    server.current_state.leaderboard['😀'] = {'score': 100, 'player_id': 'p1', 'last_active': 1234567890}
+    server.current_state.leaderboard['😂'] = {'score': 50, 'player_id': 'p2', 'last_active': 1234567890}
+    
+    # Test broadcast payload (SSE scenario)
+    from queue import Queue
+    import json
+    mock_queue = Queue()
+    server.current_state.listeners.add(mock_queue)
+    
+    server.broadcast_state()
+    
+    broadcast_data = mock_queue.get_nowait()
+    parsed_data = json.loads(broadcast_data)
+    
+    # SSE broadcasts should include daily_double_status for all players
+    assert 'daily_double_status' in parsed_data
+    assert parsed_data['daily_double_status']['😀'] is True
+    assert parsed_data['daily_double_status']['😂'] is False
+    
+    # Should not include the player-specific field
+    assert 'daily_double_available' not in parsed_data
+    
+    # Clean up
+    server.current_state.listeners.discard(mock_queue)
+    
+
+def test_hint_endpoint_broadcasts_state(server_env):
+    server, request = server_env
+    
+    # Setup
+    server.current_state.daily_double_pending['😀'] = 1
+    server.current_state.target_word = 'HELLO'
+    server.current_state.leaderboard['😀'] = {'score': 100, 'player_id': 'p1', 'last_active': 1234567890}
+    
+    # Create mock SSE queue
+    from queue import Queue
+    import json
+    mock_queue = Queue()
+    server.current_state.listeners.add(mock_queue)
+    
+    # Use hint
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 2}
+    response = server.select_hint()
+    
+    # Should work and broadcast
+    assert response['status'] == 'ok'
+    assert '😀' not in server.current_state.daily_double_pending
+    
+    # Should have sent SSE broadcast
+    assert not mock_queue.empty()
+    broadcast_data = mock_queue.get_nowait()
+    parsed_data = json.loads(broadcast_data)
+    assert 'daily_double_status' in parsed_data
+    assert parsed_data['daily_double_status']['😀'] is False  # Used the hint
+    
+    # Clean up
+    server.current_state.listeners.discard(mock_queue)
+
+
 def test_chat_empty_message_returns_400(server_env):
     server, request = server_env
     request.method = 'POST'
