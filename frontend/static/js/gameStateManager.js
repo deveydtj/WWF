@@ -74,7 +74,18 @@ class GameStateManager {
     this.prevLeaderboard = Object.fromEntries(this.leaderboard.map(e => [e.emoji, e.score]));
     this.activeEmojis = state.active_emojis || [];
     this.leaderboard = state.leaderboard || [];
-    this.dailyDoubleAvailable = !!state.daily_double_available;
+    
+    // Handle daily double availability - check both old format (player-specific) and new format (all players)
+    if ('daily_double_available' in state) {
+      // Player-specific response (from /state endpoint with emoji parameter)
+      this.dailyDoubleAvailable = !!state.daily_double_available;
+    } else if (state.daily_double_status && this.myEmoji) {
+      // Broadcast response (from SSE) - check status for our emoji
+      this.dailyDoubleAvailable = !!state.daily_double_status[this.myEmoji];
+    } else {
+      // Fallback - assume false if no information available
+      this.dailyDoubleAvailable = false;
+    }
     
     // Handle daily double state
     this._handleDailyDoubleState(state);
