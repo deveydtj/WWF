@@ -281,6 +281,16 @@ function setupLobbyLeaving() {
   const leaveLobby = domManager.get('leaveLobby');
   if (leaveLobby && LOBBY_CODE) {
     leaveLobby.addEventListener('click', async () => {
+      // Immediately update URL to prevent refresh back into lobby before any async operations
+      if (window.parent !== window) {
+        // Clear the hash in the parent window to ensure proper navigation
+        window.parent.location.hash = '';
+        window.parent.history.replaceState(null, '', '/');
+      } else {
+        // Immediately update URL to prevent refresh back into lobby
+        window.history.replaceState(null, '', '/');
+      }
+      
       // Only call the API if we have player info and are in a lobby
       if (myEmoji && myPlayerId) {
         try {
@@ -300,13 +310,8 @@ function setupLobbyLeaving() {
       
       // Check if we're in an iframe (lobby loaded within landing page)
       if (window.parent !== window) {
-        // Clear the hash in the parent window to ensure proper navigation
-        window.parent.location.hash = '';
-        window.parent.history.replaceState(null, '', '/');
         window.parent.location.href = '/';
       } else {
-        // Immediately update URL to prevent refresh back into lobby
-        window.history.replaceState(null, '', '/');
         // If not in iframe, navigate normally
         window.location.href = '/';
       }
