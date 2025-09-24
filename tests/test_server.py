@@ -1714,3 +1714,171 @@ def test_create_lobby_then_get_state(server_env):
     assert state['phase'] == 'waiting'
     assert code in server.LOBBIES
 
+
+def test_offline_definitions_cache_initialization(tmp_path, server_env):
+    """Test that offline definitions are cached during initialization."""
+    server, _ = server_env
+    
+    # Create a test definitions file
+    test_definitions = {
+        "hello": "a greeting",
+        "world": "<b>the earth</b>",  # HTML to test sanitization
+        "empty": "",
+        "none": None
+    }
+    definitions_file = tmp_path / "test_definitions.json"
+    with open(definitions_file, 'w') as f:
+        json.dump(test_definitions, f)
+    
+    # Initialize game assets with our test file
+    words_file = tmp_path / "test_words.txt"
+    with open(words_file, 'w') as f:
+        f.write("hello\nworld\n")
+    
+    server.init_game_assets(words_file, definitions_file)
+    
+    # Check that definitions are cached and sanitized
+    import backend.game_logic as gl
+    assert gl.OFFLINE_DEFINITIONS_CACHE["hello"] == "a greeting"
+    assert gl.OFFLINE_DEFINITIONS_CACHE["world"] == "the earth"  # HTML stripped
+    assert gl.OFFLINE_DEFINITIONS_CACHE["empty"] is None
+    assert gl.OFFLINE_DEFINITIONS_CACHE["none"] is None
+
+
+def test_fetch_definition_uses_cache_on_network_failure(monkeypatch, server_env):
+    """Test that cached definitions are used when network requests fail."""
+    server, _ = server_env
+
+    def fail_request(*a, **k):
+        raise server.requests.RequestException('Network failure')
+
+    monkeypatch.setattr(server.requests, 'get', fail_request)
+
+    # This should use cached definition since network fails
+    definition = server.fetch_definition('crane')
+    assert definition == 'a large bird or lifting machine'
+
+
+def test_fetch_definition_no_cache_on_unexpected_error(monkeypatch, server_env):
+    """Test that unexpected errors don't trigger cached fallback."""
+    server, _ = server_env
+
+    def raise_unexpected_error(*a, **k):
+        raise ValueError('Unexpected programming error')
+
+    monkeypatch.setattr(server.requests, 'get', raise_unexpected_error)
+
+    # This should NOT use cached definition for unexpected errors
+    definition = server.fetch_definition('crane')
+    assert definition is None
+
+
+def test_fetch_definition_thread_safety(server_env):
+    """Test that cached definition access is thread-safe."""
+    server, _ = server_env
+    import threading
+    import time
+    
+    results = []
+    errors = []
+    
+    def lookup_definition(word):
+        try:
+            # Import the helper function
+            from backend.game_logic import _get_cached_offline_definition
+            result = _get_cached_offline_definition(word)
+            results.append(result)
+        except Exception as e:
+            errors.append(e)
+    
+    # Create multiple threads trying to access the cache simultaneously
+    threads = []
+    for i in range(10):
+        thread = threading.Thread(target=lookup_definition, args=('crane',))
+        threads.append(thread)
+    
+    # Start all threads
+    for thread in threads:
+        thread.start()
+    
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
+    
+    # Check results
+    assert len(errors) == 0, f"Thread safety errors: {errors}"
+    assert len(results) == 10
+    assert all(result == 'a large bird or lifting machine' for result in results)
+
+
+def test_cached_offline_definition_function(server_env):
+    """Test the _get_cached_offline_definition helper function."""
+    server, _ = server_env
+    from backend.game_logic import _get_cached_offline_definition
+    
+    # Test existing definition
+    definition = _get_cached_offline_definition('crane')
+    assert definition == 'a large bird or lifting machine'
+    
+    # Test non-existent definition
+    definition = _get_cached_offline_definition('nonexistent')
+    assert definition is None
+
+
+def test_fetch_definition_network_success_bypasses_cache(monkeypatch, server_env):
+    """Test that successful network requests don't use cache."""
+    server, _ = server_env
+    
+    online_definition = "online definition from API"
+    
+    payload = [
+        {
+            'meanings': [
+                {
+                    'definitions': [
+                        {'definition': online_definition}
+                    ]
+                }
+            ]
+        }
+    ]
+
+    class DummyResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return payload
+
+    monkeypatch.setattr(server.requests, 'get', lambda *a, **k: DummyResp())
+
+    # Should get online definition, not cached one
+    definition = server.fetch_definition('crane')
+    assert definition == online_definition
+    assert definition != 'a large bird or lifting machine'  # Not the cached version
+
+
+def test_empty_offline_definitions_cache(tmp_path, server_env):
+    """Test behavior with empty offline definitions file."""
+    server, _ = server_env
+    
+    # Create empty definitions file
+    definitions_file = tmp_path / "empty_definitions.json"
+    with open(definitions_file, 'w') as f:
+        json.dump({}, f)
+    
+    words_file = tmp_path / "test_words.txt"
+    with open(words_file, 'w') as f:
+        f.write("hello\n")
+    
+    server.init_game_assets(words_file, definitions_file)
+    
+    # Cache should be empty
+    import backend.game_logic as gl
+    assert len(gl.OFFLINE_DEFINITIONS_CACHE) == 0
+    
+    # Should return None for any word
+    from backend.game_logic import _get_cached_offline_definition
+    definition = _get_cached_offline_definition('anything')
+    assert definition is None
+
