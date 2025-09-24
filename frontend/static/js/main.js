@@ -27,6 +27,11 @@ let skipAutoClose = false;
 let myEmoji = getMyEmoji();
 let myPlayerId = getMyPlayerId();
 
+// Function to update global myPlayerId (called by appInitializer during auto-reconnection)
+export function updateGlobalPlayerId(newPlayerId) {
+  myPlayerId = newPlayerId;
+}
+
 // Get lobby code from URL
 const LOBBY_CODE = (() => {
   const m = window.location.pathname.match(/\/lobby\/([A-Za-z0-9]{6})/);

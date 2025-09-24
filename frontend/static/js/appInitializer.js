@@ -15,6 +15,7 @@ import { initResetManager } from './resetManager.js';
 import { updatePanelVisibility } from './panelManager.js';
 import { initHintManager, updateHintState } from './hintManager.js';
 import { initializeEnhancedScaling } from './enhancedScaling.js';
+import { updateGlobalPlayerId } from './main.js';
 import { 
   applyDarkModePreference, 
   repositionResetButton,
@@ -234,6 +235,8 @@ class AppInitializer {
       onPlayerIdUpdate: (newPlayerId) => {
         this.myPlayerId = newPlayerId;
         setMyPlayerId(newPlayerId);
+        // Update the global myPlayerId in main.js so it uses the new ID immediately
+        updateGlobalPlayerId(newPlayerId);
         // Update the event listeners manager with new player ID
         if (this.eventListenersManager) {
           this.eventListenersManager.updatePlayerInfo(this.myEmoji, newPlayerId);
