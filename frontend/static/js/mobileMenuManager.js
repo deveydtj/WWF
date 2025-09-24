@@ -93,6 +93,8 @@ class MobileMenuManager {
     if (leaveLobbyBtn) {
       leaveLobbyBtn.addEventListener('click', () => {
         this.close();
+        // Immediately update URL to prevent refresh back into lobby
+        window.history.replaceState(null, '', '/');
         window.location.href = '/';
       });
     }

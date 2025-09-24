@@ -768,6 +768,26 @@ def test_leave_lobby_clears_stored_lobby():
     assert m, "localStorage.removeItem('lastLobby') not found within leaveLobby event listener"
 
 
+def test_leave_lobby_immediately_updates_url():
+    """Test that leaving via door icon immediately updates URL using history.replaceState."""
+    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    
+    # Look for the line that immediately updates the URL in the leave lobby handler
+    assert "window.history.replaceState(null, '', '/')" in text, "window.history.replaceState not found in main.js"
+    
+    # Also verify it's within the leave lobby event handler context and occurs before navigation
+    m = re.search(r"leaveLobby\.addEventListener.*?window\.history\.replaceState.*?window\.location\.href", text, re.DOTALL)
+    assert m, "history.replaceState not found before location.href in leaveLobby event listener"
+    
+    # Check mobile menu manager also has the fix
+    mobile_text = (SRC_DIR / 'mobileMenuManager.js').read_text(encoding='utf-8')
+    assert "window.history.replaceState(null, '', '/')" in mobile_text, "window.history.replaceState not found in mobileMenuManager.js"
+    
+    # Check event listeners manager also has the fix 
+    event_text = (SRC_DIR / 'eventListenersManager.js').read_text(encoding='utf-8')
+    assert "window.history.replaceState(null, '', '/')" in event_text, "window.history.replaceState not found in eventListenersManager.js"
+
+
 def test_fit_board_to_container_returns_sizes():
     script = """
 import { fitBoardToContainer } from './frontend/static/js/utils.js';

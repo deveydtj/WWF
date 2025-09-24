@@ -520,6 +520,8 @@ class EventListenersManager {
     if (leaveLobby && this.lobbyCode) {
       leaveLobby.addEventListener('click', async () => {
         // Lobby leaving logic would be handled here
+        // Immediately update URL to prevent refresh back into lobby
+        window.history.replaceState(null, '', '/');
         // For now, just redirect
         window.location.href = '/';
       });

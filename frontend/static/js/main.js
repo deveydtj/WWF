@@ -302,8 +302,11 @@ function setupLobbyLeaving() {
       if (window.parent !== window) {
         // Clear the hash in the parent window to ensure proper navigation
         window.parent.location.hash = '';
+        window.parent.history.replaceState(null, '', '/');
         window.parent.location.href = '/';
       } else {
+        // Immediately update URL to prevent refresh back into lobby
+        window.history.replaceState(null, '', '/');
         // If not in iframe, navigate normally
         window.location.href = '/';
       }
