@@ -586,6 +586,8 @@ def state():
         data = request.get_json(silent=True) or {}
         e = data.get("emoji")
         pid = data.get("player_id")
+        ip = get_client_ip()
+        
         if (
             e
             and pid
@@ -596,6 +598,40 @@ def state():
             current_state.last_activity = time.time()
             save_data_legacy()
             emoji = e
+        elif (
+            e
+            and pid
+            and e in current_state.leaderboard
+            and current_state.leaderboard[e].get("player_id") != pid
+        ):
+            # Check if this might be a player reconnecting after server restart
+            # If the emoji exists in leaderboard but player_id doesn't match,
+            # and the IP matches the emoji's registered IP, re-register the player
+            # Additional safety: both player_ids should look like UUIDs (server restart scenario)
+            if (e in current_state.leaderboard and 
+                current_state.leaderboard[e].get("ip") == ip and
+                pid is not None and
+                len(pid) == 32 and  # UUID hex string length
+                all(c in '0123456789abcdef' for c in pid)):  # Valid hex chars
+                old_player_id = current_state.leaderboard[e].get("player_id")
+                # Also check that old player_id looks like a UUID for safety
+                if (old_player_id and len(old_player_id) == 32 and 
+                    all(c in '0123456789abcdef' for c in old_player_id)):
+                    # This looks like a server restart scenario - player exists but player_id doesn't match
+                    # Update the player_id to re-register them automatically
+                    current_state.leaderboard[e]["player_id"] = pid
+                    # Update player_map
+                    current_state.player_map.pop(old_player_id, None)
+                    current_state.player_map[pid] = e
+                    logger.info(
+                        "Auto-reconnected player %s (old_id=%s, new_id=%s) on state request after server restart", 
+                        e, old_player_id, pid
+                    )
+                    # Update the last_active time for the reconnected player
+                    current_state.leaderboard[e]["last_active"] = time.time()
+                    current_state.last_activity = time.time()
+                    save_data_legacy()
+                    emoji = e
     else:
         try:
             emoji = request.args.get("emoji")
