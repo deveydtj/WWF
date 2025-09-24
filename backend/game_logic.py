@@ -9,6 +9,7 @@ import string
 import threading
 import time
 from pathlib import Path
+from typing import Dict, Optional
 
 try:
     from .models import GameState
@@ -17,6 +18,38 @@ except ImportError:
     from models import GameState
 
 logger = logging.getLogger(__name__)
+
+# Default requests implementation - can be overridden by server module for shared object
+try:
+    import requests
+except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
+    import urllib.request
+    import urllib.error
+
+    class _SimpleResponse:
+        def __init__(self, data: str):
+            self._data = data
+
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self):
+            return json.loads(self._data)
+
+    class _RequestsShim:
+        class RequestException(Exception):
+            pass
+
+        @staticmethod
+        def get(url, headers=None, timeout=5):
+            req = urllib.request.Request(url, headers=headers or {})
+            try:
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    return _SimpleResponse(resp.read().decode("utf-8"))
+            except urllib.error.URLError as e:  # noqa: B904 - fallback shim
+                raise _RequestsShim.RequestException(e) from e
+
+    requests = _RequestsShim()
 
 # Standard Scrabble letter values used for scoring
 SCRABBLE_SCORES = {
@@ -39,10 +72,14 @@ WORDS_LOADED: bool = False
 # File paths - will be set by init_game_assets
 OFFLINE_DEFINITIONS_FILE = None
 
+# Thread-safe cache for offline definitions
+OFFLINE_DEFINITIONS_CACHE: Dict[str, Optional[str]] = {}
+_definitions_cache_lock = threading.Lock()
+
 
 def init_game_assets(words_file: Path, offline_definitions_file: Path) -> None:
     """Initialize game assets - word list and validate definitions cache."""
-    global WORDS, WORDS_LOADED, OFFLINE_DEFINITIONS_FILE
+    global WORDS, WORDS_LOADED, OFFLINE_DEFINITIONS_FILE, OFFLINE_DEFINITIONS_CACHE
     
     OFFLINE_DEFINITIONS_FILE = offline_definitions_file
     
@@ -61,9 +98,23 @@ def init_game_assets(words_file: Path, offline_definitions_file: Path) -> None:
         logger.error("Startup abort: word list '%s' contains no words", words_file)
         raise SystemExit(1)
     
+    # Load and cache offline definitions with sanitization
     try:
         with open(offline_definitions_file) as f:
-            json.load(f)
+            raw_definitions = json.load(f)
+        
+        # Thread-safe initialization of the cache with sanitized definitions
+        with _definitions_cache_lock:
+            OFFLINE_DEFINITIONS_CACHE.clear()
+            for word, definition in raw_definitions.items():
+                # Pre-sanitize definitions during initialization
+                if definition:
+                    OFFLINE_DEFINITIONS_CACHE[word] = sanitize_definition(definition)
+                else:
+                    OFFLINE_DEFINITIONS_CACHE[word] = None
+        
+        logger.info(f"Cached {len(OFFLINE_DEFINITIONS_CACHE)} offline definitions from {offline_definitions_file}")
+        
     except Exception as e:  # pragma: no cover - startup validation
         logger.error(
             "Startup abort: could not parse definitions file '%s': %s",
@@ -115,38 +166,6 @@ def sanitize_definition(text: str) -> str:
 
 def fetch_definition(word: str):
     """Look up a word's definition online with an offline JSON fallback."""
-    # Import here to avoid circular imports
-    try:
-        import requests
-    except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
-        import urllib.request
-        import urllib.error
-
-        class _SimpleResponse:
-            def __init__(self, data: str):
-                self._data = data
-
-            def raise_for_status(self) -> None:
-                pass
-
-            def json(self):
-                return json.loads(self._data)
-
-        class _RequestsShim:
-            class RequestException(Exception):
-                pass
-
-            @staticmethod
-            def get(url, headers=None, timeout=5):
-                req = urllib.request.Request(url, headers=headers or {})
-                try:
-                    with urllib.request.urlopen(req, timeout=timeout) as resp:
-                        return _SimpleResponse(resp.read().decode("utf-8"))
-                except urllib.error.URLError as e:  # noqa: B904 - fallback shim
-                    raise _RequestsShim.RequestException(e) from e
-
-        requests = _RequestsShim()
-
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     headers = {
         "User-Agent": (
@@ -155,6 +174,8 @@ def fetch_definition(word: str):
         )
     }
     logger.info(f"Fetching definition for '{word}'")
+    
+    # Try online lookup first
     try:
         logger.info(f"Trying online dictionary API for '{word}'")
         resp = requests.get(url, headers=headers, timeout=3)  # Reduced from 5 to 3 seconds
@@ -168,26 +189,34 @@ def fetch_definition(word: str):
                     definition = defs[0].get("definition")
                     if definition:
                         definition = sanitize_definition(definition)
-                    logger.info(f"Online definition for '{word}': {definition}")
-                    return definition
+                        logger.info(f"Online definition for '{word}': {definition}")
+                        return definition
     except requests.RequestException as e:
+        # Network/API failure - use cached offline definitions
         logger.info(f"Online lookup failed for '{word}': {e}. Trying offline cache.")
-        try:
-            with open(OFFLINE_DEFINITIONS_FILE) as f:
-                offline = json.load(f)
-            definition = offline.get(word)
-            if definition:
-                definition = sanitize_definition(definition)
-                logger.info(f"Offline definition for '{word}': {definition}")
-            else:
-                logger.info(f"No offline definition found for '{word}'")
-            return definition
-        except Exception as e2:
-            logger.info(f"Offline lookup failed for '{word}': {e2}")
+        return _get_cached_offline_definition(word)
     except Exception as e:
-        logger.info(f"Unexpected error fetching definition for '{word}': {e}")
-    logger.info(f"No definition found for '{word}'")
+        # Unexpected error (e.g., JSON parsing, programming errors)
+        # Don't use offline fallback for these - they indicate code issues
+        logger.warning(f"Unexpected error fetching definition for '{word}': {e}")
+        return None
+    
+    # No definition found online and no network error occurred
+    logger.info(f"No online definition found for '{word}'")
     return None
+
+
+def _get_cached_offline_definition(word: str) -> Optional[str]:
+    """Get definition from thread-safe cached offline definitions."""
+    with _definitions_cache_lock:
+        definition = OFFLINE_DEFINITIONS_CACHE.get(word)
+    
+    if definition:
+        logger.info(f"Offline definition for '{word}': {definition}")
+    else:
+        logger.info(f"No offline definition found for '{word}'")
+    
+    return definition
 
 
 def start_definition_lookup(word: str, game_state: GameState, save_data_func, broadcast_func) -> threading.Thread:
