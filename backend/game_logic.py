@@ -19,6 +19,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Will be set by server module to shared requests object
+requests = None
+
 # Standard Scrabble letter values used for scoring
 SCRABBLE_SCORES = {
     **{letter: 1 for letter in "aeilnorstu"},
@@ -134,38 +137,6 @@ def sanitize_definition(text: str) -> str:
 
 def fetch_definition(word: str):
     """Look up a word's definition online with an offline JSON fallback."""
-    # Import here to avoid circular imports
-    try:
-        import requests
-    except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
-        import urllib.request
-        import urllib.error
-
-        class _SimpleResponse:
-            def __init__(self, data: str):
-                self._data = data
-
-            def raise_for_status(self) -> None:
-                pass
-
-            def json(self):
-                return json.loads(self._data)
-
-        class _RequestsShim:
-            class RequestException(Exception):
-                pass
-
-            @staticmethod
-            def get(url, headers=None, timeout=5):
-                req = urllib.request.Request(url, headers=headers or {})
-                try:
-                    with urllib.request.urlopen(req, timeout=timeout) as resp:
-                        return _SimpleResponse(resp.read().decode("utf-8"))
-                except urllib.error.URLError as e:  # noqa: B904 - fallback shim
-                    raise _RequestsShim.RequestException(e) from e
-
-        requests = _RequestsShim()
-
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     headers = {
         "User-Agent": (

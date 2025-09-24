@@ -21,6 +21,7 @@ try:
     from .data_persistence import init_persistence, save_data, load_data
     from .analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from .config import validate_production_config, get_config_summary
+    from . import game_logic as _game_logic
 except ImportError:
     # Handle running as script instead of module
     from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
@@ -28,6 +29,7 @@ except ImportError:
     from data_persistence import init_persistence, save_data, load_data
     from analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from config import validate_production_config, get_config_summary
+    import game_logic as _game_logic
 
 try:
     import requests as _requests
@@ -61,6 +63,9 @@ except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
     requests = _RequestsShim()
 else:
     requests = _requests
+
+# Set the shared requests object in game_logic module
+_game_logic.requests = requests
 
 try:
     import redis  # type: ignore
