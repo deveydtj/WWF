@@ -4,6 +4,9 @@ import time
 import pytest
 from unittest.mock import patch
 
+# Skip tests if Flask is not available (consistent with other test files)
+pytest.importorskip("flask")
+
 # Import the server module
 try:
     import backend.server as server
