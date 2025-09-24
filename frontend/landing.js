@@ -24,7 +24,7 @@ function updateDarkToggleIcon() {
 }
 
 function applyDarkMode() {
-  const enabled = localStorage.getItem('dark') === 'true';
+  const enabled = localStorage.getItem('darkMode') === 'true';
   if (document.body) {
     document.body.classList.toggle('dark-mode', enabled);
   }
@@ -32,7 +32,7 @@ function applyDarkMode() {
 }
 
 export function setDarkMode(enabled) {
-  localStorage.setItem('dark', String(enabled));
+  localStorage.setItem('darkMode', String(enabled));
   applyDarkMode();
 }
 
