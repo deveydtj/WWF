@@ -101,10 +101,11 @@ async function submitGuessHandler() {
     } catch {}
   }
   
-  let resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
-  
-  // Record the guess attempt to provide grace period for auto-reconnection scenarios
+  // Record the guess attempt BEFORE sending to provide grace period for auto-reconnection scenarios
+  // This protects against SSE updates that arrive while the network request is in flight
   gameStateManager.recordGuessAttempt();
+  
+  let resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
   
   // If we get a 403 error, it might be due to player ID mismatch
   // Try to re-register the emoji and retry the guess once
@@ -124,11 +125,10 @@ async function submitGuessHandler() {
         }
         eventListenersManager.updatePlayerInfo(myEmoji, myPlayerId);
         console.log('🔧 Re-registration successful, retrying guess...');
+        // Record the retry attempt BEFORE sending to protect against race conditions
+        gameStateManager.recordGuessAttempt();
         // Retry the guess with the updated information
         resp = await sendGuess(guess, myEmoji, myPlayerId, LOBBY_CODE);
-        
-        // Record the retry attempt as well
-        gameStateManager.recordGuessAttempt();
       }
     } catch (retryError) {
       console.error('Failed to retry guess after emoji re-registration:', retryError);
