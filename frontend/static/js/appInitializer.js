@@ -15,6 +15,7 @@ import { initResetManager } from './resetManager.js';
 import { updatePanelVisibility } from './panelManager.js';
 import { initHintManager, updateHintState } from './hintManager.js';
 import { initializeEnhancedScaling } from './enhancedScaling.js';
+import { updateGlobalPlayerId } from './main.js';
 import { 
   applyDarkModePreference, 
   repositionResetButton,
@@ -229,7 +230,25 @@ class AppInitializer {
       dailyDoubleState: {
         row: this.dailyDoubleRow,
         hint: this.dailyDoubleHint
-      }
+      },
+      // Callbacks for auto-reconnection functionality
+      onPlayerIdUpdate: (newPlayerId) => {
+        this.myPlayerId = newPlayerId;
+        setMyPlayerId(newPlayerId);
+        // Update the global myPlayerId in main.js so it uses the new ID immediately
+        updateGlobalPlayerId(newPlayerId);
+        // Update the event listeners manager with new player ID
+        if (this.eventListenersManager) {
+          this.eventListenersManager.updatePlayerInfo(this.myEmoji, newPlayerId);
+        }
+      },
+      onRefreshState: () => {
+        // Refresh state from server after successful reconnection
+        if (this.networkManager) {
+          this.networkManager.fetchState(this.myEmoji, this.lobbyCode);
+        }
+      },
+      lobbyCode: this.lobbyCode
     });
 
     // Initialize event listeners manager

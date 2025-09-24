@@ -16,6 +16,7 @@ import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility } from '
 import { updateChatPanelPosition, positionSidePanels } from './utils.js';
 import { STATES } from './stateManager.js';
 import { playClick } from './audioManager.js';
+import { sendEmoji } from './api.js';
 
 class GameStateManager {
   constructor() {
@@ -47,6 +48,8 @@ class GameStateManager {
     this.removalCheckCooldown = 2000; // 2 seconds cooldown to avoid false positives
     this.lastGuessTime = 0; // Track when we last made a guess
     this.postGuessGracePeriod = 3000; // 3 seconds grace period after making a guess
+    this.lastEmojiRegistrationTime = 0; // Track when we last registered an emoji
+    this.postEmojiRegistrationGracePeriod = 3000; // 3 seconds grace period after emoji registration
   }
 
   /**
@@ -58,6 +61,11 @@ class GameStateManager {
     this.domManager = config.domManager;
     this.myEmoji = config.myEmoji;
     this.messageHandlers = config.messageHandlers;
+    
+    // Optional callbacks for external operations
+    this.onPlayerIdUpdate = config.onPlayerIdUpdate; // Callback to update player ID in external state
+    this.onRefreshState = config.onRefreshState; // Callback to refresh state from server
+    this.lobbyCode = config.lobbyCode; // Lobby code for API calls
     
     // Load saved daily double state
     if (config.dailyDoubleState) {
@@ -144,7 +152,7 @@ class GameStateManager {
    * Check if current player was removed from lobby
    * @private
    */
-  _checkPlayerRemoval() {
+  async _checkPlayerRemoval() {
     // Defensive check to avoid false positives during server restart scenarios
     if (!this.myEmoji || !this.prevActiveEmojis || !this.activeEmojis) {
       return;
@@ -154,9 +162,14 @@ class GameStateManager {
     const wasActive = this.prevActiveEmojis.includes(this.myEmoji);
     const isActive = this.activeEmojis.includes(this.myEmoji);
     
-    // Don't check for removal if we recently made a guess (grace period for auto-reconnection)
+    // Don't check for removal if we recently made a guess or registered an emoji (grace period for auto-reconnection)
     if ((now - this.lastGuessTime) < this.postGuessGracePeriod) {
       console.log('🔧 Skipping removal check - within post-guess grace period');
+      return;
+    }
+    
+    if ((now - this.lastEmojiRegistrationTime) < this.postEmojiRegistrationGracePeriod) {
+      console.log('🔧 Skipping removal check - within post-emoji-registration grace period');
       return;
     }
     
@@ -175,9 +188,18 @@ class GameStateManager {
       const stillInLeaderboard = this.leaderboard.some(entry => entry.emoji === this.myEmoji);
       
       if (stillInLeaderboard) {
-        console.log('🔧 Player appears removed from active_emojis but still in leaderboard - likely race condition during auto-reconnection');
-        // Don't show the removal message - this is probably auto-reconnection in progress
-        return;
+        console.log('🔧 Player appears removed from active_emojis but still in leaderboard - attempting auto-reconnection');
+        
+        // Attempt to re-register the emoji with the server
+        const reconnectionSuccessful = await this._attemptEmojiReconnection();
+        if (reconnectionSuccessful) {
+          // Don't show the removal message - reconnection was successful
+          console.log('🔧 Auto-reconnection successful - player restored');
+          return;
+        }
+        
+        // If reconnection failed, fall through to show removal message
+        console.log('🔧 Auto-reconnection failed - showing removal message');
       }
       
       console.log('🚪 Player confirmed removed from lobby');
@@ -191,6 +213,57 @@ class GameStateManager {
    */
   recordGuessAttempt() {
     this.lastGuessTime = Date.now();
+  }
+
+  /**
+   * Record that an emoji registration was just made (used for race condition protection)
+   */
+  recordEmojiRegistration() {
+    this.lastEmojiRegistrationTime = Date.now();
+  }
+
+  /**
+   * Attempt to re-register the player's emoji with the server for auto-reconnection
+   * @private
+   * @returns {Promise<boolean>} True if reconnection was successful, false otherwise
+   */
+  async _attemptEmojiReconnection() {
+    if (!this.myEmoji || !this.lobbyCode) {
+      console.warn('🔧 Cannot attempt reconnection - missing emoji or lobby code');
+      return false;
+    }
+
+    try {
+      console.log('🔧 Attempting to re-register emoji for auto-reconnection:', this.myEmoji);
+      
+      // Record the registration attempt before making the call to provide grace period
+      this.recordEmojiRegistration();
+      
+      // Call the /emoji endpoint with null player_id to trigger re-registration
+      const emojiResp = await sendEmoji(this.myEmoji, null, this.lobbyCode);
+      
+      if (emojiResp && emojiResp.status === 'ok') {
+        console.log('🔧 Emoji re-registration successful:', emojiResp);
+        
+        // Update our local state with the corrected information
+        if (emojiResp.player_id && this.onPlayerIdUpdate) {
+          this.onPlayerIdUpdate(emojiResp.player_id);
+        }
+        
+        // Refresh the state from the server to get updated active_emojis
+        if (this.onRefreshState) {
+          this.onRefreshState();
+        }
+        
+        return true;
+      } else {
+        console.warn('🔧 Emoji re-registration failed:', emojiResp);
+        return false;
+      }
+    } catch (error) {
+      console.error('🔧 Error during emoji re-registration:', error);
+      return false;
+    }
   }
 
   /**
