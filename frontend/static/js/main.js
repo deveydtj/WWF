@@ -92,6 +92,8 @@ async function submitGuessHandler() {
   
   if (!myPlayerId) {
     try {
+      // Record the emoji registration attempt for grace period protection
+      gameStateManager.recordEmojiRegistration();
       const d = await sendEmoji(myEmoji, null, LOBBY_CODE);
       if (d && d.player_id) {
         myPlayerId = d.player_id;
@@ -112,6 +114,8 @@ async function submitGuessHandler() {
   if (resp && resp.status === 'error' && resp.msg && resp.msg.includes('pick an emoji')) {
     console.log('🔧 Player ID mismatch detected, re-registering emoji...');
     try {
+      // Record the emoji registration attempt for grace period protection
+      gameStateManager.recordEmojiRegistration();
       const emojiResp = await sendEmoji(myEmoji, null, LOBBY_CODE);
       if (emojiResp && emojiResp.status === 'ok') {
         // Update our local state with the corrected information
@@ -215,7 +219,11 @@ function handleEmojiModal(activeEmojis) {
       onError: (msg) => showMessage(msg, {
         messageEl: domManager.get('messageEl'),
         messagePopup: domManager.get('messagePopup')
-      })
+      }),
+      onEmojiRegistration: () => {
+        // Record the emoji registration attempt for grace period protection
+        gameStateManager.recordEmojiRegistration();
+      }
     });
     showEmojiModalOnNextFetch = false;
   } else {

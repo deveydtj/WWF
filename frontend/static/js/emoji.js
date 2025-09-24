@@ -124,12 +124,13 @@ export function applyEmojiVariantStyling(element, emojiVariant) {
  * Display the emoji picker modal.
  *
  * @param {Array<string>} takenEmojis - Emojis already claimed by others.
- * @param {{onChosen:function, skipAutoCloseRef:{value:boolean}}} options
+ * @param {{onChosen:function, skipAutoCloseRef:{value:boolean}, onEmojiRegistration:function}} options
  */
 export function showEmojiModal(takenEmojis, {
   onChosen,
   skipAutoCloseRef,
-  onError
+  onError,
+  onEmojiRegistration
 }) {
   const modal = document.getElementById('emojiModal');
   const choices = document.getElementById('emojiChoices');
@@ -154,6 +155,8 @@ export function showEmojiModal(takenEmojis, {
     }
 
     btn.onclick = async () => {
+    // Call the emoji registration callback before making the API call
+    if (typeof onEmojiRegistration === 'function') onEmojiRegistration();
     const data = await sendEmoji(e, getMyPlayerId(), window.LOBBY_CODE);
     if (data.status === 'ok') {
       if (data.player_id) setMyPlayerId(data.player_id);
