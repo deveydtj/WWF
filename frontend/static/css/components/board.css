@@ -38,29 +38,24 @@
   position: relative;
   width: 60px;
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
-  /* Center stamps within the grid area */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  /* Container for absolutely positioned stamps */
   pointer-events: none;
   z-index: var(--z-panel-interactive);
-  padding-top: 0;
 }
 
 /* Show stamps on everything except mobile */
 @media (min-width: 601px) {
   #stampContainer {
-    display: flex;
+    display: block;
   }
 }
 
-/* Emoji stamps styling - Updated for CSS Grid */
+/* Emoji stamps styling - Updated for precise row alignment */
 .emoji-stamp {
-  position: relative; /* Changed from absolute to relative */
+  position: absolute; /* Changed back to absolute for precise positioning */
+  left: 0;
   width: 100%;
   height: var(--tile-size); /* Match tile height */
-  margin-bottom: var(--tile-gap); /* Space between stamps */
   font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   display: flex;
   align-items: center;
@@ -68,8 +63,6 @@
   background: transparent;
   padding: 0;
   border: none;
-  pointer-events: none;
-}
   box-shadow: none;
   outline: none;
   /* Black stroke outline for light mode */
