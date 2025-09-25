@@ -249,7 +249,8 @@ function renderPlayerSidebar() {
  */
 function alignStampsWithBoardRows() {
   const stampsDiv = document.getElementById('stampContainer');
-  if (!stampsDiv) return;
+  const boardElement = document.getElementById('board');
+  if (!stampsDiv || !boardElement) return;
   
   // Get current CSS variable values
   const tileSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
@@ -257,16 +258,21 @@ function alignStampsWithBoardRows() {
   
   if (!tileSize || !tileGap) return; // Skip if CSS variables aren't ready
   
+  // Calculate the vertical offset between stamp container and board
+  const stampsRect = stampsDiv.getBoundingClientRect();
+  const boardRect = boardElement.getBoundingClientRect();
+  const verticalOffset = boardRect.top - stampsRect.top;
+  
   const stamps = stampsDiv.querySelectorAll('.emoji-stamp');
   stamps.forEach((stamp) => {
     const rowIndex = parseInt(stamp.getAttribute('data-guess-index'), 10);
     if (isNaN(rowIndex)) return;
     
-    // Calculate vertical center of the row
+    // Calculate vertical center of the row, accounting for board offset
     const stampHeight = tileSize * 0.8; // Match font-size from CSS
-    const top = (rowIndex * (tileSize + tileGap)) + (tileSize / 2) - (stampHeight / 2);
+    const rowTop = verticalOffset + (rowIndex * (tileSize + tileGap)) + (tileSize / 2) - (stampHeight / 2);
     
-    stamp.style.top = `${top}px`;
+    stamp.style.top = `${rowTop}px`;
     stamp.style.height = `${stampHeight}px`;
     stamp.style.lineHeight = `${stampHeight}px`;
   });
