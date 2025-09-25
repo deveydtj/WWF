@@ -34,13 +34,16 @@
 
 /* Board stamps - Updated for CSS Grid layout */
 #stampContainer {
-  /* Use relative positioning within grid area */
+  /* Use relative positioning within grid area, but anchor to the right (closest to board) */
   position: relative;
   width: 60px;
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
   /* Container for absolutely positioned stamps */
   pointer-events: none;
   z-index: var(--z-panel-interactive);
+  /* Align stamps close to the board by positioning container to the right of its grid area */
+  margin-left: auto;
+  margin-right: 0;
 }
 
 /* Show stamps on everything except mobile */
