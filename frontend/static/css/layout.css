@@ -150,7 +150,7 @@ body.definition-open #definitionBox {
 }
 
 body.chat-open #chatBox {
-  display: block;
+  display: flex;
   visibility: visible;
   opacity: 1;
 }
