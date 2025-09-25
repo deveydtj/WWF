@@ -162,12 +162,12 @@ body.chat-open #chatBox {
 /* Desktop Grid Layout (>900px) - Responsive column widths with history panel overflow detection */
 @media (min-width: 901px) {
   #mainGrid {
-    /* Tighter layout: history panel, stamps close to board, then definition/chat */
-    grid-template-columns: minmax(200px, 280px) 60px minmax(auto, var(--board-width)) minmax(200px, 280px);
+    /* Wide desktop: center the layout with history panel close to stamps */
+    grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      "history stamp center definition"
-      "history stamp center chat";
+      ". history stamp center definition ."
+      ". history stamp center chat .";
     justify-content: center;
     max-width: none;
     /* Reduce gap for tighter spacing */
@@ -177,10 +177,10 @@ body.chat-open #chatBox {
   /* Narrow desktop layout - history panel becomes popup to prevent overflow */
   body[data-history-popup="true"] #mainGrid {
     /* Remove history from grid layout on narrow screens */
-    grid-template-columns: 60px minmax(auto, var(--board-width)) minmax(200px, 280px);
+    grid-template-columns: 1fr 60px minmax(auto, var(--board-width)) 280px 1fr;
     grid-template-areas: 
-      "stamp center definition"
-      "stamp center chat";
+      ". stamp center definition ."
+      ". stamp center chat .";
   }
   
   /* History panel popup styling for narrow desktop screens */
@@ -198,17 +198,21 @@ body.chat-open #chatBox {
   /* For ultra-wide displays (>1550px), always use full grid layout */
   @media (min-width: 1551px) {
     #mainGrid {
-      grid-template-columns: minmax(280px, 1fr) 60px minmax(auto, var(--board-width)) minmax(280px, 1fr);
+      /* Center the layout and position history panel closer to stamps */
+      grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+      grid-template-areas: 
+        ". history stamp center definition ."
+        ". history stamp center chat .";
       /* Slightly larger gap on ultra-wide screens */
       gap: 20px;
     }
     
     /* Override history popup on ultra-wide screens */
     body[data-history-popup="true"] #mainGrid {
-      grid-template-columns: minmax(280px, 1fr) 60px minmax(auto, var(--board-width)) minmax(280px, 1fr);
+      grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
       grid-template-areas: 
-        "history stamp center definition"
-        "history stamp center chat";
+        ". history stamp center definition ."
+        ". history stamp center chat .";
     }
     
     body[data-history-popup="true"] #historyBox {
