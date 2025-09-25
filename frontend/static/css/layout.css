@@ -159,7 +159,7 @@ body.chat-open #chatBox {
   opacity: 1;
 }
 
-/* Desktop Grid Layout (>900px) - Responsive column widths */
+/* Desktop Grid Layout (>900px) - Responsive column widths with history panel overflow detection */
 @media (min-width: 901px) {
   #mainGrid {
     /* Tighter layout: history panel, stamps close to board, then definition/chat */
@@ -174,12 +174,50 @@ body.chat-open #chatBox {
     gap: 15px;
   }
   
-  /* For ultra-wide displays (>1550px), allow panels to grow beyond 280px but keep stamps anchored */
+  /* Narrow desktop layout - history panel becomes popup to prevent overflow */
+  body[data-history-popup="true"] #mainGrid {
+    /* Remove history from grid layout on narrow screens */
+    grid-template-columns: 60px minmax(auto, var(--board-width)) minmax(200px, 280px);
+    grid-template-areas: 
+      "stamp center definition"
+      "stamp center chat";
+  }
+  
+  /* History panel popup styling for narrow desktop screens */
+  body[data-history-popup="true"] #historyBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: var(--z-panel-overlay);
+    max-width: 90%;
+    max-height: 80vh;
+    width: 280px; /* Use optimal width when space allows */
+  }
+  
+  /* For ultra-wide displays (>1550px), always use full grid layout */
   @media (min-width: 1551px) {
     #mainGrid {
       grid-template-columns: minmax(280px, 1fr) 60px minmax(auto, var(--board-width)) minmax(280px, 1fr);
       /* Slightly larger gap on ultra-wide screens */
       gap: 20px;
+    }
+    
+    /* Override history popup on ultra-wide screens */
+    body[data-history-popup="true"] #mainGrid {
+      grid-template-columns: minmax(280px, 1fr) 60px minmax(auto, var(--board-width)) minmax(280px, 1fr);
+      grid-template-areas: 
+        "history stamp center definition"
+        "history stamp center chat";
+    }
+    
+    body[data-history-popup="true"] #historyBox {
+      position: static;
+      transform: none;
+      z-index: var(--z-panel-base);
+      max-width: none;
+      max-height: calc(100vh - 160px);
+      width: auto;
     }
   }
 }

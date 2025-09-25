@@ -278,39 +278,25 @@ export function updateVH() {
 
 /**
  * Set the layout mode (light/medium/full) based on viewport width.
+ * Also determines if history panel should be in popup mode on narrow desktop layouts.
  */
 export function applyLayoutMode() {
   const width = window.innerWidth;
   let mode = 'full';
+  let historyPopup = false; // Track if history panel should be popup on desktop
+  
   if (width <= 600) {
     mode = 'light';
   } else if (width <= 900) {
     mode = 'medium';
+  } else if (width <= 1150) {
+    // Narrow desktop - use grid layout but make history panel a popup to prevent overflow
+    mode = 'full';
+    historyPopup = true;
   } else if (width <= 1550) {
-    // For screens 901-1550px, allow transition to full mode for larger screens in this range
-    // This reduces over-constraining of the 1200-1550px range
-    if (width <= 1200) {
-      mode = 'medium';
-    } else {
-      // For 1200-1550px, check if there's space for side panels before forcing medium mode
-      const boardArea = document.getElementById('boardArea');
-      if (boardArea) {
-        const rect = boardArea.getBoundingClientRect();
-        const leftSpace = rect.left;
-        const rightSpace = width - rect.right;
-        const minPanelWidth = 250; // Reduced from 280 to be less restrictive
-        const margin = 30; // Reduced margin for better space utilization
-        
-        // Allow full mode if there's reasonable space for side panels
-        if (leftSpace >= minPanelWidth + margin && rightSpace >= minPanelWidth + margin) {
-          mode = 'full';
-        } else {
-          mode = 'medium';
-        }
-      } else {
-        mode = 'medium';
-      }
-    }
+    // For screens 1151-1550px, allow full mode with all panels in grid
+    mode = 'full';
+    historyPopup = false;
   } else {
     // For screens wider than 1550px, use full mode with side panels
     const boardArea = document.getElementById('boardArea');
@@ -327,8 +313,14 @@ export function applyLayoutMode() {
       }
     }
   }
+  
   if (document.body.dataset.mode !== mode) {
     document.body.dataset.mode = mode;
+  }
+  
+  // Set history popup state for CSS to use
+  if (historyPopup !== (document.body.dataset.historyPopup === 'true')) {
+    document.body.dataset.historyPopup = historyPopup ? 'true' : 'false';
   }
 }
 
