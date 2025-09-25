@@ -127,28 +127,6 @@
       </div>
     </div>
 
-    <!-- Game History Panel -->
-    <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
-      <button id="historyClose" class="close-btn">✖</button>
-      <h3 id="historyHeading">History</h3>
-      <ul id="historyList"></ul>
-    </div>
-
-    <!-- Leaderboard moved to lobbyHeader -->
-    <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
-      <button id="definitionClose" class="close-btn">✖</button>
-      <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
-      <div id="definitionText"></div>
-    </div>
-    <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
-      <button id="chatClose" class="close-btn" type="button">✖</button>
-      <h3 id="chatHeading" class="visually-hidden">Chat</h3>
-      <div id="chatMessages"></div>
-      <form id="chatForm">
-        <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
-        <button id="chatSend" type="submit">Send</button>
-      </form>
-    </div>
     <div id="playerSidebar" role="dialog" aria-label="Players">
       <button id="playerClose" class="close-btn" type="button">✖</button>
       <ul id="playerList"></ul>
@@ -168,7 +146,11 @@
     <div id="gameLayoutContainer">
       <!-- Left Panel -->
       <div id="leftPanel" class="layout-panel">
-        <!-- History box will be positioned here for non-mobile -->
+        <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
+          <button id="historyClose" class="close-btn">✖</button>
+          <h3 id="historyHeading">History</h3>
+          <ul id="historyList"></ul>
+        </div>
       </div>
 
       <!-- Center Panel -->
@@ -257,7 +239,20 @@
 
       <!-- Right Panel -->
       <div id="rightPanel" class="layout-panel">
-        <!-- Chat and definition boxes will be positioned here for non-mobile -->
+        <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
+          <button id="definitionClose" class="close-btn">✖</button>
+          <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
+          <div id="definitionText"></div>
+        </div>
+        <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
+          <button id="chatClose" class="close-btn" type="button">✖</button>
+          <h3 id="chatHeading" class="visually-hidden">Chat</h3>
+          <div id="chatMessages"></div>
+          <form id="chatForm">
+            <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
+            <button id="chatSend" type="submit">Send</button>
+          </form>
+        </div>
       </div>
     </div> <!-- end gameLayoutContainer -->
   </div>

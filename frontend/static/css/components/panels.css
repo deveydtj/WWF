@@ -193,17 +193,14 @@ body.dark-mode .close-btn:active {
 
 /* History Panel */
 #historyBox {
-  position: absolute;
-  top: 100px;
-  left: 20px;
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  width: 100%;
+  max-width: 100%;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   background: var(--bg-color);
-  padding: 10px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 20px;
   box-shadow:
     inset 2px 2px 5px var(--shadow-color-dark),
     inset -2px -2px 5px var(--shadow-color-light);
@@ -258,17 +255,14 @@ body.dark-mode .close-btn:active {
 
 /* Definition Panel */
 #definitionBox {
-  position: absolute;
-  top: 100px;
-  right: 20px;
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  width: 100%;
+  max-width: 100%;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   background: var(--bg-color);
-  padding: 10px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 20px;
   box-shadow:
     inset 2px 2px 5px var(--shadow-color-dark),
     inset -2px -2px 5px var(--shadow-color-light);
@@ -281,17 +275,14 @@ body.dark-mode .close-btn:active {
 
 /* Chat Panel */
 #chatBox {
-  position: absolute;
-  top: 100px;
-  left: calc(100% + 20px);
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-color);
   padding: 36px 10px 10px;
-  border-radius: 8px;
+  border-radius: 20px;
   box-shadow:
     inset 2px 2px 5px var(--shadow-color-dark),
     inset -2px -2px 5px var(--shadow-color-light);
@@ -449,84 +440,12 @@ body.players-open #playerSidebar {
   #definitionClose {
     display: none;
   }
-  
+
   #optionsToggle {
     display: block;
   }
-  
+
   #chatNotify {
     display: block;
-  }
-  
-  #boardArea {
-    position: relative;
-  }
-  
-  /* Large screen panel positioning - align with board level and add gaps */
-  body #historyBox {
-    position: absolute !important;
-    top: 140px !important; /* Move down to align with board level */
-    left: calc(50% - var(--board-width) / 2 - 365px) !important; /* Move further left to give room for stamps */
-    right: auto !important;
-    width: 280px !important;
-    max-height: calc(100vh - 240px) !important;
-    transform-origin: left center !important;
-  }
-  
-  body #definitionBox {
-    position: absolute !important;
-    top: 180px !important; /* Move down further to avoid options gear overlap */
-    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Move further right to avoid options button */
-    left: auto !important;
-    width: 280px !important;
-    max-height: 300px !important; /* Limit height to prevent overlap with chat panel */
-    transform-origin: right center !important;
-  }
-  
-  body:not([data-mode='medium']) #chatBox {
-    position: absolute !important;
-    /* Dynamic top position will be set by JavaScript based on definition panel height */
-    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Match definition panel position */
-    left: auto !important;
-    width: 280px !important;
-    max-height: calc(100vh - 510px) !important; /* Adjust max-height for the new position */
-    transform-origin: right center !important;
-  }
-  
-  body:not(.history-open) #historyBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  body:not(.definition-open) #definitionBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  body:not(.chat-open) #chatBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  /* When panels are open, they should be visible */
-  body.history-open #historyBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  
-  body.definition-open #definitionBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  
-  body.chat-open #chatBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
   }
 }
