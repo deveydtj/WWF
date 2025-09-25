@@ -224,26 +224,4 @@
 .fluid-space-lg { margin: clamp(1.5rem, 3vw, 3rem); }
 .fluid-space-xl { margin: clamp(2rem, 4vw, 4rem); }
 
-/* ═══════════════════════════════════════════════
-   MEDIUM MODE FIX: Panel positioning to prevent extra space
-   ═══════════════════════════════════════════════ */
-@media (min-width: 601px) and (max-width: 900px) {
-  /* Fix medium mode panel positioning to prevent space above lobbyHeader */
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    position: absolute !important;
-    top: 10px !important;
-  }
-
-  body[data-mode='medium'] #historyBox {
-    left: 0 !important;
-    transform-origin: left center !important;
-  }
-
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    right: 0 !important;
-    transform-origin: right center !important;
-  }
-}
+/* Medium mode layout handled in responsive.css */

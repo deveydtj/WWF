@@ -2,17 +2,42 @@
    Layout - Responsive positioning and panel layouts
    ───────────────────────────────────────────── */
 
+body {
+  --left-panel-width: 0px;
+  --right-panel-width: 0px;
+  --left-panel-gap: 0px;
+  --right-panel-gap: 0px;
+}
+
+body.history-open {
+  --left-panel-width: clamp(220px, 18vw, 280px);
+  --left-panel-gap: 20px;
+}
+
+body.definition-open,
+body.chat-open {
+  --right-panel-width: clamp(220px, 18vw, 280px);
+  --right-panel-gap: 20px;
+}
+
 /* Three-panel layout structure for non-mobile */
 #gameLayoutContainer {
-  display: flex;
+  display: grid;
+  grid-template-columns:
+    minmax(0, var(--left-panel-width))
+    minmax(0, var(--left-panel-gap))
+    minmax(0, 1fr)
+    minmax(0, var(--right-panel-gap))
+    minmax(0, var(--right-panel-width));
+  column-gap: 0;
+  row-gap: 0;
   width: 100%;
   height: 100%;
-  gap: 20px;
   align-items: flex-start;
   justify-content: center;
   position: relative;
   /* Enhanced transitions for smooth layout mode changes */
-  transition: flex-direction 0.3s ease-in-out, 
+  transition: grid-template-columns 0.3s ease-in-out,
               gap 0.3s ease-in-out,
               padding 0.3s ease-in-out;
 }
@@ -20,50 +45,37 @@
 .layout-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 20px;
+  min-width: 0;
   /* Enhanced transitions for panel visibility and layout changes */
-  transition: width 0.3s ease-in-out, 
-              opacity 0.3s ease-in-out,
+  transition: opacity 0.3s ease-in-out,
               transform 0.3s ease-in-out;
 }
 
 #leftPanel {
-  width: 280px;
-  min-width: 280px;
-  position: relative;
-  /* Enhanced panel transitions with transform support */
-  transition: width 0.3s ease-in-out, 
-              opacity 0.3s ease-in-out,
-              transform 0.3s ease-in-out;
-}
-
-#centerPanel {
-  flex: 1;
-  max-width: calc(var(--board-width) + 200px); /* Allow extra buffer around board plus stamp space to prevent history panel overlap at ultra-wide resolutions */
-  min-width: var(--board-width);
-  position: relative;
-  /* Enhanced panel transitions for responsive scaling */
-  transition: width 0.3s ease-in-out, 
-              max-width 0.3s ease-in-out, 
-              min-width 0.3s ease-in-out,
-              transform 0.3s ease-in-out;
+  grid-column: 1;
 }
 
 #rightPanel {
-  width: 280px;
-  min-width: 280px;
+  grid-column: 5;
+}
+
+#centerPanel {
   position: relative;
-  /* Enhanced panel transitions with transform support */
-  transition: width 0.3s ease-in-out, 
-              opacity 0.3s ease-in-out,
-              transform 0.3s ease-in-out;
+  max-width: calc(var(--board-width) + 200px);
+  min-width: min(calc(var(--board-width) + 40px), 100%);
+  justify-self: center;
+  grid-column: 3;
 }
 
 /* Mobile layout will be handled in responsive.css to avoid conflicts */
 
 /* Panel positioning and layout */
 #historyBox {
-  width: 260px;
+  width: 100%;
+  max-width: 100%;
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
@@ -83,13 +95,12 @@
               transform 0.3s ease-in-out,
               width 0.3s ease-in-out;
   pointer-events: none;
-  /* Position within left panel on non-mobile */
-  position: relative;
-  top: 10px;
+  margin-top: 10px;
 }
 
 #definitionBox {
-  width: 260px;
+  width: 100%;
+  max-width: 100%;
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
@@ -109,24 +120,24 @@
               transform 0.3s ease-in-out,
               width 0.3s ease-in-out;
   pointer-events: none;
-  /* Position within right panel on non-mobile */
-  position: relative;
-  top: 10px;
+  margin-top: 10px;
 }
 
 #chatBox {
-  width: 260px;
-  height: calc(100vh - 160px);
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 
+  box-shadow:
     inset 4px 4px 8px var(--inset-shadow-dark),
     inset -4px -4px 8px var(--inset-shadow-light),
     8px 8px 16px var(--shadow-color-dark),
     -8px -8px 16px var(--shadow-color-light);
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   overflow: hidden;
   z-index: var(--z-panel-base);
   opacity: 0;
@@ -137,9 +148,7 @@
               transform 0.3s ease-in-out,
               width 0.3s ease-in-out;
   pointer-events: none;
-  /* Position within right panel on non-mobile */
-  position: relative;
-  top: 10px;
+  margin-top: 10px;
 }
 
 /* Panel visibility states */
@@ -252,10 +261,13 @@ body.chat-open #chatBox {
 
 /* Medium mode panel positioning moved to responsive.css for proper CSS loading order */
 
-body[data-mode='medium'] #historyBox,
+body[data-mode='medium'] #historyBox {
+  transform-origin: top left;
+}
+
 body[data-mode='medium'] #definitionBox,
 body[data-mode='medium'] #chatBox {
-  transform-origin: top left;
+  transform-origin: top right;
 }
 
 body[data-mode='medium']:not(.history-open) #historyBox,

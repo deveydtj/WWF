@@ -197,40 +197,15 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
  * with a small gap, regardless of the definition panel's content height.
  */
 export function updateChatPanelPosition() {
-  const viewportWidth = window.innerWidth;
-  
-  // Only apply dynamic positioning for large screens (≥901px)
-  if (viewportWidth <= 900) {
-    return;
-  }
-  
-  const definitionBox = document.getElementById('definitionBox');
   const chatBox = document.getElementById('chatBox');
-  
-  if (!definitionBox || !chatBox) {
+
+  if (!chatBox) {
     return;
   }
-  
-  // Get the definition panel's position and actual height
-  const definitionRect = definitionBox.getBoundingClientRect();
-  const definitionComputedStyle = window.getComputedStyle(definitionBox);
-  const definitionTop = parseInt(definitionComputedStyle.top, 10) || 180; // fallback to CSS default
-  
-  // Calculate the bottom position of the definition panel
-  // Use scrollHeight to get the actual content height, but respect max-height
-  const maxHeight = parseInt(definitionComputedStyle.maxHeight, 10) || 300;
-  const actualContentHeight = Math.min(definitionBox.scrollHeight, maxHeight);
-  
-  // Position chat panel just below definition panel with 10px gap
-  const chatTop = definitionTop + actualContentHeight + 10;
-  
-  // Set the chat panel position
-  chatBox.style.top = `${chatTop}px`;
-  
-  // Adjust max-height to ensure chat panel doesn't extend beyond viewport
-  const remainingViewportHeight = window.innerHeight - chatTop - 20; // 20px bottom margin
-  const newMaxHeight = Math.max(100, remainingViewportHeight); // Minimum 100px height
-  chatBox.style.maxHeight = `${newMaxHeight}px`;
+
+  // Clear any inline positioning styles so CSS grid/flex layout can handle stacking.
+  chatBox.style.top = '';
+  chatBox.style.maxHeight = '';
 }
 
 
