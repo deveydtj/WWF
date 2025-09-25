@@ -32,6 +32,7 @@
   /* Level 3: Panels (20-39) */
   --z-panel-base: 20;
   --z-panel-content: 25;
+  --z-panel-overlay: 30; /* For medium/mobile panel overlays */
   --z-panel-notification: 30;
   --z-panel-interactive: 35;
   
