@@ -23,6 +23,10 @@
   grid-area: history;
 }
 
+#stampContainer {
+  grid-area: stamp;
+}
+
 #centerPanel {
   grid-area: center;
 }
@@ -158,11 +162,11 @@ body.chat-open #chatBox {
 /* Desktop Grid Layout (>900px) */
 @media (min-width: 901px) {
   #mainGrid {
-    grid-template-columns: 280px 1fr 280px;
+    grid-template-columns: 280px 60px 1fr 280px;
     grid-template-rows: auto;
     grid-template-areas: 
-      "history center definition"
-      "history center chat";
+      "history stamp center definition"
+      "history stamp center chat";
     justify-content: center;
     max-width: none;
   }
@@ -170,7 +174,7 @@ body.chat-open #chatBox {
   /* For ultra-wide displays (>1550px), allow more space */
   @media (min-width: 1551px) {
     #mainGrid {
-      grid-template-columns: minmax(280px, 1fr) minmax(auto, calc(var(--board-width) + 200px)) minmax(280px, 1fr);
+      grid-template-columns: minmax(280px, 1fr) 60px minmax(auto, calc(var(--board-width) + 200px)) minmax(280px, 1fr);
     }
   }
 }
