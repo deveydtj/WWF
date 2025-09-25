@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
 
 test('analyze stamps and history panel positioning', async ({ page }) => {
   // Navigate to the game HTML file directly
-  await page.goto(`file://${__dirname}/frontend/game.html`);
+  await page.goto('game.html');
   
   // Wait for page to load
   await page.waitForLoadState('networkidle');
