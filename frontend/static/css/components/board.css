@@ -32,18 +32,18 @@
   max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
 }
 
-/* Board stamps - Updated for CSS Grid layout */
+/* Board stamps - Updated for CSS Grid layout with precise 10px spacing from board */
 #stampContainer {
-  /* Use relative positioning within grid area, but anchor to the right (closest to board) */
+  /* Use relative positioning within grid area, positioned 10px from board edge */
   position: relative;
   width: 60px;
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
   /* Container for absolutely positioned stamps */
   pointer-events: none;
   z-index: var(--z-panel-interactive);
-  /* Align stamps close to the board by positioning container to the right of its grid area */
+  /* Position stamps exactly 10px from board edge */
   margin-left: auto;
-  margin-right: 0;
+  margin-right: 10px; /* 10px space from board edge */
 }
 
 /* Show stamps on everything except mobile */

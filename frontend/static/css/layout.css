@@ -50,7 +50,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: calc(var(--board-width) + 200px); /* Allow extra buffer around board plus stamp space */
+  max-width: var(--board-width); /* Minimal buffer for tight layout, stamps positioned separately */
   min-width: var(--board-width);
   /* Enhanced panel transitions for responsive scaling */
   transition: width 0.3s ease-in-out, 
