@@ -195,6 +195,9 @@ export function positionSidePanels(boardArea, historyBox, definitionBox, chatBox
  * Dynamically position the chat panel based on definition panel height.
  * This ensures the chat panel is always positioned just below the definition panel
  * with a small gap, regardless of the definition panel's content height.
+ * 
+ * Note: This function is designed for absolute positioning layouts. When panels are
+ * positioned using CSS Grid, this repositioning is skipped as the grid handles layout.
  */
 export function updateChatPanelPosition() {
   const viewportWidth = window.innerWidth;
@@ -208,6 +211,20 @@ export function updateChatPanelPosition() {
   const chatBox = document.getElementById('chatBox');
   
   if (!definitionBox || !chatBox) {
+    return;
+  }
+  
+  // Check if panels are positioned using CSS Grid instead of absolute positioning
+  // If they're grid items, skip the repositioning as CSS Grid handles layout
+  const definitionStyles = window.getComputedStyle(definitionBox);
+  const definitionPosition = definitionStyles.position;
+  
+  // If definition box is not absolutely positioned, it's likely using CSS Grid
+  // Skip repositioning to avoid interfering with grid layout
+  if (definitionPosition !== 'absolute' && definitionPosition !== 'fixed') {
+    // Reset any inline styles that might have been set by previous runs
+    chatBox.style.top = '';
+    chatBox.style.maxHeight = '';
     return;
   }
   
