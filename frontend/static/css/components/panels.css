@@ -462,71 +462,62 @@ body.players-open #playerSidebar {
     position: relative;
   }
   
-  /* Large screen panel positioning - align with board level and add gaps */
+  /* CSS Grid Layout - Panels use grid positioning instead of absolute positioning */
   body #historyBox {
-    position: absolute !important;
-    top: 140px !important; /* Move down to align with board level */
-    left: calc(50% - var(--board-width) / 2 - 365px) !important; /* Move further left to give room for stamps */
+    position: static !important; /* Reset absolute positioning to allow grid layout */
+    top: auto !important;
+    left: auto !important;
     right: auto !important;
-    width: 280px !important;
-    max-height: calc(100vh - 240px) !important;
-    transform-origin: left center !important;
+    width: 280px !important; /* Keep fixed width within grid area */
+    max-height: calc(100vh - 160px) !important; /* Allow scrolling for long history */
+    transform-origin: left center !important; /* Keep transform origin for animations */
   }
   
   body #definitionBox {
-    position: absolute !important;
-    top: 180px !important; /* Move down further to avoid options gear overlap */
-    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Move further right to avoid options button */
+    position: static !important; /* Reset absolute positioning to allow grid layout */
+    top: auto !important;
+    right: auto !important;
     left: auto !important;
-    width: 280px !important;
-    max-height: 300px !important; /* Limit height to prevent overlap with chat panel */
-    transform-origin: right center !important;
+    width: 280px !important; /* Keep fixed width within grid area */
+    max-height: calc(100vh - 160px) !important; /* Allow scrolling for long definitions */
+    transform-origin: right center !important; /* Keep transform origin for animations */
   }
   
   body:not([data-mode='medium']) #chatBox {
-    position: absolute !important;
-    /* Dynamic top position will be set by JavaScript based on definition panel height */
-    right: calc(50% - var(--board-width) / 2 - 370px) !important; /* Match definition panel position */
+    position: static !important; /* Reset absolute positioning to allow grid layout */
+    top: auto !important; /* Let grid handle positioning */
+    right: auto !important;
     left: auto !important;
-    width: 280px !important;
-    max-height: calc(100vh - 510px) !important; /* Adjust max-height for the new position */
-    transform-origin: right center !important;
+    width: 280px !important; /* Keep fixed width within grid area */
+    max-height: calc(100vh - 160px) !important; /* Allow scrolling for long chat history */
+    transform-origin: right center !important; /* Keep transform origin for animations */
   }
   
+  /* Panel visibility using display instead of transforms for better grid compatibility */
   body:not(.history-open) #historyBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
   
   body:not(.definition-open) #definitionBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
   
   body:not(.chat-open) #chatBox {
-    transform: scale(0);
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
   
-  /* When panels are open, they should be visible */
+  /* When panels are open, they should be visible with proper display */
   body.history-open #historyBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
   }
   
   body.definition-open #definitionBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
+    display: block;
   }
   
   body.chat-open #chatBox {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
+    display: flex; /* Maintain flex layout for proper chat UI */
+    flex-direction: column;
   }
 }

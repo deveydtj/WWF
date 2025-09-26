@@ -127,33 +127,6 @@
       </div>
     </div>
 
-    <!-- Game History Panel -->
-    <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
-      <button id="historyClose" class="close-btn">✖</button>
-      <h3 id="historyHeading">History</h3>
-      <ul id="historyList"></ul>
-    </div>
-
-    <!-- Leaderboard moved to lobbyHeader -->
-    <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
-      <button id="definitionClose" class="close-btn">✖</button>
-      <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
-      <div id="definitionText"></div>
-    </div>
-    <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
-      <button id="chatClose" class="close-btn" type="button">✖</button>
-      <h3 id="chatHeading" class="visually-hidden">Chat</h3>
-      <div id="chatMessages"></div>
-      <form id="chatForm">
-        <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
-        <button id="chatSend" type="submit">Send</button>
-      </form>
-    </div>
-    <div id="playerSidebar" role="dialog" aria-label="Players">
-      <button id="playerClose" class="close-btn" type="button">✖</button>
-      <ul id="playerList"></ul>
-    </div>
-
     <div id="lobbyHeader">
       <span id="lobbyCode" aria-label="Lobby code"></span>
       <div id="leaderboard" role="region" aria-label="Leaderboard"></div>
@@ -164,15 +137,20 @@
       </div>
     </div>
 
-    <!-- Three-panel layout for non-mobile -->
-    <div id="gameLayoutContainer">
-      <!-- Left Panel -->
-      <div id="leftPanel" class="layout-panel">
-        <!-- History box will be positioned here for non-mobile -->
+    <!-- Grid-based main layout -->
+    <div id="mainGrid">
+      <!-- Game History Panel -->
+      <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
+        <button id="historyClose" class="close-btn">✖</button>
+        <h3 id="historyHeading">History</h3>
+        <ul id="historyList"></ul>
       </div>
 
-      <!-- Center Panel -->
-      <div id="centerPanel" class="layout-panel">
+      <!-- Stamp Container (positioned between history and center) -->
+      <div id="stampContainer"></div>
+
+      <!-- Center Panel (Game content) -->
+      <div id="centerPanel">
         <div id="gameColumn">
           <div id="titleBar">
             <div class="mobile-title-row">
@@ -186,7 +164,6 @@
 
           <!-- Board -->
           <div id="boardArea">
-            <div id="stampContainer"></div>
             <div id="board" role="grid" aria-label="Guess grid"></div>
             <div id="hintTooltip" class="hint-tooltip" role="status"></div>
             <button id="optionsToggle" title="More Options">⚙️</button>
@@ -255,11 +232,30 @@
         </div> <!-- end gameColumn -->
       </div> <!-- end centerPanel -->
 
-      <!-- Right Panel -->
-      <div id="rightPanel" class="layout-panel">
-        <!-- Chat and definition boxes will be positioned here for non-mobile -->
+      <!-- Definition Panel -->
+      <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
+        <button id="definitionClose" class="close-btn">✖</button>
+        <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
+        <div id="definitionText"></div>
       </div>
-    </div> <!-- end gameLayoutContainer -->
+
+      <!-- Chat Panel -->
+      <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
+        <button id="chatClose" class="close-btn" type="button">✖</button>
+        <h3 id="chatHeading" class="visually-hidden">Chat</h3>
+        <div id="chatMessages"></div>
+        <form id="chatForm">
+          <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
+          <button id="chatSend" type="submit">Send</button>
+        </form>
+      </div>
+    </div> <!-- end mainGrid -->
+
+    <!-- Player Sidebar (outside grid) -->
+    <div id="playerSidebar" role="dialog" aria-label="Players">
+      <button id="playerClose" class="close-btn" type="button">✖</button>
+      <ul id="playerList"></ul>
+    </div>
   </div>
 
   <script type="module" src="static/js/main.js"></script>

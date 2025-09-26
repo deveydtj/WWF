@@ -31,8 +31,11 @@ function hasDefinitionContent() {
 
 // Show or hide panels based on content and viewport size
 function updatePanelVisibility() {
-  if (window.innerWidth > 1550) {
-    // Full mode - show panels if they have content OR if manually toggled
+  const mode = document.body.dataset.mode;
+  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+  
+  if (mode === 'full' && !isHistoryPopup) {
+    // Full mode with grid-based panels - show panels if they have content OR if manually toggled
     if (hasHistoryContent() || manualPanelToggles.history) {
       document.body.classList.add('history-open');
     } else if (!manualPanelToggles.history) {
@@ -47,12 +50,29 @@ function updatePanelVisibility() {
     
     positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
     updateChatPanelPosition(); // Update chat panel position after panel visibility changes
+  } else if (mode === 'full' && isHistoryPopup) {
+    // Full mode but history panel is popup - only show history when manually toggled
+    if (!manualPanelToggles.history) {
+      document.body.classList.remove('history-open');
+    }
+    
+    // Definition panel still uses grid positioning
+    if (hasDefinitionContent() || manualPanelToggles.definition) {
+      document.body.classList.add('definition-open');
+    } else if (!manualPanelToggles.definition) {
+      document.body.classList.remove('definition-open');
+    }
+    
+    positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
+    updateChatPanelPosition();
   }
 }
 
-// Toggle one of the side panels while closing any others in medium mode
+// Toggle one of the side panels while closing any others in medium mode or history popup mode
 function togglePanel(panelClass) {
-  if (document.body.dataset.mode === 'medium') {
+  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+  
+  if (document.body.dataset.mode === 'medium' || (isHistoryPopup && panelClass === 'history-open')) {
     const wasChatOpen = document.body.classList.contains('chat-open');
     ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
       if (c !== panelClass) document.body.classList.remove(c);
