@@ -433,9 +433,9 @@ class AppInitializer {
       this._updateGameTitle(); // Update title for mobile/desktop
       console.log('🔧 Calling repositionResetButton from resize handler');
       repositionResetButton();
+      applyLayoutMode(); // Update layout mode first so panel visibility uses correct mode
       updatePanelVisibility();
       updateChatPanelPosition();
-      applyLayoutMode();
       updateInputVisibility();
       
       this._handleScalingOnResize();
@@ -484,7 +484,8 @@ class AppInitializer {
       const chatBox = this.domManager.get('chatBox');
       
       positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-      applyLayoutMode();
+      applyLayoutMode(); // Update layout mode first
+      updatePanelVisibility(); // Then update panel visibility with correct mode
       updateInputVisibility();
       
       this._handleScalingOnResize();
