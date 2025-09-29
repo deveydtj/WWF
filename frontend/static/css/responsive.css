@@ -44,15 +44,22 @@
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
-  /* Layout container mobile behavior */
-  #gameLayoutContainer {
-    flex-direction: column;
+  /* Layout container mobile behavior - Updated for Grid */
+  #mainGrid {
+    /* Mobile uses single column center-only layout */
+    grid-template-columns: 1fr;
+    grid-template-areas: "center";
     gap: 0;
+  }
+  
+  /* Legacy containers hidden */
+  #gameLayoutContainer {
+    display: none;
   }
   
   #leftPanel,
   #rightPanel {
-    display: none; /* Panels will use fixed positioning overlay on mobile */
+    display: none; /* These are no longer needed with grid */
   }
   
   #centerPanel {
@@ -66,7 +73,7 @@
     min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
   }
 
-  /* Mobile panel positioning */
+  /* Mobile panel positioning - panels become fixed overlays on mobile */
   #historyBox {
     position: fixed;
     bottom: 0;
@@ -655,11 +662,18 @@
 @media (min-width: 601px) and (max-width: 900px) {
   /* 
    * Medium Mode Layout Calculations:
-   * - Three-panel horizontal layout with left/center/right zones
-   * - Panel transitions with 0.3s timing for smooth UX
+   * - Single-column grid layout with center panel
+   * - Panel overlays when open
    * - Tile size optimized for tablet touch precision: min(8vmin, 42px)
    * - Panel overlays with transform scaling for space efficiency
    */
+   
+  /* Grid layout for medium mode */
+  #mainGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "center";
+  }
+   
   /* Hide player count in medium mode to save space and prevent input field overlap */
   #playerCount {
     display: none;
@@ -671,26 +685,18 @@
     width: clamp(14rem, 30vw, 17rem);
   }
 
-  /* Fix medium mode panel positioning to prevent space above lobbyHeader */
-  body[data-mode='medium'] #historyBox {
-    position: absolute !important;
-    top: 10px !important;
-    left: 0 !important;
-  }
-
-  body[data-mode='medium'] #definitionBox {
-    position: absolute !important;
-    top: 10px !important;
-    right: 0 !important;
-  }
-
+  /* Medium mode panels become centered overlays */
+  body[data-mode='medium'] #historyBox,
+  body[data-mode='medium'] #definitionBox,
   body[data-mode='medium'] #chatBox {
-    position: absolute !important;
-    top: 10px !important;
-    right: 0 !important;
-    left: auto !important; /* Ensure left is not set by other rules */
-    width: clamp(14rem, 30vw, 17rem) !important; /* Match other medium mode panels */
-    transform-origin: right center !important; /* Consistent with large screen mode */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: var(--z-panel-overlay);
+    max-width: 90%;
+    max-height: 80vh;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   /* Override base positioning for medium mode */

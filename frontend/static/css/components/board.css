@@ -32,28 +32,18 @@
   max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
 }
 
-/* Board stamps and confetti */
+/* Board stamps - Updated for CSS Grid layout with precise 10px spacing from board */
 #stampContainer {
-  position: absolute;
-  top: 0;
-  /* Position stamps exactly 10px to the left of the board edge */
-  /* Calculate from center: 50% - (half board width + 40px stamp width + 10px gap) */
-  /* Default positioning when no panels are open */
-  left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 10px);
-  pointer-events: none;
-  z-index: var(--z-panel-interactive); /* Ensure stamps appear above history panel */
-  display: none;
-  /* Dynamic width to accommodate any emoji characters */
-  width: fit-content; /* Let container grow with emoji content */
-  min-width: 40px; /* Minimum width to fit in available space */
-  max-width: 40px; /* Constrain width to fit in limited space */
+  /* Use relative positioning within grid area, positioned 10px from board edge */
+  position: relative;
+  width: 60px;
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
-  transition: left 0.3s ease; /* Smooth transition when panels open/close */
-}
-
-/* Stamp positioning when history panel is open - avoid overlap */
-body.history-open #stampContainer {
-  left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 280px);
+  /* Container for absolutely positioned stamps */
+  pointer-events: none;
+  z-index: var(--z-panel-interactive);
+  /* Position stamps exactly 10px from board edge */
+  margin-left: auto;
+  margin-right: 10px; /* 10px space from board edge */
 }
 
 /* Show stamps on everything except mobile */
@@ -63,49 +53,16 @@ body.history-open #stampContainer {
   }
 }
 
-/* Medium mode stamp positioning - account for history panel at left edge when open */
-@media (min-width: 601px) and (max-width: 900px) {
-  body.history-open #stampContainer {
-    /* History panel width in medium mode: clamp(14rem, 30vw, 17rem) ≈ 224-272px */
-    /* Add 20px buffer to ensure clear separation */
-    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 300px);
-  }
-}
-
-/* Standard desktop stamp positioning - account for default history panel when open */
-@media (min-width: 901px) and (max-width: 1199px) {
-  body.history-open #stampContainer {
-    /* History panel width: clamp(14rem, 25vw, 16rem) ≈ 224-256px */
-    /* Position stamps with sufficient clearance */
-    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 280px);
-  }
-}
-
-/* Large desktop stamp positioning when history is open */
-@media (min-width: 1200px) and (max-width: 1799px) {
-  body.history-open #stampContainer {
-    /* Larger screens have more space, but still need to avoid history panel */
-    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 280px);
-  }
-}
-
-/* Ultra-wide screen stamp positioning adjustment for better clearance when history is open */
-@media (min-width: 1800px) {
-  body.history-open #stampContainer {
-    /* Increase minimum left position to ensure stamps stay clear of expanded panels */
-    left: max(calc(50% - (var(--board-width) / 2) - 40px - 10px), 320px);
-  }
-}
-
-/* Emoji stamps next to board */
+/* Emoji stamps styling - Updated for precise row alignment */
 .emoji-stamp {
-  position: absolute;
-  right: 10px; /* 10px gap from stamps to board */
+  position: absolute; /* Changed back to absolute for precise positioning */
+  left: 0;
+  width: 100%;
+  height: var(--tile-size); /* Match tile height */
   font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Simple emoji styling - no background, borders, or labels */
   background: transparent;
   padding: 0;
   border: none;
@@ -126,21 +83,24 @@ body.history-open #stampContainer {
   }
 }
 
-
-
 /* Responsive adjustments */
 @media (max-width: 600px) {  
   #stampContainer {
     display: none !important; /* Hide stamps completely on mobile */
   }
-  
-  .emoji-stamp {
-    right: 8px; /* Smaller gap on mobile */
-    font-size: calc(var(--tile-size) * 0.7); /* Smaller stamps on mobile */
-  }
 }
 
-/* Keep stamps in their normal position - history panel will move to accommodate */
+/* Medium mode - hide stamp area since panels become overlays */
+@media (min-width: 601px) and (max-width: 900px) {
+  #mainGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "center";
+  }
+  
+  #stampContainer {
+    display: none; /* Hide stamps in medium mode */
+  }
+}
 
 .confetti-container {
   position: absolute;
