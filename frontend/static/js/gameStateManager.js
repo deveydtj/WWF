@@ -13,7 +13,6 @@ import { showMessage, setGameInputDisabled } from './utils.js';
 import { showChatNotify, showChatMessagePopup } from './uiNotifications.js';
 import { updateResetButton } from './resetManager.js';
 import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility } from './panelManager.js';
-import { updateChatPanelPosition, positionSidePanels } from './utils.js';
 import { STATES } from './stateManager.js';
 import { playClick } from './audioManager.js';
 import { sendEmoji } from './api.js';
@@ -127,7 +126,6 @@ class GameStateManager {
     this._handleDefinitionUpdates(state);
     
     // Update panels
-    updateChatPanelPosition();
     updatePanelVisibility();
   }
 

@@ -3,14 +3,13 @@
  * Handles visibility and toggling of side panels (history, definition, chat).
  */
 
-import { positionSidePanels, updateChatPanelPosition, focusFirstElement } from './utils.js';
+import { focusFirstElement } from './utils.js';
 
 // DOM elements
 const definitionText = document.getElementById('definitionText');
 const historyBox = document.getElementById('historyBox');
 const definitionBoxEl = document.getElementById('definitionBox');
 const chatBox = document.getElementById('chatBox');
-const boardArea = document.getElementById('boardArea');
 
 // Track manual panel toggles to avoid overriding user actions
 let manualPanelToggles = {
@@ -47,9 +46,6 @@ function updatePanelVisibility() {
     } else if (!manualPanelToggles.definition) {
       document.body.classList.remove('definition-open');
     }
-    
-    positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-    updateChatPanelPosition(); // Update chat panel position after panel visibility changes
   } else if (mode === 'full' && isHistoryPopup) {
     // Full mode but history panel is popup - only show history when manually toggled
     if (!manualPanelToggles.history) {
@@ -62,9 +58,6 @@ function updatePanelVisibility() {
     } else if (!manualPanelToggles.definition) {
       document.body.classList.remove('definition-open');
     }
-    
-    positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-    updateChatPanelPosition();
   }
 }
 
@@ -87,12 +80,6 @@ function togglePanel(panelClass) {
     }
   }
   document.body.classList.toggle(panelClass);
-  positionSidePanels(boardArea, historyBox, definitionBoxEl, chatBox);
-  
-  // Update chat panel position when panels are toggled (especially when definition panel is toggled)
-  if (panelClass === 'definition-open' || panelClass === 'chat-open') {
-    updateChatPanelPosition();
-  }
 }
 
 function toggleHistory() {
