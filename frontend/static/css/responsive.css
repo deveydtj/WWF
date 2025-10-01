@@ -664,7 +664,15 @@
   #mainGrid {
     grid-template-columns: 1fr;
     grid-template-areas: "center";
-    justify-items: center; /* Center the grid item within the column */
+    justify-content: center;      /* center the grid track(s) in the available space */
+    justify-items: center;        /* center grid items within their tracks */
+  }
+  
+  /* Ensure the center panel is sized and can shrink if needed */
+  #centerPanel {
+    width: min(100%, var(--board-width));
+    max-width: 100%;
+    justify-self: center;         /* explicit safety to center this item */
   }
    
   /* Hide player count in medium mode to save space and prevent input field overlap */
@@ -694,13 +702,15 @@
 
   /* Override base positioning for medium mode */
   #optionsToggle {
-    left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
-    right: auto !important;
+    position: absolute;
+    right: calc(-36px - 10px); /* Position to the right of board area with gap - matches base positioning */
+    left: auto !important;
   }
   
   #chatNotify {
-    left: calc(100% + var(--tile-gap)) !important; /* Position to the right of board area with gap */
-    right: auto !important;
+    position: absolute;
+    right: calc(-36px - 10px); /* Position to the right of board area with gap - matches base positioning */
+    left: auto !important;
   }
 
   /* Fix title bar layout for medium screens - override mobile layout */
