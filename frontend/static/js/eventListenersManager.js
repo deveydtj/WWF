@@ -5,7 +5,6 @@
 
 import { closeDialog, openDialog, showMessage, focusFirstElement, shakeInput, announce } from './utils.js';
 import { togglePanel, setManualPanelToggle, toggleHistory, toggleDefinition } from './panelManager.js';
-import { positionSidePanels, updateChatPanelPosition } from './utils.js';
 import { positionContextMenu } from './popupPositioning.js';
 import { hideChatNotify } from './uiNotifications.js';
 import { closeOptionsMenu, showInfo, toggleDarkMode } from './optionsManager.js';
@@ -84,8 +83,6 @@ class EventListenersManager {
         // Use shorter delay for users with reduced motion preferences
         const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
         setTimeout(() => {
-          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-          
           // Return focus to a logical element after panel closes
           const mainElement = document.getElementById('wordInput') || document.getElementById('guessInput');
           if (mainElement && !document.activeElement?.closest('#chatBox, #historyBox, #definitionBox')) {
@@ -108,9 +105,6 @@ class EventListenersManager {
         // Use shorter delay for users with reduced motion preferences
         const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
         setTimeout(() => {
-          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-          updateChatPanelPosition();
-          
           // Return focus to a logical element after panel closes
           const mainElement = document.getElementById('wordInput') || document.getElementById('guessInput');
           if (mainElement && !document.activeElement?.closest('#chatBox, #historyBox, #definitionBox')) {
@@ -132,13 +126,11 @@ class EventListenersManager {
         setManualPanelToggle('chat', false);
         document.body.classList.remove('chat-open');
         
-        // Delay both position update and notification display until after close animation completes
+        // Delay notification display until after close animation completes
         // Use shorter delay for users with reduced motion preferences
         const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
         setTimeout(() => {
-          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-          
-          // Show the chat notification icon after positioning is complete
+          // Show the chat notification icon after animation is complete
           if (chatNotify) {
             chatNotify.style.display = 'block';
           }
@@ -572,18 +564,8 @@ class EventListenersManager {
       // Clear any pending timeouts to prevent animation conflicts during resize
       clearTimeout(resizeTimeout);
       
-      // Debounce resize events to prevent excessive position calculations
+      // Debounce resize events
       resizeTimeout = setTimeout(() => {
-        const boardArea = this.domManager.get('boardArea');
-        const historyBox = this.domManager.get('historyBox');
-        const definitionBox = this.domManager.get('definitionBox');
-        const chatBox = this.domManager.get('chatBox');
-        
-        if (boardArea && historyBox && definitionBox && chatBox) {
-          positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
-          updateChatPanelPosition();
-        }
-        
         // Re-align stamps with board rows after resize
         alignStampsWithBoardRows();
       }, 150);

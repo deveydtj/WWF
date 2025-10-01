@@ -19,8 +19,6 @@ import { updateGlobalPlayerId } from './main.js';
 import { 
   applyDarkModePreference, 
   repositionResetButton,
-  positionSidePanels, 
-  updateChatPanelPosition,
   updateVH,
   applyLayoutMode, 
   fitBoardToContainer,
@@ -435,7 +433,6 @@ class AppInitializer {
       repositionResetButton();
       applyLayoutMode(); // Update layout mode first so panel visibility uses correct mode
       updatePanelVisibility();
-      updateChatPanelPosition();
       updateInputVisibility();
       
       this._handleScalingOnResize();
@@ -478,12 +475,6 @@ class AppInitializer {
       this._updateGameTitle(); // Update title for mobile/desktop
       updateVH();
       
-      const boardArea = this.domManager.get('boardArea');
-      const historyBox = this.domManager.get('historyBox');
-      const definitionBox = this.domManager.get('definitionBox');
-      const chatBox = this.domManager.get('chatBox');
-      
-      positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
       applyLayoutMode(); // Update layout mode first
       updatePanelVisibility(); // Then update panel visibility with correct mode
       updateInputVisibility();
@@ -543,14 +534,8 @@ class AppInitializer {
    * @private
    */
   _initializePanelsAndLayout() {
-    const boardArea = this.domManager.get('boardArea');
-    const historyBox = this.domManager.get('historyBox');
-    const definitionBox = this.domManager.get('definitionBox');
-    const chatBox = this.domManager.get('chatBox');
-    
     console.log('🔧 Calling repositionResetButton from _initializePanelsAndLayout');
     repositionResetButton();
-    positionSidePanels(boardArea, historyBox, definitionBox, chatBox);
     renderEmojiStamps([]);
     
     updateInputVisibility();

@@ -39,11 +39,6 @@
   grid-area: chat;
 }
 
-/* Legacy three-panel layout structure (for backwards compatibility - will be removed) */
-#gameLayoutContainer {
-  display: none; /* Hidden since we're using mainGrid now */
-}
-
 /* Center panel contains the game content */
 #centerPanel {
   position: relative;

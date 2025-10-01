@@ -52,15 +52,7 @@
     gap: 0;
   }
   
-  /* Legacy containers hidden */
-  #gameLayoutContainer {
-    display: none;
-  }
-  
-  #leftPanel,
-  #rightPanel {
-    display: none; /* These are no longer needed with grid */
-  }
+  /* Legacy containers removed - now using CSS Grid exclusively */
   
   #centerPanel {
     width: 100%;
