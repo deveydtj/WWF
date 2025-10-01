@@ -229,8 +229,11 @@ export function applyLayoutMode() {
   }
   
   // Set history popup state for CSS to use
-  if (historyPopup !== (document.body.dataset.historyPopup === 'true')) {
-    document.body.dataset.historyPopup = historyPopup ? 'true' : 'false';
+  // Always ensure the value is set as a string
+  const currentHistoryPopup = document.body.dataset.historyPopup;
+  const newHistoryPopup = historyPopup ? 'true' : 'false';
+  if (currentHistoryPopup !== newHistoryPopup) {
+    document.body.dataset.historyPopup = newHistoryPopup;
   }
 }
 
