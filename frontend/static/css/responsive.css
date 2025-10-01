@@ -672,6 +672,7 @@
   #centerPanel {
     width: min(100%, var(--board-width));
     max-width: 100%;
+    min-width: auto;              /* override base min-width to allow shrinking */
     justify-self: center;         /* explicit safety to center this item */
   }
    
