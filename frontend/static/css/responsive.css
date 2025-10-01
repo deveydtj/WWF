@@ -664,6 +664,7 @@
   #mainGrid {
     grid-template-columns: 1fr;
     grid-template-areas: "center";
+    justify-items: center; /* Center the grid item within the column */
   }
    
   /* Hide player count in medium mode to save space and prevent input field overlap */
@@ -757,6 +758,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    align-items: center; /* Center content horizontally in medium mode */
   }
 
   /* Board area should only take space it needs */

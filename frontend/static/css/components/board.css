@@ -95,6 +95,7 @@
   #mainGrid {
     grid-template-columns: 1fr;
     grid-template-areas: "center";
+    justify-items: center; /* Center the grid item within the column */
   }
   
   #stampContainer {
