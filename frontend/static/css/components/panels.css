@@ -191,23 +191,14 @@ body.dark-mode .close-btn:active {
               0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
-/* History Panel */
+/* Panel content styling - positioning handled by CSS Grid and media queries */
+
+/* History Panel - content styles only */
 #historyBox {
-  position: absolute;
-  top: 100px;
-  left: 20px;
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  /* Base styles - positioning handled by CSS Grid layout in responsive.css and layout.css */
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background: var(--bg-color);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow:
-    inset 2px 2px 5px var(--shadow-color-dark),
-    inset -2px -2px 5px var(--shadow-color-light);
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 #historyBox::-webkit-scrollbar {
@@ -256,47 +247,24 @@ body.dark-mode .close-btn:active {
   text-align: center;
 }
 
-/* Definition Panel */
+/* Definition Panel - content styles only */
 #definitionBox {
-  position: absolute;
-  top: 100px;
-  right: 20px;
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  /* Base styles - positioning handled by CSS Grid layout in responsive.css and layout.css */
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background: var(--bg-color);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow:
-    inset 2px 2px 5px var(--shadow-color-dark),
-    inset -2px -2px 5px var(--shadow-color-light);
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 #definitionBox::-webkit-scrollbar {
   display: none;
 }
 
-/* Chat Panel */
+/* Chat Panel - content styles only */
 #chatBox {
-  position: absolute;
-  top: 100px;
-  left: calc(100% + 20px);
-  width: clamp(14rem, 25vw, 16rem);
-  max-height: 70vh;
+  /* Base styles - positioning handled by CSS Grid layout in responsive.css and layout.css */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-color);
-  padding: 36px 10px 10px;
-  border-radius: 8px;
-  box-shadow:
-    inset 2px 2px 5px var(--shadow-color-dark),
-    inset -2px -2px 5px var(--shadow-color-light);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  /* Transform origin set in responsive CSS for proper mobile/desktop behavior */
 }
 
 #chatMessages {
