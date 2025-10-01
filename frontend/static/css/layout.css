@@ -56,7 +56,7 @@
 
 /* Panel positioning and layout - Updated for Grid */
 #historyBox {
-  width: 260px;
+  width: 240px;
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
@@ -78,7 +78,7 @@
 }
 
 #definitionBox {
-  width: 260px;
+  width: 240px;
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
@@ -100,7 +100,7 @@
 }
 
 #chatBox {
-  width: 260px;
+  width: 240px;
   height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
@@ -187,7 +187,7 @@ body.chat-open #chatBox {
     z-index: var(--z-panel-overlay);
     max-width: 90%;
     max-height: 80vh;
-    width: 280px; /* Use optimal width when space allows */
+    width: 240px; /* Use optimal width when space allows */
   }
   
   /* For ultra-wide displays (>1550px), always use full grid layout */
