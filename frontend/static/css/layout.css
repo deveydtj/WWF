@@ -230,10 +230,38 @@ body.chat-open #chatBox {
     justify-content: center;
   }
   
-  /* In medium mode, panels become overlays but maintain their grid areas for consistency */
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
+  /* When there's enough space in medium mode, use grid layout with history panel */
+  body[data-mode='medium']:not([data-history-popup="true"]) #mainGrid {
+    grid-template-columns: 1fr 240px 60px minmax(auto, var(--board-width)) 1fr;
+    grid-template-areas: 
+      ". history stamp center ."
+      ". history stamp center .";
+    gap: 15px;
+  }
+  
+  /* In medium mode with grid layout, definition and chat panels still use overlays */
+  body[data-mode='medium']:not([data-history-popup="true"]) #definitionBox,
+  body[data-mode='medium']:not([data-history-popup="true"]) #chatBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: var(--z-panel-overlay);
+    max-width: 90%;
+    max-height: 80vh;
+  }
+  
+  /* In medium mode with grid layout, history panel uses grid positioning */
+  body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
+    position: static;
+    transform: none;
+    width: 240px;
+  }
+  
+  /* In medium mode without enough space, all panels become overlays */
+  body[data-mode='medium'][data-history-popup="true"] #historyBox,
+  body[data-mode='medium'][data-history-popup="true"] #definitionBox,
+  body[data-mode='medium'][data-history-popup="true"] #chatBox {
     position: fixed;
     top: 50%;
     left: 50%;

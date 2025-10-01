@@ -187,6 +187,18 @@ export function applyLayoutMode() {
     mode = 'light';
   } else if (width <= 900) {
     mode = 'medium';
+    
+    // Calculate if there's room for history panel in grid layout
+    const historyPanelWidth = 240; // Minimum history panel width
+    const stampWidth = 60; // Stamp container width
+    const minBoardWidth = 340; // Minimum board width (5 tiles * ~68px)
+    const gaps = 15 * 3; // Three gaps between elements (history, stamp, board)
+    const margins = 40; // Side margins
+    const minRequiredWidth = historyPanelWidth + stampWidth + minBoardWidth + gaps + margins;
+    
+    // If viewport is wide enough, use grid layout with history panel
+    // Otherwise, keep history as popup overlay
+    historyPopup = width < minRequiredWidth;
   } else if (width <= 1150) {
     // Narrow desktop - use grid layout but make history panel a popup to prevent overflow
     mode = 'full';

@@ -59,13 +59,25 @@ function updatePanelVisibility() {
     } else if (!manualPanelToggles.definition) {
       document.body.classList.remove('definition-open');
     }
-  } else if (mode === 'full' && isHistoryPopup) {
-    // Full mode but history panel is popup - only show history when manually toggled
-    if (!manualPanelToggles.history) {
-      document.body.classList.remove('history-open');
+  } else if ((mode === 'full' && isHistoryPopup) || (mode === 'medium' && !isHistoryPopup)) {
+    // Full mode with history popup OR medium mode with grid-based history
+    // History panel can be in grid (medium with space) or popup (full narrow)
+    // In medium mode with grid, history uses grid positioning like full mode
+    if (mode === 'medium' && !isHistoryPopup) {
+      // Medium mode with grid layout - show history if it has content OR if manually toggled
+      if (hasHistoryContent() || manualPanelToggles.history) {
+        document.body.classList.add('history-open');
+      } else if (!manualPanelToggles.history) {
+        document.body.classList.remove('history-open');
+      }
+    } else {
+      // Full mode with history popup - only show history when manually toggled
+      if (!manualPanelToggles.history) {
+        document.body.classList.remove('history-open');
+      }
     }
     
-    // Definition panel still uses grid positioning
+    // Definition panel still uses grid positioning in full mode, overlay in medium mode
     if (hasDefinitionContent() || manualPanelToggles.definition) {
       document.body.classList.add('definition-open');
     } else if (!manualPanelToggles.definition) {
@@ -76,9 +88,13 @@ function updatePanelVisibility() {
 
 // Toggle one of the side panels while closing any others in medium mode or history popup mode
 function togglePanel(panelClass) {
+  const mode = document.body.dataset.mode;
   const isHistoryPopup = document.body.dataset.historyPopup === 'true';
   
-  if (document.body.dataset.mode === 'medium' || (isHistoryPopup && panelClass === 'history-open')) {
+  // In medium mode with history popup, or medium mode for non-history panels, close other panels
+  // In medium mode with grid layout, only history can be in grid, others are still overlays
+  if ((mode === 'medium' && (isHistoryPopup || panelClass !== 'history-open')) || 
+      (mode === 'full' && isHistoryPopup && panelClass === 'history-open')) {
     const wasChatOpen = document.body.classList.contains('chat-open');
     ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
       if (c !== panelClass) document.body.classList.remove(c);
