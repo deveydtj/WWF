@@ -12,19 +12,21 @@ This document specifies the requirements for resolving CSS rule conflicts and wi
 
 ### CSS Rule Organization
 - **Layout.css Responsibilities**:
-  - Three-panel layout structure (`#gameLayoutContainer`, `#leftPanel`, `#centerPanel`, `#rightPanel`)
-  - Panel base styles and positioning logic
-  - Default panel dimensions and transitions
+  - CSS Grid container structure (`#mainGrid`)
+  - Grid area assignments for panels
+  - Base panel styles (content styling only, no positioning)
+  - Grid template definitions for different screen sizes
   
 - **Responsive.css Responsibilities**:
-  - All breakpoint-specific adaptations
-  - Mobile panel positioning overrides
-  - Viewport-specific scaling and spacing
+  - Breakpoint-specific grid layouts and template areas
+  - Mobile panel positioning overrides (fixed overlays)
+  - Viewport-specific panel scaling and spacing
 
 ### Removed Conflicts
 - **Container Query Conflicts**: Eliminated conflicting `@container` and `@media` rules at same breakpoint
-- **Panel Positioning**: Consolidated mobile panel positioning rules from multiple locations
-- **Layout Container**: Single definition of mobile layout behavior
+- **Panel Positioning**: Pure CSS Grid positioning - no JavaScript manipulation required
+- **Layout Container**: CSS Grid replaces legacy flexbox three-panel container system
+- **Absolute Positioning**: Removed all absolute positioning in favor of grid areas
 
 ## Window Resize Behavior
 
@@ -51,54 +53,69 @@ This document specifies the requirements for resolving CSS rule conflicts and wi
 ```css
 /* Mobile: ≤600px - All mobile rules in responsive.css */
 @media (max-width: 600px) {
-  /* Layout structure overrides */
-  #gameLayoutContainer { flex-direction: column; gap: 0; }
-  #leftPanel, #rightPanel { display: none; }
-  #centerPanel { width: 100%; max-width: none; }
+  /* Grid layout for mobile */
+  #mainGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "center";
+    gap: 0;
+  }
   
-  /* Mobile panel positioning */
+  /* Mobile panel positioning as fixed overlays */
   #historyBox, #definitionBox, #chatBox {
     position: fixed; bottom: 0; width: 100%;
     /* Mobile-specific styling */
   }
 }
 
-/* Medium: 601px-900px - Three-panel tablet layout */
+/* Medium: 601px-900px - Tablet grid layout */
 @media (min-width: 601px) and (max-width: 900px) {
-  /* Medium mode specific adaptations */
+  #mainGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "center";
+  }
+  /* Panels as centered overlays */
 }
 
-/* Full: >900px - Full desktop layout */
+/* Full: >900px - Desktop grid layout */
 @media (min-width: 901px) {
-  /* Desktop specific adaptations */
+  #mainGrid {
+    grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+    grid-template-areas: 
+      ". history stamp center definition ."
+      ". history stamp center chat .";
+  }
 }
 ```
 
 ### Transition System
 ```css
-/* Layout container with smooth transitions */
-#gameLayoutContainer {
-  transition: flex-direction 0.3s ease, gap 0.3s ease;
+/* Main grid container with smooth transitions */
+#mainGrid {
+  transition: grid-template-columns 0.3s ease-in-out, 
+              grid-template-areas 0.3s ease-in-out,
+              gap 0.3s ease-in-out;
 }
 
-/* Panel transitions for mode changes */
-.layout-panel {
-  transition: width 0.3s ease, opacity 0.3s ease;
+/* Panel base styles with transitions */
+#historyBox, #definitionBox, #chatBox {
+  transition: opacity 0.3s ease-in-out, 
+              transform 0.3s ease-in-out,
+              width 0.3s ease-in-out;
 }
 
-/* Individual panel transitions */
-#leftPanel, #rightPanel, #centerPanel {
-  transition: width 0.3s ease, display 0.3s ease;
-}
+/* Panel visibility handled by display property */
+body:not(.history-open) #historyBox { display: none; }
+body:not(.definition-open) #definitionBox { display: none; }
+body:not(.chat-open) #chatBox { display: none; }
 ```
 
 ## Validation Testing
 
 ### Breakpoint Testing Matrix
-- [x] **Mobile Mode (≤600px)**: Panel overlay behavior, single-column layout
-- [x] **Medium Mode (601px-900px)**: Three-panel tablet layout, proper panel positioning
-- [x] **Full Mode (>900px)**: Desktop layout with side panels
-- [x] **Dynamic Resizing**: Smooth transitions during window resize
+- [x] **Mobile Mode (≤600px)**: Panel fixed overlay behavior, single-column grid layout
+- [x] **Medium Mode (601px-900px)**: Tablet grid layout, centered panel overlays
+- [x] **Full Mode (>900px)**: Desktop CSS Grid layout with automatic panel positioning
+- [x] **Dynamic Resizing**: Smooth grid transitions during window resize
 
 ### Console Validation
 - [x] **No CSS Conflicts**: No console warnings about conflicting rules
@@ -108,7 +125,7 @@ This document specifies the requirements for resolving CSS rule conflicts and wi
 ### Cross-Browser Compatibility
 - [x] **Transition Support**: CSS transitions work across major browsers
 - [x] **Media Query Support**: Consistent breakpoint behavior
-- [x] **Flexbox Layout**: Proper flexbox support for panel system
+- [x] **CSS Grid Support**: Modern grid layout supported in all target browsers
 
 ## Acceptance Criteria
 
@@ -140,4 +157,4 @@ This document specifies the requirements for resolving CSS rule conflicts and wi
 - `docs/REQUIREMENTS.md` - Layout system architecture updates
 
 ## Notes
-This resolution addresses the core CSS conflicts that were causing unpredictable layout behavior and ensures smooth transitions during responsive mode changes. The separation of structural layout from responsive adaptations provides better maintainability and prevents future conflicts.
+This document reflects the completed migration from flexbox three-panel layout to CSS Grid. The grid-based system eliminates the need for JavaScript positioning logic and provides automatic, declarative panel positioning through grid areas. All panels now use pure CSS for positioning, with no runtime calculations required.

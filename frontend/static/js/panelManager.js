@@ -1,6 +1,19 @@
 /**
  * Panel management for WordSquad game interface.
  * Handles visibility and toggling of side panels (history, definition, chat).
+ * 
+ * ARCHITECTURE NOTE:
+ * This module manages panel visibility state through CSS classes only.
+ * All panel positioning is handled by CSS Grid layout defined in layout.css
+ * and responsive.css. No JavaScript positioning calculations are performed.
+ * 
+ * Panel visibility is controlled via body classes:
+ * - 'history-open' - shows/hides #historyBox
+ * - 'definition-open' - shows/hides #definitionBox  
+ * - 'chat-open' - shows/hides #chatBox
+ * 
+ * CSS Grid handles all positioning automatically based on grid-template-areas
+ * defined in media queries for each breakpoint (mobile, tablet, desktop).
  */
 
 import { focusFirstElement } from './utils.js';
