@@ -687,10 +687,23 @@
     width: clamp(14rem, 30vw, 17rem);
   }
 
-  /* Medium mode panels become centered overlays */
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
+  /* Medium mode panels - default to centered overlays when history is popup */
+  body[data-mode='medium'][data-history-popup="true"] #historyBox,
+  body[data-mode='medium'][data-history-popup="true"] #definitionBox,
+  body[data-mode='medium'][data-history-popup="true"] #chatBox {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: var(--z-panel-overlay);
+    max-width: 90%;
+    max-height: 80vh;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* When there's enough space, definition and chat still use overlays */
+  body[data-mode='medium']:not([data-history-popup="true"]) #definitionBox,
+  body[data-mode='medium']:not([data-history-popup="true"]) #chatBox {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;

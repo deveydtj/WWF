@@ -171,8 +171,16 @@ def test_apply_state_updates_definition_text():
 
 def test_side_panels_centered_and_limited_in_medium_mode():
     css = read_css()
-    for panel in ['#historyBox', '#definitionBox', '#chatBox']:
-        assert f"body[data-mode='medium'] {panel}" in css
+    # Medium mode now has conditional behavior based on data-history-popup
+    # When history is popup (not enough space), all panels are overlays
+    assert "body[data-mode='medium'][data-history-popup=\"true\"] #historyBox" in css
+    assert "body[data-mode='medium'][data-history-popup=\"true\"] #definitionBox" in css
+    assert "body[data-mode='medium'][data-history-popup=\"true\"] #chatBox" in css
+    # When history is in grid (enough space), definition and chat are still overlays
+    assert "body[data-mode='medium']:not([data-history-popup=\"true\"]) #definitionBox" in css
+    assert "body[data-mode='medium']:not([data-history-popup=\"true\"]) #chatBox" in css
+    # History box uses grid positioning when there's space
+    assert "body[data-mode='medium']:not([data-history-popup=\"true\"]) #historyBox" in css
     assert 'position: fixed;' in css
     assert 'transform: translate(-50%, -50%);' in css
     assert 'max-width: 90%;' in css

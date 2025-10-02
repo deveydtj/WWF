@@ -59,26 +59,50 @@ function updatePanelVisibility() {
     } else if (!manualPanelToggles.definition) {
       document.body.classList.remove('definition-open');
     }
-  } else if (mode === 'full' && isHistoryPopup) {
-    // Full mode but history panel is popup - only show history when manually toggled
-    if (!manualPanelToggles.history) {
-      document.body.classList.remove('history-open');
-    }
-    
-    // Definition panel still uses grid positioning
-    if (hasDefinitionContent() || manualPanelToggles.definition) {
-      document.body.classList.add('definition-open');
-    } else if (!manualPanelToggles.definition) {
-      document.body.classList.remove('definition-open');
+  } else if ((mode === 'full' && isHistoryPopup) || (mode === 'medium' && !isHistoryPopup)) {
+    // Full mode with history popup OR medium mode with grid-based history
+    // History panel can be in grid (medium with space) or popup (full narrow)
+    // In medium mode with grid, history uses grid positioning like full mode
+    if (mode === 'medium' && !isHistoryPopup) {
+      // Medium mode with grid layout - show history if it has content OR if manually toggled
+      if (hasHistoryContent() || manualPanelToggles.history) {
+        document.body.classList.add('history-open');
+      } else if (!manualPanelToggles.history) {
+        document.body.classList.remove('history-open');
+      }
+      
+      // In medium mode with grid, definition and chat are overlays - respect manual toggles
+      // Don't automatically re-open them just because there's content
+      if (manualPanelToggles.definition && hasDefinitionContent()) {
+        document.body.classList.add('definition-open');
+      } else if (!manualPanelToggles.definition) {
+        document.body.classList.remove('definition-open');
+      }
+    } else {
+      // Full mode with history popup - only show history when manually toggled
+      if (!manualPanelToggles.history) {
+        document.body.classList.remove('history-open');
+      }
+      
+      // Definition panel in full mode with history popup
+      if (hasDefinitionContent() || manualPanelToggles.definition) {
+        document.body.classList.add('definition-open');
+      } else if (!manualPanelToggles.definition) {
+        document.body.classList.remove('definition-open');
+      }
     }
   }
 }
 
 // Toggle one of the side panels while closing any others in medium mode or history popup mode
 function togglePanel(panelClass) {
+  const mode = document.body.dataset.mode;
   const isHistoryPopup = document.body.dataset.historyPopup === 'true';
   
-  if (document.body.dataset.mode === 'medium' || (isHistoryPopup && panelClass === 'history-open')) {
+  // In medium mode with history popup, or medium mode for non-history panels, close other panels
+  // In medium mode with grid layout, only history can be in grid, others are still overlays
+  if ((mode === 'medium' && (isHistoryPopup || panelClass !== 'history-open')) || 
+      (mode === 'full' && isHistoryPopup && panelClass === 'history-open')) {
     const wasChatOpen = document.body.classList.contains('chat-open');
     ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
       if (c !== panelClass) document.body.classList.remove(c);
@@ -110,6 +134,13 @@ function toggleDefinition() {
   togglePanel('definition-open');
   if (document.body.classList.contains('definition-open')) {
     focusFirstElement(definitionBoxEl);
+  }
+  
+  // Restore history panel if it should remain visible in medium mode with grid layout
+  const mode = document.body.dataset.mode;
+  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+  if (mode === 'medium' && !isHistoryPopup) {
+    updatePanelVisibility();
   }
 }
 
