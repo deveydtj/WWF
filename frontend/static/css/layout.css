@@ -7,7 +7,7 @@
   display: grid;
   width: 100%;
   height: 100%;
-  gap: 20px;
+  gap: var(--gutter-md);
   align-items: start;
   justify-content: center;
   position: relative;
@@ -56,11 +56,11 @@
 
 /* Panel positioning and layout - Updated for Grid */
 #historyBox {
-  width: 240px;
+  width: var(--panel-width);
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
-  padding: 20px;
+  padding: var(--gutter-md);
   box-shadow: 
     inset 4px 4px 8px var(--inset-shadow-dark),
     inset -4px -4px 8px var(--inset-shadow-light),
@@ -75,14 +75,17 @@
   /* Use visibility instead of transforms for show/hide */
   visibility: visible;
   opacity: 1;
+  /* Enable container queries for panel content */
+  container-type: inline-size;
+  container-name: history-panel;
 }
 
 #definitionBox {
-  width: 240px;
+  width: var(--panel-width);
   max-height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
-  padding: 20px;
+  padding: var(--gutter-md);
   box-shadow: 
     inset 4px 4px 8px var(--inset-shadow-dark),
     inset -4px -4px 8px var(--inset-shadow-light),
@@ -97,14 +100,17 @@
   /* Use visibility instead of transforms for show/hide */
   visibility: visible;
   opacity: 1;
+  /* Enable container queries for panel content */
+  container-type: inline-size;
+  container-name: definition-panel;
 }
 
 #chatBox {
-  width: 240px;
+  width: var(--panel-width);
   height: calc(100vh - 160px);
   background: var(--bg-color);
   border-radius: 20px;
-  padding: 20px;
+  padding: var(--gutter-md);
   box-shadow: 
     inset 4px 4px 8px var(--inset-shadow-dark),
     inset -4px -4px 8px var(--inset-shadow-light),
@@ -121,6 +127,9 @@
   /* Use visibility instead of transforms for show/hide */
   visibility: visible;
   opacity: 1;
+  /* Enable container queries for panel content */
+  container-type: inline-size;
+  container-name: chat-panel;
 }
 
 /* Panel visibility states - Updated to use visibility and display instead of transforms */
@@ -158,21 +167,21 @@ body.chat-open #chatBox {
 @media (min-width: 901px) {
   #mainGrid {
     /* Wide desktop: center the layout with history panel close to stamps */
-    grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+    grid-template-columns: 1fr var(--panel-width) 60px minmax(auto, var(--board-width)) var(--panel-width) 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
       ". history stamp center definition ."
       ". history stamp center chat .";
     justify-content: center;
     max-width: none;
-    /* Reduce gap for tighter spacing */
-    gap: 15px;
+    /* Use fluid gutter for spacing */
+    gap: var(--gutter-md);
   }
   
   /* Narrow desktop layout - history panel becomes popup to prevent overflow */
   body[data-history-popup="true"] #mainGrid {
     /* Remove history from grid layout on narrow screens */
-    grid-template-columns: 1fr 60px minmax(auto, var(--board-width)) 280px 1fr;
+    grid-template-columns: 1fr 60px minmax(auto, var(--board-width)) var(--panel-width) 1fr;
     grid-template-areas: 
       ". stamp center definition ."
       ". stamp center chat .";
@@ -185,26 +194,26 @@ body.chat-open #chatBox {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: var(--z-panel-overlay);
-    max-width: 90%;
-    max-height: 80vh;
-    width: 240px; /* Use optimal width when space allows */
+    max-width: var(--popup-max-width);
+    max-height: var(--popup-max-height);
+    width: var(--panel-width-narrow); /* Use optimal width when space allows */
   }
   
   /* For ultra-wide displays (>1550px), always use full grid layout */
   @media (min-width: 1551px) {
     #mainGrid {
       /* Center the layout and position history panel closer to stamps */
-      grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+      grid-template-columns: 1fr var(--panel-width) 60px minmax(auto, var(--board-width)) var(--panel-width) 1fr;
       grid-template-areas: 
         ". history stamp center definition ."
         ". history stamp center chat .";
       /* Slightly larger gap on ultra-wide screens */
-      gap: 20px;
+      gap: var(--gutter-lg);
     }
     
     /* Override history popup on ultra-wide screens */
     body[data-history-popup="true"] #mainGrid {
-      grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+      grid-template-columns: 1fr var(--panel-width) 60px minmax(auto, var(--board-width)) var(--panel-width) 1fr;
       grid-template-areas: 
         ". history stamp center definition ."
         ". history stamp center chat .";
@@ -232,11 +241,11 @@ body.chat-open #chatBox {
   
   /* When there's enough space in medium mode, use grid layout with history panel */
   body[data-mode='medium']:not([data-history-popup="true"]) #mainGrid {
-    grid-template-columns: 1fr 240px 60px minmax(auto, var(--board-width)) 1fr;
+    grid-template-columns: 1fr var(--panel-width-narrow) 60px minmax(auto, var(--board-width)) 1fr;
     grid-template-areas: 
       ". history stamp center ."
       ". history stamp center .";
-    gap: 15px;
+    gap: var(--gutter-md);
   }
   
   /* In medium mode with grid layout, definition and chat panels still use overlays */
@@ -247,15 +256,15 @@ body.chat-open #chatBox {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: var(--z-panel-overlay);
-    max-width: 90%;
-    max-height: 80vh;
+    max-width: var(--popup-max-width);
+    max-height: var(--popup-max-height);
   }
   
   /* In medium mode with grid layout, history panel uses grid positioning */
   body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
     position: static;
     transform: none;
-    width: 240px;
+    width: var(--panel-width-narrow);
   }
   
   /* In medium mode without enough space, all panels become overlays */
@@ -267,8 +276,8 @@ body.chat-open #chatBox {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: var(--z-panel-overlay);
-    max-width: 90%;
-    max-height: 80vh;
+    max-width: var(--popup-max-width);
+    max-height: var(--popup-max-height);
   }
 }
 

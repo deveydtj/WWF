@@ -33,13 +33,15 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 18px;
-  padding: 28px 22px;
+  padding: var(--modal-padding, 28px 22px);
   text-align: center;
   transform: translateY(-20px) scale(0.95);
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   position: relative;
   z-index: var(--z-modal-content);
   pointer-events: auto;
+  max-width: var(--popup-max-width);
+  max-height: var(--popup-max-height);
 }
 
 #emojiModal.show #emojiModalBox {
@@ -63,16 +65,16 @@
   transition: opacity 0.3s ease-in-out;
   pointer-events: none;
 }
-  justify-content: center;
-}
 
 #closeCallBox {
   background: var(--bg-color);
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 12px;
-  padding: 20px;
+  padding: var(--modal-padding, 20px);
   text-align: center;
+  max-width: var(--popup-max-width);
+  max-height: var(--popup-max-height);
 }
 
 #closeCallBox button {
@@ -104,9 +106,9 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 12px;
-  padding: 20px;
-  max-width: min(90vw, 26.25rem);
-  max-height: 90vh;
+  padding: var(--modal-padding, 20px);
+  max-width: var(--popup-max-width);
+  max-height: var(--popup-max-height);
   overflow-y: auto;
   text-align: left;
 }
@@ -139,9 +141,10 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 12px;
-  padding: 20px;
+  padding: var(--modal-padding, 20px);
   text-align: center;
-  max-width: min(90vw, 22.5rem);
+  max-width: var(--popup-max-width);
+  max-height: var(--popup-max-height);
 }
 
 #shareActions {

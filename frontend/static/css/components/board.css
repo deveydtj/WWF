@@ -9,8 +9,11 @@
   align-items: flex-start;
   margin: 5px auto 0;
   width: 100%;
+  max-width: var(--board-width); /* Constrain to board width */
   position: relative;
   flex: 0 0 auto; /* Only take space needed, don't expand */
+  /* Ensure board scales within its grid area, not viewport */
+  contain: layout; /* Optimize layout containment */
 }
 
 /* Large screen board area - properly constrain within the game column */

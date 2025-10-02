@@ -41,6 +41,20 @@
   /* Touch and accessibility */
   --min-touch-target: 44px;
   --accessibility-scale: 1;
+  
+  /* Fluid spacing tokens for consistent layout scaling */
+  --gutter-sm: clamp(5px, 1vw, 10px);
+  --gutter-md: clamp(10px, 2vw, 20px);
+  --gutter-lg: clamp(15px, 3vw, 30px);
+  
+  /* Panel sizing tokens */
+  --panel-width: clamp(200px, 30vw, 280px);
+  --panel-width-narrow: clamp(180px, 25vw, 240px);
+  
+  /* Popup/Modal sizing tokens */
+  --popup-max-width: min(90vw, 500px);
+  --popup-max-height: min(90vh, 600px);
+  --modal-padding: clamp(16px, 3vw, 28px);
 }
 
 body.dark-mode {
