@@ -127,6 +127,13 @@ function toggleDefinition() {
   if (document.body.classList.contains('definition-open')) {
     focusFirstElement(definitionBoxEl);
   }
+  
+  // Restore history panel if it should remain visible in medium mode with grid layout
+  const mode = document.body.dataset.mode;
+  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+  if (mode === 'medium' && !isHistoryPopup) {
+    updatePanelVisibility();
+  }
 }
 
 // Get the manual panel toggles for external access

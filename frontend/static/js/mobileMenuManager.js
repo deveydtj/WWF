@@ -4,7 +4,7 @@
  */
 
 import { closeDialog, openDialog, showMessage, announce } from './utils.js';
-import { setManualPanelToggle, togglePanel, toggleHistory, toggleDefinition } from './panelManager.js';
+import { setManualPanelToggle, togglePanel, toggleHistory, toggleDefinition, updatePanelVisibility } from './panelManager.js';
 import { hideChatNotify } from './uiNotifications.js';
 import { showInfo, toggleDarkMode } from './optionsManager.js';
 import { toggleSound } from './audioManager.js';
@@ -160,6 +160,13 @@ class MobileMenuManager {
         
         if (document.body.classList.contains('chat-open')) {
           this._focusChatInput();
+        }
+        
+        // Restore history panel if it should remain visible in medium mode with grid layout
+        const mode = document.body.dataset.mode;
+        const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+        if (mode === 'medium' && !isHistoryPopup) {
+          updatePanelVisibility();
         }
       });
     }

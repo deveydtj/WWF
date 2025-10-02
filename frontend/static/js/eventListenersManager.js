@@ -4,7 +4,7 @@
  */
 
 import { closeDialog, openDialog, showMessage, focusFirstElement, shakeInput, announce } from './utils.js';
-import { togglePanel, setManualPanelToggle, toggleHistory, toggleDefinition } from './panelManager.js';
+import { togglePanel, setManualPanelToggle, toggleHistory, toggleDefinition, updatePanelVisibility } from './panelManager.js';
 import { positionContextMenu } from './popupPositioning.js';
 import { hideChatNotify } from './uiNotifications.js';
 import { closeOptionsMenu, showInfo, toggleDarkMode } from './optionsManager.js';
@@ -156,6 +156,13 @@ class EventListenersManager {
         if (document.body.classList.contains('chat-open')) {
           this._focusChatInput();
         }
+        
+        // Restore history panel if it should remain visible in medium mode with grid layout
+        const mode = document.body.dataset.mode;
+        const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+        if (mode === 'medium' && !isHistoryPopup) {
+          updatePanelVisibility();
+        }
       });
     }
   }
@@ -238,6 +245,14 @@ class EventListenersManager {
         if (document.body.classList.contains('chat-open')) {
           this._focusChatInput();
         }
+        
+        // Restore history panel if it should remain visible in medium mode with grid layout
+        const mode = document.body.dataset.mode;
+        const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+        if (mode === 'medium' && !isHistoryPopup) {
+          updatePanelVisibility();
+        }
+        
         closeOptionsMenu();
       });
     }
