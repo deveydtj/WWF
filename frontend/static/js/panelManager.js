@@ -70,18 +70,26 @@ function updatePanelVisibility() {
       } else if (!manualPanelToggles.history) {
         document.body.classList.remove('history-open');
       }
+      
+      // In medium mode with grid, definition and chat are overlays - respect manual toggles
+      // Don't automatically re-open them just because there's content
+      if (manualPanelToggles.definition && hasDefinitionContent()) {
+        document.body.classList.add('definition-open');
+      } else if (!manualPanelToggles.definition) {
+        document.body.classList.remove('definition-open');
+      }
     } else {
       // Full mode with history popup - only show history when manually toggled
       if (!manualPanelToggles.history) {
         document.body.classList.remove('history-open');
       }
-    }
-    
-    // Definition panel still uses grid positioning in full mode, overlay in medium mode
-    if (hasDefinitionContent() || manualPanelToggles.definition) {
-      document.body.classList.add('definition-open');
-    } else if (!manualPanelToggles.definition) {
-      document.body.classList.remove('definition-open');
+      
+      // Definition panel in full mode with history popup
+      if (hasDefinitionContent() || manualPanelToggles.definition) {
+        document.body.classList.add('definition-open');
+      } else if (!manualPanelToggles.definition) {
+        document.body.classList.remove('definition-open');
+      }
     }
   }
 }
