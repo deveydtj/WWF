@@ -220,6 +220,7 @@ export function applyLayoutMode() {
       // Only use full mode if there's enough space for side panels
       if (leftSpace < minPanelWidth + margin || rightSpace < minPanelWidth + margin) {
         mode = 'medium';
+        historyPopup = true; // Force popup layout when downgrading to medium due to space constraints
       }
     }
   }
