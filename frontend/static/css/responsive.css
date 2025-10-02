@@ -6,31 +6,39 @@
  * LAYOUT BREAKPOINT SYSTEM DOCUMENTATION
  * =====================================
  * 
- * WordSquad uses a three-mode responsive layout system:
+ * WordSquad uses a three-mode responsive layout system with CSS Grid:
  * 
- * 1. LIGHT MODE (≤600px) - Mobile/Vertical Stack Layout
+ * 1. SMALL MODE (≤600px) - Mobile/Vertical Stack Layout
  *    - Single-column vertical layout optimized for phones
- *    - Panels use fixed positioning overlays
+ *    - Grid: 1fr with single "center" area
+ *    - Panels use fixed positioning overlays (bottom sheets)
  *    - Tile size: min(8vmin, 32px) for touch accessibility
  *    - Keyboard handling with dynamic viewport height support
+ *    - Gap: 0 (no grid gap)
  * 
- * 2. MEDIUM MODE (601px-900px) - Tablet Three-Panel Layout  
- *    - Three-panel horizontal layout for tablets
- *    - Left, center, and right panel zones defined
+ * 2. MEDIUM MODE (601px-900px) - Tablet Hybrid Layout  
+ *    - Hybrid layout: Grid for history panel, overlays for others
+ *    - Grid (when space allows): 1fr panel-width 60px board-width 1fr
+ *    - Grid areas: history, stamp, center
+ *    - Definition and chat panels remain as centered overlays
  *    - Tile size: min(8vmin, 42px) for balanced touch/precision
- *    - Panel animations and overlay system
+ *    - Gap: var(--gutter-md) (~15px)
  * 
- * 3. FULL MODE (>900px) - Desktop Layout
- *    - Full three-panel desktop experience
- *    - Larger tile sizes for precision input
- *    - Advanced panel positioning and scaling
- *    - Multiple sub-breakpoints for ultra-wide displays
+ * 3. LARGE MODE (>900px) - Desktop Full Grid Layout
+ *    - Full multi-column grid layout
+ *    - Grid: 1fr panel-width 60px board-width panel-width 1fr
+ *    - Grid areas: history, stamp, center, definition, chat
+ *    - All panels positioned within grid
+ *    - Tile size: min(11vmin, 60px) for precision input
+ *    - Gap: var(--gutter-md) to var(--gutter-lg) (~15-30px)
+ *    - Responsive panel widths via --panel-width token
  * 
  * Performance Optimizations:
  * - Consolidated media queries to minimize layout recalculations
  * - CSS custom properties for efficient scaling adjustments
  * - 0.3s transition timing for smooth mode switches
  * - Minimal layout thrashing during window resize
+ * - Layout containment on board area
  */
 
 /* ═══════════════════════════════════════════════

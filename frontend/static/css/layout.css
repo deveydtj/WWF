@@ -2,6 +2,27 @@
    Layout - CSS Grid-based positioning and panel layouts  
    ───────────────────────────────────────────── */
 
+/*
+ * LAYOUT STRUCTURE
+ * ================
+ * 
+ * #appContainer (main container, flex column)
+ *   ├── [Modals/Popups] (fixed position, viewport overlay)
+ *   ├── #lobbyHeader (header area)
+ *   └── #mainGrid (CSS Grid container)
+ *       ├── #historyBox (grid-area: history)
+ *       ├── #stampContainer (grid-area: stamp)
+ *       ├── #centerPanel (grid-area: center)
+ *       │   └── #gameColumn (game board and controls)
+ *       ├── #definitionBox (grid-area: definition)
+ *       └── #chatBox (grid-area: chat)
+ * 
+ * Grid layout changes based on viewport width:
+ * - Small (≤600px): Single column "center" only
+ * - Medium (601-900px): Selective grid with history when space allows
+ * - Large (>900px): Full multi-column grid layout
+ */
+
 /* Main Grid Container */
 #mainGrid {
   display: grid;
@@ -52,6 +73,9 @@
               max-width 0.3s ease-in-out, 
               min-width 0.3s ease-in-out,
               transform 0.3s ease-in-out;
+  /* Ensure center panel scales based on its grid area */
+  width: 100%;
+  justify-self: center; /* Center within grid area */
 }
 
 /* Panel positioning and layout - Updated for Grid */
