@@ -1,5 +1,7 @@
 import { resetAllElementTransforms } from './utils.js';
 
+const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
+
 /**
  * Enhanced Display Scaling System
  * Modern, device-aware scaling with comprehensive viewport management
@@ -285,6 +287,7 @@ export class ScalingCalculator {
 export class CSSScalingManager {
   constructor() {
     this.root = document.documentElement;
+    this.lastScaling = null;
   }
 
   applyScaling(scalingResult) {
@@ -302,9 +305,15 @@ export class CSSScalingManager {
     
     // Update keyboard scaling for better visibility
     this.updateKeyboardScaling(scalingResult);
-    
+
     // Apply accessibility enhancements
     this.applyAccessibilityScaling(scalingResult);
+
+    // Update layout metrics for responsive panel alignment
+    this.updateLayoutMetrics(scalingResult);
+
+    // Persist last scaling snapshot for later adjustments
+    this.lastScaling = { ...scalingResult };
     
     // Measure actual board width and sync --board-width variable (especially important for mobile)
     this.syncBoardWidth();
@@ -320,8 +329,57 @@ export class CSSScalingManager {
         const actualBoardWidth = board.getBoundingClientRect().width;
         this.setProperty('--board-width', `${actualBoardWidth}px`);
         console.log(`🔧 Synced --board-width to actual board width: ${actualBoardWidth}px`);
+
+        if (this.lastScaling) {
+          const updatedScaling = { ...this.lastScaling, boardWidth: Math.round(actualBoardWidth) };
+          this.updateLayoutMetrics(updatedScaling);
+          this.lastScaling = updatedScaling;
+        }
       }
     }, 0);
+  }
+
+  updateLayoutMetrics(scalingResult) {
+    const { boardWidth, tileSize, viewport, uiHeights } = scalingResult;
+    const availableWidth = Math.max(320, viewport?.availableWidth || window.innerWidth || 1280);
+    const availableHeight = Math.max(480, viewport?.availableHeight || window.innerHeight || 720);
+
+    const baseGutter = clampNumber(availableWidth * 0.04, 12, 48);
+    const layoutGridGap = clampNumber(baseGutter * 0.75, 10, 32);
+    const verticalGap = clampNumber(availableHeight * 0.04, 16, 48);
+    const inferredPanelWidth = clampNumber(availableWidth * 0.22, 240, 320);
+    const panelPadding = clampNumber(tileSize * 0.35, 16, 28);
+    const panelContentGap = clampNumber(tileSize * 0.25, 12, 24);
+    const stampColumn = clampNumber(tileSize + layoutGridGap, 48, 96);
+
+    const minLayoutWidth = boardWidth + baseGutter * 2;
+    const panelMultiplier = availableWidth > 1400 ? 2 : availableWidth > 1100 ? 1.6 : 1.4;
+    const idealLayoutWidth = boardWidth + inferredPanelWidth * panelMultiplier + baseGutter * 4;
+    const availableForLayout = Math.max(minLayoutWidth, availableWidth - baseGutter);
+    const layoutMaxWidth = Math.max(
+      minLayoutWidth,
+      Math.min(idealLayoutWidth, availableForLayout)
+    );
+
+    const remainingSpace = Math.max(0, availableWidth - layoutMaxWidth);
+    const edgeBuffer = clampNumber(
+      Math.max(remainingSpace / 2, baseGutter * 0.75),
+      baseGutter * 0.75,
+      Math.max(baseGutter * 3, 220)
+    );
+
+    const panelMaxHeight = Math.max(320, availableHeight - verticalGap * 2 - (uiHeights?.margins || 0));
+
+    this.setProperty('--layout-gutter', `${Math.round(baseGutter)}px`);
+    this.setProperty('--layout-grid-gap', `${Math.round(layoutGridGap)}px`);
+    this.setProperty('--layout-vertical-gap', `${Math.round(verticalGap)}px`);
+    this.setProperty('--layout-max-width', `${Math.round(layoutMaxWidth)}px`);
+    this.setProperty('--layout-edge-buffer', `${Math.round(edgeBuffer)}px`);
+    this.setProperty('--panel-width', `${Math.round(inferredPanelWidth)}px`);
+    this.setProperty('--panel-padding', `${Math.round(panelPadding)}px`);
+    this.setProperty('--panel-content-gap', `${Math.round(panelContentGap)}px`);
+    this.setProperty('--panel-max-height', `${Math.round(panelMaxHeight)}px`);
+    this.setProperty('--stamp-column-width', `${Math.round(stampColumn)}px`);
   }
 
   updateKeyboardScaling(scalingResult) {

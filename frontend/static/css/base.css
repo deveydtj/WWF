@@ -29,11 +29,28 @@
   --tile-gap: calc(var(--tile-size) / 6);
   --ui-scale: var(--current-scale-factor, 1);
   --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
-  
+
+  /* Layout metrics for responsive alignment */
+  --layout-gutter: clamp(8px, 4vw, 48px);
+  --layout-grid-gap: clamp(10px, 3vw, 32px);
+  --layout-vertical-gap: clamp(16px, 4vh, 48px);
+  --layout-edge-buffer: clamp(24px, 10vw, 160px);
+  --layout-max-width: min(1280px, calc(100vw - var(--layout-gutter) * 2));
+  --stamp-column-width: clamp(48px, 6vw, 72px);
+
+  --panel-min-width: 220px;
+  --panel-ideal-width: 260px;
+  --panel-max-width: 320px;
+  --panel-width: clamp(var(--panel-min-width), 24vw, var(--panel-max-width));
+  --panel-padding: clamp(16px, 2vw + 8px, 28px);
+  --panel-radius: 20px;
+  --panel-max-height: calc(var(--viewport-height) - 160px);
+  --panel-content-gap: clamp(12px, 1.5vw, 20px);
+
   /* Uniform button sizing - ensures buttons are same size */
   --uniform-button-width: calc(var(--tile-size) * 1.8);
   --uniform-button-height: calc(var(--tile-size) * 0.8);
-  
+
   /* Modern viewport support */
   --viewport-height: var(--dynamic-viewport-height, 100vh);
   --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));

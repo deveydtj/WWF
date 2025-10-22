@@ -34,16 +34,19 @@
 
 /* Board stamps - Updated for CSS Grid layout with precise 10px spacing from board */
 #stampContainer {
-  /* Use relative positioning within grid area, positioned 10px from board edge */
+  /* Use relative positioning within grid area, positioned next to the board edge */
   position: relative;
-  width: 60px;
+  width: var(--stamp-column-width);
+  min-width: 48px;
+  max-width: var(--stamp-column-width);
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
   /* Container for absolutely positioned stamps */
   pointer-events: none;
   z-index: var(--z-panel-interactive);
-  /* Position stamps exactly 10px from board edge */
+  /* Align stamps with consistent breathing room from the board */
   margin-left: auto;
-  margin-right: 10px; /* 10px space from board edge */
+  margin-right: calc(var(--layout-grid-gap) * 0.5);
+  justify-self: center;
 }
 
 /* Show stamps on everything except mobile */

@@ -277,11 +277,11 @@
 
   /* Open states for mobile panels */
   body.history-open #historyBox {
-    max-height: 50vh;
-    max-width: calc(98% - 20px);
-    padding: 8px;
+    max-height: min(55vh, var(--panel-max-height));
+    max-width: calc(100% - var(--layout-gutter) * 2);
+    padding: var(--panel-padding) var(--layout-gutter);
     overflow-y: auto;
-    border-radius: 0;
+    border-radius: var(--panel-radius) var(--panel-radius) 0 0;
     box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
                 inset -2px -2px 4px var(--shadow-color-light);
     opacity: 1;
@@ -292,10 +292,10 @@
 
   body.definition-open #definitionBox {
     display: block;
-    max-width: calc(98% - 20px);
-    padding: 8px;
+    max-width: calc(100% - var(--layout-gutter) * 2);
+    padding: var(--panel-padding) var(--layout-gutter);
     overflow-y: auto;
-    border-radius: 0;
+    border-radius: var(--panel-radius) var(--panel-radius) 0 0;
     box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
                 inset -2px -2px 4px var(--shadow-color-light);
     opacity: 1;
@@ -306,12 +306,12 @@
 
   body.chat-open #chatBox {
     display: flex;
-    max-height: 40vh;
-    max-width: calc(95% - 20px);
-    margin-left: 10px;
-    padding: 36px 8px 8px;
+    max-height: min(45vh, var(--panel-max-height));
+    max-width: calc(100% - var(--layout-gutter) * 2);
+    margin: 0 auto;
+    padding: calc(var(--panel-padding) + 20px) var(--layout-gutter) var(--panel-padding);
     overflow: hidden;
-    border-radius: 0;
+    border-radius: var(--panel-radius) var(--panel-radius) 0 0;
     box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
                 inset -2px -2px 4px var(--shadow-color-light);
     opacity: 1;
@@ -337,6 +337,14 @@
     /* Mobile devices - smaller tiles to ensure keyboard visibility */
     --tile-size: min(8vmin, 32px);
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+
+    /* Mobile layout spacing and panel sizing */
+    --layout-gutter: clamp(12px, 5vw, 24px);
+    --layout-grid-gap: clamp(10px, 4vw, 24px);
+    --layout-vertical-gap: clamp(12px, 6vh, 32px);
+    --panel-width: clamp(var(--panel-min-width), 90vw, var(--panel-max-width));
+    --panel-padding: clamp(14px, 3vw + 6px, 24px);
+    --panel-max-height: calc(var(--viewport-height) - 140px);
   }
 
   #board {
