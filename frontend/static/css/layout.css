@@ -2,6 +2,15 @@
    Layout - CSS Grid-based positioning and panel layouts  
    ───────────────────────────────────────────── */
 
+/* CSS Custom Properties for Grid Layout */
+:root {
+  /* Panel and container widths */
+  --panel-width: 240px;
+  --stamp-width: 60px;
+  /* Panel heights - consistent formula for all panels */
+  --panel-max-height: calc(100vh - 160px);
+}
+
 /* Main Grid Container */
 #mainGrid {
   display: grid;
@@ -56,8 +65,8 @@
 
 /* Panel positioning and layout - Updated for Grid */
 #historyBox {
-  width: 240px;
-  max-height: calc(100vh - 160px);
+  width: var(--panel-width);
+  max-height: var(--panel-max-height);
   background: var(--bg-color);
   border-radius: 20px;
   padding: 20px;
@@ -78,8 +87,8 @@
 }
 
 #definitionBox {
-  width: 240px;
-  max-height: calc(100vh - 160px);
+  width: var(--panel-width);
+  max-height: var(--panel-max-height);
   background: var(--bg-color);
   border-radius: 20px;
   padding: 20px;
@@ -100,8 +109,8 @@
 }
 
 #chatBox {
-  width: 240px;
-  height: calc(100vh - 160px);
+  width: var(--panel-width);
+  height: var(--panel-max-height);
   background: var(--bg-color);
   border-radius: 20px;
   padding: 20px;
@@ -155,37 +164,33 @@ body.chat-open #chatBox {
 }
 
 /* ═══════════════════════════════════════════════
-   FULL MODE: Desktop Grid Layout (>900px)
+   FULL MODE: Desktop Grid Layout (≥901px)
    ═══════════════════════════════════════════════
-   Corresponds to body[data-mode="full"] set by JS applyLayoutMode()
-   - Three-panel desktop layout with full panel visibility
-   - Responsive column widths with history panel overflow detection
-   - Grid-based positioning for all panels
+   Authoritative full-mode grid definition.
+   Grid areas: history | stamp | center | definition | chat
 */
 @media (min-width: 901px) {
+  /* Default full-mode grid with all panels */
   #mainGrid {
-    /* Wide desktop: center the layout with history panel close to stamps */
-    grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+    grid-template-columns: 1fr var(--panel-width) var(--stamp-width) minmax(auto, var(--board-width)) var(--panel-width) 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
       ". history stamp center definition ."
       ". history stamp center chat .";
     justify-content: center;
     max-width: none;
-    /* Reduce gap for tighter spacing */
     gap: 15px;
   }
   
-  /* Narrow desktop layout - history panel becomes popup to prevent overflow */
+  /* Narrow desktop layout - history panel becomes popup, grid doesn't reserve column */
   body[data-history-popup="true"] #mainGrid {
-    /* Remove history from grid layout on narrow screens */
-    grid-template-columns: 1fr 60px minmax(auto, var(--board-width)) 280px 1fr;
+    grid-template-columns: 1fr var(--stamp-width) minmax(auto, var(--board-width)) var(--panel-width) 1fr;
     grid-template-areas: 
       ". stamp center definition ."
       ". stamp center chat .";
   }
   
-  /* History panel popup styling for narrow desktop screens */
+  /* History panel in popup mode - fixed overlay */
   body[data-history-popup="true"] #historyBox {
     position: fixed;
     top: 50%;
@@ -194,36 +199,35 @@ body.chat-open #chatBox {
     z-index: var(--z-panel-overlay);
     max-width: 90%;
     max-height: 80vh;
-    width: 240px; /* Use optimal width when space allows */
+    width: var(--panel-width);
   }
   
-  /* For ultra-wide displays (>1550px), always use full grid layout */
+  /* Ultra-wide displays (≥1551px) - always use full grid, no popup */
   @media (min-width: 1551px) {
     #mainGrid {
-      /* Center the layout and position history panel closer to stamps */
-      grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+      grid-template-columns: 1fr var(--panel-width) var(--stamp-width) minmax(auto, var(--board-width)) var(--panel-width) 1fr;
       grid-template-areas: 
         ". history stamp center definition ."
         ". history stamp center chat .";
-      /* Slightly larger gap on ultra-wide screens */
       gap: 20px;
     }
     
-    /* Override history popup on ultra-wide screens */
+    /* Override popup mode on ultra-wide screens - force grid layout */
     body[data-history-popup="true"] #mainGrid {
-      grid-template-columns: 1fr 280px 60px minmax(auto, var(--board-width)) 280px 1fr;
+      grid-template-columns: 1fr var(--panel-width) var(--stamp-width) minmax(auto, var(--board-width)) var(--panel-width) 1fr;
       grid-template-areas: 
         ". history stamp center definition ."
         ". history stamp center chat .";
     }
     
+    /* Reset history panel to grid positioning on ultra-wide */
     body[data-history-popup="true"] #historyBox {
       position: static;
       transform: none;
       z-index: var(--z-panel-base);
       max-width: none;
-      max-height: calc(100vh - 160px);
-      width: auto;
+      max-height: var(--panel-max-height);
+      width: var(--panel-width);
     }
   }
 }
@@ -247,7 +251,7 @@ body.chat-open #chatBox {
   
   /* When there's enough space in medium mode, use grid layout with history panel */
   body[data-mode='medium']:not([data-history-popup="true"]) #mainGrid {
-    grid-template-columns: 1fr 240px 60px minmax(auto, var(--board-width)) 1fr;
+    grid-template-columns: 1fr var(--panel-width) var(--stamp-width) minmax(auto, var(--board-width)) 1fr;
     grid-template-areas: 
       ". history stamp center ."
       ". history stamp center .";
