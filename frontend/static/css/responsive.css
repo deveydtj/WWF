@@ -623,7 +623,7 @@
   #historyBox,
   #definitionBox,
   #chatBox {
-    width: clamp(14rem, 30vw, 17rem);
+    width: clamp(14rem, 30vw, var(--panel-width));
   }
 
   /* Medium mode panels - default to centered overlays when history is popup */
@@ -657,7 +657,7 @@
   body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
     position: static !important;
     transform: none !important;
-    width: 240px;
+    width: var(--panel-width);
   }
 
   /* Override base positioning for medium mode */
@@ -838,9 +838,4 @@
   /* Very large screens use unified button sizing */
 }
 
-/* Extra-Wide Desktop (≥1800px) - Additional spacing for stamp positioning */
-@media (min-width: 1800px) {
-  #centerPanel {
-    max-width: calc(var(--board-width) + 250px) !important; /* Extra buffer at very wide resolutions to prevent stamp/panel overlap */
-  }
-}
+/* Extra-Wide Desktop (≥1800px) - No additional center panel adjustments needed */
