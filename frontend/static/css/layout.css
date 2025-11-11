@@ -154,7 +154,14 @@ body.chat-open #chatBox {
   opacity: 1;
 }
 
-/* Desktop Grid Layout (>900px) - Responsive column widths with history panel overflow detection */
+/* ═══════════════════════════════════════════════
+   FULL MODE: Desktop Grid Layout (>900px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="full"] set by JS applyLayoutMode()
+   - Three-panel desktop layout with full panel visibility
+   - Responsive column widths with history panel overflow detection
+   - Grid-based positioning for all panels
+*/
 @media (min-width: 901px) {
   #mainGrid {
     /* Wide desktop: center the layout with history panel close to stamps */
@@ -221,13 +228,21 @@ body.chat-open #chatBox {
   }
 }
 
-/* Tablet Grid Layout (601-900px) */
+/* ═══════════════════════════════════════════════
+   MEDIUM MODE: Tablet Grid Layout (601-900px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="medium"] set by JS applyLayoutMode()
+   - Single-column grid with center panel
+   - Panels use overlay positioning when opened
+   - Hybrid grid/overlay approach based on available width
+*/
 @media (min-width: 601px) and (max-width: 900px) {
   #mainGrid {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     grid-template-areas: "center";
     justify-content: center;
+    justify-items: center;
   }
   
   /* When there's enough space in medium mode, use grid layout with history panel */
@@ -272,7 +287,14 @@ body.chat-open #chatBox {
   }
 }
 
-/* Mobile Grid Layout (≤600px) */
+/* ═══════════════════════════════════════════════
+   LIGHT MODE: Mobile Grid Layout (≤600px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="light"] set by JS applyLayoutMode()
+   - Single-column vertical layout optimized for phones
+   - Grid template shows only center panel
+   - All side panels positioned as overlays (handled in responsive.css)
+*/
 @media (max-width: 600px) {
   #mainGrid {
     grid-template-columns: 1fr;

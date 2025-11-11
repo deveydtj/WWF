@@ -45,12 +45,7 @@
   }
 
   /* Layout container mobile behavior - Updated for Grid */
-  #mainGrid {
-    /* Mobile uses single column center-only layout */
-    grid-template-columns: 1fr;
-    grid-template-areas: "center";
-    gap: 0;
-  }
+  /* Note: Grid structure defined in layout.css, mode adaptations here */
   
   /* Legacy containers removed - now using CSS Grid exclusively */
   
@@ -121,7 +116,9 @@
     opacity: 0;
     transform-origin: bottom center;
     transform: scale(0);
-    z-index: var(--z-mobile-menu);
+    z-index: 10000; /* Increased z-index to appear above virtual keyboards */
+    display: flex;
+    flex-direction: column;
     pointer-events: none;
     top: auto; /* Reset top for mobile */
     height: auto; /* Reset height for mobile */
@@ -215,64 +212,6 @@
   /* Hide player count in mobile/light mode to save space */
   #playerCount {
     display: none;
-  }
-
-  /* Panel positioning for mobile */
-  #historyBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-  }
-
-  #definitionBox {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 50;
-    pointer-events: none;
-  }
-
-  #chatBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 10000; /* Increased z-index to appear above virtual keyboards */
-    display: flex;
-    flex-direction: column;
-    pointer-events: none;
   }
 
   /* Open states for mobile panels */
@@ -649,24 +588,24 @@
 }
 
 /* ═══════════════════════════════════════════════
-   MEDIUM MODE: Tablet Three-Panel Layout (601px-900px) 
-   ═══════════════════════════════════════════════ */
+   MEDIUM MODE: Tablet Three-Panel Layout (601px-900px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="medium"] set by JS applyLayoutMode()
+   - Mode-specific adaptations for tablet layouts
+   - Panel overlay behaviors and animations
+   - Touch-optimized sizing and spacing
+*/
 @media (min-width: 601px) and (max-width: 900px) {
   /* 
    * Medium Mode Layout Calculations:
-   * - Single-column grid layout with center panel
-   * - Panel overlays when open
+   * - Single-column grid layout with center panel (defined in layout.css)
+   * - Panel overlays when open (positioning here)
    * - Tile size optimized for tablet touch precision: min(8vmin, 42px)
    * - Panel overlays with transform scaling for space efficiency
    */
    
-  /* Grid layout for medium mode */
-  #mainGrid {
-    grid-template-columns: 1fr;
-    grid-template-areas: "center";
-    justify-content: center;      /* center the grid track(s) in the available space */
-    justify-items: center;        /* center grid items within their tracks */
-  }
+  /* Grid layout for medium mode - structure in layout.css, adaptations here */
+  /* Note: grid-template-columns and grid-template-areas defined in layout.css */
   
   /* Ensure the center panel is sized and can shrink if needed */
   #centerPanel {
@@ -807,7 +746,11 @@
 
 /* ═══════════════════════════════════════════════
    FULL MODE: Desktop Layout (>900px)
-   ═══════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="full"] set by JS applyLayoutMode()
+   - Mode-specific desktop adaptations
+   - Transform origins for panel animations
+*/
 
 /* Set proper transform origins for desktop panel animations */
 @media (min-width: 901px) {
@@ -821,7 +764,8 @@
   }
 }
 
-/* Full Mode - Standard Desktop (901px-1199px) */
+/* Full Mode - Standard Desktop (901px-1199px)
+   Corresponds to body[data-mode="full"] - standard desktop range */
 @media (min-width: 901px) and (max-width: 1199px) {
   /* 
    * Full Mode Standard Desktop Calculations:
@@ -836,7 +780,8 @@
   }
 }
 
-/* Full Mode - Large Desktop (1200px-1550px) */
+/* Full Mode - Large Desktop (1200px-1550px)
+   Corresponds to body[data-mode="full"] - large desktop range */
 @media (min-width: 1200px) and (max-width: 1550px) {
   /* 
    * Full Mode Large Desktop Calculations:
@@ -862,7 +807,8 @@
   /* Large screens use unified button sizing */
 }
 
-/* Full Mode - Ultra-Wide Desktop (≥1551px) */
+/* Full Mode - Ultra-Wide Desktop (≥1551px)
+   Corresponds to body[data-mode="full"] - ultra-wide desktop range */
 @media (min-width: 1551px) {
   /* 
    * Full Mode Ultra-Wide Desktop Calculations:

@@ -1,6 +1,18 @@
 /* ─────────────────────────────────────────────
    Modern Responsive Design - Advanced viewport and container-based scaling
-   ───────────────────────────────────────────── */
+   ───────────────────────────────────────────── 
+
+   This file contains SCALING TOKENS and modern CSS features:
+   - Viewport units (dvh, svh, lvh) for better mobile support
+   - Container queries for component-level responsiveness
+   - Fluid typography and spacing with clamp()
+   - Touch-optimized sizing and accessibility features
+   
+   Mode breakpoints reference (for informational purposes):
+   - LIGHT MODE: ≤600px (body[data-mode="light"])
+   - MEDIUM MODE: 601px-900px (body[data-mode="medium"])
+   - FULL MODE: >900px (body[data-mode="full"])
+*/
 
 /* Modern viewport units for better mobile support */
 :root {
@@ -223,27 +235,3 @@
 .fluid-space-md { margin: clamp(1rem, 2vw, 2rem); }
 .fluid-space-lg { margin: clamp(1.5rem, 3vw, 3rem); }
 .fluid-space-xl { margin: clamp(2rem, 4vw, 4rem); }
-
-/* ═══════════════════════════════════════════════
-   MEDIUM MODE FIX: Panel positioning to prevent extra space
-   ═══════════════════════════════════════════════ */
-@media (min-width: 601px) and (max-width: 900px) {
-  /* Fix medium mode panel positioning to prevent space above lobbyHeader */
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    position: absolute !important;
-    top: 10px !important;
-  }
-
-  body[data-mode='medium'] #historyBox {
-    left: 0 !important;
-    transform-origin: left center !important;
-  }
-
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
-    right: 0 !important;
-    transform-origin: right center !important;
-  }
-}
