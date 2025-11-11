@@ -652,6 +652,13 @@
     max-height: 80vh;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
+  
+  /* In medium mode with grid layout, history panel uses grid positioning */
+  body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
+    position: static !important;
+    transform: none !important;
+    width: 240px;
+  }
 
   /* Override base positioning for medium mode */
   #optionsToggle {
