@@ -151,11 +151,17 @@ export function setGameInputDisabled(disabled) {
 
 /**
  * Update the CSS custom properties for viewport height to handle mobile browser chrome.
- * Sets --vh and --viewport-height. The --keyboard-safe-height is calculated by CSS
- * in base.css as: calc(var(--viewport-height) - env(keyboard-inset-height, 0px))
+ * Sets --vh and --viewport-height using the layout viewport (innerHeight).
+ * The --keyboard-safe-height is calculated by CSS in base.css as:
+ * calc(var(--viewport-height) - env(keyboard-inset-height, 0px))
+ * 
+ * Note: We use innerHeight (layout viewport) rather than visualViewport.height
+ * because visualViewport already excludes the keyboard, which would cause
+ * double-subtraction when CSS subtracts env(keyboard-inset-height).
  */
 export function updateVH() {
-  const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  // Use layout viewport (innerHeight) so CSS can subtract keyboard inset once
+  const height = window.innerHeight;
   const vh = height * 0.01;
   
   // Set viewport height variables - CSS calculates --keyboard-safe-height from these
