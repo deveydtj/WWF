@@ -340,13 +340,16 @@
     flex: 0 0 auto;
   }
 
-  /* Points Popup - mobile positioning */
+  /* Points Popup - mobile positioning and sizing */
   #pointsPopup {
     top: 20%;
-    font-size: 20px;
-    padding: 10px 16px;
+    font-size: calc(1.1em * var(--ui-scale));
+    padding: calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale));
+    min-width: calc(60px * var(--ui-scale));
     max-width: calc(100vw - 40px);
+    border-radius: 10px;
     text-align: center;
+    white-space: nowrap;
   }
 
   /* History Items - compact mobile view */
