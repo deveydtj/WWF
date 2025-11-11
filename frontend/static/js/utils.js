@@ -151,24 +151,28 @@ export function setGameInputDisabled(disabled) {
 
 /**
  * Update the CSS custom properties for viewport height to handle mobile browser chrome.
- * Sets --vh and --viewport-height using the layout viewport (innerHeight).
- * The --keyboard-safe-height is calculated by CSS in base.css as:
- * calc(var(--viewport-height) - env(keyboard-inset-height, 0px))
  * 
- * Note: We use innerHeight (layout viewport) rather than visualViewport.height
- * because visualViewport already excludes the keyboard, which would cause
- * double-subtraction when CSS subtracts env(keyboard-inset-height).
+ * Strategy:
+ * - For --viewport-height: Use innerHeight (layout viewport) so CSS can subtract
+ *   env(keyboard-inset-height) once without double-counting
+ * - For --keyboard-safe-height: Use visualViewport as fallback for browsers that
+ *   don't support env(keyboard-inset-height), since visualViewport automatically
+ *   adjusts for the keyboard on those browsers
  */
 export function updateVH() {
-  // Use layout viewport (innerHeight) so CSS can subtract keyboard inset once
-  const height = window.innerHeight;
-  const vh = height * 0.01;
+  const layoutHeight = window.innerHeight;
+  const visualHeight = window.visualViewport ? window.visualViewport.height : layoutHeight;
+  const vh = layoutHeight * 0.01;
   
-  // Set viewport height variables - CSS calculates --keyboard-safe-height from these
+  // Set viewport height variables
   document.documentElement.style.setProperty('--vh', `${vh}px`);
-  document.documentElement.style.setProperty('--viewport-height', `${height}px`);
-  // Note: --keyboard-safe-height is NOT set here; it's computed by CSS from
-  // --viewport-height minus env(keyboard-inset-height) in base.css
+  document.documentElement.style.setProperty('--viewport-height', `${layoutHeight}px`);
+  
+  // Set keyboard-safe-height using visualViewport as fallback for browsers
+  // without env(keyboard-inset-height) support. CSS will override this with
+  // calc(var(--viewport-height) - env(keyboard-inset-height, 0px)) if the env
+  // variable is supported, but this ensures older browsers still work.
+  document.documentElement.style.setProperty('--keyboard-safe-height', `${visualHeight}px`);
 
   const board = document.getElementById('board');
   if (board) {
