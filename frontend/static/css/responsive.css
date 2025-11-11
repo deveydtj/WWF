@@ -37,94 +37,59 @@
    LIGHT MODE: Mobile Layout (≤600px)
    ═══════════════════════════════════════════════ */
 @media (max-width: 600px) {
-  /* Mobile scaling variables */
+  /* Mobile scaling variables - single source of truth */
   :root {
-    /* Mobile scaling - use enhanced scaling values when available */
     --tile-size: var(--current-tile-size, min(8vmin, 32px));
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
 
-  /* Layout container mobile behavior - Updated for Grid */
-  /* Note: Grid structure defined in layout.css, mode adaptations here */
+  /* Main Grid - mobile uses single column layout (defined in layout.css) */
   
-  /* Legacy containers removed - now using CSS Grid exclusively */
-  
+  /* Center Panel - full width container for mobile */
   #centerPanel {
     width: 100%;
     max-width: none;
     min-width: auto;
   }
 
+  /* App Container - use keyboard-safe viewport height */
   #appContainer {
     padding: 5px;
     min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
   }
 
-  /* Mobile panel positioning - panels become fixed overlays on mobile */
-  #historyBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: var(--z-mobile-menu);
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
-  }
-
-  #definitionBox {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow-y: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: var(--z-mobile-menu);
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
-  }
-
-  #chatBox {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
-    background: var(--bg-color);
-    opacity: 0;
-    transform-origin: bottom center;
-    transform: scale(0);
-    z-index: 10000; /* Increased z-index to appear above virtual keyboards */
+  /* Game Column - flexible layout with keyboard-safe height */
+  #gameColumn {
+    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
     display: flex;
     flex-direction: column;
-    pointer-events: none;
-    top: auto; /* Reset top for mobile */
-    height: auto; /* Reset height for mobile */
   }
 
-  /* Enhanced keyboard handling with modern viewport units */
+  /* Board Area - take only needed space, centered */
+  #boardArea {
+    flex: 0 0 auto;
+    min-height: auto;
+    height: auto;
+  }
+
+  /* Board Grid - use CSS variables for sizing */
+  #board {
+    grid-template-columns: repeat(5, var(--tile-size));
+    grid-gap: var(--tile-gap);
+    margin: 0;
+  }
+
+  /* Tile Sizing - responsive to --tile-size variable */
+  .tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    font-size: max(12px, calc(var(--tile-size) * 0.44));
+    border-radius: clamp(3px, var(--tile-size) * 0.1, 6px);
+    box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                -3px -3px 6px var(--shadow-color-light);
+  }
+
+  /* Keyboard - always visible at bottom, matches board width */
   #keyboard {
     min-height: calc(var(--tile-size) * 2.2);
     margin-top: 5px;
@@ -132,266 +97,19 @@
     position: relative;
     z-index: 100;
     flex-shrink: 0;
-    transform: scale(var(--keyboard-scale, 1));
-    transform-origin: center bottom;
+    max-width: none;
+    width: var(--board-width);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  /* Enhanced gameColumn with modern viewport support */
-  #gameColumn {
-    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Improved board area with container queries */
-  #boardArea {
-    flex: 0 0 auto;
-    min-height: auto; /* Calculate height based on content */
-    height: auto; /* Allow height to be calculated from board content */
-  }
-
-  /* Enhanced mobile tile sizing */
-  :root {
-    --tile-size: var(--current-tile-size, min(8vmin, 32px));
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
-  }
-
-  .tile {
-    width: var(--tile-size);
-    height: var(--tile-size);
-    font-size: max(12px, calc(var(--tile-size) * 0.44));
-    border-radius: clamp(3px, var(--tile-size) * 0.1, 6px);
-  }
-
+  /* Keyboard Keys - sized relative to tiles */
   .key {
     min-width: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.58));
     height: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.83));
     font-size: max(12px, calc(var(--tile-size) * 0.27));
-  }
-
-  #appContainer {
-    padding: 5px;
-    min-height: 100vh;
-    min-height: calc(var(--vh, 1vh) * 100);
-  }
-
-  #optionsMenu {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  #optionsToggle {
-    display: none !important; /* Hidden on mobile - replaced by mobile menu */
-  }
-  
-  #chatNotify {
-    display: none !important; /* Hidden on mobile - replaced by mobile menu */
-  }
-
-  #mobileMenuToggle {
-    display: block !important;
-    position: fixed !important;
-    top: 10px !important;
-    right: 10px !important;
-    z-index: 70 !important;
-    font-size: 18px !important;
-  }
-
-  /* Hide duplicate host control buttons on mobile - they're now in the mobile menu */
-  #hostControls {
-    display: none !important;
-  }
-
-  /* Hide lobby code on mobile since it's now in the title */
-  #lobbyCode {
-    display: none !important;
-  }
-
-  /* Hide player count in mobile/light mode to save space */
-  #playerCount {
-    display: none;
-  }
-
-  /* Open states for mobile panels */
-  body.history-open #historyBox {
-    max-height: 50vh;
-    max-width: calc(98% - 20px);
-    padding: 8px;
-    overflow-y: auto;
-    border-radius: 0;
-    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
-                inset -2px -2px 4px var(--shadow-color-light);
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    pointer-events: auto;
-  }
-
-  body.definition-open #definitionBox {
-    display: block;
-    max-width: calc(98% - 20px);
-    padding: 8px;
-    overflow-y: auto;
-    border-radius: 0;
-    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
-                inset -2px -2px 4px var(--shadow-color-light);
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    pointer-events: auto;
-  }
-
-  body.chat-open #chatBox {
-    display: flex;
-    max-height: 40vh;
-    max-width: calc(95% - 20px);
-    margin-left: 10px;
-    padding: 36px 8px 8px;
-    overflow: hidden;
-    border-radius: 0;
-    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
-                inset -2px -2px 4px var(--shadow-color-light);
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    flex-direction: column;
-    pointer-events: auto;
-  }
-
-  #historyBox h3 {
-    display: none;
-  }
-
-  .history-item .history-guess-tiles .tile {
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
-    line-height: 20px;
-  }
-
-  /* Mobile tile and layout sizing */
-  :root {
-    /* Mobile devices - smaller tiles to ensure keyboard visibility */
-    --tile-size: min(8vmin, 32px);
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
-  }
-
-  #board {
-    grid-template-columns: repeat(5, var(--tile-size));
-    grid-gap: var(--tile-gap);
-    margin: 0;
-  }
-
-  .tile {
-    width: var(--tile-size);
-    height: var(--tile-size);
-    font-size: calc(var(--tile-size) * 0.44);
-    border-radius: 4px;
-    box-shadow: 3px 3px 6px var(--shadow-color-dark),
-                -3px -3px 6px var(--shadow-color-light);
-  }
-
-  /* Mobile reset button positioning - move to top left */
-  #resetWrapper {
-    position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    z-index: 999 !important; /* Extremely high z-index to ensure it's always on top */
-    order: unset !important;
-    margin: 0 !important;
-    pointer-events: auto !important; /* Ensure it can receive touch events */
-    /* Create new stacking context to ensure proper layering */
-    isolation: isolate !important;
-  }
-
-  /* Mobile header uniformity - match hamburger menu button height */
-  #holdReset {
-    height: 44px !important;
-    width: 44px !important;
-    font-size: 14px !important;
-    z-index: 999 !important; /* Ensure button itself is above leaderboard */
-    position: relative !important; /* Ensure proper stacking context */
-    pointer-events: auto !important; /* Ensure it can receive touch events */
-    touch-action: manipulation !important; /* Optimize for touch interaction */
-    /* Create new stacking context to isolate from other elements */
-    isolation: isolate !important;
-  }
-
-  /* Hide input area on mobile since users should use on-screen keyboard */
-  #inputArea {
-    display: none !important; /* Hide input area on mobile - users should use on-screen keyboard */
-  }
-
-  #messagePopup {
-    font-size: 16px;
-  }
-
-  /* Points popup mobile positioning */
-  #pointsPopup {
-    top: 20%;
-    font-size: 20px;
-    padding: 10px 16px;
-    /* Better mobile positioning */
-    max-width: calc(100vw - 40px);
-    text-align: center;
-  }
-
-  /* Enhanced mobile keyboard adjustments with virtual keyboard support */
-  #keyboard {
-    min-height: calc(var(--tile-size) * 2.2);
-    margin-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
-    /* Ensure keyboard is always visible above virtual keyboard */
-    position: relative;
-    z-index: 100;
-    flex-shrink: 0;
-    transform: scale(var(--keyboard-scale, 1));
-    transform-origin: center bottom;
-  }
-
-  /* Enhanced gameColumn with modern viewport support */
-  #gameColumn {
-    min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Board area should only take space it needs, not expand */
-  #boardArea {
-    flex: 0 0 auto; /* Only take space needed, don't expand */
-    min-height: auto; /* Calculate height based on content */
-    height: auto; /* Allow height to be calculated from board content */
-  }
-
-  /* Ensure input area doesn't take excessive space */
-  #inputArea {
-    flex: 0 0 auto; /* Don't allow expansion */
-    margin: 3px auto 3px; /* Reduced margins to keep keyboard closer to board */
-  }
-
-  /* Keep message areas compact */
-  #message {
-    flex: 0 0 auto;
-    margin: 3px 0; /* Reduced margin */
-  }
-
-  #messagePopup {
-    flex: 0 0 auto;
-  }
-
-  /* Position keyboard immediately after other elements */
-  #keyboard {
-    flex: 0 0 auto; /* Don't shrink or expand */
-    margin-top: 3px; /* Reduced margin to position closer to board */
-    order: 999; /* Ensure keyboard comes last in flex order */
-  }
-
-  .key {
-    min-width: calc(var(--tile-size) * 0.58);
-    height: calc(var(--tile-size) * 0.83);
     margin: calc(var(--tile-gap) / 2);
-    font-size: calc(var(--tile-size) * 0.27);
     padding: 0 5px;
     box-shadow: 3px 3px 6px var(--shadow-color-dark),
                 -3px -3px 6px var(--shadow-color-light);
@@ -402,32 +120,137 @@
     min-width: calc(var(--tile-size) * 1.2);
   }
 
-  /* Mobile reset button - now uses unified sizing */
-
-  .leaderboard-entry {
-    font-size: calc(1em * var(--ui-scale));
-    padding: calc(5px * var(--ui-scale)) calc(10px * var(--ui-scale));
-    margin: 0 3px;
-    min-width: calc(40px * var(--ui-scale));
+  /* Mobile Panel Positioning - Fixed bottom overlays */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    background: var(--bg-color);
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--z-mobile-menu);
+    /* Reset desktop properties for mobile */
+    top: auto;
+    right: auto;
+    height: auto;
+    transform: none;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
   }
 
-  .hint-badge {
-    margin-left: 4px;
-    font-size: calc(0.7em * var(--ui-scale));
-    animation: hint-pulse 4s ease-in-out infinite;
+  /* Mobile Panel Open States */
+  body.history-open #historyBox {
+    max-height: 50vh;
+    padding: 8px;
+    overflow-y: auto;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light);
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  h1 {
-    font-size: calc(1.5em * var(--ui-scale));
-    margin-bottom: 2px;
+  body.definition-open #definitionBox {
+    max-height: 50vh;
+    padding: 8px;
+    overflow-y: auto;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.chat-open #chatBox {
+    max-height: 40vh;
+    padding: 36px 8px 8px;
+    overflow: hidden;
+    box-shadow: inset 2px 2px 4px var(--shadow-color-dark),
+                inset -2px -2px 4px var(--shadow-color-light);
+    opacity: 1;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Input Area - hidden on mobile (users use on-screen keyboard) */
+  #inputArea {
+    display: none;
+  }
+
+  /* Reset Button - positioned by JS repositionResetButton() */
+  #resetWrapper {
+    /* Positioned by JS - these rules ensure proper stacking when moved */
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 999;
+    order: unset;
+    margin: 0;
+    pointer-events: auto;
+    isolation: isolate;
+  }
+
+  #holdReset {
+    height: 44px;
+    width: 44px;
+    font-size: 14px;
+    z-index: 999;
+    position: relative;
+    pointer-events: auto;
+    touch-action: manipulation;
+    isolation: isolate;
+  }
+
+  /* Options Menu - centered overlay on mobile */
+  #optionsMenu {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Options Toggle - hidden on mobile, replaced by mobile menu */
+  #optionsToggle {
+    display: none;
   }
   
-  #message {
-    font-size: 16px;
-    margin-top: 12px;
+  /* Chat Notify - hidden on mobile, replaced by mobile menu */
+  #chatNotify {
+    display: none;
   }
 
-  /* Additional mobile layout fixes */
+  /* Mobile Menu Toggle - visible only on mobile */
+  #mobileMenuToggle {
+    display: block;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 70;
+    font-size: 18px;
+  }
+
+  /* Host Controls - hidden on mobile, available in mobile menu */
+  #hostControls {
+    display: none;
+  }
+
+  /* Lobby Code - hidden on mobile to save space */
+  #lobbyCode {
+    display: none;
+  }
+
+  /* Player Count - hidden on mobile to save space */
+  #playerCount {
+    display: none;
+  }
+
+  /* Title Bar - mobile layout with inline leaderboard */
   #titleBar {
     flex-direction: column;
     gap: 0.5rem;
@@ -435,11 +258,14 @@
   }
   
   #titleBar h1 {
-    font-size: 1.5rem;
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
   }
   
-  /* Mobile leaderboard inline with title */
   #titleBar .mobile-title-row {
     display: flex;
     flex-direction: row;
@@ -453,12 +279,6 @@
   #titleBar .mobile-title-row h1 {
     margin: 0;
     text-align: center;
-    /* Scale down title to always fit on one line */
-    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 60vw;
   }
   
   #titleBar .mobile-leaderboard-container {
@@ -469,14 +289,14 @@
     min-width: 0;
     overflow: hidden;
     max-width: 200px;
-    z-index: 70; /* Below reset button (85) but above other UI elements */
+    z-index: 70;
   }
   
   #titleBar .mobile-leaderboard-container #leaderboard {
     margin: 0;
     padding: 0;
     gap: 8px;
-    max-height: 60px; /* Increased to prevent emoji clipping on mobile */
+    max-height: 60px;
     overflow-x: auto;
     overflow-y: hidden;
     flex-wrap: nowrap;
@@ -484,38 +304,76 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     display: flex;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   
   #titleBar .mobile-leaderboard-container #leaderboard::-webkit-scrollbar {
     display: none;
   }
   
-  #titleBar .mobile-leaderboard-container #leaderboard {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  /* Hide the separate leaderboard on mobile when it's moved inline */
-  body:has(.mobile-leaderboard-container #leaderboard) > #appContainer > #leaderboard:not(.mobile-inline) {
-    display: none;
-  }
-  
-  /* Ensure leaderboard entries are appropriately sized for mobile inline */
   #titleBar .mobile-leaderboard-container .leaderboard-entry {
-    /* Limit scaling to prevent tiles from exceeding 44px height */
     font-size: min(calc(0.9em * var(--ui-scale)), 14px);
     padding: min(calc(4px * var(--ui-scale)), 6px) min(calc(8px * var(--ui-scale)), 8px);
     margin: 0 2px;
     min-width: calc(35px * var(--ui-scale));
     white-space: nowrap;
     flex-shrink: 0;
-    /* Mobile header uniformity - match hamburger menu button height */
-    height: 44px !important;
-    max-height: 44px !important; /* Enforce maximum height */
+    height: 44px;
+    max-height: 44px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    overflow: hidden; /* Prevent content overflow */
+    overflow: hidden;
+  }
+
+  /* Message Elements */
+  #message {
+    font-size: 16px;
+    margin-top: 12px;
+    flex: 0 0 auto;
+    margin-bottom: 3px;
+  }
+
+  #messagePopup {
+    font-size: 16px;
+    flex: 0 0 auto;
+  }
+
+  /* Points Popup - mobile positioning */
+  #pointsPopup {
+    top: 20%;
+    font-size: 20px;
+    padding: 10px 16px;
+    max-width: calc(100vw - 40px);
+    text-align: center;
+  }
+
+  /* History Items - compact mobile view */
+  #historyBox h3 {
+    display: none;
+  }
+
+  .history-item .history-guess-tiles .tile {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+  }
+
+  /* Leaderboard Entries - mobile sizing */
+  .leaderboard-entry {
+    font-size: calc(1em * var(--ui-scale));
+    padding: calc(5px * var(--ui-scale)) calc(10px * var(--ui-scale));
+    margin: 0 3px;
+    min-width: calc(40px * var(--ui-scale));
+  }
+
+  /* Hint Badge - mobile sizing */
+  .hint-badge {
+    margin-left: 4px;
+    font-size: calc(0.7em * var(--ui-scale));
+    animation: hint-pulse 4s ease-in-out infinite;
   }
 }
 

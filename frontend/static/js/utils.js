@@ -150,19 +150,17 @@ export function setGameInputDisabled(disabled) {
  */
 
 /**
- * Update the CSS `--vh` custom property to handle mobile browser chrome.
+ * Update the CSS custom properties for viewport height to handle mobile browser chrome.
+ * Sets --vh, --viewport-height, and --keyboard-safe-height for consistent usage across CSS.
  */
 export function updateVH() {
   const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const vh = height * 0.01;
+  
+  // Set all viewport height variables to the same value for consistency
   document.documentElement.style.setProperty('--vh', `${vh}px`);
-
-  const container = document.getElementById('appContainer');
-  if (container) {
-    // Use the visual viewport height for better mobile experience
-    container.style.height = `${height}px`;
-    container.style.minHeight = `${height}px`;
-  }
+  document.documentElement.style.setProperty('--viewport-height', `${height}px`);
+  document.documentElement.style.setProperty('--keyboard-safe-height', `${height}px`);
 
   const board = document.getElementById('board');
   if (board) {
