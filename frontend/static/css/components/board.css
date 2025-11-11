@@ -32,18 +32,17 @@
   max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
 }
 
-/* Board stamps - Updated for CSS Grid layout with precise 10px spacing from board */
+/* Board stamps - Updated for CSS Grid layout */
 #stampContainer {
-  /* Use relative positioning within grid area, positioned 10px from board edge */
+  /* Use grid positioning - no manual margins needed */
   position: relative;
-  width: 60px;
+  width: var(--stamp-width);
   height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
   /* Container for absolutely positioned stamps */
   pointer-events: none;
   z-index: var(--z-panel-interactive);
-  /* Position stamps exactly 10px from board edge */
-  margin-left: auto;
-  margin-right: 10px; /* 10px space from board edge */
+  /* Internal padding for spacing from board */
+  padding-right: 10px;
 }
 
 /* Show stamps on everything except mobile */
@@ -92,12 +91,7 @@
 
 /* Medium mode - hide stamp area since panels become overlays */
 @media (min-width: 601px) and (max-width: 900px) {
-  #mainGrid {
-    grid-template-columns: 1fr;
-    grid-template-areas: "center";
-    justify-content: center;      /* center the grid track(s) in the available space */
-    justify-items: center;        /* center grid items within their tracks */
-  }
+  /* Grid structure is handled in layout.css */
   
   #stampContainer {
     display: none; /* Hide stamps in medium mode */
