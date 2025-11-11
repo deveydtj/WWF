@@ -150,19 +150,29 @@ export function setGameInputDisabled(disabled) {
  */
 
 /**
- * Update the CSS `--vh` custom property to handle mobile browser chrome.
+ * Update the CSS custom properties for viewport height to handle mobile browser chrome.
+ * 
+ * Strategy:
+ * - For --viewport-height: Use innerHeight (layout viewport) so CSS can subtract
+ *   env(keyboard-inset-height) once without double-counting
+ * - For --keyboard-safe-height: Use visualViewport as fallback for browsers that
+ *   don't support env(keyboard-inset-height), since visualViewport automatically
+ *   adjusts for the keyboard on those browsers
  */
 export function updateVH() {
-  const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const vh = height * 0.01;
+  const layoutHeight = window.innerHeight;
+  const visualHeight = window.visualViewport ? window.visualViewport.height : layoutHeight;
+  const vh = layoutHeight * 0.01;
+  
+  // Set viewport height variables
   document.documentElement.style.setProperty('--vh', `${vh}px`);
-
-  const container = document.getElementById('appContainer');
-  if (container) {
-    // Use the visual viewport height for better mobile experience
-    container.style.height = `${height}px`;
-    container.style.minHeight = `${height}px`;
-  }
+  document.documentElement.style.setProperty('--viewport-height', `${layoutHeight}px`);
+  
+  // Set keyboard-safe-height using visualViewport as fallback for browsers
+  // without env(keyboard-inset-height) support. CSS will override this with
+  // calc(var(--viewport-height) - env(keyboard-inset-height, 0px)) if the env
+  // variable is supported, but this ensures older browsers still work.
+  document.documentElement.style.setProperty('--keyboard-safe-height', `${visualHeight}px`);
 
   const board = document.getElementById('board');
   if (board) {
