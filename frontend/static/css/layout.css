@@ -154,7 +154,14 @@ body.chat-open #chatBox {
   opacity: 1;
 }
 
-/* Desktop Grid Layout (>900px) - Responsive column widths with history panel overflow detection */
+/* ═══════════════════════════════════════════════
+   FULL MODE: Desktop Grid Layout (>900px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="full"] set by JS applyLayoutMode()
+   - Three-panel desktop layout with full panel visibility
+   - Responsive column widths with history panel overflow detection
+   - Grid-based positioning for all panels
+*/
 @media (min-width: 901px) {
   #mainGrid {
     /* Wide desktop: center the layout with history panel close to stamps */
@@ -221,13 +228,21 @@ body.chat-open #chatBox {
   }
 }
 
-/* Tablet Grid Layout (601-900px) */
+/* ═══════════════════════════════════════════════
+   MEDIUM MODE: Tablet Grid Layout (601-900px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="medium"] set by JS applyLayoutMode()
+   - Single-column grid with center panel
+   - Panels use overlay positioning when opened
+   - Hybrid grid/overlay approach based on available width
+*/
 @media (min-width: 601px) and (max-width: 900px) {
   #mainGrid {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     grid-template-areas: "center";
     justify-content: center;
+    justify-items: center;
   }
   
   /* When there's enough space in medium mode, use grid layout with history panel */
@@ -239,40 +254,17 @@ body.chat-open #chatBox {
     gap: 15px;
   }
   
-  /* In medium mode with grid layout, definition and chat panels still use overlays */
-  body[data-mode='medium']:not([data-history-popup="true"]) #definitionBox,
-  body[data-mode='medium']:not([data-history-popup="true"]) #chatBox {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: var(--z-panel-overlay);
-    max-width: 90%;
-    max-height: 80vh;
-  }
-  
-  /* In medium mode with grid layout, history panel uses grid positioning */
-  body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
-    position: static;
-    transform: none;
-    width: 240px;
-  }
-  
-  /* In medium mode without enough space, all panels become overlays */
-  body[data-mode='medium'][data-history-popup="true"] #historyBox,
-  body[data-mode='medium'][data-history-popup="true"] #definitionBox,
-  body[data-mode='medium'][data-history-popup="true"] #chatBox {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: var(--z-panel-overlay);
-    max-width: 90%;
-    max-height: 80vh;
-  }
+  /* Panel positioning overrides for medium mode handled in responsive.css */
 }
 
-/* Mobile Grid Layout (≤600px) */
+/* ═══════════════════════════════════════════════
+   LIGHT MODE: Mobile Grid Layout (≤600px)
+   ═══════════════════════════════════════════════
+   Corresponds to body[data-mode="light"] set by JS applyLayoutMode()
+   - Single-column vertical layout optimized for phones
+   - Grid template shows only center panel
+   - All side panels positioned as overlays (handled in responsive.css)
+*/
 @media (max-width: 600px) {
   #mainGrid {
     grid-template-columns: 1fr;
@@ -405,30 +397,7 @@ body.chat-open #chatBox {
   right: calc(-36px - 10px); /* Position to the right of the board with 10px gap */
 }
 
-/* Extra small mobile adjustments */
-@media (max-width: 400px) {
-  :root {
-    --tile-size: min(12vmin, 36px);
-  }
-  
-  body {
-    font-size: 14px;
-  }
-  
-  #appContainer {
-    padding: 5px;
-  }
-}
-
-@media (max-width: 350px) {
-  body {
-    font-size: 14px;
-  }
-  
-  #appContainer {
-    padding: 5px;
-  }
-}
+/* Extra small and very small mobile adjustments are in responsive.css */
 
 /* Lobby header styles */
 #lobbyHeader {
