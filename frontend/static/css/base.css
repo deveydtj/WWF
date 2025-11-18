@@ -94,8 +94,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: var(--keyboard-safe-height, 100vh); /* Modern viewport with keyboard support */
-  min-height: calc(var(--vh, 1vh) * 100); /* Fallback */
+  /* Use keyboard-safe-height which adjusts for keyboard on all browsers */
+  min-height: var(--keyboard-safe-height, calc(var(--vh, 1vh) * 100));
   
   /* Enable container queries */
   container-type: inline-size;
