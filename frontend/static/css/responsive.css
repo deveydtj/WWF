@@ -136,7 +136,8 @@
     background: var(--bg-color);
     opacity: 0;
     pointer-events: none;
-    z-index: var(--z-mobile-menu);
+    /* Higher z-index than keyboard (100) to remain visible above it */
+    z-index: 150;
     /* Reset desktop properties for mobile */
     top: auto;
     right: auto;
