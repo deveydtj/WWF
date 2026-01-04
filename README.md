@@ -1,278 +1,75 @@
 # WordSquad
 
-> A multiplayer word guessing game inspired by Wordle with real-time chat, emoji leaderboards, and responsive design.
+> Multiplayer Wordle-style puzzling with chat, emoji leaderboards, and mobile-friendly controls.
 
-WordSquad is a small multiplayer adaptation of Word. The frontend lives under the
-`frontend/` directory while `backend/server.py` provides a Flask API. The
-server supports **multiple lobbies**, each identified by a six character code.
-Every lobby maintains its own guesses, chat log and scoreboard while sharing
-the same application code. See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for a diagram
-of the overall flow.
+WordSquad is a Flask API (`backend/`) plus a static frontend (`frontend/`). Each six-character lobby keeps its own guesses, chat, and scoreboard. Use the short steps below or jump to [ARCHITECTURE.md](docs/ARCHITECTURE.md) for a deeper view.
 
-## 🎮 Game Features
+## Quick start
 
-- **Emoji leaderboard:** choose a unique emoji to represent yourself and compete for the
-  highest score.
-- **Hard mode:** every guess must include letters and positions you have already
-  discovered.
-- **On‑screen and physical keyboard support** for desktop and mobile play.
-- **History panel** showing guesses from the current and previous games.
-- **Word definition popup** when a game ends so everyone can learn the meaning of the
-  solution.
-- **In-game chat box** so players can talk while solving the puzzle together.
-- **Unique player IDs** allow multiple devices on the same IP to join without
-  overwriting each other's emoji.
-- **Dark mode toggle** and responsive layout for small screens.
-- **Hold‑to‑reset button** (or instant reset once the game is over).
-- **Inactive player detection** – entries on the leaderboard fade if a player has not
-  acted for several minutes.
-- **Info pop‑up** in the options menu explaining gameplay and scoring.
-- **"Close call" notification** if another player submits the winning word within
-  two seconds of your own guess.
-- **Daily Double** bonus that awards a hidden letter when you uncover a special tile.
-  The qualifying player may privately reveal one tile on the next row.
-- **Hint badge** shows next to your emoji while a Daily Double hint is unused.
-- **Accessible color contrast** ensures text is readable in light and dark modes.
-
-## 💻 Requirements
-
-- Python **3.12.x**
-- Node.js **20.x**
-- [Flask](https://flask.palletsprojects.com/)
-- [Flask-Cors](https://flask-cors.readthedocs.io/)
-
-Install the dependencies with pip:
-
+1) Install prerequisites: **Python 3.12+** and **Node 20+**.
+2) Install dependencies and validate your setup:
 ```bash
-pip install Flask Flask-Cors
+python -m pip install -r backend/requirements.txt
+./scripts/setup.sh
 ```
-
-Run `./scripts/setup.sh` to verify that Python, Node.js and required assets are present
-before starting development.
-
-## 🚀 Running the server
-
-From the project root, run:
-
+3) Run the server and open the game:
 ```bash
 python backend/server.py
+# visit http://localhost:5001
 ```
-Detailed steps for verifying dependencies and running the server are provided in
-[LOCAL_SERVER_SETUP.md](docs/LOCAL_SERVER_SETUP.md).
 
-The server now locates its frontend and data files relative to `server.py`,
-so you can run it from any directory.
+Prefer containers? `docker compose up --build` works from the repo root.
 
-The server loads its words from `data/sgb-words.txt` and stores state in
-`game_persist.json` by default. Set the `GAME_FILE` environment variable to
-override this path or configure `REDIS_URL` to persist state in Redis instead.
-It listens on port `5001`, so open
-`http://localhost:5001` in your browser to start playing.
-The API attempts to fetch word definitions from dictionaryapi.dev. If that fails
-or the network is unavailable, definitions are loaded from
-`data/offline_definitions.json`.
+## Highlights
 
-Each lobby exposes a set of REST endpoints under `/lobby/<id>`:
+- Realtime multiplayer with SSE updates, emoji leaderboards, chat, and history.
+- Hard mode, Daily Double bonuses, hint badges, and “close call” notifications.
+- Responsive layout for phones, tablets, and desktops with on-screen + physical keyboard support.
+- Word definitions shown after each round so everyone can learn the solution.
 
-- `GET /lobby/<id>/state` – retrieve the latest state
-- `POST /lobby/<id>/state` – heartbeat to mark the player active
-- `POST /lobby/<id>/emoji` – claim or change an emoji
-- `POST /lobby/<id>/guess` – submit a word
-- `POST /lobby/<id>/reset` – start a new round (host token required)
-- `POST /lobby/<id>/kick` – remove a player from the lobby (host token required)
-- `GET /lobby/<id>/stream` – Server‑Sent Events channel
+## Where things live
 
-`POST /emoji` responds with a `player_id` that uniquely identifies the browser.
-Include this id with all subsequent requests so multiple players on the same IP
-can join concurrently.
+- `backend/server.py` — Flask API and SSE stream
+- `frontend/index.html` / `frontend/game.html` — landing page and game client
+- `frontend/static/js/` — modular client logic
+- `frontend/static/css/` — theme and layout styles
+- `data/` — word list and offline definitions cache
+- `docs/` — architecture, requirements, and deployment guides
 
-The SSE stream pushes state updates in real time. The client falls back to
-polling these endpoints if the stream disconnects.
+## Local development essentials
 
-## Point System
+- **Default run:** `python backend/server.py` serves everything on port **5001**. The server finds assets relative to `server.py`.
+- **Config knobs:**
+  - `GAME_FILE` to change where lobby state is stored (defaults to `data/game_persist.json`).
+  - `REDIS_URL` to persist state in Redis instead of a local JSON file.
+  - `WORD_LIST_PATH` and `DEFN_CACHE_PATH` to override the default word list and offline definitions.
+- **Frontend tweaks:** Editing files in `frontend/static` requires no build. Running `npm run build` inside `frontend/` copies optimized assets into `backend/static` for production use.
 
-Points are shared across all players on the leaderboard. Letter discoveries are
-valued using traditional Scrabble tile scores. A green letter awards its full
-value. A yellow letter grants **half** its value, with the remaining half paid
-out if that letter later turns green. The standard bonuses and penalties still
-apply:
-
-- **+3** bonus for guessing the correct word.
-- **-3** penalty if your final guess is wrong when the board is full.
-- **-1** penalty for repeating a guess that adds no new letters.
-
-You can view these rules at any time in-game by opening the ℹ️ info pop-up from
-the options menu.
-
-## Testing
-
-Run the test suite from the repository root. Ensure Pytest and Node.js are
-installed (`pip install pytest` and `node --version` should succeed). Cypress
-requires an Xvfb display server when running headless and Terraform 1.4 or
-newer must also be available. Once these dependencies are installed, run:
-
-```bash
-python -m pytest -v
-```
-Some frontend tests execute small Node.js scripts, so a recent Node installation
-is required for the full suite to run successfully.
-An optional end-to-end test using Playwright will run if the `playwright`
-package and browsers are installed. It checks lobby creation through automatic
-expiration.
-
-## Repository layout
-
-- `backend/server.py` – Flask backend
-- `frontend/index.html` – landing page served from `/`
-- `frontend/game.html` – main game client
-- `frontend/static/css/theme.css` – color theme styles
-- `frontend/static/css/layout.css` – layout and responsive rules
-- `data/sgb-words.txt` – word list used by the game
-- `frontend/static/js/` – modular JavaScript loaded by `index.html`
-- `data/offline_definitions.json` – fallback word definitions
-- `docs/` – project documentation including architecture and deployment guides
-- `package.json` – Node settings used by frontend tests
-- `frontend/landing.js` and `frontend/landing.css` – landing page assets
-
-## Layout Modes
-
-The client adjusts its interface based on viewport width:
-
-- **Light Mode** – up to **600px** wide. The layout stacks vertically with large touch areas and panels sliding up from the bottom.
-- **Medium Mode** – widths between **601px** and **900px**. Panels sit beside the board but use narrower widths and slightly smaller tiles.
-- **Full Mode** – wider than **900px**. The game uses the largest tile and panel sizes and displays the richest interface.
-
-The mode updates automatically on window resize or device orientation changes.
-
-The board is scaled by `fitBoardToContainer`, which calculates a tile size that
-fits within the available window height and width. The function also returns the
-computed tile and board dimensions for testing and layout logic.
-
-
-## Landing Page
-
-The home page served at `/` is the starting point for all players. It mirrors the neumorphic style of the game board and stores your dark-mode setting, chosen emoji, and most recent lobby code in `localStorage`. See [LANDING_PAGE_REQUIREMENTS.md](docs/LANDING_PAGE_REQUIREMENTS.md) for the full specification. Key pieces include:
-
-- A sticky header with theme toggle plus Help and GitHub links.
-- A hero card with **Create Lobby**, **Join Lobby**, **Quick Play**, and a re-join chip when available.
-- Feature highlight cards for emoji avatars, Daily Double bonuses, and real-time chat.
-- A collapsible **How to Play** accordion.
-- A simple footer noting the project is not affiliated with Wordle.
-
-`landing.js` manages form validation, fetch calls, and preference storage while `landing.css` defines layout and neumorphic styling.
-
-
-## Docker
-
-Ensure [Docker Desktop](https://www.docker.com/products/docker-desktop) is installed.
-Build and start the full stack with:
+## Docker workflow
 
 ```bash
 docker compose up --build
-```
-
-Stop the containers with `docker compose down`.
-
-Alternatively run `start_docker.sh` to reset your local repository and
-launch Docker Compose in one step:
-
-```bash
+# or
 ./scripts/start_docker.sh
 ```
 
-The compose file mounts your `backend/` directory so changes trigger a reload.
-It also mounts the `frontend/` folder to `/app/frontend` so the server can
-fall back to unbuilt assets during development. The `data/` folder is mounted
-read-only so the default word list and definitions cache are always
-available.
+Compose hot-reloads backend changes and mounts `frontend/` so unbuilt assets are available during development. Stop everything with `docker compose down`.
 
-Environment variables such as `FLASK_ENV` and `VITE_API_URL` can be set in the
-compose file or a `.env` file.
+## Tests
 
-### Building the frontend locally
+- Python suite: `python -m pytest -v`
+- Playwright/Cypress end-to-end tests auto-run when their browsers are installed (skipped otherwise). Node 20+ is required for the frontend-side helpers.
 
-If you change the UI outside of Docker you must rebuild the assets before
-starting Compose. The postbuild script automatically copies the files into
-`backend/static`:
+## Scoring cheat sheet
 
-```bash
-cd frontend && npm ci && npm run build && cd ..
-```
+- Lobby-wide points: Scrabble-style values (full for green letters, half for yellow until upgraded).
+- Bonuses: **+3** for solving the word.
+- Penalties: **-3** for an incorrect final-row guess, **-1** for repeating a guess that adds no info.
+- The in-game ℹ️ popup always shows the current rules.
 
-The backend volume mount overrides the image's bundled assets, so copying the
-`dist` output ensures the container serves your latest build. If `backend/static`
-is empty the server automatically falls back to the mounted `frontend/`
-directory, which is convenient for rapid development.
+## Documentation
 
-## Asset configuration
-
-Two additional environment variables control where the server loads its words
-and offline definition cache:
-
-- `WORD_LIST_PATH` – path to the text file containing the allowed five-letter
-  words. Defaults to `data/sgb-words.txt`.
-- `DEFN_CACHE_PATH` – path to the JSON file of offline definitions. Defaults to
-  `data/offline_definitions.json`.
-
-The paths are resolved at startup. If the word list cannot be read or is empty
-the server logs `Startup abort: word list '<path>' contains no words` and exits.
-Failure to parse the definitions file logs `Startup abort: could not parse
-definitions file '<path>': <error>`.
-
-Example override for staging:
-
-```bash
-docker run -e WORD_LIST_PATH=/opt/wwf/words.txt \
-           -e DEFN_CACHE_PATH=/opt/wwf/defs.json wwf-image
-```
-
-
-## Local Development
-
-Run the Flask API with the built frontend assets using Docker Compose:
-
-```bash
-docker compose up --build
-```
-
-Visit <http://localhost:5001> to use the app. AWS deployments use this same
-configuration.
-
-## Infrastructure as Code
-
-Terraform templates in `infra/terraform` provision the AWS resources needed for
-a production deployment. These include an S3 bucket for the static frontend,
-CloudFront distribution with HTTPS via ACM, an Application Load Balancer, and an
-ECS Fargate service running the Flask API. Set `enable_efs` to mount a shared
-EFS volume and override the `GAME_FILE` path. Refer to the README in that
-directory for usage instructions.
-
-## Production Deployment
-
-WordSquad is production-ready with comprehensive security features and monitoring. Key production features include:
-
-- **Security Headers**: CSP, HSTS, XSS protection, and frame options
-- **Rate Limiting**: API-wide and guess-specific rate limiting
-- **Environment Validation**: Automatic validation of production configuration
-- **Enhanced Health Checks**: Comprehensive monitoring endpoint
-- **Docker Security**: Non-root user execution and health checks
-- **Dependency Security**: Regular security updates for all dependencies
-
-### Quick Start for AWS Deployment
-
-**Just created an AWS account?** Start here:
-1. Follow [AWS_QUICKSTART.md](docs/AWS_QUICKSTART.md) for immediate next steps
-2. Then proceed with [DEPLOY_GUIDE.md](docs/DEPLOY_GUIDE.md) for full deployment
-3. Use [PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) to verify your deployment
-
-For detailed deployment instructions and security verification steps, see the complete documentation in the `docs/` directory.
-
-## 🤖 AI Development Support
-
-This repository is optimized for GitHub Copilot and AI-assisted development. See [`.copilot/README.md`](.copilot/README.md) for detailed configuration and usage guidelines.
-
-## 🏗️ Repository Practices
-
-- Branch names follow the short `feat/*`, `fix/*`, or `docs/*` pattern.
-- Pull requests must pass status checks for Pytest, Cypress, and `terraform plan` before merging to `main`.
-- See [DEPLOY_GUIDE.md](docs/DEPLOY_GUIDE.md) for details on configuring deployment secrets and running Terraform. Further architectural details can be found in [ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — how data and requests flow
+- [REQUIREMENTS.md](docs/REQUIREMENTS.md) — detailed feature specs and layout notes
+- [LOCAL_SERVER_SETUP.md](docs/LOCAL_SERVER_SETUP.md) — copy/paste setup guide with common fixes
+- [DEPLOY_GUIDE.md](docs/DEPLOY_GUIDE.md) — Terraform-based deployment steps
