@@ -23,6 +23,8 @@ class DOMManager {
     // Message and popup elements
     this.elements.messageEl = document.getElementById('message');
     this.elements.messagePopup = document.getElementById('messagePopup');
+    this.elements.waitingOverlay = document.getElementById('waitingOverlay');
+    this.elements.waitingDismiss = document.getElementById('waitingDismiss');
     
     // Panel elements
     this.elements.historyBox = document.getElementById('historyBox');

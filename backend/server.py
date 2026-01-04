@@ -92,16 +92,19 @@ def add_cache_control_headers(response):
     """Add appropriate cache-control headers to responses."""
     # Set different cache policies based on content type and path
     # Override any existing cache-control if needed
-    if request.endpoint in ['index', 'game_page', 'lobby_page']:
+    endpoint = getattr(request, 'endpoint', None)
+    path = getattr(request, 'path', "") or getattr(request, 'url', "")
+
+    if endpoint in ['index', 'game_page', 'lobby_page']:
         # HTML pages - short cache with must-revalidate for freshness
         response.headers['Cache-Control'] = 'public, max-age=300, must-revalidate'
-    elif request.path.startswith('/static/') or request.path.startswith('/assets/'):
+    elif path.startswith('/static/') or path.startswith('/assets/'):
         # Static assets - longer cache for performance
         response.headers['Cache-Control'] = 'public, max-age=86400, immutable'
-    elif request.endpoint in ['js_files', 'css_files', 'asset_files', 'lobby_js_files', 'lobby_css_files', 'lobby_asset_files']:
+    elif endpoint in ['js_files', 'css_files', 'asset_files', 'lobby_js_files', 'lobby_css_files', 'lobby_asset_files']:
         # JS/CSS files - longer cache for performance
         response.headers['Cache-Control'] = 'public, max-age=86400, immutable'
-    elif request.endpoint in ['health', 'state', 'lobby_state', 'chat', 'lobby_chat']:
+    elif endpoint in ['health', 'state', 'lobby_state', 'chat', 'lobby_chat']:
         # API endpoints - no cache to ensure real-time data
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'

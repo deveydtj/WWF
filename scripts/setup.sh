@@ -26,8 +26,8 @@ check_python_packages() {
 echo "Checking Python..."
 check_cmd python3
 py_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-if [[ $(python3 -c 'import sys;print(sys.version_info<(3,12))') == "True" ]]; then
-  echo "Python 3.12+ required (found $py_version)" >&2
+if [[ $(python3 -c 'import sys;print(sys.version_info<(3,11))') == "True" ]]; then
+  echo "Python 3.11+ required (found $py_version)" >&2
   exit 1
 fi
 check_python_packages

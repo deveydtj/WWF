@@ -257,6 +257,38 @@ body.chat-open #chatBox {
       ". history stamp center ."
       ". history stamp center .";
   }
+  
+  /* Medium mode overlays when panels are forced into popup mode */
+  body[data-mode='medium'][data-history-popup="true"] #historyBox,
+  body[data-mode='medium'][data-history-popup="true"] #definitionBox,
+  body[data-mode='medium'][data-history-popup="true"] #chatBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+    max-height: 80vh;
+    z-index: var(--z-panel-overlay);
+  }
+  
+  /* Medium mode grid layout keeps history inline but definition/chat as overlays */
+  body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
+    position: static;
+    transform: none;
+    max-width: var(--panel-width);
+    max-height: var(--panel-max-height);
+  }
+  
+  body[data-mode='medium']:not([data-history-popup="true"]) #definitionBox,
+  body[data-mode='medium']:not([data-history-popup="true"]) #chatBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+    max-height: 80vh;
+    z-index: var(--z-panel-overlay);
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -276,6 +308,26 @@ body.chat-open #chatBox {
   }
   
   /* Mobile panels as overlays - positioning handled in responsive.css */
+  body[data-mode='light'] #historyBox {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: auto;
+  }
+  
+  body[data-mode='light'] #definitionBox {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: auto;
+  }
+  
+  body[data-mode='light'] #chatBox {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: auto;
+  }
 }
 
 /* Popup modals that fill the viewport */
@@ -345,6 +397,71 @@ body.chat-open #chatBox {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease-in-out;
+}
+
+/* Waiting overlay shown while rejoining/connecting */
+#waitingOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: var(--z-modal-backdrop);
+  transition: opacity 0.25s ease-in-out;
+}
+
+#waitingOverlay.active {
+  pointer-events: auto;
+}
+
+#waitingOverlay .waiting-content {
+  pointer-events: auto;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 16px 20px;
+  border-radius: 16px;
+  box-shadow: 
+    inset 4px 4px 8px var(--inset-shadow-dark),
+    inset -4px -4px 8px var(--inset-shadow-light),
+    6px 6px 14px var(--shadow-color-dark),
+    -6px -6px 14px var(--shadow-color-light);
+  text-align: center;
+}
+
+#waitingOverlay.fade-out {
+  animation: fadeOutOverlay 0.35s ease forwards;
+}
+
+@keyframes fadeOutOverlay {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Extra small device tuning to keep controls usable */
+@media (max-width: 400px) {
+  :root {
+    --tile-size: min(12vmin, 36px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  }
+  
+  #keyboard {
+    min-height: calc(var(--tile-size) * 2);
+    margin-bottom: max(2px, env(safe-area-inset-bottom, 0px));
+    margin-top: 5px;
+  }
+  
+  .key {
+    min-width: calc(var(--tile-size) * 0.58);
+    height: calc(var(--tile-size) * 0.75);
+    font-size: calc(var(--tile-size) * 0.24);
+    margin: 1px;
+  }
+  
+  .keyboard-row {
+    margin-bottom: calc(var(--tile-gap) * 0.8);
+  }
 }
 
 /* Mobile panel positioning moved to responsive.css to avoid conflicts */
