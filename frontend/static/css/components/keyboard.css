@@ -25,24 +25,11 @@
 }
 
 /* Mobile devices should match board width exactly */
-@media (max-width: 600px) {
-  #appContainer #keyboard {
-    max-width: none; /* Remove max-width constraint on mobile */
-    width: var(--board-width) !important; /* Match the board width exactly */
-    display: block !important; /* Change to block for better width control */
-    margin: 0 auto !important; /* Center the keyboard when it's narrower than container */
-    /* Override any scaling transforms from responsive.css to maintain exact board width */
-    transform: none !important;
-    transform-origin: center center !important;
-  }
-}
-
 /* Ensure keyboard container has proper flexbox behavior */
 #gameColumn {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: calc(var(--vh, 1vh) * 100);
+  min-height: var(--keyboard-safe-height, var(--viewport-height, 100vh));
 }
 
 /* Keyboard should stick to bottom */

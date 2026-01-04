@@ -77,7 +77,7 @@ body {
   text-align: center;
   background-color: var(--bg-color);
   color: var(--text-color);
-  height: calc(var(--vh, 1vh) * 100);
+  height: var(--keyboard-safe-height, var(--viewport-height, 100vh));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -94,8 +94,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: var(--keyboard-safe-height, 100vh); /* Modern viewport with keyboard support */
-  min-height: calc(var(--vh, 1vh) * 100); /* Fallback */
+  min-height: var(--keyboard-safe-height, var(--viewport-height, 100vh)); /* Modern viewport with keyboard support */
   
   /* Enable container queries */
   container-type: inline-size;

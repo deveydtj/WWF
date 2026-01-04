@@ -155,14 +155,10 @@ export function setGameInputDisabled(disabled) {
 export function updateVH() {
   const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const vh = height * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  const root = document.documentElement;
 
-  const container = document.getElementById('appContainer');
-  if (container) {
-    // Use the visual viewport height for better mobile experience
-    container.style.height = `${height}px`;
-    container.style.minHeight = `${height}px`;
-  }
+  root.style.setProperty('--vh', `${vh}px`);
+  root.style.setProperty('--viewport-height', `${height}px`);
 
   const board = document.getElementById('board');
   if (board) {
