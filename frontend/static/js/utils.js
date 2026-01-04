@@ -176,6 +176,18 @@ export function updateVH() {
  */
 export function applyLayoutMode() {
   const width = window.innerWidth;
+  const rootStyles = getComputedStyle(document.documentElement);
+  const parseSize = (value, fallback) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  
+  const panelWidth = parseSize(rootStyles.getPropertyValue('--panel-width'), 240);
+  const stampWidth = parseSize(rootStyles.getPropertyValue('--stamp-width'), 60);
+  const computedBoardWidth = parseSize(rootStyles.getPropertyValue('--board-width'), 0);
+  const minBoardWidth = Math.max(computedBoardWidth, 340); // fallback to reasonable board size
+  const gapSize = 15; // Matches medium grid gap
+  
   let mode = 'full';
   let historyPopup = false; // Track if history panel should be popup on desktop
   
@@ -185,12 +197,9 @@ export function applyLayoutMode() {
     mode = 'medium';
     
     // Calculate if there's room for history panel in grid layout
-    const historyPanelWidth = 240; // Minimum history panel width
-    const stampWidth = 60; // Stamp container width
-    const minBoardWidth = 340; // Minimum board width (5 tiles * ~68px)
-    const gaps = 15 * 3; // Three gaps between elements (history, stamp, board)
+    const inlineGaps = gapSize * 4; // history | stamp | center | right spacer
     const margins = 40; // Side margins
-    const minRequiredWidth = historyPanelWidth + stampWidth + minBoardWidth + gaps + margins;
+    const minRequiredWidth = panelWidth + stampWidth + minBoardWidth + inlineGaps + margins;
     
     // If viewport is wide enough, use grid layout with history panel
     // Otherwise, keep history as popup overlay

@@ -385,94 +385,86 @@
 @media (min-width: 601px) and (max-width: 900px) {
   /* 
    * Medium Mode Layout Calculations:
-   * - Single-column grid layout with center panel (defined in layout.css)
-   * - Panel overlays when open (positioning here)
+   * - Grid contract defined in layout.css (center anchored, optional history column)
+   * - Definition and chat always use overlays
    * - Tile size optimized for tablet touch precision: min(8vmin, 42px)
-   * - Panel overlays with transform scaling for space efficiency
    */
-   
-  /* Grid layout for medium mode - structure in layout.css, adaptations here */
-  /* Note: grid-template-columns and grid-template-areas defined in layout.css */
   
-  /* Ensure the center panel is sized and can shrink if needed */
-  #centerPanel {
+  body[data-mode='medium'] #centerPanel {
     width: min(100%, var(--board-width));
-    max-width: 100%;
-    min-width: auto;              /* override base min-width to allow shrinking */
+    max-width: var(--board-width);
+    min-width: auto;              /* allow shrinking alongside overlays */
     justify-self: center;         /* explicit safety to center this item */
   }
    
   /* Hide player count in medium mode to save space and prevent input field overlap */
-  #playerCount {
+  body[data-mode='medium'] #playerCount {
     display: none;
   }
 
-  #historyBox,
-  #definitionBox,
-  #chatBox {
-    width: clamp(14rem, 30vw, var(--panel-width));
+  /* Shared overlay sizing for medium mode */
+  body[data-mode='medium'] #historyBox,
+  body[data-mode='medium'] #definitionBox,
+  body[data-mode='medium'] #chatBox {
+    width: clamp(16rem, 70vw, var(--panel-width));
   }
 
-  /* Medium mode panels - default to centered overlays when history is popup */
+  /* Medium overlays: history when popup, definition & chat always overlays */
   body[data-mode='medium'][data-history-popup="true"] #historyBox,
-  body[data-mode='medium'][data-history-popup="true"] #definitionBox,
-  body[data-mode='medium'][data-history-popup="true"] #chatBox {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+  body[data-mode='medium'] #definitionBox,
+  body[data-mode='medium'] #chatBox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    grid-area: auto;
     z-index: var(--z-panel-overlay);
     max-width: 90%;
     max-height: 80vh;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* When there's enough space, definition and chat still use overlays */
-  body[data-mode='medium']:not([data-history-popup="true"]) #definitionBox,
-  body[data-mode='medium']:not([data-history-popup="true"]) #chatBox {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: var(--z-panel-overlay);
-    max-width: 90%;
-    max-height: 80vh;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
   
   /* In medium mode with grid layout, history panel uses grid positioning */
   body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
-    position: static !important;
-    transform: none !important;
+    position: static;
+    transform: none;
+    grid-area: history;
     width: var(--panel-width);
+    max-height: var(--panel-max-height);
+    z-index: var(--z-panel-base);
+  }
+
+  /* Ensure overlay panels are not treated as grid items */
+  body[data-mode='medium'] #definitionBox,
+  body[data-mode='medium'] #chatBox {
+    grid-area: auto;
   }
 
   /* Override base positioning for medium mode */
-  #optionsToggle {
+  body[data-mode='medium'] #optionsToggle {
     position: absolute;
     right: calc(-36px - 10px); /* Position to the right of board area with gap - matches base positioning */
-    left: auto !important;
+    left: auto;
   }
   
-  #chatNotify {
+  body[data-mode='medium'] #chatNotify {
     position: absolute;
     right: calc(-36px - 10px); /* Position to the right of board area with gap - matches base positioning */
-    left: auto !important;
+    left: auto;
   }
 
   /* Fix title bar layout for medium screens - override mobile layout */
-  #titleBar {
+  body[data-mode='medium'] #titleBar {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
   }
   
-  #titleBar .mobile-title-row {
+  body[data-mode='medium'] #titleBar .mobile-title-row {
     display: contents;
   }
   
-  #titleBar h1 {
+  body[data-mode='medium'] #titleBar h1 {
     order: 2;
     flex: 1;
     margin: 0;
@@ -480,12 +472,12 @@
     font-size: calc(1.4rem * var(--ui-scale)); /* Reduced from 1.8rem to 1.4rem */
   }
   
-  #resetWrapper {
+  body[data-mode='medium'] #resetWrapper {
     order: 1;
     margin-left: 0;
   }
   
-  #titleBar .mobile-leaderboard-container {
+  body[data-mode='medium'] #titleBar .mobile-leaderboard-container {
     order: 3;
     flex: 0 0 auto;
     max-width: none;
@@ -496,8 +488,6 @@
   body[data-mode='medium'] #chatClose {
     display: block;
   }
-
-  /* Medium mode panel positioning is handled in layout.css */
 
   :root {
     /* Medium screens: Use smaller tiles to prevent input field from being hidden */
