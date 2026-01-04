@@ -65,7 +65,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--component-gap);
     min-height: var(--keyboard-safe-height, var(--viewport-height, 100vh));
   }
 
@@ -521,9 +521,9 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
     width: var(--board-width);
-    gap: calc(var(--tile-gap) * 2);
+    max-width: var(--board-width);
+    gap: var(--input-inline-gap);
     flex: 0 0 auto; /* Don't allow input area to shrink */
   }
 }

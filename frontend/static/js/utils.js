@@ -1091,23 +1091,26 @@ function compactLayoutForInputField() {
   
   if (!status.overlap) return;
 
+  const rootStyles = getComputedStyle(document.documentElement);
+  const compactGap = (rootStyles.getPropertyValue('--component-gap-tight') || '').trim() || '6px';
+
   // Reduce margins and padding of elements above the input field
   const titleBar = document.getElementById('titleBar');
   const boardArea = document.getElementById('boardArea');
   
   if (titleBar) {
-    titleBar.style.marginBottom = '5px';
+    titleBar.style.marginBottom = compactGap;
   }
   
   if (boardArea) {
-    boardArea.style.marginBottom = '5px';
+    boardArea.style.marginBottom = compactGap;
   }
 
   // Make the input area more compact
   const inputArea = document.getElementById('inputArea');
   if (inputArea) {
-    inputArea.style.marginTop = '3px';
-    inputArea.style.marginBottom = '3px';
+    inputArea.style.marginTop = compactGap;
+    inputArea.style.marginBottom = compactGap;
   }
 }
 
