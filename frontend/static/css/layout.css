@@ -21,10 +21,7 @@
   justify-content: center;
   position: relative;
   /* Grid area definitions for different breakpoints will be defined in media queries */
-  /* Enhanced transitions for smooth layout mode changes */
-  transition: grid-template-columns 0.3s ease-in-out, 
-              grid-template-areas 0.3s ease-in-out,
-              gap 0.3s ease-in-out;
+  transition: gap 0.2s ease-in-out;
 }
 
 /* Grid area assignments for panels */
@@ -197,6 +194,7 @@ body.chat-open #chatBox {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: var(--z-panel-overlay);
+    grid-area: auto;
     max-width: 90%;
     max-height: 80vh;
     width: var(--panel-width);
@@ -241,24 +239,24 @@ body.chat-open #chatBox {
    - Hybrid grid/overlay approach based on available width
 */
 @media (min-width: 601px) and (max-width: 900px) {
-  #mainGrid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    grid-template-areas: "center";
+  /* Base medium grid keeps the center panel anchored with stamp alongside */
+  body[data-mode='medium'] #mainGrid {
+    grid-template-columns: 1fr var(--stamp-width) minmax(auto, var(--board-width)) 1fr;
+    grid-template-areas: 
+      ". stamp center ."
+      ". stamp center .";
     justify-content: center;
     justify-items: center;
+    gap: 15px;
   }
   
-  /* When there's enough space in medium mode, use grid layout with history panel */
+  /* Wider medium viewports can surface the history column inline */
   body[data-mode='medium']:not([data-history-popup="true"]) #mainGrid {
     grid-template-columns: 1fr var(--panel-width) var(--stamp-width) minmax(auto, var(--board-width)) 1fr;
     grid-template-areas: 
       ". history stamp center ."
       ". history stamp center .";
-    gap: 15px;
   }
-  
-  /* Panel positioning overrides for medium mode handled in responsive.css */
 }
 
 /* ═══════════════════════════════════════════════
