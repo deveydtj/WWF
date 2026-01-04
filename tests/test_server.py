@@ -3,10 +3,12 @@ import types
 import importlib
 import json
 import pytest
+import importlib.util
+from pathlib import Path
 
 
 def load_server():
-    # create flask stub module
+    # create flask stub module for isolated server import
     flask_stub = types.ModuleType('flask')
 
     class Headers(dict):
@@ -67,11 +69,29 @@ def load_server():
     cors_stub = types.ModuleType('flask_cors')
     cors_stub.CORS = lambda app: None
 
+    original_flask = sys.modules.get('flask')
+    original_flask_cors = sys.modules.get('flask_cors')
     sys.modules['flask'] = flask_stub
     sys.modules['flask_cors'] = cors_stub
 
-    server = importlib.import_module('backend.server')
-    importlib.reload(server)
+    try:
+        server_path = Path(__file__).resolve().parents[1] / "backend" / "server.py"
+        spec = importlib.util.spec_from_file_location("backend.server_stub", server_path)
+        server = importlib.util.module_from_spec(spec)
+        server.__package__ = "backend"
+        sys.modules[spec.name] = server
+        spec.loader.exec_module(server)  # type: ignore[arg-type]
+    finally:
+        # Restore real flask modules for other tests
+        if original_flask is not None:
+            sys.modules['flask'] = original_flask
+        else:
+            sys.modules.pop('flask', None)
+
+        if original_flask_cors is not None:
+            sys.modules['flask_cors'] = original_flask_cors
+        else:
+            sys.modules.pop('flask_cors', None)
 
     return server, request
 
@@ -1949,4 +1969,3 @@ def test_empty_offline_definitions_cache(tmp_path, server_env):
     from backend.game_logic import _get_cached_offline_definition
     definition = _get_cached_offline_definition('anything')
     assert definition is None
-

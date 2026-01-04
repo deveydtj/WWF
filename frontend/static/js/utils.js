@@ -176,7 +176,10 @@ export function updateVH() {
  */
 export function applyLayoutMode() {
   const width = window.innerWidth;
-  const rootStyles = getComputedStyle(document.documentElement);
+  const docEl = (typeof document !== 'undefined' && (document.documentElement || document.body)) || { style: {} };
+  const rootStyles = typeof getComputedStyle === 'function'
+    ? getComputedStyle(docEl)
+    : { getPropertyValue: () => '' };
   const parseSize = (value, fallback) => {
     const parsed = parseFloat(value);
     return Number.isFinite(parsed) ? parsed : fallback;
@@ -187,6 +190,13 @@ export function applyLayoutMode() {
   const computedBoardWidth = parseSize(rootStyles.getPropertyValue('--board-width'), 0);
   const minBoardWidth = Math.max(computedBoardWidth, 340); // fallback to reasonable board size
   const gapSize = 15; // Matches medium grid gap
+  const boardArea = typeof document !== 'undefined' ? document.getElementById('boardArea') : null;
+  const rect = boardArea && typeof boardArea.getBoundingClientRect === 'function'
+    ? boardArea.getBoundingClientRect()
+    : { left: (width - minBoardWidth) / 2, right: (width + minBoardWidth) / 2 };
+  const leftSpace = Math.max(0, rect.left);
+  const rightSpace = Math.max(0, width - rect.right);
+  const minPanelSpace = panelWidth + 40; // allow buffer for shadows/margins
   
   let mode = 'full';
   let historyPopup = false; // Track if history panel should be popup on desktop
@@ -205,9 +215,14 @@ export function applyLayoutMode() {
     // Otherwise, keep history as popup overlay
     historyPopup = width < minRequiredWidth;
   } else if (width <= 1150) {
-    // Narrow desktop - use grid layout but make history panel a popup to prevent overflow
-    mode = 'full';
-    historyPopup = true;
+    // Narrow desktop - favor medium mode if side panels would feel cramped
+    if (Math.min(leftSpace, rightSpace) < minPanelSpace * 1.2) {
+      mode = 'medium';
+      historyPopup = true;
+    } else {
+      mode = 'full';
+      historyPopup = true;
+    }
   } else if (width <= 1550) {
     // For screens 1151-1550px, allow full mode with all panels in grid
     mode = 'full';

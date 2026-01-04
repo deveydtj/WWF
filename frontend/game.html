@@ -22,6 +22,12 @@
 
 <body>
   <div id="appContainer">
+    <div id="waitingOverlay" aria-live="polite">
+      <div class="waiting-content" role="status">
+        <p>Setting up your game. This should only take a moment.</p>
+        <button id="waitingDismiss" type="button">Continue</button>
+      </div>
+    </div>
     <!-- Emoji Picker Modal -->
     <div id="emojiModal" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading">
       <div id="emojiModalBox">

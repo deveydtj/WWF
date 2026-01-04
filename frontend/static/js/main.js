@@ -18,6 +18,8 @@ import gameStateManager from './gameStateManager.js';
 import eventListenersManager from './eventListenersManager.js';
 import mobileMenuManager from './mobileMenuManager.js';
 import appInitializer from './appInitializer.js';
+import { toggleDefinition } from './panelManager.js';
+import { positionContextMenu } from './popupPositioning.js';
 
 // Import board scaling test utilities for debugging
 import './boardScalingTests.js';
@@ -26,6 +28,17 @@ import './boardScalingTests.js';
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
 let myPlayerId = getMyPlayerId();
+let waitingOverlayDismissed = false;
+const controlsHelpText = 'Use arrow keys to choose a tile';
+const supportsWebShare = typeof navigator !== 'undefined' && !!navigator.share;
+
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      dismissWaitingOverlay();
+    }
+  });
+}
 
 // Function to update global myPlayerId (called by appInitializer during auto-reconnection)
 export function updateGlobalPlayerId(newPlayerId) {
@@ -44,6 +57,7 @@ async function initializeApp() {
   // Setup the submit guess handler BEFORE app initialization
   // so it's available during keyboard setup
   window.submitGuessHandler = submitGuessHandler;
+  console.debug(controlsHelpText);
 
   // Initialize with all managers
   const success = await appInitializer.initialize({
@@ -58,6 +72,10 @@ async function initializeApp() {
     console.error('Failed to initialize application');
     return;
   }
+
+  setupDefinitionToggle();
+  setupOptionsMenuPositioning();
+  setupWaitingOverlay();
 
   console.log('🚀 Application initialized successfully');
 }
@@ -237,9 +255,69 @@ function handleEmojiModal(activeEmojis) {
   }
 }
 
+function updateDefinitionPanel(state) {
+  const definitionText = domManager.get('definitionText');
+  if (!definitionText) return;
+  
+  if (state?.is_over && state?.definition) {
+    definitionText.textContent = `${state.target_word?.toUpperCase() || ''} – ${state.definition}`;
+  } else if (state?.last_word) {
+    const def = state.last_definition || 'Definition not found.';
+    definitionText.textContent = `${state.last_word.toUpperCase()} – ${def}`;
+  } else {
+    definitionText.textContent = '';
+  }
+}
+
+function dismissWaitingOverlay() {
+  if (waitingOverlayDismissed) return;
+  const waitingOverlay = domManager.get('waitingOverlay');
+  if (waitingOverlay) {
+    waitingOverlayDismissed = true;
+    waitingOverlay.classList.add('fade-out');
+    setTimeout(() => {
+      waitingOverlay.style.display = 'none';
+    }, 350);
+  }
+}
+
+function setupWaitingOverlay() {
+  const waitingOverlay = domManager.get('waitingOverlay');
+  const waitingDismiss = domManager.get('waitingDismiss');
+  if (waitingOverlay) {
+    waitingOverlay.classList.add('active');
+  }
+  if (waitingDismiss && waitingOverlay) {
+    waitingDismiss.addEventListener('click', dismissWaitingOverlay);
+  }
+  // Auto-hide after a reasonable delay in case initialization stalls
+  setTimeout(dismissWaitingOverlay, 4000);
+}
+
+function setupDefinitionToggle() {
+  const definitionClose = domManager.get('definitionClose');
+  if (definitionClose) {
+    definitionClose.addEventListener('click', () => {
+      toggleDefinition();
+    });
+  }
+}
+
+function setupOptionsMenuPositioning() {
+  const optionsToggle = domManager.get('optionsToggle');
+  const optionsMenu = domManager.get('optionsMenu');
+  if (optionsToggle && optionsMenu) {
+    optionsToggle.addEventListener('click', () => {
+      positionContextMenu(optionsMenu, optionsToggle);
+    });
+  }
+}
+
 // Enhanced applyState wrapper that includes emoji modal handling
 function applyStateWithEmojiModal(state) {
   gameStateManager.applyState(state);
+  updateDefinitionPanel(state);
+  dismissWaitingOverlay();
   handleEmojiModal(state.active_emojis || []);
 }
 
