@@ -7,7 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  margin: 5px auto 0;
+  margin: 0 auto;
   width: 100%;
   position: relative;
   flex: 0 0 auto; /* Only take space needed, don't expand */
@@ -19,7 +19,7 @@
     /* Don't constrain width - let it use the full game column space */
     width: 100%;
     max-width: 100%; /* Use full width of parent container (gameColumn) */
-    margin: 5px auto 0;
+    margin: 0 auto;
   }
 }
 
@@ -208,10 +208,11 @@ body.hint-selecting .tile:not(.hint-target) {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 5px auto;
+  margin: 0 auto;
   width: var(--board-width);
+  max-width: var(--board-width);
   flex: 0 0 auto;
-  gap: calc(var(--tile-gap) * 2);
+  gap: var(--input-inline-gap);
 }
 
 #guessInput,
@@ -223,11 +224,12 @@ body.hint-selecting .tile:not(.hint-target) {
   color: var(--text-color);
   outline: none;
   transition: box-shadow 0.2s, background-color 0.3s, color 0.3s;
+  box-sizing: border-box;
 }
 
 #guessInput {
   /* Calculate input width: board width minus 2 buttons and gaps */
-  width: calc(var(--board-width) - (var(--uniform-button-width) * 2) - (var(--tile-gap) * 4));
+  width: calc(var(--board-width) - (var(--uniform-button-width) * 2) - (var(--input-inline-gap) * 2));
   height: var(--uniform-button-height);
   padding: 0 calc(var(--tile-size) * 0.2);
   text-transform: uppercase;

@@ -30,9 +30,14 @@
   --ui-scale: var(--current-scale-factor, 1);
   --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   
+  /* Shared spacing tokens */
+  --component-gap: clamp(0.25rem, 1vw, 1rem);
+  --component-gap-tight: calc(var(--component-gap) * 0.6);
+  --input-inline-gap: calc(var(--tile-gap) * 2);
+  
   /* Uniform button sizing - ensures buttons are same size */
-  --uniform-button-width: calc(var(--tile-size) * 1.8);
-  --uniform-button-height: calc(var(--tile-size) * 0.8);
+  --uniform-button-width: max(calc(var(--tile-size) * 1.8), var(--min-touch-target));
+  --uniform-button-height: max(calc(var(--tile-size) * 0.8), var(--min-touch-target));
   
   /* Modern viewport support */
   --viewport-height: var(--dynamic-viewport-height, 100vh);
@@ -109,7 +114,7 @@ body {
   width: 100%;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px; /* Add consistent spacing between elements */
+  gap: var(--component-gap); /* Add consistent spacing between elements */
 }
 
 h1 {
