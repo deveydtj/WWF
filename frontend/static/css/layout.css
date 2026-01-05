@@ -1,3 +1,29 @@
+/* ═════════════════════════════════════════════════════════════════════
+   DEPRECATION NOTICE - Phase 1: File Structure Reorganization
+   ═════════════════════════════════════════════════════════════════════
+   
+   This file is marked for deprecation as part of the layout refactoring plan.
+   See: docs/LAYOUT_REFACTORING_PLAN.md
+   
+   REPLACEMENT FILES:
+   - mobile-layout.css (for ≤768px viewports)
+   - desktop-layout.css (for >768px viewports)
+   - shared-base.css (for common base styles)
+   
+   MIGRATION PLAN:
+   Phase 1: File structure created (current)
+   Phase 2: Mobile layout implemented
+   Phase 3: Desktop layout implemented
+   Phase 4: JavaScript simplified
+   Phase 5: Components updated
+   Phase 6: Testing completed
+   Phase 7: This file removed
+   
+   STATUS: This file is still active and required for current functionality.
+   Do not remove until Phase 7 migration is complete.
+   
+   ═════════════════════════════════════════════════════════════════════ */
+
 /* ─────────────────────────────────────────────
    Layout - CSS Grid-based positioning and panel layouts  
    ───────────────────────────────────────────── */

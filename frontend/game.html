@@ -4,11 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <title>WordSquad Game (Hard Mode, Shared)</title>
+  
+  <!-- Phase 1: New Layout System - File Structure -->
+  <!-- Shared foundation -->
   <link rel="stylesheet" href="static/css/theme.css">
   <link rel="stylesheet" href="static/css/z-index.css">
-  <link rel="stylesheet" href="static/css/modern-responsive.css">
-  <link rel="stylesheet" href="static/css/layout.css">
+  <link rel="stylesheet" href="static/css/shared-base.css">
+  
+  <!-- Legacy base styles (to be migrated to shared-base.css in future phases) -->
   <link rel="stylesheet" href="static/css/base.css">
+  
+  <!-- Component styles (work on both layouts) -->
   <link rel="stylesheet" href="static/css/components/board.css">
   <link rel="stylesheet" href="static/css/components/keyboard.css">
   <link rel="stylesheet" href="static/css/components/panels.css">
@@ -16,7 +22,18 @@
   <link rel="stylesheet" href="static/css/components/leaderboard.css">
   <link rel="stylesheet" href="static/css/components/modals.css">
   <link rel="stylesheet" href="static/css/components/mobile-menu.css">
+  
+  <!-- NEW: Layout-specific styles (loaded conditionally via media queries) -->
+  <link rel="stylesheet" href="static/css/mobile-layout.css" media="(max-width: 768px)">
+  <link rel="stylesheet" href="static/css/desktop-layout.css" media="(min-width: 769px)">
+  
+  <!-- Animations (shared) -->
   <link rel="stylesheet" href="static/css/animations.css">
+  
+  <!-- DEPRECATED: Old layout system (to be removed in Phase 7) -->
+  <!-- These files are still active and required for current functionality -->
+  <link rel="stylesheet" href="static/css/modern-responsive.css">
+  <link rel="stylesheet" href="static/css/layout.css">
   <link rel="stylesheet" href="static/css/responsive.css">
 </head>
 
