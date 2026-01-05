@@ -45,9 +45,7 @@
   #appContainer {
     padding: 8px;
     gap: 8px;
-    /* Use dynamic viewport height to properly handle virtual keyboard */
-    min-height: 100dvh;
-    max-height: 100dvh;
+    min-height: var(--keyboard-safe-height, var(--viewport-height, 100vh));
   }
 
   #mainGrid {
@@ -68,11 +66,7 @@
     flex-direction: column;
     align-items: center;
     gap: var(--component-gap);
-    /* Use dynamic viewport to adapt to keyboard */
-    min-height: 100dvh;
-    max-height: 100dvh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    min-height: var(--keyboard-safe-height, var(--viewport-height, 100vh));
   }
 
   #boardArea {
@@ -99,8 +93,7 @@
     width: var(--board-width);
     max-width: 100%;
     flex: 0 0 auto;
-    /* Ensure keyboard is always visible by using margin-bottom to respect safe areas */
-    margin: 4px auto env(safe-area-inset-bottom, 8px);
+    margin: 4px auto max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
     position: relative;
     z-index: var(--z-keyboard);
     transform: none !important;

@@ -16,8 +16,8 @@
 
 /* Modern viewport units for better mobile support */
 :root {
-  /* Use dynamic viewport height - adapts to virtual keyboard */
-  --viewport-height: 100dvh;
+  /* Modern viewport units - use when available */
+  --viewport-height: 100vh;
   --small-viewport-height: 100svh;
   --large-viewport-height: 100lvh;
   --dynamic-viewport-height: 100dvh;
@@ -43,11 +43,16 @@
   --board-max-height: min(80vh, 600px);
 }
 
-/* Fallback for browsers that don't support dvh */
-@supports not (height: 100dvh) {
+/* Support for modern viewport units where available */
+@supports (height: 100dvh) {
   :root {
-    --viewport-height: 100vh;
-    --dynamic-viewport-height: 100vh;
+    --viewport-height: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+  :root {
+    --small-viewport-height: 100svh;
   }
 }
 
@@ -96,20 +101,13 @@
 /* Keyboard-safe viewport for mobile devices */
 @media (max-height: 600px) and (max-width: 768px) {
   :root {
-    /* Use small viewport height when keyboard might appear */
-    --viewport-height: 100dvh;
+    --viewport-height: 100svh; /* Use small viewport height on mobile keyboards */
     --keyboard-safe-area: max(env(keyboard-inset-height, 0px), 0px);
   }
   
   .keyboard-safe-container {
     min-height: calc(var(--viewport-height) - var(--keyboard-safe-area));
     padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  
-  /* Ensure content is scrollable when keyboard appears */
-  #gameColumn {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
 }
 
