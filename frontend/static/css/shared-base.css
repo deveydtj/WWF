@@ -1,0 +1,28 @@
+/**
+ * shared-base.css
+ * 
+ * Common base styles shared between mobile and desktop layouts.
+ * This file contains typography, colors, and base element styles
+ * that apply to both layout systems.
+ * 
+ * Part of Phase 1: File Structure Reorganization
+ * See: docs/LAYOUT_REFACTORING_PLAN.md
+ * 
+ * Dependencies:
+ * - theme.css (CSS variables)
+ * - z-index.css (layering)
+ * 
+ * TODO (Phase 2-5): Populate with shared base styles extracted from:
+ * - base.css
+ * - Common styles from layout.css
+ * - Common styles from responsive.css
+ * 
+ * Planned contents:
+ * - Typography base styles
+ * - Color utilities (if not in theme.css)
+ * - Base element resets and normalization
+ * - Shared spacing utilities
+ * - Common animation timing functions
+ */
+
+/* Placeholder - to be populated in future phases */

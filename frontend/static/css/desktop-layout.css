@@ -1,0 +1,86 @@
+/**
+ * desktop-layout.css
+ * 
+ * Complete desktop layout system for WordSquad
+ * Target: Viewports >768px
+ * 
+ * Part of Phase 1: File Structure Reorganization
+ * See: docs/LAYOUT_REFACTORING_PLAN.md
+ * 
+ * Architecture:
+ * - CSS Grid-based layout (three columns)
+ * - Horizontal panel arrangement
+ * - Side-by-side content
+ * - Mouse-optimized
+ * - Fixed header
+ * - Independent panel scrolling
+ * 
+ * Dependencies:
+ * - theme.css
+ * - z-index.css
+ * - shared-base.css
+ * - components/*.css
+ * 
+ * TODO (Phase 3): Implement complete desktop layout
+ * 
+ * Planned structure:
+ * 1. Container setup
+ * 2. Desktop header
+ * 3. Three-column CSS Grid
+ * 4. Left sidebar (history panel)
+ * 5. Center panel (game board and keyboard)
+ * 6. Right sidebar (definition and chat panels)
+ * 7. Panel visibility management
+ * 8. Responsive scaling for large screens
+ * 
+ * Breakpoint strategy:
+ * - Primary: min-width: 769px
+ * - Sub-breakpoint: min-width: 1400px (large desktop)
+ * - Sub-breakpoint: min-width: 1920px (ultra-wide)
+ */
+
+/* ===================================
+   DESKTOP LAYOUT - CSS Grid-based
+   Target: >768px
+   =================================== */
+
+@media (min-width: 769px) {
+  /* TODO (Phase 3): Implement desktop layout styles */
+  
+  /* Container setup */
+  /* #appContainer { } */
+  
+  /* Desktop header */
+  /* #desktopHeader { } */
+  
+  /* Main grid (three columns) */
+  /* #desktopGrid { } */
+  
+  /* Left panel */
+  /* #leftPanel { } */
+  
+  /* Center panel */
+  /* #centerPanel { } */
+  
+  /* Right panel */
+  /* #rightPanel { } */
+  
+  /* Board area */
+  /* #boardArea { } */
+  
+  /* Panels styling */
+  /* #historyPanel, #definitionPanel, #chatPanel { } */
+  
+  /* Hide mobile-only elements */
+  /* #mobileHeader, .mobile-panel, etc. { display: none !important; } */
+}
+
+/* Large desktop optimization */
+@media (min-width: 1400px) {
+  /* TODO (Phase 3): Large desktop optimizations */
+}
+
+/* Ultra-wide displays */
+@media (min-width: 1920px) {
+  /* TODO (Phase 3): Ultra-wide optimizations */
+}

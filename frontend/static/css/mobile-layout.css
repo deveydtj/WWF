@@ -1,0 +1,74 @@
+/**
+ * mobile-layout.css
+ * 
+ * Complete mobile layout system for WordSquad
+ * Target: Viewports ≤768px
+ * 
+ * Part of Phase 1: File Structure Reorganization
+ * See: docs/LAYOUT_REFACTORING_PLAN.md
+ * 
+ * Architecture:
+ * - Flexbox-based layout (no CSS Grid)
+ * - Vertical stacking
+ * - Full-screen panel overlays
+ * - Touch-optimized (min 44px tap targets)
+ * - Fixed header and keyboard
+ * - Scrollable main content
+ * 
+ * Dependencies:
+ * - theme.css
+ * - z-index.css
+ * - shared-base.css
+ * - components/*.css
+ * 
+ * TODO (Phase 2): Implement complete mobile layout
+ * 
+ * Planned structure:
+ * 1. Container setup (Flexbox)
+ * 2. Fixed mobile header
+ * 3. Scrollable content area
+ * 4. Fixed keyboard at bottom
+ * 5. Full-screen panel overlays
+ * 6. Mobile-specific animations
+ * 7. Touch optimizations
+ * 8. Safe area insets for notches
+ * 
+ * Breakpoint strategy:
+ * - Primary: max-width: 768px
+ * - Sub-breakpoint: max-width: 375px (very small devices)
+ */
+
+/* ===================================
+   MOBILE LAYOUT - Flexbox-based
+   Target: ≤768px
+   =================================== */
+
+@media (max-width: 768px) {
+  /* TODO (Phase 2): Implement mobile layout styles */
+  
+  /* Container setup */
+  /* #appContainer { } */
+  
+  /* Mobile header */
+  /* #mobileHeader { } */
+  
+  /* Main content area */
+  /* #mobileContent { } */
+  
+  /* Board area */
+  /* #boardArea { } */
+  
+  /* Keyboard */
+  /* #keyboard { } */
+  
+  /* Mobile panels (overlays) */
+  /* .mobile-panel { } */
+  
+  /* Hide desktop-only elements */
+  /* #mainGrid, #stampContainer, etc. { display: none !important; } */
+}
+
+/* Sub-breakpoints for very small devices */
+@media (max-width: 375px) {
+  /* TODO (Phase 2): Small device optimizations */
+}
