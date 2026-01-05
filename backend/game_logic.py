@@ -1,6 +1,7 @@
 """
 Core game logic for WordSquad.
 """
+import os
 import json
 import logging
 import random
@@ -18,6 +19,18 @@ except ImportError:
     from models import GameState
 
 logger = logging.getLogger(__name__)
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    """Return True when an environment flag is set to a truthy value.
+
+    Accepts 1/true/yes/on (case-insensitive). When unset, returns ``default``.
+    """
+
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 # Default requests implementation - can be overridden by server module for shared object
 try:
@@ -50,6 +63,12 @@ except ModuleNotFoundError:  # pragma: no cover - fallback when requests missing
                 raise _RequestsShim.RequestException(e) from e
 
     requests = _RequestsShim()
+
+# Cost-savings: disable online dictionary lookups when requested.
+# This keeps AWS-hosted deployments from incurring data transfer or API charges.
+# Default to budget-friendly mode unless explicitly opted out.
+BUDGET_MODE = _env_flag("AWS_BUDGET_MODE", True)
+DISABLE_ONLINE_DICTIONARY = _env_flag("DISABLE_ONLINE_DICTIONARY", BUDGET_MODE)
 
 # Standard Scrabble letter values used for scoring
 SCRABBLE_SCORES = {
@@ -166,6 +185,13 @@ def sanitize_definition(text: str) -> str:
 
 def fetch_definition(word: str):
     """Look up a word's definition online with an offline JSON fallback."""
+    budget_mode = _env_flag("AWS_BUDGET_MODE", BUDGET_MODE) or _env_flag(
+        "DISABLE_ONLINE_DICTIONARY", DISABLE_ONLINE_DICTIONARY
+    )
+    if budget_mode:
+        logger.info("Budget mode: skipping online dictionary lookup for '%s'", word)
+        return _get_cached_offline_definition(word)
+
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
     headers = {
         "User-Agent": (
