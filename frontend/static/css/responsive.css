@@ -90,7 +90,7 @@
 
   #keyboard {
     order: 3;
-    width: var(--board-width);
+    width: 100%; /* Use full width on mobile to show all keys */
     max-width: 100%;
     flex: 0 0 auto;
     margin: 4px auto max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
@@ -204,9 +204,12 @@
   }
 
   .key {
-    min-width: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.58));
-    height: max(var(--min-touch-target, 44px), calc(var(--tile-size) * 0.83));
-    font-size: max(12px, calc(var(--tile-size) * 0.27));
+    /* Use smaller keys on mobile to fit all keys in viewport */
+    min-width: calc(var(--tile-size) * 0.55);
+    height: max(40px, calc(var(--tile-size) * 0.8));
+    font-size: max(11px, calc(var(--tile-size) * 0.26));
+    /* Reduce margins to fit more keys */
+    margin: 2px;
   }
 
   #messagePopup {
