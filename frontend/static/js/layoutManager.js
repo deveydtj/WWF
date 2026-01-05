@@ -84,6 +84,9 @@ export class LayoutManager {
     
     console.log('[LayoutManager] Layout changed:', this.currentLayout, '->', newLayout);
     
+    // Capture previous layout before updating
+    const previousLayout = this.currentLayout;
+    
     // Update current layout
     this.currentLayout = newLayout;
     
@@ -94,7 +97,7 @@ export class LayoutManager {
     const event = new CustomEvent('layoutchange', {
       detail: { 
         layout: newLayout,
-        previousLayout: this.currentLayout === 'mobile' ? 'desktop' : 'mobile',
+        previousLayout: previousLayout,
         breakpoint: this.breakpoint
       }
     });
@@ -154,7 +157,7 @@ export class LayoutManager {
 }
 
 /**
- * Create and export a singleton instance
- * TODO (Phase 4): Initialize in appInitializer.js instead of here
+ * Instances of LayoutManager are created and initialized
+ * by the application bootstrap logic (e.g. appInitializer.js).
+ * This module only exports the class definition.
  */
-// export const layoutManager = new LayoutManager();
