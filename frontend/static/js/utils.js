@@ -1,3 +1,5 @@
+import { getBoardContainerInfo, verifyElementsFitInViewport } from './boardContainer.js';
+
 /**
  * Basic mobile device check used to tailor UI behavior.
  * @type {boolean}
@@ -268,11 +270,11 @@ export function applyLayoutMode() {
  */
 export function fitBoardToContainer(rows = 6) {
   // First try the enhanced scaling system if available
-  if (typeof window !== 'undefined' && window.boardScalingTests) {
+  if (typeof window !== 'undefined') {
     try {
-      const containerInfo = window.boardScalingTests.getBoardContainerInfo(rows);
+      const containerInfo = getBoardContainerInfo(rows);
       if (containerInfo) {
-        const verification = window.boardScalingTests.verifyElementsFitInViewport(rows);
+        const verification = verifyElementsFitInViewport(rows);
         if (verification.success && verification.optimalSizing) {
           const { tileSize, gap, boardWidth } = verification.optimalSizing;
           const root = document.documentElement;
