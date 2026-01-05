@@ -55,6 +55,17 @@ class TestAWSOptimizations:
             call_args = mock_get.call_args
             assert call_args[1]['timeout'] == 3, "API timeout should be optimized to 3 seconds"
 
+    def test_budget_mode_skips_online_dictionary(self, monkeypatch):
+        """Budget mode should avoid paid/egress dictionary lookups."""
+        monkeypatch.setenv("AWS_BUDGET_MODE", "1")
+        with patch("backend.game_logic._get_cached_offline_definition", return_value="offline") as offline_mock, \
+             patch("backend.game_logic.requests.get") as mock_get:
+            result = fetch_definition("cigar")
+            offline_mock.assert_called_once_with("cigar")
+            mock_get.assert_not_called()
+            assert result == "offline"
+        monkeypatch.delenv("AWS_BUDGET_MODE", raising=False)
+
     def test_health_endpoint_exists(self):
         """Test that the health endpoint exists for ALB health checks."""
         from backend.server import health, app
