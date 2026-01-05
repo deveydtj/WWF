@@ -21,9 +21,6 @@ import appInitializer from './appInitializer.js';
 import { toggleDefinition } from './panelManager.js';
 import { positionContextMenu } from './popupPositioning.js';
 
-// Import board scaling test utilities for debugging
-import './boardScalingTests.js';
-
 // Global state variables
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
