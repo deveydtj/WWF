@@ -40,8 +40,11 @@ class TestAWSOptimizations:
             pool = redis_client.connection_pool
             assert pool.max_connections == 20, "Connection pool should have max_connections=20"
 
-    def test_external_api_timeout_optimized(self):
+    def test_external_api_timeout_optimized(self, monkeypatch):
         """Test that external API calls use optimized timeout."""
+        # Disable budget mode to exercise the online path
+        monkeypatch.setenv("AWS_BUDGET_MODE", "0")
+        monkeypatch.setenv("DISABLE_ONLINE_DICTIONARY", "0")
         with patch('backend.server.requests.get') as mock_get:
             mock_response = MagicMock()
             mock_response.json.return_value = []
@@ -55,16 +58,16 @@ class TestAWSOptimizations:
             call_args = mock_get.call_args
             assert call_args[1]['timeout'] == 3, "API timeout should be optimized to 3 seconds"
 
-    def test_budget_mode_skips_online_dictionary(self, monkeypatch):
-        """Budget mode should avoid paid/egress dictionary lookups."""
-        monkeypatch.setenv("AWS_BUDGET_MODE", "1")
+    def test_budget_mode_skips_online_dictionary_by_default(self, monkeypatch):
+        """Budget mode should avoid paid/egress dictionary lookups by default."""
+        monkeypatch.delenv("AWS_BUDGET_MODE", raising=False)
+        monkeypatch.delenv("DISABLE_ONLINE_DICTIONARY", raising=False)
         with patch("backend.game_logic._get_cached_offline_definition", return_value="offline") as offline_mock, \
              patch("backend.game_logic.requests.get") as mock_get:
             result = fetch_definition("cigar")
             offline_mock.assert_called_once_with("cigar")
             mock_get.assert_not_called()
             assert result == "offline"
-        monkeypatch.delenv("AWS_BUDGET_MODE", raising=False)
 
     def test_health_endpoint_exists(self):
         """Test that the health endpoint exists for ALB health checks."""
