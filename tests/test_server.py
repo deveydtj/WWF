@@ -1946,8 +1946,24 @@ def test_fetch_definition_network_success_bypasses_cache(monkeypatch, server_env
     assert definition != 'a large bird or lifting machine'  # Not the cached version
 
 
+def test_missing_offline_definition_raises(tmp_path, server_env):
+    """Ensure init fails when any word lacks an offline definition."""
+    server, _ = server_env
+    
+    definitions_file = tmp_path / "partial_definitions.json"
+    with open(definitions_file, 'w') as f:
+        json.dump({"hello": "greeting"}, f)
+
+    words_file = tmp_path / "test_words.txt"
+    with open(words_file, 'w') as f:
+        f.write("hello\nworld\n")
+
+    with pytest.raises(SystemExit):
+        server.init_game_assets(words_file, definitions_file)
+
+
 def test_empty_offline_definitions_cache(tmp_path, server_env):
-    """Test behavior with empty offline definitions file."""
+    """Fail fast when offline definitions are missing."""
     server, _ = server_env
     
     # Create empty definitions file
@@ -1959,13 +1975,5 @@ def test_empty_offline_definitions_cache(tmp_path, server_env):
     with open(words_file, 'w') as f:
         f.write("hello\n")
     
-    server.init_game_assets(words_file, definitions_file)
-    
-    # Cache should be empty
-    import backend.game_logic as gl
-    assert len(gl.OFFLINE_DEFINITIONS_CACHE) == 0
-    
-    # Should return None for any word
-    from backend.game_logic import _get_cached_offline_definition
-    definition = _get_cached_offline_definition('anything')
-    assert definition is None
+    with pytest.raises(SystemExit):
+        server.init_game_assets(words_file, definitions_file)

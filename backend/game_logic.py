@@ -126,13 +126,27 @@ def init_game_assets(words_file: Path, offline_definitions_file: Path) -> None:
         with _definitions_cache_lock:
             OFFLINE_DEFINITIONS_CACHE.clear()
             for word, definition in raw_definitions.items():
+                # Normalize keys to lowercase to match the word list
+                word_key = word.lower()
+
                 # Pre-sanitize definitions during initialization
                 if definition:
-                    OFFLINE_DEFINITIONS_CACHE[word] = sanitize_definition(definition)
+                    OFFLINE_DEFINITIONS_CACHE[word_key] = sanitize_definition(definition)
                 else:
-                    OFFLINE_DEFINITIONS_CACHE[word] = None
-        
+                    OFFLINE_DEFINITIONS_CACHE[word_key] = None
+
         logger.info(f"Cached {len(OFFLINE_DEFINITIONS_CACHE)} offline definitions from {offline_definitions_file}")
+
+        missing_definitions = [word for word in WORDS if not OFFLINE_DEFINITIONS_CACHE.get(word)]
+        if missing_definitions:
+            sample_words = ", ".join(missing_definitions[:5])
+            logger.error(
+                "Startup abort: offline definitions file '%s' is missing %d definition(s). Example(s): %s",
+                offline_definitions_file,
+                len(missing_definitions),
+                sample_words,
+            )
+            raise SystemExit(1)
         
     except Exception as e:  # pragma: no cover - startup validation
         logger.error(
