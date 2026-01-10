@@ -4,7 +4,7 @@
  * Complete mobile layout system for WordSquad
  * Target: Viewports ≤768px
  * 
- * Part of Phase 1: File Structure Reorganization
+ * Part of Phase 2: Mobile Layout Implementation
  * See: docs/LAYOUT_REFACTORING_PLAN.md
  * 
  * Architecture:
@@ -21,18 +21,6 @@
  * - shared-base.css
  * - components/*.css
  * 
- * TODO (Phase 2): Implement complete mobile layout
- * 
- * Planned structure:
- * 1. Container setup (Flexbox)
- * 2. Fixed mobile header
- * 3. Scrollable content area
- * 4. Fixed keyboard at bottom
- * 5. Full-screen panel overlays
- * 6. Mobile-specific animations
- * 7. Touch optimizations
- * 8. Safe area insets for notches
- * 
  * Breakpoint strategy:
  * - Primary: max-width: 768px
  * - Sub-breakpoint: max-width: 375px (very small devices)
@@ -44,31 +32,691 @@
    =================================== */
 
 @media (max-width: 768px) {
-  /* TODO (Phase 2): Implement mobile layout styles */
+  /* ─────────────────────────────────
+     Container Setup - Flexbox Vertical
+     ───────────────────────────────── */
   
-  /* Container setup */
-  /* #appContainer { } */
+  #appContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+  }
   
-  /* Mobile header */
-  /* #mobileHeader { } */
+  /* ─────────────────────────────────
+     Mobile Header - Fixed at Top
+     ───────────────────────────────── */
   
-  /* Main content area */
-  /* #mobileContent { } */
+  #lobbyHeader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    padding-top: max(0px, env(safe-area-inset-top));
+    background: var(--bg-color);
+    z-index: var(--z-ui-component);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    gap: 8px;
+  }
   
-  /* Board area */
-  /* #boardArea { } */
+  #lobbyCode {
+    font-size: 14px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
   
-  /* Keyboard */
-  /* #keyboard { } */
+  #leaderboard {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    min-width: 0; /* Allow flexbox to shrink */
+  }
   
-  /* Mobile panels (overlays) */
-  /* .mobile-panel { } */
+  #leaderboard::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
   
-  /* Hide desktop-only elements */
-  /* #mainGrid, #stampContainer, etc. { display: none !important; } */
+  #hostControls {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  
+  #hostControls button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* ─────────────────────────────────
+     Main Content Area - Scrollable
+     ───────────────────────────────── */
+  
+  #mainGrid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: calc(72px + env(safe-area-inset-top)) 12px 180px; /* Top padding for fixed header + safe area, bottom for keyboard */
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  #centerPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  #gameColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  /* ─────────────────────────────────
+     Title Bar
+     ───────────────────────────────── */
+  
+  #titleBar {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .mobile-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  #gameTitle {
+    font-size: clamp(18px, 5vw, 24px);
+    margin: 0;
+  }
+  
+  /* ─────────────────────────────────
+     Board Area - Touch Optimized
+     ───────────────────────────────── */
+  
+  #boardArea {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding: 8px;
+  }
+  
+  #board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: clamp(4px, 2vw, 8px);
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Tiles - Touch targets ≥44px */
+  .tile {
+    width: 100%;
+    aspect-ratio: 1;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: clamp(16px, 5vw, 24px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  
+  /* Board buttons - Mobile menu and options */
+  #mobileMenuToggle {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 24px;
+    z-index: var(--z-ui-component);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #optionsToggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 24px;
+    z-index: var(--z-ui-component);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #chatNotify {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 24px;
+    z-index: var(--z-ui-component);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* ─────────────────────────────────
+     Input Area
+     ───────────────────────────────── */
+  
+  #inputArea {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 360px;
+    padding: 0 8px;
+  }
+  
+  #guessInput {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  
+  #submitGuess {
+    min-width: 80px;
+    height: 44px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  #resetWrapper {
+    display: flex;
+  }
+  
+  #holdReset {
+    min-width: 80px;
+    height: 44px;
+    font-size: 14px;
+  }
+  
+  /* Message display */
+  #message {
+    text-align: center;
+    font-size: 14px;
+    min-height: 20px;
+    margin: 4px 0;
+  }
+  
+  /* ─────────────────────────────────
+     Keyboard - Fixed at Bottom
+     ───────────────────────────────── */
+  
+  #keyboard {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-color);
+    padding: 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    z-index: var(--z-keyboard);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  .key {
+    flex: 1;
+    min-width: 0;
+    max-width: 48px;
+    height: 48px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0;
+  }
+  
+  .key.wide {
+    flex: 1.5;
+    max-width: 72px;
+    font-size: 12px;
+  }
+  
+  /* ─────────────────────────────────
+     Mobile Panels - Full-Screen Overlays
+     ───────────────────────────────── */
+  
+  /* History Panel */
+  #historyBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    z-index: var(--z-panel-overlay);
+    display: flex;
+    flex-direction: column;
+    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    pointer-events: none;
+  }
+  
+  #historyBox.active,
+  #historyBox.visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    pointer-events: auto;
+  }
+  
+  /* Definition Panel */
+  #definitionBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    z-index: var(--z-panel-overlay);
+    display: flex;
+    flex-direction: column;
+    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    pointer-events: none;
+  }
+  
+  #definitionBox.active,
+  #definitionBox.visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    pointer-events: auto;
+  }
+  
+  /* Chat Panel */
+  #chatBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    z-index: var(--z-panel-overlay);
+    display: flex;
+    flex-direction: column;
+    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    pointer-events: none;
+  }
+  
+  #chatBox.active,
+  #chatBox.visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    pointer-events: auto;
+  }
+  
+  /* Chat messages area */
+  #chatMessages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 12px;
+  }
+  
+  /* Chat form */
+  #chatForm {
+    display: flex;
+    gap: 8px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  #chatInput {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  
+  #chatSend {
+    min-width: 70px;
+    height: 44px;
+    font-size: 16px;
+  }
+  
+  /* Panel close buttons */
+  #historyBox .close-btn,
+  #definitionBox .close-btn,
+  #chatBox .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    z-index: calc(var(--z-panel-overlay) + 1);
+  }
+  
+  /* ─────────────────────────────────
+     Player Sidebar - Mobile Overlay
+     ───────────────────────────────── */
+  
+  #playerSidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    z-index: var(--z-panel-overlay);
+    display: flex;
+    flex-direction: column;
+    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    pointer-events: none;
+  }
+  
+  #playerSidebar.visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    pointer-events: auto;
+  }
+  
+  #playerClose {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    z-index: calc(var(--z-panel-overlay) + 1);
+  }
+  
+  /* ─────────────────────────────────
+     Modals - Mobile Optimized
+     ───────────────────────────────── */
+  
+  /* Options Menu */
+  #optionsMenu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 32px);
+    max-width: 320px;
+    max-height: calc(100dvh - 100px);
+    overflow-y: auto;
+    z-index: var(--z-options-menu);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out, visibility 0s 0.25s;
+  }
+  
+  #optionsMenu.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.25s ease-in-out, visibility 0s 0s;
+  }
+  
+  #optionsMenu button {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+    text-align: left;
+    padding: 0 16px;
+  }
+  
+  /* Mobile Menu Popup */
+  #mobileMenuPopup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-mobile-menu);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out, visibility 0s 0.3s;
+  }
+  
+  #mobileMenuPopup.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.3s ease-in-out, visibility 0s 0s;
+  }
+  
+  #mobileMenuBox {
+    background: var(--bg-color);
+    width: calc(100% - 32px);
+    max-width: 360px;
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 16px;
+    position: relative;
+  }
+  
+  #mobileMenuClose {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+  
+  #mobileMenuItems {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 40px;
+  }
+  
+  .mobile-menu-item {
+    width: 100%;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    font-size: 16px;
+    text-align: left;
+  }
+  
+  .menu-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  
+  .menu-text {
+    flex: 1;
+  }
+  
+  .menu-badge {
+    background: var(--correct-bg);
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  /* ─────────────────────────────────
+     Hide Desktop-Only Elements
+     ───────────────────────────────── */
+  
+  #stampContainer {
+    display: none !important;
+  }
+  
+  /* ─────────────────────────────────
+     Touch Optimizations
+     ───────────────────────────────── */
+  
+  /* Improve tap responsiveness */
+  button,
+  .tile,
+  .key {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent text selection during game interaction */
+  #board,
+  #keyboard,
+  #inputArea {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection in input fields */
+  input,
+  textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }
 
-/* Sub-breakpoints for very small devices */
+/* ═══════════════════════════════════
+   Sub-breakpoints for Very Small Devices
+   ═══════════════════════════════════ */
+
 @media (max-width: 375px) {
-  /* TODO (Phase 2): Small device optimizations */
+  /* Tighter spacing for small screens */
+  #board {
+    gap: clamp(3px, 1.5vw, 6px);
+  }
+  
+  .tile {
+    font-size: clamp(14px, 4vw, 18px);
+    /* Maintain 44px minimum for accessibility */
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .key {
+    height: 44px;
+    font-size: 12px;
+  }
+  
+  #gameTitle {
+    font-size: clamp(16px, 4.5vw, 20px);
+  }
+  
+  /* Reduce padding on very small screens */
+  #mainGrid {
+    padding: calc(68px + env(safe-area-inset-top)) 8px 170px;
+  }
+  
+  #boardArea {
+    padding: 4px;
+  }
+  
+  #inputArea {
+    padding: 0 4px;
+  }
+  
+  /* Smaller header - preserve safe area insets */
+  #lobbyHeader {
+    height: 56px;
+    padding: 0 8px;
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+  
+  #lobbyCode {
+    font-size: 12px;
+  }
+  
+  #hostControls button {
+    /* Maintain 44px minimum for accessibility */
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 16px;
+  }
 }
