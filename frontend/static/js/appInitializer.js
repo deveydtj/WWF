@@ -144,7 +144,8 @@ class AppInitializer {
    * @private
    */
   _updateGameTitle() {
-    const isMobile = this.layoutManager.isMobile();
+    // Use layoutManager if available, fallback to width check
+    const isMobile = this.layoutManager ? this.layoutManager.isMobile() : window.innerWidth <= 768;
     let title = GAME_NAME;
     
     // On mobile, include lobby code in the title if available
@@ -337,19 +338,20 @@ class AppInitializer {
     const scalingResult = applyOptimalScaling(this.maxRows);
     
     if (!scalingResult) {
-      console.warn('⚠️ Board scaling returned false, but CSS should handle layout');
+      console.info('ℹ️ Board scaling deferred to CSS - this is normal for CSS-driven layouts');
     } else {
       console.log('✅ Board scaling applied successfully');
     }
 
     // Verify elements fit in viewport
+    const layoutType = this.layoutManager ? this.layoutManager.getCurrentLayout() : 'unknown';
     console.log('Board dimensions verification:', {
       boardArea: document.getElementById('boardArea')?.getBoundingClientRect(),
       viewport: { 
         width: window.innerWidth, 
         height: window.innerHeight 
       },
-      layout: this.layoutManager.getCurrentLayout()
+      layout: layoutType
     });
   }
 
