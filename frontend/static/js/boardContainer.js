@@ -18,17 +18,17 @@
  * Get dynamic viewport-based constraints for board scaling
  * These values determine tile sizing and gaps based on screen size
  * 
- * Breakpoints and constraints:
- * - < 360px (tiny phones): minTile=18, maxTile=48, gap=0.08
- * - 360-479px (small phones): minTile=20, maxTile=56, gap=0.09
- * - 480-767px (large phones): minTile=24, maxTile=60, gap=0.10
- * - 768-1199px (tablets): minTile=28, maxTile=65, gap=0.12
- * - >= 1200px (desktop): minTile=32, maxTile=70, gap=0.14
+ * Breakpoints and constraints (based on viewportWidth <= maxWidth):
+ * - ≤360px (tiny phones): minTile=18, maxTile=48, gap=0.08
+ * - 361-480px (small phones): minTile=20, maxTile=56, gap=0.09
+ * - 481-768px (large phones): minTile=24, maxTile=60, gap=0.10
+ * - 769-1200px (tablets): minTile=28, maxTile=65, gap=0.12
+ * - ≥1201px (desktop): minTile=32, maxTile=70, gap=0.14
  * 
  * @param {number} viewportWidth - Current viewport width in pixels
  * @returns {Object} Constraint object with minTileSize, maxTileSize, and gapRatio
  */
-function getViewportConstraints(viewportWidth) {
+export function getViewportConstraints(viewportWidth) {
   // Define breakpoints with their corresponding constraints
   // Easy to adjust these values for different screen sizes
   const breakpoints = [
