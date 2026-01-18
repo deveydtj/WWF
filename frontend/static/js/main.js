@@ -435,7 +435,8 @@ initializeApp().then(() => {
 });
 
 // Expose board scaling test utilities for E2E testing (Cypress)
-if (typeof window !== 'undefined') {
+// Only load in development/test environments
+if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname.includes('test'))) {
   import('./boardContainer.js').then(module => {
     window.boardScalingTests = {
       getBoardContainerInfo: module.getBoardContainerInfo,
