@@ -199,7 +199,7 @@ class AppInitializer {
       menuSound.textContent = isSoundEnabled() ? '🔊 Sound On' : '🔈 Sound Off';
     }
     
-    applyLayoutMode();
+    // Layout is automatically managed by LayoutManager now
   }
 
   /**
@@ -485,8 +485,8 @@ class AppInitializer {
       this._updateGameTitle(); // Update title for mobile/desktop
       updateVH();
       
-      applyLayoutMode(); // Update layout mode first
-      updatePanelVisibility(); // Then update panel visibility with correct mode
+      // Layout is automatically detected by LayoutManager
+      updatePanelVisibility(); // Update panel visibility
       updateInputVisibility();
       
       this._handleScalingOnResize();
