@@ -251,6 +251,7 @@
   #boardArea {
     width: var(--board-width);
     max-width: var(--board-max-width);
+    min-width: 280px; /* Prevent collapse, consistent with mobile */
     display: flex;
     justify-content: center;
     position: relative;

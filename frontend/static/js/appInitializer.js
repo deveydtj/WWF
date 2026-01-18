@@ -499,9 +499,8 @@ class AppInitializer {
       }
     };
 
-    window.addEventListener('orientationchange', handleOrientationChange);
-
-    // Delayed orientation change handling for iOS
+    // Delayed orientation change handling for iOS compatibility
+    // Use only the debounced version to prevent double execution
     window.addEventListener('orientationchange', () => {
       clearTimeout(orientationTimeout);
       orientationTimeout = setTimeout(() => {
