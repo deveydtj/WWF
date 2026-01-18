@@ -4,9 +4,6 @@
  * Complete desktop layout system for WordSquad
  * Target: Viewports >768px
  * 
- * Part of Phase 1: File Structure Reorganization
- * See: docs/LAYOUT_REFACTORING_PLAN.md
- * 
  * Architecture:
  * - CSS Grid-based layout (three columns)
  * - Horizontal panel arrangement
@@ -14,6 +11,7 @@
  * - Mouse-optimized
  * - Fixed header
  * - Independent panel scrolling
+ * - CSS-first board sizing with fluid scaling
  * 
  * Dependencies:
  * - theme.css
@@ -21,22 +19,10 @@
  * - shared-base.css
  * - components/*.css
  * 
- * TODO (Phase 3): Implement complete desktop layout
- * 
- * Planned structure:
- * 1. Container setup
- * 2. Desktop header
- * 3. Three-column CSS Grid
- * 4. Left sidebar (history panel)
- * 5. Center panel (game board and keyboard)
- * 6. Right sidebar (definition and chat panels)
- * 7. Panel visibility management
- * 8. Responsive scaling for large screens
- * 
  * Breakpoint strategy:
  * - Primary: min-width: 769px
- * - Sub-breakpoint: min-width: 1400px (large desktop)
- * - Sub-breakpoint: min-width: 1920px (ultra-wide)
+ * - Sub-breakpoint: min-width: 1200px (large desktop)
+ * - Sub-breakpoint: min-width: 1551px (ultra-wide)
  */
 
 /* ===================================
@@ -45,42 +31,616 @@
    =================================== */
 
 @media (min-width: 769px) {
-  /* TODO (Phase 3): Implement desktop layout styles */
+  /* ─────────────────────────────────
+     CSS Variables for Desktop
+     ───────────────────────────────── */
   
-  /* Container setup */
-  /* #appContainer { } */
+  :root {
+    --desktop-panel-width: 240px;
+    --desktop-stamp-width: 60px;
+    --desktop-header-height: 60px;
+    --desktop-panel-max-height: calc(100vh - 160px);
+    
+    /* Board sizing - CSS first, JS only adjusts when needed */
+    --tile-size: clamp(48px, 4vw, 60px);
+    --tile-gap: clamp(4px, 0.5vw, 8px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --board-max-width: 500px;
+    
+    /* Spacing */
+    --desktop-grid-gap: 20px;
+    --desktop-content-padding: 16px;
+  }
   
-  /* Desktop header */
-  /* #desktopHeader { } */
+  /* ─────────────────────────────────
+     Container Setup
+     ───────────────────────────────── */
   
-  /* Main grid (three columns) */
-  /* #desktopGrid { } */
+  #appContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+  }
   
-  /* Left panel */
-  /* #leftPanel { } */
+  /* ─────────────────────────────────
+     Desktop Header - Fixed at Top
+     ───────────────────────────────── */
   
-  /* Center panel */
-  /* #centerPanel { } */
+  #lobbyHeader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--desktop-header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--desktop-content-padding);
+    background: var(--bg-color);
+    z-index: var(--z-ui-component);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    gap: 16px;
+  }
   
-  /* Right panel */
-  /* #rightPanel { } */
+  #lobbyCode {
+    font-size: 16px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
   
-  /* Board area */
-  /* #boardArea { } */
+  #leaderboard {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    min-width: 0;
+    display: flex;
+    gap: 8px;
+    padding: 4px 0;
+  }
   
-  /* Panels styling */
-  /* #historyPanel, #definitionPanel, #chatPanel { } */
+  #hostControls {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
   
-  /* Hide mobile-only elements */
-  /* #mobileHeader, .mobile-panel, etc. { display: none !important; } */
+  #hostControls button {
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* ─────────────────────────────────
+     Main Grid - Three Columns
+     ───────────────────────────────── */
+  
+  #mainGrid {
+    display: grid;
+    grid-template-columns: var(--desktop-panel-width) 1fr var(--desktop-panel-width);
+    grid-template-rows: 1fr;
+    gap: var(--desktop-grid-gap);
+    padding: calc(var(--desktop-header-height) + var(--desktop-grid-gap)) var(--desktop-grid-gap) var(--desktop-grid-gap);
+    height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    grid-template-areas: "left center right";
+  }
+  
+  /* Adjust grid when panels are hidden */
+  body:not(.history-open) #mainGrid {
+    grid-template-columns: 0 1fr var(--desktop-panel-width);
+  }
+  
+  body:not(.definition-open):not(.chat-open) #mainGrid {
+    grid-template-columns: var(--desktop-panel-width) 1fr 0;
+  }
+  
+  body:not(.history-open):not(.definition-open):not(.chat-open) #mainGrid {
+    grid-template-columns: 0 1fr 0;
+  }
+  
+  /* ─────────────────────────────────
+     Left Panel - History
+     ───────────────────────────────── */
+  
+  #historyBox {
+    grid-area: left;
+    width: var(--desktop-panel-width);
+    max-height: var(--desktop-panel-max-height);
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 
+      inset 2px 2px 4px var(--inset-shadow-dark),
+      inset -2px -2px 4px var(--inset-shadow-light),
+      4px 4px 8px var(--shadow-color-dark),
+      -4px -4px 8px var(--shadow-color-light);
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--z-panel-base);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  body:not(.history-open) #historyBox {
+    display: none;
+  }
+  
+  body.history-open #historyBox {
+    display: flex;
+  }
+  
+  #historyClose {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    font-size: 16px;
+    z-index: 10;
+  }
+  
+  /* ─────────────────────────────────
+     Center Panel - Game Board
+     ───────────────────────────────── */
+  
+  #centerPanel {
+    grid-area: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 var(--desktop-content-padding);
+    max-width: 100%;
+    position: relative;
+  }
+  
+  #gameColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: var(--board-max-width);
+    flex: 1;
+  }
+  
+  /* ─────────────────────────────────
+     Title Bar
+     ───────────────────────────────── */
+  
+  #titleBar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  
+  #gameTitle {
+    font-size: clamp(20px, 2vw, 28px);
+    margin: 0;
+    text-align: center;
+    flex: 1;
+  }
+  
+  #resetWrapper {
+    flex-shrink: 0;
+  }
+  
+  /* ─────────────────────────────────
+     Board Area - Fixed Width Container
+     ───────────────────────────────── */
+  
+  #boardArea {
+    width: var(--board-width);
+    max-width: var(--board-max-width);
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding: 16px;
+    box-sizing: content-box;
+  }
+  
+  #board {
+    display: grid;
+    grid-template-columns: repeat(5, var(--tile-size));
+    gap: var(--tile-gap);
+    width: var(--board-width);
+  }
+  
+  /* Tiles - Mouse optimized */
+  .tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    font-size: clamp(18px, calc(var(--tile-size) * 0.45), 32px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: default;
+    user-select: none;
+  }
+  
+  /* Board controls */
+  #optionsToggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0;
+    font-size: 20px;
+    z-index: var(--z-ui-component);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #chatNotify {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0;
+    font-size: 20px;
+    z-index: var(--z-ui-component);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* ─────────────────────────────────
+     Input Area
+     ───────────────────────────────── */
+  
+  #inputArea {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: var(--board-width);
+  }
+  
+  #guessInput {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    font-size: 18px;
+    padding: 0 16px;
+  }
+  
+  #submitGuess {
+    min-width: 100px;
+    height: 48px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  #holdReset {
+    min-width: 80px;
+    height: 48px;
+    font-size: 16px;
+  }
+  
+  /* Message display */
+  #message {
+    text-align: center;
+    font-size: 16px;
+    min-height: 24px;
+    margin: 8px 0;
+  }
+  
+  /* ─────────────────────────────────
+     Keyboard - Below Board
+     ───────────────────────────────── */
+  
+  #keyboard {
+    width: 100%;
+    max-width: var(--board-width);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 0;
+  }
+  
+  .keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .key {
+    flex: 1;
+    min-width: 0;
+    max-width: 52px;
+    height: 52px;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .key.wide {
+    flex: 1.5;
+    max-width: 78px;
+    font-size: 14px;
+  }
+  
+  .key:hover {
+    transform: translateY(-2px);
+    transition: transform 0.1s ease;
+  }
+  
+  .key:active {
+    transform: translateY(0);
+  }
+  
+  /* ─────────────────────────────────
+     Right Panel - Definition & Chat
+     ───────────────────────────────── */
+  
+  #definitionBox,
+  #chatBox {
+    grid-area: right;
+    width: var(--desktop-panel-width);
+    max-height: var(--desktop-panel-max-height);
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 
+      inset 2px 2px 4px var(--inset-shadow-dark),
+      inset -2px -2px 4px var(--inset-shadow-light),
+      4px 4px 8px var(--shadow-color-dark),
+      -4px -4px 8px var(--shadow-color-light);
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--z-panel-base);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  /* Definition panel */
+  #definitionBox {
+    overflow-y: auto;
+  }
+  
+  body:not(.definition-open) #definitionBox {
+    display: none;
+  }
+  
+  body.definition-open #definitionBox {
+    display: flex;
+  }
+  
+  /* Chat panel */
+  #chatBox {
+    overflow: hidden;
+  }
+  
+  body:not(.chat-open) #chatBox {
+    display: none;
+  }
+  
+  body.chat-open #chatBox {
+    display: flex;
+  }
+  
+  /* When both are closed, show definition by default if opened */
+  body.definition-open:not(.chat-open) #definitionBox {
+    display: flex;
+  }
+  
+  body.chat-open:not(.definition-open) #chatBox {
+    display: flex;
+  }
+  
+  /* When both are open, stack them (chat takes priority) */
+  body.definition-open.chat-open #definitionBox {
+    display: none;
+  }
+  
+  body.definition-open.chat-open #chatBox {
+    display: flex;
+  }
+  
+  #definitionClose,
+  #chatClose {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    font-size: 16px;
+    z-index: 10;
+  }
+  
+  /* Chat messages area */
+  #chatMessages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 12px;
+  }
+  
+  /* Chat form */
+  #chatForm {
+    display: flex;
+    gap: 8px;
+  }
+  
+  #chatInput {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+    font-size: 14px;
+    padding: 0 12px;
+  }
+  
+  #chatSend {
+    min-width: 60px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  /* ─────────────────────────────────
+     Hide Mobile-Only Elements
+     ───────────────────────────────── */
+  
+  #mobileMenuToggle,
+  #mobileMenuPopup,
+  .mobile-only-button,
+  .mobile-only-menu,
+  .mobile-title-row,
+  .mobile-leaderboard-container {
+    display: none !important;
+  }
+  
+  #stampContainer {
+    display: none !important;
+  }
+  
+  /* ─────────────────────────────────
+     Options Menu - Desktop Centered
+     ───────────────────────────────── */
+  
+  #optionsMenu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    min-width: 280px;
+    max-width: 400px;
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: var(--z-options-menu);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out, visibility 0s 0.25s;
+  }
+  
+  #optionsMenu.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.25s ease-in-out, visibility 0s 0s;
+  }
+  
+  #optionsMenu button {
+    width: 100%;
+    height: 44px;
+    font-size: 16px;
+    text-align: left;
+    padding: 0 16px;
+  }
 }
 
-/* Large desktop optimization */
-@media (min-width: 1400px) {
-  /* TODO (Phase 3): Large desktop optimizations */
+/* ═══════════════════════════════════
+   Large Desktop Optimization
+   Target: ≥1200px
+   ═══════════════════════════════════ */
+
+@media (min-width: 1200px) {
+  :root {
+    --tile-size: clamp(56px, 4vw, 65px);
+    --tile-gap: clamp(6px, 0.6vw, 8px);
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --board-max-width: 600px;
+    --desktop-grid-gap: 24px;
+  }
+  
+  /* More spacious layout */
+  #gameTitle {
+    font-size: clamp(24px, 2.5vw, 32px);
+  }
+  
+  #keyboard {
+    gap: 10px;
+  }
+  
+  .keyboard-row {
+    gap: 8px;
+  }
+  
+  .key {
+    max-width: 58px;
+    height: 58px;
+    font-size: 18px;
+  }
+  
+  .key.wide {
+    max-width: 87px;
+    font-size: 16px;
+  }
 }
 
-/* Ultra-wide displays */
-@media (min-width: 1920px) {
-  /* TODO (Phase 3): Ultra-wide optimizations */
+/* ═══════════════════════════════════
+   Ultra-Wide Displays
+   Target: ≥1551px
+   ═══════════════════════════════════ */
+
+@media (min-width: 1551px) {
+  :root {
+    --tile-size: 65px;
+    --tile-gap: 8px;
+    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    --board-max-width: 700px;
+    --desktop-panel-width: 280px;
+    --desktop-grid-gap: 32px;
+  }
+  
+  /* Maximum comfortable sizing */
+  #gameTitle {
+    font-size: 32px;
+  }
+  
+  .tile {
+    font-size: 28px;
+  }
+  
+  .key {
+    max-width: 60px;
+    height: 60px;
+    font-size: 18px;
+  }
+  
+  .key.wide {
+    max-width: 90px;
+    font-size: 16px;
+  }
+  
+  /* Wider panels for better readability */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    width: var(--desktop-panel-width);
+  }
 }

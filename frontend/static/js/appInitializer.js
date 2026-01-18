@@ -16,19 +16,14 @@ import { updatePanelVisibility } from './panelManager.js';
 import { initHintManager, updateHintState } from './hintManager.js';
 import { initializeEnhancedScaling } from './enhancedScaling.js';
 import { updateGlobalPlayerId } from './main.js';
+import { LayoutManager } from './layoutManager.js';
 import { 
   applyDarkModePreference, 
   repositionResetButton,
   updateVH,
-  applyLayoutMode, 
-  fitBoardToContainer,
-  applyOptimalScaling,
-  verifyElementsFitInViewport,
-  adjustKeyboardForViewport,
-  ensureKeyboardVisibility,
-  ensureInputFieldVisibility,
   enableClickOffDismiss
 } from './utils.js';
+import { applyOptimalScaling } from './boardContainer.js';
 
 // Expose repositionResetButton to global scope for debugging and manual calls
 window.repositionResetButton = repositionResetButton;
@@ -44,6 +39,7 @@ class AppInitializer {
     this.gameStateManager = null;
     this.eventListenersManager = null;
     this.mobileMenuManager = null;
+    this.layoutManager = null;
     
     // App state
     this.myEmoji = null;
@@ -70,6 +66,10 @@ class AppInitializer {
     
     // Initialize game state
     this.gameState = new StateManager();
+    
+    // Initialize layout manager (new deterministic layout system)
+    this.layoutManager = new LayoutManager();
+    console.log('[AppInitializer] Layout manager initialized:', this.layoutManager.getCurrentLayout());
     
     // Extract lobby code from URL
     this.lobbyCode = this._extractLobbyCode();
@@ -144,7 +144,7 @@ class AppInitializer {
    * @private
    */
   _updateGameTitle() {
-    const isMobile = window.innerWidth <= 600;
+    const isMobile = this.layoutManager.isMobile();
     let title = GAME_NAME;
     
     // On mobile, include lobby code in the title if available
@@ -332,19 +332,26 @@ class AppInitializer {
     // Create board structure
     createBoard(board, this.maxRows);
 
-    // Initialize enhanced scaling system
-    const enhancedScaling = initializeEnhancedScaling();
-    const scalingResult = enhancedScaling.applyOptimalScaling(this.maxRows);
-
-    if (!scalingResult.success) {
-      console.warn('Enhanced scaling failed, using fallback:', scalingResult.error);
-      const fallbackResult = applyOptimalScaling(this.maxRows);
-      if (!fallbackResult) {
-        fitBoardToContainer(this.maxRows);
-      }
+    // Apply optimal CSS-based scaling
+    // CSS handles most sizing, JS only adjusts when needed
+    const scalingResult = applyOptimalScaling(this.maxRows);
+    
+    if (!scalingResult) {
+      console.warn('⚠️ Board scaling returned false, but CSS should handle layout');
     } else {
-      console.log('✅ Enhanced scaling applied successfully');
+      console.log('✅ Board scaling applied successfully');
     }
+
+    // Verify elements fit in viewport
+    console.log('Board dimensions verification:', {
+      boardArea: document.getElementById('boardArea')?.getBoundingClientRect(),
+      viewport: { 
+        width: window.innerWidth, 
+        height: window.innerHeight 
+      },
+      layout: this.layoutManager.getCurrentLayout()
+    });
+  }
 
     // Verify scaling
     const verification = verifyElementsFitInViewport(this.maxRows);
@@ -426,26 +433,31 @@ class AppInitializer {
    * @private
    */
   _setupWindowEvents() {
-    // Resize handler
-    window.addEventListener('resize', () => {
-      this._updateGameTitle(); // Update title for mobile/desktop
-      console.log('🔧 Calling repositionResetButton from resize handler');
-      repositionResetButton();
-      applyLayoutMode(); // Update layout mode first so panel visibility uses correct mode
-      updatePanelVisibility();
-      updateInputVisibility();
-      
-      this._handleScalingOnResize();
-      adjustKeyboardForViewport();
-      setupMobileLeaderboard();
-      
-      const latestState = this.gameStateManager.getLatestState();
-      if (latestState) {
-        renderEmojiStamps(latestState.guesses);
-      }
-      
-      setTimeout(() => ensureKeyboardVisibility(), 100);
-    });
+    // Debounced resize handler to prevent thrashing
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this._updateGameTitle(); // Update title for mobile/desktop
+        console.log('🔧 Calling repositionResetButton from resize handler');
+        repositionResetButton();
+        
+        // Layout manager handles the layout detection automatically
+        // No need to call applyLayoutMode()
+        updatePanelVisibility();
+        updateInputVisibility();
+        
+        this._handleScalingOnResize();
+        setupMobileLeaderboard();
+        
+        const latestState = this.gameStateManager.getLatestState();
+        if (latestState) {
+          renderEmojiStamps(latestState.guesses);
+        }
+      }, 150); // Debounce for 150ms
+    };
+    
+    window.addEventListener('resize', handleResize);
 
     // Viewport handlers
     updateVH();
@@ -454,14 +466,22 @@ class AppInitializer {
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
         updateVH();
-        adjustKeyboardForViewport();
-        setTimeout(() => ensureKeyboardVisibility(), 50);
-        setTimeout(() => ensureInputFieldVisibility(), 100);
+        // Apply board scaling when keyboard appears/disappears
+        setTimeout(() => applyOptimalScaling(this.maxRows), 50);
       });
     }
 
     // Orientation change handlers
     this._setupOrientationChangeHandlers();
+    
+    // Listen for layout changes from LayoutManager
+    document.addEventListener('layoutchange', (e) => {
+      console.log('[AppInitializer] Layout changed:', e.detail);
+      // Re-apply scaling when layout changes
+      setTimeout(() => applyOptimalScaling(this.maxRows), 100);
+      updatePanelVisibility();
+      setupMobileLeaderboard();
+    });
   }
 
   /**
