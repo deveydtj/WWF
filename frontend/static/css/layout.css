@@ -1,28 +1,24 @@
 /* ═════════════════════════════════════════════════════════════════════
-   DEPRECATION NOTICE - Phase 1: File Structure Reorganization
+   DEPRECATION NOTICE - Layout Refactoring
    ═════════════════════════════════════════════════════════════════════
    
-   This file is marked for deprecation as part of the layout refactoring plan.
-   See: docs/LAYOUT_REFACTORING_PLAN.md
+   This file has been NEUTRALIZED as part of the layout refactoring.
+   New layout system is now authoritative via mobile-layout.css and desktop-layout.css.
    
-   REPLACEMENT FILES:
+   This file is scoped behind .legacy-layout-active class to prevent conflicts.
+   The class is NOT applied by default, so these rules are inactive.
+   
+   REPLACEMENT FILES (NOW ACTIVE):
    - mobile-layout.css (for ≤768px viewports)
    - desktop-layout.css (for >768px viewports)
    - shared-base.css (for common base styles)
    
-   MIGRATION PLAN:
-   Phase 1: File structure created (current)
-   Phase 2: Mobile layout implemented
-   Phase 3: Desktop layout implemented
-   Phase 4: JavaScript simplified
-   Phase 5: Components updated
-   Phase 6: Testing completed
-   Phase 7: This file removed
-   
-   STATUS: This file is still active and required for current functionality.
-   Do not remove until Phase 7 migration is complete.
+   TODO: Remove this file entirely once migration is validated
    
    ═════════════════════════════════════════════════════════════════════ */
+
+/* Scope all legacy rules behind a class that is never applied */
+.legacy-layout-active {
 
 /* ─────────────────────────────────────────────
    Layout - CSS Grid-based positioning and panel layouts  
@@ -582,3 +578,5 @@ body.chat-open #chatBox {
   outline: 2px dashed var(--text-color);
   outline-offset: -2px;
 }
+
+} /* End .legacy-layout-active scope */

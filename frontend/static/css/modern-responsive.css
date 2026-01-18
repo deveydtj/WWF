@@ -1,28 +1,17 @@
 /* ═════════════════════════════════════════════════════════════════════
-   DEPRECATION NOTICE - Phase 1: File Structure Reorganization
+   DEPRECATION NOTICE - Layout Refactoring
    ═════════════════════════════════════════════════════════════════════
    
-   This file is marked for deprecation as part of the layout refactoring plan.
-   See: docs/LAYOUT_REFACTORING_PLAN.md
+   This file has been NEUTRALIZED as part of the layout refactoring.
+   Modern CSS features are now integrated into mobile-layout.css and desktop-layout.css.
    
-   REPLACEMENT FILES:
-   - mobile-layout.css (for ≤768px viewports)
-   - desktop-layout.css (for >768px viewports)
-   - shared-base.css (for common base styles)
-   
-   MIGRATION PLAN:
-   Phase 1: File structure created (current)
-   Phase 2: Mobile layout implemented
-   Phase 3: Desktop layout implemented
-   Phase 4: JavaScript simplified
-   Phase 5: Components updated
-   Phase 6: Testing completed
-   Phase 7: This file removed
-   
-   STATUS: This file is still active and required for current functionality.
-   Do not remove until Phase 7 migration is complete.
+   This file is scoped behind .legacy-layout-active class to prevent conflicts.
+   The class is NOT applied by default, so these rules are inactive.
    
    ═════════════════════════════════════════════════════════════════════ */
+
+/* Scope all legacy rules behind a class that is never applied */
+.legacy-layout-active {
 
 /* ─────────────────────────────────────────────
    Modern Responsive Design - Advanced viewport and container-based scaling
@@ -261,3 +250,5 @@
 .fluid-space-md { margin: clamp(1rem, 2vw, 2rem); }
 .fluid-space-lg { margin: clamp(1.5rem, 3vw, 3rem); }
 .fluid-space-xl { margin: clamp(2rem, 4vw, 4rem); }
+
+} /* End .legacy-layout-active scope */
