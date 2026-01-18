@@ -433,3 +433,35 @@ initializeApp().then(() => {
 }).catch(error => {
   console.error('💥 Failed to start application:', error);
 });
+
+// Expose board scaling test utilities for E2E testing (Cypress)
+if (typeof window !== 'undefined') {
+  import('./boardContainer.js').then(module => {
+    window.boardScalingTests = {
+      getBoardContainerInfo: module.getBoardContainerInfo,
+      calculateOptimalTileSize: module.calculateOptimalTileSize,
+      verifyElementsFitInViewport: module.verifyElementsFitInViewport,
+      applyOptimalScaling: module.applyOptimalScaling,
+      testBoardScalingAcrossDevices: module.testBoardScalingAcrossDevices,
+      checkElementVisibility: module.checkElementVisibility,
+      // Helper for running comprehensive tests
+      runBoardScalingTests: () => {
+        console.log('🧪 Running board scaling tests...');
+        const verification = module.verifyElementsFitInViewport();
+        console.log('Verification result:', verification);
+        return verification;
+      },
+      // Helper for debugging
+      debugBoardMeasurements: () => {
+        const info = module.getBoardContainerInfo();
+        console.log('📏 Board Container Info:', info);
+        const sizing = module.calculateOptimalTileSize(info);
+        console.log('📐 Optimal Sizing:', sizing);
+        return { containerInfo: info, optimalSizing: sizing };
+      }
+    };
+    console.log('✅ Board scaling test utilities exposed on window.boardScalingTests');
+  }).catch(err => {
+    console.error('Failed to load board scaling test utilities:', err);
+  });
+}
