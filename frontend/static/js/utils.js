@@ -105,7 +105,7 @@ export function repositionResetButton() {
     return;
   }
   
-  if (window.innerWidth <= 600) {
+  if (window.innerWidth <= 768) {
     // Move to appContainer as direct child (not inside inputArea which is hidden on mobile)
     if (resetWrapper.parentElement !== appContainer) {
       // Remove from current parent (inputArea or titleBar)
