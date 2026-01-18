@@ -353,16 +353,6 @@ class AppInitializer {
     });
   }
 
-    // Verify scaling
-    const verification = verifyElementsFitInViewport(this.maxRows);
-    if (!verification.success) {
-      console.warn('Board scaling verification failed:', verification);
-      if (verification.recommendations?.length > 0) {
-        console.info('Scaling recommendations:', verification.recommendations);
-      }
-    }
-  }
-
   /**
    * Setup event listeners
    * @private
@@ -500,27 +490,21 @@ class AppInitializer {
       updateInputVisibility();
       
       this._handleScalingOnResize();
-      adjustKeyboardForViewport();
       setupMobileLeaderboard();
       
       const latestState = this.gameStateManager.getLatestState();
       if (latestState) {
         renderEmojiStamps(latestState.guesses);
       }
-      
-      setTimeout(() => ensureKeyboardVisibility(), 200);
-      setTimeout(() => ensureInputFieldVisibility(), 250);
     };
 
     window.addEventListener('orientationchange', handleOrientationChange);
 
-    // Delayed orientation change handling
+    // Delayed orientation change handling for iOS
     window.addEventListener('orientationchange', () => {
       clearTimeout(orientationTimeout);
       orientationTimeout = setTimeout(() => {
         handleOrientationChange();
-        ensureKeyboardVisibility();
-        ensureInputFieldVisibility();
       }, 300);
     });
   }
@@ -532,21 +516,8 @@ class AppInitializer {
   _handleScalingOnResize() {
     const maxRows = this.gameStateManager.getMaxRows();
     
-    if (window.enhancedScaling) {
-      const scalingResult = window.enhancedScaling.applyOptimalScaling(maxRows);
-      if (!scalingResult.success) {
-        console.warn('Enhanced scaling failed on resize, using fallback');
-        const fallbackResult = applyOptimalScaling(maxRows);
-        if (!fallbackResult) {
-          fitBoardToContainer(maxRows);
-        }
-      }
-    } else {
-      const scalingSuccess = applyOptimalScaling(maxRows);
-      if (!scalingSuccess) {
-        fitBoardToContainer(maxRows);
-      }
-    }
+    // Use the simplified CSS-first scaling
+    applyOptimalScaling(maxRows);
   }
 
   /**
