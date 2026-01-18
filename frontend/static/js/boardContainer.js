@@ -15,6 +15,41 @@
  */
 
 /**
+ * Get dynamic viewport-based constraints for board scaling
+ * These values determine tile sizing and gaps based on screen size
+ * 
+ * Breakpoints and constraints:
+ * - < 360px (tiny phones): minTile=18, maxTile=48, gap=0.08
+ * - 360-479px (small phones): minTile=20, maxTile=56, gap=0.09
+ * - 480-767px (large phones): minTile=24, maxTile=60, gap=0.10
+ * - 768-1199px (tablets): minTile=28, maxTile=65, gap=0.12
+ * - >= 1200px (desktop): minTile=32, maxTile=70, gap=0.14
+ * 
+ * @param {number} viewportWidth - Current viewport width in pixels
+ * @returns {Object} Constraint object with minTileSize, maxTileSize, and gapRatio
+ */
+function getViewportConstraints(viewportWidth) {
+  // Define breakpoints with their corresponding constraints
+  // Easy to adjust these values for different screen sizes
+  const breakpoints = [
+    { maxWidth: 360, minTileSize: 18, maxTileSize: 48, gapRatio: 0.08 },
+    { maxWidth: 480, minTileSize: 20, maxTileSize: 56, gapRatio: 0.09 },
+    { maxWidth: 768, minTileSize: 24, maxTileSize: 60, gapRatio: 0.10 },
+    { maxWidth: 1200, minTileSize: 28, maxTileSize: 65, gapRatio: 0.12 },
+    { maxWidth: Infinity, minTileSize: 32, maxTileSize: 70, gapRatio: 0.14 }
+  ];
+  
+  // Find the appropriate breakpoint for current viewport
+  const constraint = breakpoints.find(bp => viewportWidth < bp.maxWidth);
+  
+  return {
+    minTileSize: constraint.minTileSize,
+    maxTileSize: constraint.maxTileSize,
+    gapRatio: constraint.gapRatio
+  };
+}
+
+/**
  * Get comprehensive information about the board container and its constraints
  * @param {number} rows - Number of board rows (default 6)
  * @returns {BoardContainerInfo}
@@ -111,14 +146,17 @@ export function getBoardContainerInfo(rows = 6) {
     }
   };
 
-  // Calculate constraints
+  // Calculate constraints with dynamic values based on viewport width
+  // These values can be adjusted for different screen sizes
+  const dynamicConstraints = getViewportConstraints(viewportWidth);
+  
   const constraints = {
     maxWidth: effectiveContainerRect.width,
     maxHeight: calculateMaxBoardHeight(elements, margins, viewportHeight),
-    minTileSize: 20, // Minimum usable tile size
-    maxTileSize: viewportWidth >= 1200 ? 65 : 60, // Allow larger tiles for 1200px+ screens
+    minTileSize: dynamicConstraints.minTileSize,
+    maxTileSize: dynamicConstraints.maxTileSize,
     targetAspectRatio: 5 / rows, // Board aspect ratio (5 columns, variable rows)
-    gapRatio: 0.1 // Gap as ratio of tile size
+    gapRatio: dynamicConstraints.gapRatio
   };
 
   // Calculate available space
@@ -372,10 +410,11 @@ export function applyOptimalScaling(rows = 6) {
     }
   }
 
-  const { optimalSizing } = verification;
-  if (!optimalSizing) return false;
+  const { optimalSizing, containerInfo } = verification;
+  if (!optimalSizing || !containerInfo) return false;
 
   const viewportWidth = window.innerWidth;
+  const dynamicGapRatio = containerInfo.constraints.gapRatio;
   
   // For larger screens (1200px+), check if CSS has already set appropriate fixed sizes
   // before applying JavaScript overrides
@@ -386,8 +425,8 @@ export function applyOptimalScaling(rows = 6) {
     if (currentCSSSize >= 60) {
       console.log(`CSS fixed tile size (${currentCSSSize}px) is adequate for ${viewportWidth}px viewport, respecting CSS`);
       
-      // Only apply minimal adjustments if needed
-      const gap = Math.max(2, currentCSSSize * 0.1);
+      // Use dynamic gap ratio for this viewport size
+      const gap = Math.max(2, currentCSSSize * dynamicGapRatio);
       const boardWidth = 5 * currentCSSSize + 4 * gap;
       
       const root = document.documentElement;
@@ -414,8 +453,8 @@ export function applyOptimalScaling(rows = 6) {
     console.log(`Applied 1551px+ minimum (60px): ${finalTileSize}px`);
   }
   
-  // Recalculate gap and board width if tile size was adjusted
-  const gap = Math.max(2, finalTileSize * 0.1);
+  // Recalculate gap and board width using dynamic gap ratio
+  const gap = Math.max(2, finalTileSize * dynamicGapRatio);
   const boardWidth = 5 * finalTileSize + 4 * gap;
 
   // Apply the calculated sizing to CSS variables
