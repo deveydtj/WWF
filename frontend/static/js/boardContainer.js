@@ -39,12 +39,16 @@ function getViewportConstraints(viewportWidth) {
     { maxWidth: Infinity, minTileSize: 32, maxTileSize: 70, gapRatio: 0.14 }
   ];
   
-  // Find the appropriate breakpoint for current viewport
-  // Use <= to handle exact breakpoint values correctly
+  // Find the first breakpoint whose maxWidth is >= the current viewport width
+  // Ordering of `breakpoints` matters because Array.find returns the first match;
+  // we use <= so exact breakpoint widths map to the correct (more constrained) range.
   const constraint = breakpoints.find(bp => viewportWidth <= bp.maxWidth);
   
-  // Fallback to the last (largest) breakpoint if none found (should not happen with Infinity)
-  const finalConstraint = constraint || breakpoints[breakpoints.length - 1];
+  // Fallback to the last (largest) breakpoint if none found (should not happen with Infinity).
+  // If the breakpoints array is ever empty, fall back to a safe default constraint.
+  const finalConstraint = constraint || 
+    breakpoints[breakpoints.length - 1] || 
+    { minTileSize: 24, maxTileSize: 60, gapRatio: 0.10 };
   
   return {
     minTileSize: finalConstraint.minTileSize,

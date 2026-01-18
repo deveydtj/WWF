@@ -435,8 +435,14 @@ initializeApp().then(() => {
 });
 
 // Expose board scaling test utilities for E2E testing (Cypress)
-// Only load in development/test environments
-if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname.includes('test'))) {
+// Only load in browser environments on localhost, loopback IPs, or when Cypress is detected
+if (
+  typeof window !== 'undefined' &&
+  (
+    ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname) ||
+    typeof window.Cypress !== 'undefined'
+  )
+) {
   import('./boardContainer.js').then(module => {
     window.boardScalingTests = {
       getBoardContainerInfo: module.getBoardContainerInfo,
