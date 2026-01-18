@@ -14,7 +14,6 @@ import { setupMobileLeaderboard, setupLeaderboardScrolling, renderEmojiStamps } 
 import { initResetManager } from './resetManager.js';
 import { updatePanelVisibility } from './panelManager.js';
 import { initHintManager, updateHintState } from './hintManager.js';
-import { initializeEnhancedScaling } from './enhancedScaling.js';
 import { updateGlobalPlayerId } from './main.js';
 import { LayoutManager } from './layoutManager.js';
 import { 

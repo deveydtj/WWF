@@ -255,7 +255,7 @@
     justify-content: center;
     position: relative;
     padding: 16px;
-    box-sizing: content-box;
+    box-sizing: border-box;
   }
   
   #board {

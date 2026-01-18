@@ -182,8 +182,9 @@
     gap: clamp(4px, 2vw, 8px);
     width: 100%;
     max-width: 100%;
-    /* Note: aspect-ratio maintains proportions during dynamic sizing */
-    aspect-ratio: 5 / 6; /* 5 columns, 6 rows */
+    /* Note: aspect-ratio maintains proportions during dynamic sizing. */
+    /* This assumes the board has MAX_ROWS = 6; update if MAX_ROWS changes. */
+    aspect-ratio: 5 / 6; /* 5 columns, 6 rows (rows = MAX_ROWS) */
   }
   
   /* Tiles - Touch targets ≥44px */
