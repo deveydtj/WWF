@@ -100,6 +100,9 @@ def load_server():
 def server_env(tmp_path):
     server, request = load_server()
     server.LOBBIES_FILE = tmp_path / 'lobbies.json'
+    # Disable budget mode for tests to allow online dictionary lookups to be tested
+    server._game_logic.BUDGET_MODE = False
+    server._game_logic.DISABLE_ONLINE_DICTIONARY = False
     # basic game state
     server.WORDS = ['apple', 'enter', 'crane', 'crate', 'trace']
     server.current_state.target_word = 'apple'

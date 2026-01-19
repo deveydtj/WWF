@@ -43,8 +43,10 @@ class TestAWSOptimizations:
     def test_external_api_timeout_optimized(self, monkeypatch):
         """Test that external API calls use optimized timeout."""
         # Disable budget mode to exercise the online path
-        monkeypatch.setenv("AWS_BUDGET_MODE", "0")
-        monkeypatch.setenv("DISABLE_ONLINE_DICTIONARY", "0")
+        # Need to patch both env vars AND module-level constants since fetch_definition uses constants
+        import backend.game_logic as game_logic_module
+        monkeypatch.setattr(game_logic_module, 'BUDGET_MODE', False)
+        monkeypatch.setattr(game_logic_module, 'DISABLE_ONLINE_DICTIONARY', False)
         with patch('backend.server.requests.get') as mock_get:
             mock_response = MagicMock()
             mock_response.json.return_value = []
