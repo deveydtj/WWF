@@ -126,6 +126,11 @@ body {
   flex-direction: column;
   overflow: hidden;
   min-height: var(--viewport-height); /* Modern viewport with dvh support */
+  /* Constrain main app content for readability and to match reference layout.
+     On large / ultra-wide screens, content remains at 980px wide and is
+     centered in the viewport via margin: 0 auto;, leaving extra space as
+     background. Adjust this max-width if we later introduce wider layouts
+     (e.g., sidebars or full-bleed sections) for >1080p displays. */
   max-width: 980px;
   margin: 0 auto;
   

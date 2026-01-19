@@ -333,8 +333,9 @@ class AppInitializer {
     createBoard(board, this.maxRows);
 
     // Initialize modern responsive scaling system
-    // This dynamically calculates optimal tile and keyboard sizes
-    // based on viewport and ensures everything fits
+    // This performs one-time initialization that calculates optimal tile and
+    // keyboard sizes based on the current viewport, and sets up resize event
+    // listeners so scaling is recalculated when the viewport changes.
     initializeResponsiveScaling();
     
     console.log('✅ Board and responsive scaling initialized');

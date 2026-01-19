@@ -29,7 +29,8 @@
   display: grid;
   grid-template-columns: repeat(5, var(--tile-size));
   gap: var(--tile-gap);
-  width: fit-content;
+  /* Explicitly match 5 columns and 4 gaps to keep layout predictable across viewports */
+  width: calc(5 * var(--tile-size) + 4 * var(--tile-gap));
   max-width: 100%;
 }
 

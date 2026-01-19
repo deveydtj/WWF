@@ -19,12 +19,14 @@ function clamp(n, a, b) {
 /**
  * Calculate optimal sizing for tiles, keyboard, and UI elements
  * Based on available viewport space
+ * 
+ * Note: This function expects the DOM to be fully loaded. If called during
+ * initialization before elements are rendered, it will use fallback values
+ * for header height (60px) which may result in less accurate initial sizing.
  */
 function tuneSizing() {
   const root = document.documentElement;
-  const app = document.querySelector("#appContainer") || document.body;
   const titleBar = document.querySelector("#titleBar");
-  const keyboard = document.querySelector("#keyboard");
 
   // Viewport dimensions
   const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -47,7 +49,8 @@ function tuneSizing() {
   const tileByWidth = Math.floor((usableW - 4 * gap) / 5);
 
   // Height-driven tile size: ensure board + keyboard + header fits in viewport
-  // Estimate keyboard total height: 3 rows of keys + 2 gaps + breathing room
+  // Note: Keyboard uses flex layout with 3 rows. This calculation assumes a standard
+  // 3-row QWERTY layout. If keyboard layout changes, this may need adjustment.
   const headerH = titleBar ? titleBar.getBoundingClientRect().height : 60;
   const breathing = clamp(vh * 0.03, 10, 24);
 
@@ -112,23 +115,28 @@ export function initializeResponsiveScaling() {
   const root = document.documentElement;
   const styles = getComputedStyle(root);
   
-  if (!styles.getPropertyValue("--pad-x")) {
+  const padX = styles.getPropertyValue("--pad-x");
+  if (!padX || padX.trim() === "") {
     root.style.setProperty("--pad-x", "16px");
   }
-  if (!styles.getPropertyValue("--pad-y")) {
+  
+  const padY = styles.getPropertyValue("--pad-y");
+  if (!padY || padY.trim() === "") {
     root.style.setProperty("--pad-y", "14px");
   }
 
-  // Add event listeners for resize and orientation change
-  window.addEventListener("resize", tuneSizing);
+  // Add event listeners for resize and orientation change with debouncing
+  let resizeTimeout;
+  const debouncedResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(tuneSizing, 150);
+  };
+  
+  window.addEventListener("resize", debouncedResize);
   window.addEventListener("orientationchange", tuneSizing);
 
-  // Run initial sizing
-  tuneSizing();
-
-  // Run again after fonts/layout settle
+  // Run initial sizing once on next frame after DOM layout
   requestAnimationFrame(tuneSizing);
-  setTimeout(tuneSizing, 250);
 
   console.log('✅ Responsive scaling initialized');
 }

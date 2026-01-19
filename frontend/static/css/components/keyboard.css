@@ -4,7 +4,9 @@
 
 #keyboard {
   width: 100%;
-  max-width: min(100%, var(--board-width));
+  /* Allow keyboard to scale wider on large screens for better usability,
+     but constrain to reasonable maximum */
+  max-width: min(100%, 900px);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -25,7 +27,10 @@
 
 .key {
   height: var(--key-h);
-  min-width: calc(var(--board-width) / 11); /* Approximate key width based on board */
+  /* Use flex to distribute space naturally across keys in each row.
+     This allows proper handling of varying key counts per row. */
+  flex: 1 1 auto;
+  min-width: 0;
   border: none;
   background-color: var(--key-bg);
   border-radius: var(--radius);
@@ -47,7 +52,8 @@
 }
 
 .key.wide { 
-  min-width: calc(var(--board-width) / 11 * 1.5); 
+  /* Wide keys (Enter, Backspace) span more space using flex-grow */
+  flex: 1.5 1 auto;
   font-size: clamp(11px, var(--key-font) * 0.9, 15px);
   letter-spacing: 0.02em;
 }
