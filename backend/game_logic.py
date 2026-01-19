@@ -160,7 +160,7 @@ def pick_new_word(s: GameState) -> None:
     s.definition = None
     s.win_timestamp = None
     if MAX_ROWS > 1:
-        s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
+        s.daily_double_index = random.randint(0, MAX_ROWS * 5 - 1)
     else:
         s.daily_double_index = None
     s.daily_double_winners.clear()
