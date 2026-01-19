@@ -455,8 +455,8 @@ class AppInitializer {
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
         updateVH();
-        // Apply board scaling when keyboard appears/disappears
-        setTimeout(() => applyOptimalScaling(this.maxRows), 50);
+        // Apply board scaling when keyboard appears/disappears using new system
+        setTimeout(() => recalculateScaling(), 50);
       });
     }
 
@@ -466,8 +466,8 @@ class AppInitializer {
     // Listen for layout changes from LayoutManager
     document.addEventListener('layoutchange', (e) => {
       console.log('[AppInitializer] Layout changed:', e.detail);
-      // Re-apply scaling when layout changes
-      setTimeout(() => applyOptimalScaling(this.maxRows), 100);
+      // Re-apply scaling when layout changes using new system
+      setTimeout(() => recalculateScaling(), 100);
       updatePanelVisibility();
       setupMobileLeaderboard();
     });
