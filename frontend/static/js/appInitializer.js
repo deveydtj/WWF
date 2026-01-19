@@ -22,7 +22,7 @@ import {
   updateVH,
   enableClickOffDismiss
 } from './utils.js';
-import { applyOptimalScaling } from './boardContainer.js';
+import { initializeResponsiveScaling } from './responsiveScaling.js';
 
 // Expose repositionResetButton to global scope for debugging and manual calls
 window.repositionResetButton = repositionResetButton;
@@ -332,15 +332,12 @@ class AppInitializer {
     // Create board structure
     createBoard(board, this.maxRows);
 
-    // Apply optimal CSS-based scaling
-    // CSS handles most sizing, JS only adjusts when needed
-    const scalingResult = applyOptimalScaling(this.maxRows);
+    // Initialize modern responsive scaling system
+    // This dynamically calculates optimal tile and keyboard sizes
+    // based on viewport and ensures everything fits
+    initializeResponsiveScaling();
     
-    if (!scalingResult) {
-      console.info('ℹ️ Board scaling deferred to CSS - this is normal for CSS-driven layouts');
-    } else {
-      console.log('✅ Board scaling applied successfully');
-    }
+    console.log('✅ Board and responsive scaling initialized');
 
     // Verify elements fit in viewport
     const layoutType = this.layoutManager ? this.layoutManager.getCurrentLayout() : 'unknown';

@@ -29,7 +29,8 @@
   display: grid;
   grid-template-columns: repeat(5, var(--tile-size));
   grid-gap: var(--tile-gap);
-  max-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  width: var(--board-width);
+  max-width: var(--board-width);
 }
 
 /* Board stamps - Updated for CSS Grid layout */
@@ -121,16 +122,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--tile-size) * 0.46);
-  font-weight: bold;
+  font-size: var(--tile-font);
+  font-weight: 900;
+  line-height: 1;
   text-transform: uppercase;
   background-color: var(--tile-bg);
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 5px 5px 10px var(--shadow-color-dark),
               -5px -5px 10px var(--shadow-color-light);
-  transition: background-color 0.3s, color 0.3s, border-color 0.3s,
-              transform 0.1s, opacity 0.1s;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease,
+              transform 120ms ease, opacity 120ms ease;
   color: var(--text-color);
+  user-select: none;
 }
 
 .tile.backspace-effect {
