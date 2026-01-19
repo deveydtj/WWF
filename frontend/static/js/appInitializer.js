@@ -22,7 +22,7 @@ import {
   updateVH,
   enableClickOffDismiss
 } from './utils.js';
-import { applyOptimalScaling } from './boardContainer.js';
+import { initializeResponsiveScaling, recalculateScaling } from './responsiveScaling.js';
 
 // Expose repositionResetButton to global scope for debugging and manual calls
 window.repositionResetButton = repositionResetButton;
@@ -332,15 +332,13 @@ class AppInitializer {
     // Create board structure
     createBoard(board, this.maxRows);
 
-    // Apply optimal CSS-based scaling
-    // CSS handles most sizing, JS only adjusts when needed
-    const scalingResult = applyOptimalScaling(this.maxRows);
+    // Initialize modern responsive scaling system
+    // This performs one-time initialization that calculates optimal tile and
+    // keyboard sizes based on the current viewport, and sets up resize event
+    // listeners so scaling is recalculated when the viewport changes.
+    initializeResponsiveScaling();
     
-    if (!scalingResult) {
-      console.info('ℹ️ Board scaling deferred to CSS - this is normal for CSS-driven layouts');
-    } else {
-      console.log('✅ Board scaling applied successfully');
-    }
+    console.log('✅ Board and responsive scaling initialized');
 
     // Verify elements fit in viewport
     const layoutType = this.layoutManager ? this.layoutManager.getCurrentLayout() : 'unknown';
@@ -457,8 +455,8 @@ class AppInitializer {
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
         updateVH();
-        // Apply board scaling when keyboard appears/disappears
-        setTimeout(() => applyOptimalScaling(this.maxRows), 50);
+        // Apply board scaling when keyboard appears/disappears using new system
+        setTimeout(() => recalculateScaling(), 50);
       });
     }
 
@@ -468,8 +466,8 @@ class AppInitializer {
     // Listen for layout changes from LayoutManager
     document.addEventListener('layoutchange', (e) => {
       console.log('[AppInitializer] Layout changed:', e.detail);
-      // Re-apply scaling when layout changes
-      setTimeout(() => applyOptimalScaling(this.maxRows), 100);
+      // Re-apply scaling when layout changes using new system
+      setTimeout(() => recalculateScaling(), 100);
       updatePanelVisibility();
       setupMobileLeaderboard();
     });
@@ -514,10 +512,8 @@ class AppInitializer {
    * @private
    */
   _handleScalingOnResize() {
-    const maxRows = this.gameStateManager.getMaxRows();
-    
-    // Use the simplified CSS-first scaling
-    applyOptimalScaling(maxRows);
+    // Use the new responsive scaling system's recalculate function
+    recalculateScaling();
   }
 
   /**

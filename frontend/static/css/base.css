@@ -24,11 +24,26 @@
   --absent-shadow-light: #8a8e90;
   --border-color: transparent;
   
-  /* Enhanced scaling system - integrated with modern responsive design */
-  --tile-size: var(--current-tile-size, min(11vmin, 60px));
-  --tile-gap: calc(var(--tile-size) / 6);
-  --ui-scale: var(--current-scale-factor, 1);
+  /* Modern responsive scaling system - dynamically calculated by JS */
+  --pad-x: 16px;
+  --pad-y: 14px;
+  --gap: 10px;
+  --kb-gap: 8px;
+  --radius: 10px;
+  
+  --tile-size: 56px;
+  --tile-gap: var(--gap);
+  --key-h: 44px;
   --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+  
+  --tile-font: 28px;
+  --key-font: 16px;
+  --ui-font: 14px;
+  
+  /* UI scaling */
+  --ui-scale: 1;
+  --current-scale-factor: 1;
+  --current-tile-size: var(--tile-size);
   
   /* Shared spacing tokens */
   --component-gap: clamp(0.25rem, 1vw, 1rem);
@@ -39,13 +54,20 @@
   --uniform-button-width: max(calc(var(--tile-size) * 1.8), var(--min-touch-target));
   --uniform-button-height: max(calc(var(--tile-size) * 0.8), var(--min-touch-target));
   
-  /* Modern viewport support */
-  --viewport-height: var(--dynamic-viewport-height, 100vh);
+  /* Modern viewport support with dvh */
+  --viewport-height: 100vh;
   --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));
   
   /* Touch and accessibility */
   --min-touch-target: 44px;
   --accessibility-scale: 1;
+}
+
+/* Use dynamic viewport height when supported */
+@supports (height: 100dvh) {
+  :root {
+    --viewport-height: 100dvh;
+  }
 }
 
 body.dark-mode {
@@ -78,11 +100,11 @@ html, body {
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   text-align: center;
   background-color: var(--bg-color);
   color: var(--text-color);
-  height: var(--keyboard-safe-height, var(--viewport-height, 100vh));
+  height: var(--viewport-height);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -93,13 +115,27 @@ body {
 
 #appContainer {
   box-sizing: border-box;
-  padding: 10px;
+  padding: 
+    calc(var(--pad-y) + env(safe-area-inset-top))
+    calc(var(--pad-x) + env(safe-area-inset-right))
+    calc(var(--pad-y) + env(safe-area-inset-bottom))
+    calc(var(--pad-x) + env(safe-area-inset-left));
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: var(--keyboard-safe-height, var(--viewport-height, 100vh)); /* Modern viewport with keyboard support */
+  min-height: var(--viewport-height); /* Modern viewport with dvh support */
+  /*
+   * Constrain main app content for readability and to match reference layout.
+   * On large / ultra-wide screens, content remains at 980px wide and is
+   * centered in the viewport via margin: 0 auto;, leaving extra space as
+   * background.
+   * Adjust this max-width if we later introduce wider layouts (e.g., sidebars
+   * or full-bleed sections) for >1080p displays.
+   */
+  max-width: 980px;
+  margin: 0 auto;
   
   /* Enable container queries */
   container-type: inline-size;
