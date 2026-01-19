@@ -22,7 +22,7 @@ import {
   updateVH,
   enableClickOffDismiss
 } from './utils.js';
-import { initializeResponsiveScaling } from './responsiveScaling.js';
+import { initializeResponsiveScaling, recalculateScaling } from './responsiveScaling.js';
 
 // Expose repositionResetButton to global scope for debugging and manual calls
 window.repositionResetButton = repositionResetButton;
@@ -511,10 +511,8 @@ class AppInitializer {
    * @private
    */
   _handleScalingOnResize() {
-    const maxRows = this.gameStateManager.getMaxRows();
-    
-    // Use the simplified CSS-first scaling
-    applyOptimalScaling(maxRows);
+    // Use the new responsive scaling system's recalculate function
+    recalculateScaling();
   }
 
   /**
