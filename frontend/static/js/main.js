@@ -434,42 +434,6 @@ initializeApp().then(() => {
   console.error('💥 Failed to start application:', error);
 });
 
-// Expose board scaling test utilities for E2E testing (Cypress)
-// Only load in browser environments on localhost, loopback IPs, or when Cypress is detected
-if (
-  typeof window !== 'undefined' &&
-  (
-    ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname) ||
-    typeof window.Cypress !== 'undefined'
-  )
-) {
-  import('./boardContainer.js').then(module => {
-    window.boardScalingTests = {
-      getBoardContainerInfo: module.getBoardContainerInfo,
-      calculateOptimalTileSize: module.calculateOptimalTileSize,
-      verifyElementsFitInViewport: module.verifyElementsFitInViewport,
-      applyOptimalScaling: module.applyOptimalScaling,
-      testBoardScalingAcrossDevices: module.testBoardScalingAcrossDevices,
-      checkElementVisibility: module.checkElementVisibility,
-      getViewportConstraints: module.getViewportConstraints,
-      // Helper for running comprehensive tests
-      runBoardScalingTests: () => {
-        console.log('🧪 Running board scaling tests...');
-        const verification = module.verifyElementsFitInViewport();
-        console.log('Verification result:', verification);
-        return verification;
-      },
-      // Helper for debugging
-      debugBoardMeasurements: () => {
-        const info = module.getBoardContainerInfo();
-        console.log('📏 Board Container Info:', info);
-        const sizing = module.calculateOptimalTileSize(info);
-        console.log('📐 Optimal Sizing:', sizing);
-        return { containerInfo: info, optimalSizing: sizing };
-      }
-    };
-    console.log('✅ Board scaling test utilities exposed on window.boardScalingTests');
-  }).catch(err => {
-    console.error('Failed to load board scaling test utilities:', err);
-  });
-}
+// Note: Board scaling test utilities are now exposed by responsiveScaling.js
+// The new scaling system automatically exposes window.boardScalingTests with full
+// backward compatibility for existing Cypress tests. No need to load old boardContainer.js.

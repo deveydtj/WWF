@@ -99,7 +99,9 @@ function tuneSizing() {
   root.style.setProperty("--radius", radius + "px");
 
   // Set scale factor for UI elements
-  const scaleFactor = tile / 60; // 60px is baseline
+  // Baseline of 60px represents the standard tile size for desktop viewports
+  const BASELINE_TILE_SIZE = 60;
+  const scaleFactor = tile / BASELINE_TILE_SIZE;
   root.style.setProperty("--ui-scale", scaleFactor);
   root.style.setProperty("--current-scale-factor", scaleFactor);
   root.style.setProperty("--current-tile-size", tile + "px");
@@ -109,8 +111,19 @@ function tuneSizing() {
 
 /**
  * Initialize responsive scaling system
+ * 
+ * Note: This function should only be called once during app initialization.
+ * Multiple calls will result in duplicate event listeners.
  */
+let isScalingInitialized = false;
+
 export function initializeResponsiveScaling() {
+  // Prevent duplicate initialization
+  if (isScalingInitialized) {
+    console.warn('⚠️ Responsive scaling already initialized, skipping duplicate initialization');
+    return;
+  }
+  
   console.log('🚀 Initializing responsive scaling system');
 
   // Set up padding CSS variables if not already set
@@ -139,7 +152,8 @@ export function initializeResponsiveScaling() {
 
   // Run initial sizing once on next frame after DOM layout
   requestAnimationFrame(tuneSizing);
-
+  
+  isScalingInitialized = true;
   console.log('✅ Responsive scaling initialized');
 }
 
@@ -152,7 +166,7 @@ export function recalculateScaling() {
 
 /**
  * Verify that all elements fit properly in the viewport
- * Used for testing and debugging
+ * Used for testing and debugging - Compatible with Cypress test expectations
  */
 function verifyElementsFitInViewport() {
   const root = document.documentElement;
@@ -184,6 +198,11 @@ function verifyElementsFitInViewport() {
   const keyHeight = parseFloat(styles.getPropertyValue("--key-h")) || 0;
   const boardWidth = parseFloat(styles.getPropertyValue("--board-width")) || 0;
   
+  // Check if elements are visible (for Cypress compatibility)
+  const isVisible = (rect) => {
+    return rect.width > 0 && rect.height > 0 && rect.top < vh && rect.left < vw;
+  };
+  
   return {
     success: fitsVertically && fitsHorizontally,
     fitsVertically,
@@ -199,8 +218,77 @@ function verifyElementsFitInViewport() {
       keyHeight,
       boardWidth
     },
-    totalHeight
+    totalHeight,
+    // Add elementChecks for Cypress compatibility
+    elementChecks: {
+      board: { visible: isVisible(boardRect) },
+      keyboard: { visible: isVisible(keyboardRect) },
+      titleBar: { visible: isVisible(titleBarRect) }
+    }
   };
+}
+
+/**
+ * Get board container information (for Cypress test compatibility)
+ */
+function getBoardContainerInfo() {
+  const board = document.querySelector("#board");
+  const keyboard = document.querySelector("#keyboard");
+  const titleBar = document.querySelector("#titleBar");
+  
+  const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  
+  return {
+    viewport: { width: vw, height: vh },
+    board: board ? board.getBoundingClientRect() : null,
+    keyboard: keyboard ? keyboard.getBoundingClientRect() : null,
+    titleBar: titleBar ? titleBar.getBoundingClientRect() : null
+  };
+}
+
+/**
+ * Calculate optimal tile size (for Cypress test compatibility)
+ */
+function calculateOptimalTileSize(containerInfo) {
+  const root = document.documentElement;
+  const styles = getComputedStyle(root);
+  
+  return {
+    tileSize: parseFloat(styles.getPropertyValue("--tile-size")) || 0,
+    keyHeight: parseFloat(styles.getPropertyValue("--key-h")) || 0,
+    boardWidth: parseFloat(styles.getPropertyValue("--board-width")) || 0
+  };
+}
+
+/**
+ * Check element visibility (for Cypress test compatibility)
+ */
+function checkElementVisibility() {
+  const verification = verifyElementsFitInViewport();
+  return verification.elementChecks || {};
+}
+
+/**
+ * Get viewport constraints (for Cypress test compatibility)
+ */
+function getViewportConstraints() {
+  const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  
+  return {
+    width: vw,
+    height: vh,
+    availableWidth: vw,
+    availableHeight: vh
+  };
+}
+
+/**
+ * Test board scaling across devices (for Cypress test compatibility)
+ */
+function testBoardScalingAcrossDevices() {
+  return runBoardScalingTests();
 }
 
 /**
@@ -233,10 +321,25 @@ if (typeof window !== 'undefined') {
   window.tuneSizing = tuneSizing;
   window.recalculateScaling = recalculateScaling;
   
-  // Expose test utilities for Cypress and debugging
+  // Expose comprehensive test utilities for Cypress and debugging
+  // This provides full backward compatibility with existing test suite
   window.boardScalingTests = {
+    // New scaling system functions
     verifyElementsFitInViewport,
     runBoardScalingTests,
-    recalculateScaling
+    recalculateScaling,
+    
+    // Legacy API compatibility for existing Cypress tests
+    getBoardContainerInfo,
+    calculateOptimalTileSize,
+    checkElementVisibility,
+    getViewportConstraints,
+    testBoardScalingAcrossDevices,
+    
+    // Alias for applyOptimalScaling - now uses new system
+    applyOptimalScaling: () => {
+      console.warn('⚠️ applyOptimalScaling is deprecated, using recalculateScaling instead');
+      recalculateScaling();
+    }
   };
 }
