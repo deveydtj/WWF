@@ -28,9 +28,9 @@
   margin: 0;
   display: grid;
   grid-template-columns: repeat(5, var(--tile-size));
-  grid-gap: var(--tile-gap);
-  width: var(--board-width);
-  max-width: var(--board-width);
+  gap: var(--tile-gap);
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* Board stamps - Updated for CSS Grid layout */
