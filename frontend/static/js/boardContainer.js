@@ -15,6 +15,14 @@
  */
 
 /**
+ * Viewport constraint object with tile sizing parameters
+ * @typedef {Object} ViewportConstraint
+ * @property {number} minTileSize - Minimum tile size in pixels
+ * @property {number} maxTileSize - Maximum tile size in pixels
+ * @property {number} gapRatio - Gap ratio relative to tile size
+ */
+
+/**
  * Get dynamic viewport-based constraints for board scaling
  * These values determine tile sizing and gaps based on screen size
  * 
@@ -26,7 +34,7 @@
  * - ≥1201px (desktop): minTile=32, maxTile=70, gap=0.14
  * 
  * @param {number} viewportWidth - Current viewport width in pixels
- * @returns {Object} Constraint object with minTileSize, maxTileSize, and gapRatio
+ * @returns {ViewportConstraint} Constraint object with minTileSize, maxTileSize, and gapRatio
  */
 export function getViewportConstraints(viewportWidth) {
   // Define breakpoints with their corresponding constraints
