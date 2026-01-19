@@ -451,6 +451,7 @@ if (
       applyOptimalScaling: module.applyOptimalScaling,
       testBoardScalingAcrossDevices: module.testBoardScalingAcrossDevices,
       checkElementVisibility: module.checkElementVisibility,
+      getViewportConstraints: module.getViewportConstraints,
       // Helper for running comprehensive tests
       runBoardScalingTests: () => {
         console.log('🧪 Running board scaling tests...');
