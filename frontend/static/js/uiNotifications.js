@@ -234,24 +234,6 @@ function hideChatNotify() {
   }
 }
 
-// Close-call notification for near-simultaneous wins
-function showCloseCallNotification() {
-  const popup = document.getElementById('closeCallPopup');
-  if (popup) {
-    popup.style.display = 'block';
-    setTimeout(() => {
-      popup.style.display = 'none';
-    }, 4000);
-  }
-}
-
-function hideCloseCallNotification() {
-  const popup = document.getElementById('closeCallPopup');
-  if (popup) {
-    popup.style.display = 'none';
-  }
-}
-
 // Network error notification
 function showNetworkError() {
   const errorDiv = document.getElementById('networkError');
@@ -276,8 +258,6 @@ export {
   showChatNotify,
   showChatMessagePopup,
   hideChatNotify,
-  showCloseCallNotification,
-  hideCloseCallNotification,
   showNetworkError,
   hideNetworkError
 };

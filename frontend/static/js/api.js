@@ -98,18 +98,6 @@ export async function sendChatMessage(text, emoji, playerId, lobbyId) {
 }
 
 /**
- * Retrieve the current list of chat messages.
- *
- * @returns {Promise<Object>} Chat message payload.
- */
-export async function getChatMessages(lobbyId) {
-  const url = lobbyId ? `/lobby/${lobbyId}/chat` : '/chat';
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Network response was not OK');
-  return r.json();
-}
-
-/**
  * Claim a Daily Double hint for the next row.
  *
  * @param {number} col - Column index to reveal.
@@ -122,16 +110,6 @@ export async function requestHint(col, emoji, playerId, lobbyId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ col, emoji, player_id: playerId })
-  });
-  return r.json();
-}
-
-export async function kickPlayerRequest(lobbyId, emoji, hostToken) {
-  const url = `/lobby/${lobbyId}/kick`;
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ emoji, host_token: hostToken })
   });
   return r.json();
 }
