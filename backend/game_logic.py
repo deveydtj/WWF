@@ -160,7 +160,7 @@ def pick_new_word(s: GameState) -> None:
     s.definition = None
     s.win_timestamp = None
     if MAX_ROWS > 1:
-        s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
+        s.daily_double_index = random.randint(0, MAX_ROWS * 5 - 1)
     else:
         s.daily_double_index = None
     s.daily_double_winners.clear()
@@ -185,10 +185,8 @@ def sanitize_definition(text: str) -> str:
 
 def fetch_definition(word: str):
     """Look up a word's definition online with an offline JSON fallback."""
-    budget_mode = _env_flag("AWS_BUDGET_MODE", BUDGET_MODE) or _env_flag(
-        "DISABLE_ONLINE_DICTIONARY", DISABLE_ONLINE_DICTIONARY
-    )
-    if budget_mode:
+    # Use module-level constants instead of re-reading env vars to allow test mocking
+    if BUDGET_MODE or DISABLE_ONLINE_DICTIONARY:
         logger.info("Budget mode: skipping online dictionary lookup for '%s'", word)
         return _get_cached_offline_definition(word)
 
