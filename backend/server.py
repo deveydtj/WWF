@@ -77,6 +77,33 @@ except Exception:  # pragma: no cover - optional dependency
 
 CLOSE_CALL_WINDOW = 2.0  # seconds
 
+# Configure logging based on environment
+def configure_logging():
+    """Configure logging for production vs development."""
+    log_level = logging.INFO
+    log_format = "%(asctime)s %(levelname)s:%(name)s:%(message)s"
+    
+    # More detailed logging for production
+    if os.environ.get("FLASK_ENV") == "production":
+        log_format = "%(asctime)s %(levelname)s [%(name)s:%(filename)s:%(lineno)d] %(message)s"
+        # Add request ID context if available
+        if hasattr(logging, 'structlog'):
+            # Use structured logging if available
+            pass
+    
+    logging.basicConfig(
+        level=log_level,
+        format=log_format,
+        handlers=[
+            logging.StreamHandler(),
+            # Add file handler for production if needed
+        ]
+    )
+
+configure_logging()
+
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_key_for_local_testing_only")
 
@@ -114,33 +141,6 @@ def add_cache_control_headers(response):
         response.headers['Cache-Control'] = 'public, max-age=60'
     
     return response
-
-# Configure logging based on environment
-def configure_logging():
-    """Configure logging for production vs development."""
-    log_level = logging.INFO
-    log_format = "%(asctime)s %(levelname)s:%(name)s:%(message)s"
-    
-    # More detailed logging for production
-    if os.environ.get("FLASK_ENV") == "production":
-        log_format = "%(asctime)s %(levelname)s [%(name)s:%(filename)s:%(lineno)d] %(message)s"
-        # Add request ID context if available
-        if hasattr(logging, 'structlog'):
-            # Use structured logging if available
-            pass
-    
-    logging.basicConfig(
-        level=log_level,
-        format=log_format,
-        handlers=[
-            logging.StreamHandler(),
-            # Add file handler for production if needed
-        ]
-    )
-
-configure_logging()
-
-logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEV_FRONTEND_DIR = BASE_DIR / "frontend"
@@ -1263,20 +1263,6 @@ def kick_player():
     log_player_kicked(lobby_code, emoji)
     return jsonify({"status": "ok"})
 
-
-def remove_empty_lobby(lobby_code: str) -> bool:
-    """Remove a lobby if it has no players. Returns True if removed."""
-    if lobby_code == DEFAULT_LOBBY:
-        return False
-
-    lobby = LOBBIES.get(lobby_code)
-    if lobby and not lobby.leaderboard:
-        LOBBIES.pop(lobby_code, None)
-        # Track the removal time to prevent immediate recreation
-        RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
-        logger.info(f"Removed empty lobby {lobby_code}")
-        return True
-    return False
 
 
 def leave_lobby():
