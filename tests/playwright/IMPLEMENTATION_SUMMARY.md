@@ -24,15 +24,15 @@ Add comprehensive tests to check different screen sizes and browsers for UI elem
 
 ## Files Created
 
-### 1. tests/playwright/ui-responsiveness.spec.js (545 lines)
+### 1. tests/playwright/ui-responsiveness.spec.js (556 lines)
 Comprehensive Playwright test suite with 8 test categories:
 
-1. **UI Element Visibility Across Viewports** (10 tests)
+1. **UI Element Visibility Across Viewports** (9 tests)
    - Tests each of 9 viewport sizes for core element visibility
    - Validates element bounding boxes and dimensions
    - Documents visibility issues for debugging
 
-2. **UI Element Overlay Detection** (10 tests)
+2. **UI Element Overlay Detection** (9 tests)
    - Detects overlapping UI components
    - Calculates overlap area and percentage
    - Distinguishes between acceptable minor overlaps and problematic major overlaps

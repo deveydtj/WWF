@@ -245,7 +245,7 @@ test.describe('UI Element Overlay Detection', () => {
           console.log(`   Overlap area: ${result.overlapArea}px²`);
           console.log(`   Dimensions: ${result.overlapDimensions.width}x${result.overlapDimensions.height}`);
           
-          // For non-strict pairs, only warn about significant overlaps (>10% of either element)
+          // For non-strict pairs, only warn about significant overlaps (>25% of either element)
           if (!pair.strict && result.box1 && result.box2) {
             const box1Area = result.box1.width * result.box1.height;
             const box2Area = result.box2.width * result.box2.height;
@@ -302,7 +302,7 @@ test.describe('Critical Breakpoint Behavior', () => {
       
       // Log breakpoint transition
       console.log(`\n${breakpoint.name} Transition:`);
-      for (const [key, selector] of Object.entries(UI_ELEMENTS)) {
+      for (const key of Object.keys(UI_ELEMENTS)) {
         const before = beforeLayout[key];
         const after = afterLayout[key];
         

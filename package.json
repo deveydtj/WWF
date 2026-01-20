@@ -41,7 +41,8 @@
     "doc": "docs",
     "test": "tests"
   },
-  "dependencies": {
-    "@playwright/test": "^1.57.0"
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "^1.55.1"
   }
 }
