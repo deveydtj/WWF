@@ -40,5 +40,9 @@
   "directories": {
     "doc": "docs",
     "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "^1.55.1"
   }
 }
