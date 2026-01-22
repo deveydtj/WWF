@@ -38,7 +38,7 @@
      ───────────────────────────────── */
   
   :root {
-    --desktop-panel-width: 240px;
+    --desktop-panel-width: clamp(200px, 18vw, 280px);
     --desktop-stamp-width: 60px;
     --desktop-header-height: 60px;
     --desktop-panel-max-height: calc(100vh - 160px);
@@ -133,6 +133,8 @@
     padding: calc(var(--desktop-header-height) + var(--desktop-grid-gap)) var(--desktop-grid-gap) var(--desktop-grid-gap);
     height: 100vh;
     width: 100%;
+    max-width: min(1400px, 100%);
+    margin: 0 auto;
     box-sizing: border-box;
     overflow: hidden;
     grid-template-areas: "left center right";
