@@ -1,0 +1,21 @@
+{
+  "viewport": {
+    "width": 768,
+    "height": 1024
+  },
+  "capturedAt": "2026-02-11T17:38:47.459Z",
+  "headings": {
+    "h1": {
+      "fontSize": 24,
+      "fontWeight": "600",
+      "lineHeight": "normal",
+      "count": 1
+    },
+    "h3": {
+      "fontSize": 18.72,
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "count": 8
+    }
+  }
+}

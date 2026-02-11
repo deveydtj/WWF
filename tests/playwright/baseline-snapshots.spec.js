@@ -1,0 +1,342 @@
+/**
+ * PR 0 – Baseline & Safety Net
+ * 
+ * Captures viewport snapshots and computed style fixtures at critical viewports
+ * to establish a baseline for all subsequent UI scaling improvements.
+ * 
+ * This test creates:
+ * 1. PNG screenshots at all specified viewports
+ * 2. JSON fixtures of computed styles and bounding boxes for:
+ *    - Primary content column (#appContainer)
+ *    - Header elements
+ *    - Footer elements
+ * 
+ * All artifacts are stored in tests/playwright/baseline/ and committed to git.
+ */
+
+const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Required viewport configurations from PR 0 specification
+ */
+const BASELINE_VIEWPORTS = [
+  { name: '320x568', width: 320, height: 568 },
+  { name: '375x667', width: 375, height: 667 },
+  { name: '600x900', width: 600, height: 900 },
+  { name: '768x1024', width: 768, height: 1024 },
+  { name: '769x1024', width: 769, height: 1024 },
+  { name: '900x900', width: 900, height: 900 },
+  { name: '1024x768', width: 1024, height: 768 },
+  { name: '1200x900', width: 1200, height: 900 },
+  { name: '1440x900', width: 1440, height: 900 },
+];
+
+/**
+ * Key UI elements to capture computed styles and bounding boxes
+ */
+const KEY_ELEMENTS = {
+  appContainer: '#appContainer',
+  titleBar: '#titleBar',
+  board: '#board',
+  keyboard: '#keyboard',
+  // Footer elements
+  chatBox: '#chatBox',
+  historyBox: '#historyBox',
+};
+
+/**
+ * Helper function to capture computed styles and bounding boxes
+ */
+async function captureElementData(page, selector) {
+  try {
+    const element = page.locator(selector);
+    const count = await element.count();
+    
+    if (count === 0) {
+      return { exists: false, selector };
+    }
+    
+    const isVisible = await element.isVisible();
+    const box = await element.boundingBox();
+    
+    // Capture computed styles
+    const computedStyles = await element.evaluate((el) => {
+      const styles = window.getComputedStyle(el);
+      return {
+        display: styles.display,
+        position: styles.position,
+        width: styles.width,
+        height: styles.height,
+        maxWidth: styles.maxWidth,
+        maxHeight: styles.maxHeight,
+        minWidth: styles.minWidth,
+        minHeight: styles.minHeight,
+        padding: styles.padding,
+        paddingTop: styles.paddingTop,
+        paddingRight: styles.paddingRight,
+        paddingBottom: styles.paddingBottom,
+        paddingLeft: styles.paddingLeft,
+        margin: styles.margin,
+        marginTop: styles.marginTop,
+        marginRight: styles.marginRight,
+        marginBottom: styles.marginBottom,
+        marginLeft: styles.marginLeft,
+        fontSize: styles.fontSize,
+        fontWeight: styles.fontWeight,
+        lineHeight: styles.lineHeight,
+        zIndex: styles.zIndex,
+      };
+    });
+    
+    return {
+      exists: true,
+      visible: isVisible,
+      boundingBox: box,
+      computedStyles,
+      selector,
+    };
+  } catch (error) {
+    return {
+      exists: false,
+      error: error.message,
+      selector,
+    };
+  }
+}
+
+/**
+ * Helper to ensure baseline directory exists
+ */
+function ensureBaselineDir() {
+  const baselineDir = path.join(__dirname, 'baseline');
+  if (!fs.existsSync(baselineDir)) {
+    fs.mkdirSync(baselineDir, { recursive: true });
+  }
+  return baselineDir;
+}
+
+// ============================================================================
+// Test Suite: Baseline Snapshots
+// ============================================================================
+
+test.describe('PR 0 - Baseline Viewport Snapshots', () => {
+  for (const viewport of BASELINE_VIEWPORTS) {
+    test(`Capture baseline at ${viewport.name}`, async ({ page }) => {
+      // Set viewport size
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      
+      // Navigate to game page
+      await page.goto('game.html');
+      await page.waitForLoadState('networkidle');
+      
+      // Wait a bit for any dynamic content to settle
+      await page.waitForTimeout(500);
+      
+      const baselineDir = ensureBaselineDir();
+      
+      // 1. Capture PNG screenshot
+      const screenshotPath = path.join(baselineDir, `${viewport.name}.png`);
+      await page.screenshot({
+        path: screenshotPath,
+        fullPage: true,
+      });
+      
+      console.log(`✓ Screenshot saved: ${screenshotPath}`);
+      
+      // 2. Capture computed styles and bounding boxes for key elements
+      const elementData = {};
+      
+      for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
+        elementData[key] = await captureElementData(page, selector);
+      }
+      
+      // Add viewport info
+      const fixtureData = {
+        viewport: {
+          width: viewport.width,
+          height: viewport.height,
+          name: viewport.name,
+        },
+        capturedAt: new Date().toISOString(),
+        elements: elementData,
+      };
+      
+      // 3. Save JSON fixture
+      const fixturePath = path.join(baselineDir, `${viewport.name}.json`);
+      fs.writeFileSync(fixturePath, JSON.stringify(fixtureData, null, 2));
+      
+      console.log(`✓ JSON fixture saved: ${fixturePath}`);
+      
+      // Verify that critical elements have expected properties
+      // (This doesn't assert specific values, just validates structure)
+      const appContainer = elementData.appContainer;
+      if (appContainer.exists) {
+        expect(appContainer.boundingBox).toBeTruthy();
+        expect(appContainer.computedStyles).toBeTruthy();
+      }
+    });
+  }
+});
+
+// ============================================================================
+// Test Suite: Baseline Heading Typography Hierarchy
+// ============================================================================
+
+test.describe('PR 0 - Baseline Typography Hierarchy', () => {
+  const TYPOGRAPHY_VIEWPORTS = [
+    { width: 320, height: 568 },
+    { width: 768, height: 1024 },
+    { width: 1200, height: 900 },
+  ];
+  
+  for (const viewport of TYPOGRAPHY_VIEWPORTS) {
+    test(`Capture heading typography at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('game.html');
+      await page.waitForLoadState('networkidle');
+      
+      // Capture font sizes for all headings
+      const headings = await page.evaluate(() => {
+        const headingSelectors = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+        const results = {};
+        
+        for (const selector of headingSelectors) {
+          const elements = document.querySelectorAll(selector);
+          if (elements.length > 0) {
+            const firstElement = elements[0];
+            const styles = window.getComputedStyle(firstElement);
+            results[selector] = {
+              fontSize: parseFloat(styles.fontSize),
+              fontWeight: styles.fontWeight,
+              lineHeight: styles.lineHeight,
+              count: elements.length,
+            };
+          }
+        }
+        
+        return results;
+      });
+      
+      const baselineDir = ensureBaselineDir();
+      const typographyPath = path.join(
+        baselineDir,
+        `typography-${viewport.width}x${viewport.height}.json`
+      );
+      
+      const typographyData = {
+        viewport,
+        capturedAt: new Date().toISOString(),
+        headings,
+      };
+      
+      fs.writeFileSync(typographyPath, JSON.stringify(typographyData, null, 2));
+      console.log(`✓ Typography data saved: ${typographyPath}`);
+      
+      // Verify heading hierarchy (if headings exist)
+      const headingSizes = Object.entries(headings)
+        .filter(([_, data]) => data.fontSize)
+        .map(([selector, data]) => ({ selector, fontSize: data.fontSize }))
+        .sort((a, b) => {
+          const orderA = parseInt(a.selector.substring(1));
+          const orderB = parseInt(b.selector.substring(1));
+          return orderA - orderB;
+        });
+      
+      // Log heading hierarchy (but don't assert in PR 0 - this is baseline capture)
+      for (let i = 0; i < headingSizes.length - 1; i++) {
+        const current = headingSizes[i];
+        const next = headingSizes[i + 1];
+        
+        const relation = current.fontSize >= next.fontSize ? '>=' : '<';
+        console.log(
+          `  ${current.selector}: ${current.fontSize}px ${relation} ${next.selector}: ${next.fontSize}px`
+        );
+      }
+    });
+  }
+});
+
+// ============================================================================
+// Test Suite: Baseline Element Transitions at Breakpoints
+// ============================================================================
+
+test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
+  // Test the specific adjacent width pairs from PR 3 acceptance criteria
+  const ADJACENT_PAIRS = [
+    { from: 320, to: 375 },
+    { from: 375, to: 600 },
+    { from: 600, to: 768 },
+    // Skip 768->769 as they straddle the CSS layout switch
+    { from: 769, to: 900 },
+    { from: 900, to: 1200 },
+  ];
+  
+  const HEIGHT = 900;
+  
+  for (const pair of ADJACENT_PAIRS) {
+    test(`Baseline transition ${pair.from}px → ${pair.to}px`, async ({ page }) => {
+      // Capture at first width
+      await page.setViewportSize({ width: pair.from, height: HEIGHT });
+      await page.goto('game.html');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(300);
+      
+      const elementsFrom = {};
+      for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
+        elementsFrom[key] = await captureElementData(page, selector);
+      }
+      
+      // Capture at second width
+      await page.setViewportSize({ width: pair.to, height: HEIGHT });
+      await page.waitForTimeout(300);
+      
+      const elementsTo = {};
+      for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
+        elementsTo[key] = await captureElementData(page, selector);
+      }
+      
+      const baselineDir = ensureBaselineDir();
+      const transitionPath = path.join(
+        baselineDir,
+        `transition-${pair.from}-to-${pair.to}.json`
+      );
+      
+      const transitionData = {
+        fromViewport: { width: pair.from, height: HEIGHT },
+        toViewport: { width: pair.to, height: HEIGHT },
+        capturedAt: new Date().toISOString(),
+        elements: {
+          from: elementsFrom,
+          to: elementsTo,
+        },
+      };
+      
+      fs.writeFileSync(transitionPath, JSON.stringify(transitionData, null, 2));
+      console.log(`✓ Transition data saved: ${transitionPath}`);
+      
+      // Calculate and log bounding box changes for primary elements
+      const primaryElements = ['appContainer', 'titleBar', 'keyboard'];
+      
+      for (const key of primaryElements) {
+        const fromData = elementsFrom[key];
+        const toData = elementsTo[key];
+        
+        if (fromData.exists && toData.exists && fromData.boundingBox && toData.boundingBox) {
+          const fromBox = fromData.boundingBox;
+          const toBox = toData.boundingBox;
+          
+          const changes = {
+            x: Math.abs(toBox.x - fromBox.x),
+            y: Math.abs(toBox.y - fromBox.y),
+            width: Math.abs(toBox.width - fromBox.width),
+            height: Math.abs(toBox.height - fromBox.height),
+          };
+          
+          console.log(`  ${key} changes: x=${changes.x}px, y=${changes.y}px, width=${changes.width}px, height=${changes.height}px`);
+        }
+      }
+    });
+  }
+});
