@@ -186,7 +186,7 @@ New tokens must **extend** the existing token system, not replace it:
 ## Acceptance Criteria
 - [x] No horizontal scroll ≤768px (Mobile Layout) - max-width: 100% applied to #appContainer in mobile-layout.css
 - [ ] No clipping when UI is scaled to 200% using the manual zoom procedure in [Manual 200% Zoom Check](#manual-200-zoom-check) - requires manual browser testing
-- [x] Snapshot diffs are limited to expected layout changes from updated `#appContainer` constraints on wide viewports (e.g., ≥1200px) - constraints applied as specified
+- [ ] Snapshot diffs are limited to expected layout changes from updated `#appContainer` constraints on wide viewports (e.g., ≥1200px) - to be validated via `npx playwright test` and snapshot review
 - [ ] Visual regression baseline is refreshed after verifying and approving the expected snapshot diffs for these containers/areas - requires Playwright test execution with system dependencies
 
 ### Manual 200% Zoom Check
