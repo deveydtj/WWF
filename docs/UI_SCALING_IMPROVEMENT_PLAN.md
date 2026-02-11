@@ -140,12 +140,14 @@ New tokens must **extend** the existing token system, not replace it:
 ## Commands
 - [x] `python -m pytest -v` (202/203 tests passed; 1 unrelated Docker timeout)
 - [x] `cd frontend && npm run build`
-- [x] `npx playwright test` (UI responsiveness tests: 28/28 passed; baseline snapshot tests blocked by test infrastructure issue)
+- [x] `npx playwright test ui-responsiveness.spec.js` (28/28 tests passed - verified layout behavior across all breakpoints)
+- [ ] `npx playwright test baseline-snapshots.spec.js` (blocked by test infrastructure issue - modal overlay prevented screenshot capture)
 
 ## Acceptance Criteria
-- [x] Desktop visually unchanged (validated against PR 0 snapshots)
-- [x] No snapshot diffs (compared to PR 0 baseline)
 - [x] Token *names* defined in ONE location only (`base.css`); breakpoint-specific overrides allowed in layout files
+- [x] UI responsiveness validated (28/28 tests passed: no overlap issues, proper viewport behavior)
+- [ ] Desktop visually unchanged (validated against PR 0 snapshots) - *baseline snapshot validation blocked; alternative: manual verification shows no visual changes from token additions*
+- [ ] No snapshot diffs (compared to PR 0 baseline) - *baseline snapshot tests did not run due to test infrastructure issue; tokens are additive with no applied visual changes*
 
 **Prerequisite:** PR 0 must be completed and snapshot tests passing before starting this PR.
 
