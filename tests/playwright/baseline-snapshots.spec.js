@@ -376,7 +376,7 @@ test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
 });
 
 // ============================================================================
-// Test Suite: Baseline Validation (Visual Regression)
+// Test Suite: Baseline Validation (Element Metrics Regression)
 // ============================================================================
 
 test.describe('PR 0 - Baseline Validation', () => {
@@ -424,9 +424,35 @@ test.describe('PR 0 - Baseline Validation', () => {
         const current = elementData[key];
         const baseline = baselineFixture.elements[key];
         
-        if (baseline && baseline.exists && current.exists) {
+        // Ensure we actually have baseline data for this key
+        expect(
+          baseline,
+          `Baseline data missing for key "${key}" in viewport "${viewport.name}". ` +
+            'Re-generate baselines if this element was newly added.'
+        ).toBeDefined();
+        
+        // Ensure element existence matches between baseline and current run
+        expect(
+          current.exists,
+          `Existence mismatch for key "${key}" in viewport "${viewport.name}": ` +
+            `baseline.exists=${baseline && baseline.exists}, current.exists=${current.exists}. ` +
+            'If this change is intentional, re-generate the baseline fixtures.'
+        ).toBe(baseline.exists);
+        
+        if (baseline.exists && current.exists) {
           // Verify element visibility hasn't changed unexpectedly
           expect(current.visible).toBe(baseline.visible);
+          
+          // Ensure bounding box presence parity
+          const baselineHasBox = !!baseline.boundingBox;
+          const currentHasBox = !!current.boundingBox;
+          
+          expect(
+            currentHasBox,
+            `Bounding box presence mismatch for key "${key}" in viewport "${viewport.name}": ` +
+              `baseline has boundingBox=${baselineHasBox}, current has boundingBox=${currentHasBox}. ` +
+              'If this element became non-rendered, re-generate the baseline fixtures.'
+          ).toBe(baselineHasBox);
           
           // Verify bounding box position and dimensions haven't changed significantly
           if (baseline.boundingBox && current.boundingBox) {
