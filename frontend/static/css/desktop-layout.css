@@ -175,7 +175,7 @@
     max-height: var(--desktop-panel-max-height);
     background: var(--bg-color);
     border-radius: 12px;
-    padding: 16px;
+    padding: var(--pad-x); /* Use token for consistent padding */
     box-shadow: 
       inset 2px 2px 4px var(--inset-shadow-dark),
       inset -2px -2px 4px var(--inset-shadow-light),
@@ -230,7 +230,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: clamp(12px, 2vw, 16px); /* Smooth transition from mobile 12px */
     width: 100%;
     max-width: var(--board-max-width);
     flex: 1;
@@ -245,8 +245,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-top: 8px;
+    gap: clamp(8px, 1.5vw, 12px); /* Smooth transition from mobile 8px */
+    margin-top: var(--kb-gap); /* Use token */
   }
   
   #gameTitle {
@@ -271,7 +271,7 @@
     display: flex;
     justify-content: center;
     position: relative;
-    padding: 16px;
+    padding: var(--pad-x); /* Use token */
     box-sizing: border-box;
   }
   
@@ -341,29 +341,29 @@
     flex: 1;
     min-width: 0;
     height: 48px;
-    font-size: 18px;
-    padding: 0 16px;
+    font-size: clamp(16px, 2.5vw, 18px); /* Smooth transition from mobile */
+    padding: 0 var(--pad-x); /* Use token */
   }
   
   #submitGuess {
     min-width: 100px;
     height: 48px;
-    font-size: 18px;
+    font-size: clamp(16px, 2.5vw, 18px); /* Smooth transition from mobile */
     font-weight: bold;
   }
   
   #holdReset {
     min-width: 80px;
     height: 48px;
-    font-size: 16px;
+    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition from mobile */
   }
   
   /* Message display */
   #message {
     text-align: center;
-    font-size: 16px;
+    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition from mobile */
     min-height: 24px;
-    margin: 8px 0;
+    margin: var(--kb-gap) 0; /* Use token */
   }
   
   /* ─────────────────────────────────
@@ -375,8 +375,8 @@
     max-width: var(--board-width);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 16px 0;
+    gap: var(--kb-gap); /* Use token */
+    padding: var(--pad-x) 0; /* Use token */
   }
   
   .keyboard-row {
@@ -390,7 +390,7 @@
     min-width: 0;
     max-width: 52px;
     height: 52px;
-    font-size: 16px;
+    font-size: clamp(14px, 2vw, 16px); /* Smooth transition */
     font-weight: bold;
     padding: 0;
     cursor: pointer;
@@ -423,7 +423,7 @@
     max-height: var(--desktop-panel-max-height);
     background: var(--bg-color);
     border-radius: 12px;
-    padding: 16px;
+    padding: var(--pad-x); /* Use token for consistent padding */
     box-shadow: 
       inset 2px 2px 4px var(--inset-shadow-dark),
       inset -2px -2px 4px var(--inset-shadow-light),
@@ -484,13 +484,13 @@
   #definitionClose,
   #chatClose {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: var(--kb-gap); /* Use token */
+    right: var(--kb-gap); /* Use token */
     width: 32px;
     height: 32px;
     min-width: 32px;
     padding: 0;
-    font-size: 16px;
+    font-size: clamp(14px, 2vw, 16px); /* Smooth transition */
     z-index: 10;
   }
   
@@ -499,27 +499,27 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    margin-bottom: 12px;
+    margin-bottom: clamp(8px, 1.5vw, 12px); /* Smooth transition */
   }
   
   /* Chat form */
   #chatForm {
     display: flex;
-    gap: 8px;
+    gap: var(--kb-gap); /* Use token */
   }
   
   #chatInput {
     flex: 1;
     min-width: 0;
     height: 40px;
-    font-size: 14px;
-    padding: 0 12px;
+    font-size: clamp(12px, 2vw, 14px); /* Smooth transition */
+    padding: 0 clamp(8px, 1.5vw, 12px); /* Smooth transition */
   }
   
   #chatSend {
     min-width: 60px;
     height: 40px;
-    font-size: 14px;
+    font-size: clamp(12px, 2vw, 14px); /* Smooth transition */
   }
   
   /* ─────────────────────────────────
