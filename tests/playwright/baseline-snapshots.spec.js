@@ -384,7 +384,13 @@ test.describe('PR 0 - Baseline Validation', () => {
   test.skip(GENERATE_BASELINE, 'Validation disabled in baseline generation mode');
   
   for (const viewport of BASELINE_VIEWPORTS) {
-    test(`Validate UI at ${viewport.name} matches baseline`, async ({ page }) => {
+    test(`Validate UI at ${viewport.name} matches baseline`, async ({ page }, testInfo) => {
+      // Only run validation on chromium since baseline was generated from chromium
+      if (testInfo.project.name !== 'chromium') {
+        test.skip();
+        return;
+      }
+      
       // Set viewport size
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       
@@ -414,7 +420,7 @@ test.describe('PR 0 - Baseline Validation', () => {
       const baselineFixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
       
       // 4. Compare critical element properties against baseline
-      for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
+      for (const key of Object.keys(KEY_ELEMENTS)) {
         const current = elementData[key];
         const baseline = baselineFixture.elements[key];
         
@@ -422,12 +428,16 @@ test.describe('PR 0 - Baseline Validation', () => {
           // Verify element visibility hasn't changed unexpectedly
           expect(current.visible).toBe(baseline.visible);
           
-          // Verify bounding box dimensions haven't changed significantly
+          // Verify bounding box position and dimensions haven't changed significantly
           if (baseline.boundingBox && current.boundingBox) {
+            const xDiff = Math.abs(current.boundingBox.x - baseline.boundingBox.x);
+            const yDiff = Math.abs(current.boundingBox.y - baseline.boundingBox.y);
             const widthDiff = Math.abs(current.boundingBox.width - baseline.boundingBox.width);
             const heightDiff = Math.abs(current.boundingBox.height - baseline.boundingBox.height);
             
             // Allow up to 2px difference for rendering variations across runs
+            expect(xDiff).toBeLessThanOrEqual(2);
+            expect(yDiff).toBeLessThanOrEqual(2);
             expect(widthDiff).toBeLessThanOrEqual(2);
             expect(heightDiff).toBeLessThanOrEqual(2);
           }
