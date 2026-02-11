@@ -4,7 +4,7 @@
     "height": 768,
     "name": "1024x768"
   },
-  "capturedAt": "2026-02-11T17:38:42.857Z",
+  "capturedAt": "2026-02-11T17:40:03.649Z",
   "elements": {
     "appContainer": {
       "exists": true,
@@ -29,7 +29,7 @@
         "paddingRight": "16px",
         "paddingBottom": "14px",
         "paddingLeft": "16px",
-        "margin": "0px auto",
+        "margin": "0px 22px",
         "marginTop": "0px",
         "marginRight": "22px",
         "marginBottom": "0px",
@@ -46,7 +46,7 @@
       "visible": false,
       "boundingBox": {
         "x": 262,
-        "y": 182.8000030517578,
+        "y": 180.78125,
         "width": 500,
         "height": 0
       },
@@ -78,18 +78,18 @@
     },
     "board": {
       "exists": true,
-      "visible": true,
+      "visible": false,
       "boundingBox": {
-        "x": 345,
-        "y": 219.8000030517578,
-        "width": 334,
-        "height": 452.99998474121094
+        "x": 388,
+        "y": 217.78125,
+        "width": 248,
+        "height": 0
       },
       "computedStyles": {
         "display": "grid",
         "position": "static",
-        "width": "334px",
-        "height": "453px",
+        "width": "248px",
+        "height": "0px",
         "maxWidth": "100%",
         "maxHeight": "none",
         "minWidth": "auto",
@@ -115,17 +115,17 @@
       "exists": true,
       "visible": true,
       "boundingBox": {
-        "x": 329,
-        "y": 824.7999877929688,
-        "width": 366,
-        "height": 204.00006103515625
+        "x": 381.765625,
+        "y": 369.78125,
+        "width": 260.46875,
+        "height": 204
       },
       "computedStyles": {
         "display": "flex",
         "position": "relative",
-        "width": "366px",
+        "width": "260.469px",
         "height": "172px",
-        "maxWidth": "366px",
+        "maxWidth": "260.48px",
         "maxHeight": "none",
         "minWidth": "auto",
         "minHeight": "auto",
@@ -134,11 +134,11 @@
         "paddingRight": "0px",
         "paddingBottom": "16px",
         "paddingLeft": "0px",
-        "margin": "0px auto",
+        "margin": "0px 119.766px",
         "marginTop": "0px",
-        "marginRight": "67px",
+        "marginRight": "119.766px",
         "marginBottom": "0px",
-        "marginLeft": "67px",
+        "marginLeft": "119.766px",
         "fontSize": "16px",
         "fontWeight": "400",
         "lineHeight": "normal",

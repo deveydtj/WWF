@@ -7,7 +7,7 @@
     "width": 375,
     "height": 900
   },
-  "capturedAt": "2026-02-11T17:38:49.928Z",
+  "capturedAt": "2026-02-11T17:40:09.206Z",
   "elements": {
     "from": {
       "appContainer": {
@@ -33,7 +33,7 @@
           "paddingRight": "16px",
           "paddingBottom": "14px",
           "paddingLeft": "16px",
-          "margin": "0px auto",
+          "margin": "0px",
           "marginTop": "0px",
           "marginRight": "0px",
           "marginBottom": "0px",
@@ -47,18 +47,18 @@
       },
       "titleBar": {
         "exists": true,
-        "visible": true,
+        "visible": false,
         "boundingBox": {
           "x": 24,
-          "y": 225.8000030517578,
+          "y": 179.78125,
           "width": 288,
-          "height": 19
+          "height": 0
         },
         "computedStyles": {
           "display": "flex",
           "position": "relative",
           "width": "288px",
-          "height": "19px",
+          "height": "0px",
           "maxWidth": "none",
           "maxHeight": "none",
           "minWidth": "auto",
@@ -85,15 +85,15 @@
         "visible": true,
         "boundingBox": {
           "x": 28,
-          "y": 265.79998779296875,
+          "y": 200.78125,
           "width": 280,
-          "height": 348
+          "height": 336
         },
         "computedStyles": {
           "display": "grid",
           "position": "static",
           "width": "280px",
-          "height": "348px",
+          "height": "336px",
           "maxWidth": "100%",
           "maxHeight": "none",
           "minWidth": "auto",
@@ -138,7 +138,7 @@
           "paddingRight": "8px",
           "paddingBottom": "8px",
           "paddingLeft": "8px",
-          "margin": "0px auto",
+          "margin": "0px -16px 0px 0px",
           "marginTop": "0px",
           "marginRight": "-16px",
           "marginBottom": "0px",
@@ -245,7 +245,7 @@
           "paddingRight": "16px",
           "paddingBottom": "14px",
           "paddingLeft": "16px",
-          "margin": "0px auto",
+          "margin": "0px",
           "marginTop": "0px",
           "marginRight": "0px",
           "marginBottom": "0px",
@@ -259,18 +259,18 @@
       },
       "titleBar": {
         "exists": true,
-        "visible": true,
+        "visible": false,
         "boundingBox": {
           "x": 24,
-          "y": 225.8000030517578,
+          "y": 179.78125,
           "width": 343,
-          "height": 20
+          "height": 0
         },
         "computedStyles": {
           "display": "flex",
           "position": "relative",
           "width": "343px",
-          "height": "20px",
+          "height": "0px",
           "maxWidth": "none",
           "maxHeight": "none",
           "minWidth": "auto",
@@ -297,15 +297,15 @@
         "visible": true,
         "boundingBox": {
           "x": 28,
-          "y": 266.79998779296875,
+          "y": 200.78125,
           "width": 335,
-          "height": 418.08331298828125
+          "height": 402
         },
         "computedStyles": {
           "display": "grid",
           "position": "static",
           "width": "335px",
-          "height": "418.083px",
+          "height": "402px",
           "maxWidth": "100%",
           "maxHeight": "none",
           "minWidth": "auto",
@@ -350,7 +350,7 @@
           "paddingRight": "8px",
           "paddingBottom": "8px",
           "paddingLeft": "8px",
-          "margin": "0px auto",
+          "margin": "0px -16px 0px 0px",
           "marginTop": "0px",
           "marginRight": "-16px",
           "marginBottom": "0px",

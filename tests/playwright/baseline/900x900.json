@@ -4,7 +4,7 @@
     "height": 900,
     "name": "900x900"
   },
-  "capturedAt": "2026-02-11T17:38:41.343Z",
+  "capturedAt": "2026-02-11T17:40:02.411Z",
   "elements": {
     "appContainer": {
       "exists": true,
@@ -29,7 +29,7 @@
         "paddingRight": "16px",
         "paddingBottom": "14px",
         "paddingLeft": "16px",
-        "margin": "0px auto",
+        "margin": "0px",
         "marginTop": "0px",
         "marginRight": "0px",
         "marginBottom": "0px",
@@ -46,7 +46,7 @@
       "visible": false,
       "boundingBox": {
         "x": 200,
-        "y": 182.8000030517578,
+        "y": 180.78125,
         "width": 500,
         "height": 0
       },
@@ -78,18 +78,18 @@
     },
     "board": {
       "exists": true,
-      "visible": true,
+      "visible": false,
       "boundingBox": {
-        "x": 279,
-        "y": 219.8000030517578,
-        "width": 342,
-        "height": 462.99998474121094
+        "x": 326,
+        "y": 217.78125,
+        "width": 248,
+        "height": 0
       },
       "computedStyles": {
         "display": "grid",
         "position": "static",
-        "width": "342px",
-        "height": "463px",
+        "width": "248px",
+        "height": "0px",
         "maxWidth": "100%",
         "maxHeight": "none",
         "minWidth": "auto",
@@ -115,17 +115,17 @@
       "exists": true,
       "visible": true,
       "boundingBox": {
-        "x": 263,
-        "y": 754.7999877929688,
-        "width": 374,
+        "x": 321,
+        "y": 369.78125,
+        "width": 258,
         "height": 204
       },
       "computedStyles": {
         "display": "flex",
         "position": "relative",
-        "width": "374px",
+        "width": "258px",
         "height": "172px",
-        "maxWidth": "374px",
+        "maxWidth": "258px",
         "maxHeight": "none",
         "minWidth": "auto",
         "minHeight": "auto",
@@ -134,11 +134,11 @@
         "paddingRight": "0px",
         "paddingBottom": "16px",
         "paddingLeft": "0px",
-        "margin": "0px auto",
+        "margin": "0px 121px",
         "marginTop": "0px",
-        "marginRight": "63px",
+        "marginRight": "121px",
         "marginBottom": "0px",
-        "marginLeft": "63px",
+        "marginLeft": "121px",
         "fontSize": "16px",
         "fontWeight": "400",
         "lineHeight": "normal",
