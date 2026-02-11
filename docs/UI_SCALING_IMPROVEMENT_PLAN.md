@@ -175,7 +175,7 @@ New tokens must **extend** the existing token system, not replace it:
 ## Tasks
 - [x] Apply the `#appContainer` max-width behavior: remove the 980px cap, use `max-width: 1600px` for ultra-wide displays, and `max-width: 100%` for mobile viewports (≤768px)
 - [x] Add `min-width` to prevent collapse (if not already present)
-- [x] Add `min-height` where clipping occurs (modal boxes now have max-height: 90vh)
+- [x] Prevent modal clipping by constraining height (modal boxes now have max-height: 90vh)
 - [x] Prefer `%`, `rem`, `vh`, `vw` (using min() function with vw units for modal boxes)
 
 ## Commands
