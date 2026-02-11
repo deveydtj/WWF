@@ -84,10 +84,15 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
   - 1024×768
   - 1200×900
   - 1440×900
-- [ ] Update `.gitignore` to allowlist Playwright snapshots (e.g., `!tests/playwright/**/*.png`) so golden images can be committed
-- [ ] Commit golden images
+- [ ] Capture JSON fixtures of computed styles and bounding boxes for primary content column, header, and footer at all viewport widths listed above (required for PR 3 validation)
+- [ ] Store all baseline artifacts (screenshots + JSON) in `tests/playwright/baseline/` directory (create if it doesn't exist)
+- [ ] Update `.gitignore` to allowlist Playwright snapshots so golden images can be committed. Add negation rules **after** the existing `test-results/` and `*.png` entries, for example:
+  - `!tests/playwright/**/*.png`
+  - `!tests/playwright/baseline/**/*.json`
 
-**Note:** The repo's `.gitignore` currently ignores all `*.png` files and `test-results/`. You must allowlist the Playwright snapshot directory to commit golden images.
+**Note:** The repo's `.gitignore` currently ignores all `*.png` files (line 56) and `test-results/` (line 55). Because `.gitignore` is order-sensitive, any negation patterns for Playwright snapshots must be placed *after* these ignore rules or they will not take effect.
+
+- [ ] Commit golden images and JSON fixtures
 
 ## Commands
 - [ ] `npx playwright install` (install browsers if needed)
@@ -156,7 +161,8 @@ New tokens must **extend** the existing token system, not replace it:
 
 ## Explicit Targets (ONLY THESE)
 - Main app container (`#appContainer`)
-  - **Note:** `#appContainer` already has `max-width: 980px` in `base.css` with documented rationale (readability, reference layout matching). **Decision criteria:** Remove if goal is full-width scaling on ultra-wide displays; keep if maintaining centered content with readable line lengths; override per-breakpoint if different behavior needed for mobile vs desktop.
+  - **Note:** `#appContainer` already has `max-width: 980px` in `base.css` with documented rationale (readability, reference layout matching).
+  - **DECISION FOR THIS PLAN:** Remove the existing `max-width: 980px` constraint and replace with a larger cap of `max-width: 1600px` to enable scaling on ultra-wide displays (per original problem statement: "hard width caps prevent ultra-wide scaling") while maintaining a reasonable upper bound for extreme displays. Mobile viewports (≤768px) should use `max-width: 100%` to fill available space.
 - Modal wrapper (`.modal`, `#emojiModal`, etc. in modals.css)
 - Main grid layout container (`#mainGrid` – desktop three-column layout)
 - Primary side panel (panels in layout files)
@@ -220,7 +226,7 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 - [ ] `npx playwright test`
 
 ## Acceptance Criteria
-- [ ] At viewport widths **320px, 375px, 600px, 768px, 769px, 900px, and 1200px**, Playwright tests capture the bounding boxes (`x`, `y`, `width`, `height`) of the primary content column, header, and footer, and the change in any of these values between adjacent widths does not exceed **10px**
+- [ ] At viewport widths **320px, 375px, 600px, 768px, 769px, 900px, and 1200px**, Playwright tests capture the bounding boxes (`x`, `y`, `width`, `height`) of the primary content column, header, and footer. For the purposes of this plan, **"adjacent widths"** means consecutive breakpoint groups in the ordered sequence **320px → 375px → 600px → 768px/769px → 900px → 1200px**. Treat **768px and 769px as a single breakpoint group** (no assertion is required between 768px and 769px themselves). The change in any of the captured bounding box values between each pair of adjacent breakpoint groups in this sequence must not exceed **10px**
 - [ ] Responsive spacing and typography changes across the viewport widths listed above avoid hard-coded pixel jumps, using fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for the transitions (verified via CSS inspection and Playwright assertions on computed styles)
 - [ ] **Baseline definition:** The "approved baseline" for bounding boxes, typography, and visual regressions is the set of Playwright artifacts (PNG snapshots and JSON fixtures of computed styles/bounding boxes) generated in **PR 0 – Foundation** at the viewport widths listed above and checked into `tests/playwright/baseline/`
 - [ ] At viewport widths **320px, 768px, and 1200px**, Playwright typography tests confirm that the computed font-sizes for headings preserve hierarchy (`h1` ≥ `h2` ≥ `h3` ≥ `h4`), and each heading's computed font-size stays within **±2px** of the approved baseline defined above
@@ -252,31 +258,37 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 - [ ] `npx playwright test --project=mobile-chrome --project=mobile-safari`
 
 ## Acceptance Criteria
-- [ ] All primary actions reachable one-handed
-- [ ] No element hidden behind notch/keyboard
+- [ ] All targeted buttons (primary navigation, form submit, icon-only) are within the bottom 75% of the mobile viewport height (viewports ≤ 768px wide) and have minimum 44px tap targets
+- [ ] No element hidden behind notch/keyboard (manual on-device QA on iPhone 12+ and representative Android device; not deterministically covered by Playwright tests)
 
 ---
 
 # ✅ PR 5 – Validation Matrix & Final QA
 
 ## Scope Boundary
-**Read-only except tests**
-- `tests/**`
+- You may modify files only under `tests/**`.
+- `tests/**` explicitly includes test artifacts/snapshots (e.g., Jest/Playwright snapshots, golden images).
+- Do **not** change test *code* in this PR; only allow snapshot/artifact updates produced by running the approved test commands.
 
 ## Tasks
 - [ ] Run full test suite
 - [ ] Validate viewport matrix below
-- [ ] Update snapshots ONLY if expected
+- [ ] Update existing snapshots under `tests/**` **only** when diffs are:
+      - caused by expected, previously-approved UI/layout changes from earlier UI scaling PRs (PRs 1–4), and
+      - limited to snapshot/golden artifact content (no new test files, no structural test code changes).
 
 ## Viewport Validation Matrix
 
-| Viewport (W×H) | Zoom | Pass |
-|----------------|------|------|
-| 375×667        | 100% | [ ] |
-| 375×667        | 200% | [ ] |
-| 768×1024       | 100% | [ ] |
-| 1024×768       | 125% | [ ] |
-| 1440×900       | 100% | [ ] |
+> **Zoom definition for tests:** Playwright **does not support true browser zoom** (Ctrl/Cmd + / -).  
+> For this matrix, the "Zoom" values MUST be implemented as **scale / device pixel ratio (DPR) emulation** or equivalent layout checks in Playwright, **not** as real browser zoom.
+
+| Viewport (W×H) | Zoom (DPR emulation) | Pass |
+|----------------|----------------------|------|
+| 375×667        | 100%                 | [ ] |
+| 375×667        | 200%                 | [ ] |
+| 768×1024       | 100%                 | [ ] |
+| 1024×768       | 125%                 | [ ] |
+| 1440×900       | 100%                 | [ ] |
 
 ## Commands
 - [ ] `python -m pytest -v`
