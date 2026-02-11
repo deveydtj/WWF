@@ -150,8 +150,20 @@ test.describe('PR 0 - Baseline Viewport Snapshots', () => {
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
       
-      // Wait a bit for any dynamic content to settle
-      await page.waitForTimeout(500);
+      // Ensure the initial waiting overlay is not present in baseline captures
+      // main.js shows #waitingOverlay on load and auto-hides it after ~4s or on user dismissal.
+      // Try to dismiss it explicitly, then wait for it to become hidden, but don't fail if it never existed.
+      await page.evaluate(() => {
+        const dismissButton = document.querySelector('#waitingDismiss');
+        if (dismissButton instanceof HTMLElement && !dismissButton.hasAttribute('disabled')) {
+          dismissButton.click();
+        }
+      });
+      try {
+        await page.waitForSelector('#waitingOverlay', { state: 'hidden', timeout: 5000 });
+      } catch (e) {
+        // If the overlay never appears or is already gone, ignore the timeout and proceed.
+      }
       
       const baselineDir = ensureBaselineDir();
       
@@ -223,6 +235,14 @@ test.describe('PR 0 - Baseline Typography Hierarchy', () => {
       await page.setViewportSize(viewport);
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
+      
+      // Wait for waiting overlay to be dismissed before capturing typography
+      try {
+        const waitingOverlay = page.locator('#waitingOverlay');
+        await waitingOverlay.waitFor({ state: 'hidden', timeout: 10000 });
+      } catch (e) {
+        // Proceed if overlay never appears or is already gone
+      }
       
       // Capture font sizes for all headings
       const headings = await page.evaluate(() => {
@@ -316,7 +336,14 @@ test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
       await page.setViewportSize({ width: pair.from, height: HEIGHT });
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(300);
+      
+      // Wait for waiting overlay to be dismissed before capturing metrics
+      try {
+        const waitingOverlay = page.locator('#waitingOverlay');
+        await waitingOverlay.waitFor({ state: 'hidden', timeout: 10000 });
+      } catch (e) {
+        // Proceed if overlay never appears or is already gone
+      }
       
       const elementsFrom = {};
       for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
@@ -398,8 +425,14 @@ test.describe('PR 0 - Baseline Validation', () => {
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
       
-      // Wait a bit for any dynamic content to settle
-      await page.waitForTimeout(500);
+      // Wait for the initial waiting overlay (if present) to be dismissed
+      // This ensures we capture element metrics in a stable, steady-state UI
+      try {
+        const waitingOverlay = page.locator('#waitingOverlay');
+        await waitingOverlay.waitFor({ state: 'hidden', timeout: 10000 });
+      } catch (e) {
+        // If overlay never appears or is already gone, proceed
+      }
       
       const baselineDir = path.join(__dirname, 'baseline');
       
