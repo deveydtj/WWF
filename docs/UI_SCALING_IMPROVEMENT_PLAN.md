@@ -33,7 +33,7 @@ Unchecked boxes = incomplete work.
 - ❌ No new breakpoints
 - ❌ No layout re-architecture
 - ❌ No new container queries (existing `container-type: inline-size` on `#appContainer` in `base.css` is allowed)
-- ❌ No additional JS resize / keyboard listeners (existing listeners in `appInitializer.js` calling `recalculateScaling()` are allowed but MUST NOT be duplicated or extended)
+- ❌ No additional JS resize / keyboard listeners (existing listeners in `appInitializer.js` calling `recalculateScaling()` and in the responsive scaling system via `initializeResponsiveScaling()` in `responsiveScaling.js` are allowed but MUST NOT be duplicated or extended)
 - ❌ No animation changes
 
 If a task requires violating these → **STOP AND ESCALATE**
@@ -202,7 +202,7 @@ New tokens must **extend** the existing token system, not replace it:
 ## Commands
 - [ ] `python -m pytest -v`
 - [ ] `cd frontend && npm run build`
-- [ ] `npx playwright test --update-snapshots`
+- [ ] `npx playwright test`
 
 ## Acceptance Criteria
 - [ ] During continuous resize from 320px–1200px, no single layout shift (change in position or size) for the primary content column, header, or footer exceeds 10px at any breakpoint boundary
@@ -229,7 +229,7 @@ New tokens must **extend** the existing token system, not replace it:
 
 ## Tasks
 - [ ] Enforce 44px minimum tap target on buttons (in `buttons.css` and/or `mobile-layout.css`)
-- [ ] Verify existing safe-area padding (via `env(safe-area-inset-*)`) on `#appContainer` in `base.css` and on the specific mobile elements in `mobile-layout.css` before making changes. Safe-area insets are already applied to `#appContainer` padding in `base.css` (lines 118–122) and to targeted mobile elements in `mobile-layout.css` (e.g., lines 62, 114, 698, 713). Only increase these values if necessary; do **not** duplicate the `env()` padding on the same element (avoid adding a second safe-area layer).
+- [ ] Verify existing safe-area padding (via `env(safe-area-inset-*)`) on `#appContainer` in `base.css` and on the specific mobile elements in `mobile-layout.css` before making changes. Safe-area insets are already applied to `#appContainer` padding in `base.css` and to targeted mobile elements in `mobile-layout.css` (search for `env(safe-area-inset` and selectors such as `#appContainer`, `#lobbyHeader`, and bottom navigation/toolbars). Only increase these values if necessary; do **not** duplicate the `env()` padding on the same element (avoid adding a second safe-area layer).
 - [ ] Prevent keyboard overlap primarily via CSS (e.g., use `env(keyboard-inset-height)` and sufficient bottom padding on scrollable containers); you MAY rely on existing `detectVirtualKeyboard` behavior in `enhancedScaling.js` but MUST NOT add new resize/keyboard listeners
 
 ## Commands
