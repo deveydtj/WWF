@@ -227,11 +227,12 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 - [x] `python -m pytest -v` (202 passed, 1 Docker timeout unrelated)
 - [x] `cd frontend && npm run build` (completed successfully)
 - [x] `npx playwright install chromium` (browsers installed)
+- [ ] `npx playwright test` (not yet run; Playwright validation pending for this PR)
 
 ## Acceptance Criteria
-- [x] Responsive spacing and typography changes across the viewport widths avoid hard-coded pixel jumps, using fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for the transitions (verified via CSS inspection)
-- [x] All spacing values now use existing tokens (--pad-x, --pad-y, --kb-gap) or fluid clamp() functions for smooth transitions
-- [x] Typography uses clamp() for smooth transitions between mobile and desktop breakpoints
+- [x] For the **root layout container, primary content column, and global header/footer only**, responsive spacing and typography changes across the specified viewport widths avoid hard-coded pixel jumps, using fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for the transitions (verified via CSS inspection)
+- [x] Within the updated rules for the root layout container, primary content column, and global header/footer, spacing values now use existing tokens (`--pad-x`, `--pad-y`, `--kb-gap`) or fluid `clamp()` functions for smooth transitions (no new hard-coded `px` spacing introduced in these scopes)
+- [x] Typography within the primary content column and global header/footer that is updated in this PR uses `clamp()` for smooth transitions between mobile and desktop breakpoints
 - [x] Root layout container, primary content column, and global header/footer spacing all use consistent token-based values
 - [ ] At viewport widths **320px, 375px, 600px, 768px, 769px, 900px, and 1200px**, Playwright tests capture the bounding boxes (`x`, `y`, `width`, `height`) of the primary content column, header, and footer. For the purposes of this plan, **"adjacent widths"** means the following specific comparisons: **320px→375px**, **375px→600px**, **600px→768px**, **769px→900px**, and **900px→1200px**. Note that **768px and 769px intentionally straddle the CSS layout switch** (mobile-layout.css vs desktop-layout.css), so the comparison explicitly skips from 600px to 768px (mobile side) and from 769px to 900px (desktop side), with **no assertion between 768px and 769px themselves**. The change in any of the captured bounding box values between each specified adjacent pair must not exceed **10px** - *Requires Playwright test execution with live server*
 - [ ] **Baseline definition:** The "approved baseline" for bounding boxes, typography, and visual regressions is the set of Playwright artifacts (PNG snapshots and JSON fixtures of computed styles/bounding boxes) generated in **PR 0 – Foundation** at the viewport widths listed above and checked into `tests/playwright/baseline/` - *Baseline exists and is referenced*

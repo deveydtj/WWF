@@ -276,7 +276,7 @@
     flex: 1;
     min-width: 0;
     height: 44px;
-    font-size: clamp(14px, 3vw, 16px); /* Smooth transition to desktop */
+    font-size: clamp(16px, 3vw, 18px); /* Min 16px to avoid iOS zoom; still slightly fluid */
     padding: 0 clamp(12px, 2vw, 16px); /* Smooth transition to desktop */
   }
   
@@ -458,7 +458,7 @@
     flex: 1;
     min-width: 0;
     height: 44px;
-    font-size: clamp(14px, 3vw, 16px); /* Smooth transition to desktop */
+    font-size: clamp(16px, 3vw, 18px); /* Min 16px to avoid iOS zoom; still slightly fluid */
     padding: 0 clamp(12px, 2vw, 16px); /* Smooth transition to desktop */
   }
   
