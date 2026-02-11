@@ -45,14 +45,24 @@
   --current-scale-factor: 1;
   --current-tile-size: var(--tile-size);
   
+  /* Semantic scale tokens - derived from --ui-scale / --current-scale-factor
+   * These are size tiers for typography, spacing, and component sizing
+   * Values are overridden per breakpoint in mobile-layout.css and desktop-layout.css
+   */
+  --scale-xxs: 0.75;  /* Extra extra small - for very compact elements */
+  --scale-xs: 0.875;  /* Extra small - for small text, tight spacing */
+  --scale-sm: 1;      /* Small - for secondary UI elements */
+  --scale-md: 1.125;  /* Medium - baseline/default scale */
+  --scale-lg: 1.25;   /* Large - for prominent elements */
+  
   /* Shared spacing tokens */
   --component-gap: clamp(0.25rem, 1vw, 1rem);
-  --component-gap-tight: calc(var(--component-gap) * 0.6);
-  --input-inline-gap: calc(var(--tile-gap) * 2);
+  --component-gap-tight: calc(var(--component-gap) * var(--scale-xs));
+  --input-inline-gap: calc(var(--tile-gap) * var(--scale-md));
   
   /* Uniform button sizing - ensures buttons are same size */
-  --uniform-button-width: max(calc(var(--tile-size) * 1.8), var(--min-touch-target));
-  --uniform-button-height: max(calc(var(--tile-size) * 0.8), var(--min-touch-target));
+  --uniform-button-width: max(calc(var(--tile-size) * var(--scale-lg)), var(--min-touch-target));
+  --uniform-button-height: max(calc(var(--tile-size) * var(--scale-sm)), var(--min-touch-target));
   
   /* Modern viewport support with dvh */
   --viewport-height: 100vh;

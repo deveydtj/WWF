@@ -33,6 +33,19 @@
 
 @media (max-width: 768px) {
   /* ─────────────────────────────────
+     Mobile Scale Token Overrides
+     ───────────────────────────────── */
+  
+  :root {
+    /* Mobile scale values - slightly smaller for space efficiency */
+    --scale-xxs: 0.7;   /* Extra extra small */
+    --scale-xs: 0.8;    /* Extra small */
+    --scale-sm: 0.9;    /* Small */
+    --scale-md: 1;      /* Medium - baseline */
+    --scale-lg: 1.1;    /* Large */
+  }
+  
+  /* ─────────────────────────────────
      Container Setup - Flexbox Vertical
      ───────────────────────────────── */
   
@@ -672,6 +685,15 @@
    ═══════════════════════════════════ */
 
 @media (max-width: 375px) {
+  /* Very small mobile scale values - even more compact */
+  :root {
+    --scale-xxs: 0.65;  /* Extra extra small */
+    --scale-xs: 0.75;   /* Extra small */
+    --scale-sm: 0.85;   /* Small */
+    --scale-md: 0.95;   /* Medium - slightly reduced baseline */
+    --scale-lg: 1.05;   /* Large */
+  }
+  
   /* Tighter spacing for small screens */
   #board {
     gap: clamp(3px, 1.5vw, 6px);
