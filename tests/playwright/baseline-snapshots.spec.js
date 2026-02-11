@@ -441,7 +441,11 @@ test.describe('PR 0 - Baseline Validation', () => {
         
         if (baseline.exists && current.exists) {
           // Verify element visibility hasn't changed unexpectedly
-          expect(current.visible).toBe(baseline.visible);
+          expect(
+            current.visible,
+            `Visibility mismatch for key "${key}" in viewport "${viewport.name}": ` +
+              `baseline.visible=${baseline.visible}, current.visible=${current.visible}.`
+          ).toBe(baseline.visible);
           
           // Ensure bounding box presence parity
           const baselineHasBox = !!baseline.boundingBox;
@@ -462,10 +466,29 @@ test.describe('PR 0 - Baseline Validation', () => {
             const heightDiff = Math.abs(current.boundingBox.height - baseline.boundingBox.height);
             
             // Allow up to 2px difference for rendering variations across runs
-            expect(xDiff).toBeLessThanOrEqual(2);
-            expect(yDiff).toBeLessThanOrEqual(2);
-            expect(widthDiff).toBeLessThanOrEqual(2);
-            expect(heightDiff).toBeLessThanOrEqual(2);
+            expect(
+              xDiff,
+              `X position regression for key "${key}" in viewport "${viewport.name}": ` +
+                `baseline.x=${baseline.boundingBox.x}, current.x=${current.boundingBox.x}, diff=${xDiff}px (tolerance: 2px).`
+            ).toBeLessThanOrEqual(2);
+            
+            expect(
+              yDiff,
+              `Y position regression for key "${key}" in viewport "${viewport.name}": ` +
+                `baseline.y=${baseline.boundingBox.y}, current.y=${current.boundingBox.y}, diff=${yDiff}px (tolerance: 2px).`
+            ).toBeLessThanOrEqual(2);
+            
+            expect(
+              widthDiff,
+              `Width regression for key "${key}" in viewport "${viewport.name}": ` +
+                `baseline.width=${baseline.boundingBox.width}, current.width=${current.boundingBox.width}, diff=${widthDiff}px (tolerance: 2px).`
+            ).toBeLessThanOrEqual(2);
+            
+            expect(
+              heightDiff,
+              `Height regression for key "${key}" in viewport "${viewport.name}": ` +
+                `baseline.height=${baseline.boundingBox.height}, current.height=${current.boundingBox.height}, diff=${heightDiff}px (tolerance: 2px).`
+            ).toBeLessThanOrEqual(2);
           }
         }
       }

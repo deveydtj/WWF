@@ -87,7 +87,7 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 - [x] Capture JSON fixtures of computed styles and bounding boxes for primary content column, header, and footer at all viewport widths listed above (required for PR 3 validation)
 - [x] Store all baseline artifacts (screenshots + JSON) in `tests/playwright/baseline/` directory (create if it doesn't exist)
 - [x] Update `.gitignore` to allowlist Playwright snapshots so golden images can be committed. Add negation rules **after** the existing `test-results/` and `*.png` entries, for example:
-  - `!tests/playwright/**/*.png`
+  - `!tests/playwright/baseline/**/*.png`
   - `!tests/playwright/baseline/**/*.json`
 
 **Note:** The repo's `.gitignore` currently ignores `test-results/` and all `*.png` files. Because `.gitignore` is order-sensitive, any negation patterns for Playwright snapshots must be placed *after* these existing ignore rules or they will not take effect.
@@ -97,8 +97,8 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 ## Commands
 - [x] `npm install` (install dependencies at repo root)
 - [x] `npx playwright install` (install browsers if needed)
-- [x] `npx playwright test`
-- [x] `npx playwright test --update-snapshots`
+- [x] `npx playwright test` (run validation tests)
+- [x] `GENERATE_BASELINE=1 npx playwright test baseline-snapshots.spec.js --project=chromium` (regenerate baseline artifacts)
 
 ## Acceptance Criteria
 - [x] All tests pass
