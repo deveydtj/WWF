@@ -11,7 +11,7 @@ Agents MUST follow the rails defined in each PR.
 ## How Agents Should Use This File
 
 1. Pick **one PR section only**
-2. Create a branch named exactly: `ui-scaling/pr-X`
+2. Create a branch following repo convention: `feat/ui-scaling-pr-X` or `fix/ui-scaling-pr-X`
 3. Edit **only the files explicitly listed**
 4. Check off tasks as completed
 5. Stop immediately when acceptance criteria are met
@@ -37,11 +37,9 @@ If a task requires violating these → **STOP AND ESCALATE**
 ## Allowed Breakpoints (Read-Only)
 
 ```
-≤480px
-481–768px
-769–1024px
-1025–1440px
-≥1441px
+Light Mode: ≤600px
+Medium Mode: 601–900px
+Full Mode: >900px
 ```
 
 Do not introduce or modify breakpoint values.
@@ -52,8 +50,7 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `tests/e2e/**`
-- `tests/snapshots/**`
+- `tests/playwright/**`
 
 ## Tasks
 - [ ] Add viewport snapshot testing (Playwright preferred)
@@ -65,8 +62,8 @@ Do not introduce or modify breakpoint values.
 - [ ] Commit golden images
 
 ## Commands
-- [ ] `pnpm test:e2e`
-- [ ] `pnpm test:snapshots`
+- [ ] `npx playwright test`
+- [ ] `npx playwright test --update-snapshots`
 
 ## Acceptance Criteria
 - [ ] All tests pass
@@ -78,9 +75,9 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `styles/tokens.css`
-- `styles/breakpoints.css`
-- `styles/layout.css`
+- `frontend/static/css/shared-base.css` (for tokens)
+- `frontend/static/css/responsive.css` (for breakpoints)
+- `frontend/static/css/layout.css`
 
 ❌ Do NOT edit component files
 
@@ -96,8 +93,8 @@ Do not introduce or modify breakpoint values.
 - [ ] Ensure monotonic scale progression
 
 ## Commands
-- [ ] `pnpm lint`
-- [ ] `pnpm test:css`
+- [ ] `npm run test`
+- [ ] `npx playwright test`
 
 ## Acceptance Criteria
 - [ ] Desktop visually unchanged
@@ -110,8 +107,9 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `styles/layout.css`
-- `styles/containers.css`
+- `frontend/static/css/layout.css`
+- `frontend/static/css/mobile-layout.css`
+- `frontend/static/css/desktop-layout.css`
 
 ## Explicit Targets (ONLY THESE)
 - Main app container
@@ -128,11 +126,11 @@ Do not introduce or modify breakpoint values.
 - [ ] Prefer `%`, `rem`, `vh`, `vw`
 
 ## Commands
-- [ ] `pnpm lint`
-- [ ] `pnpm test:e2e`
+- [ ] `npm run test`
+- [ ] `npx playwright test`
 
 ## Acceptance Criteria
-- [ ] No horizontal scroll ≤480px
+- [ ] No horizontal scroll ≤600px (Light Mode)
 - [ ] No clipping at 200% zoom
 - [ ] No new snapshot diffs
 
@@ -142,8 +140,10 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `styles/layout.css`
-- `styles/breakpoints.css`
+- `frontend/static/css/layout.css`
+- `frontend/static/css/responsive.css`
+- `frontend/static/css/mobile-layout.css`
+- `frontend/static/css/desktop-layout.css`
 
 ## Explicit Targets
 - Root layout container
@@ -159,8 +159,8 @@ Do not introduce or modify breakpoint values.
 - [ ] Remove abrupt breakpoint jumps
 
 ## Commands
-- [ ] `pnpm lint`
-- [ ] `pnpm test:snapshots`
+- [ ] `npm run test`
+- [ ] `npx playwright test --update-snapshots`
 
 ## Acceptance Criteria
 - [ ] Continuous resize produces no snapping
@@ -173,8 +173,8 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `styles/mobile.css`
-- `styles/layout.css`
+- `frontend/static/css/mobile-layout.css`
+- `frontend/static/css/layout.css`
 
 ## Explicit Targets
 - Primary navigation buttons
@@ -187,7 +187,7 @@ Do not introduce or modify breakpoint values.
 - [ ] Prevent keyboard overlap via CSS only
 
 ## Commands
-- [ ] `pnpm test:e2e --device=mobile`
+- [ ] `npx playwright test --project=mobile`
 
 ## Acceptance Criteria
 - [ ] All primary actions reachable one-handed
@@ -217,8 +217,8 @@ Do not introduce or modify breakpoint values.
 | 1440px | 100% | [ ] |
 
 ## Commands
-- [ ] `pnpm test`
-- [ ] `pnpm test:snapshots`
+- [ ] `npm run test`
+- [ ] `npx playwright test`
 
 ## Acceptance Criteria
 - [ ] All rows pass
@@ -251,7 +251,7 @@ STOP immediately if:
 
 ```
 ### PR
-ui-scaling/pr-X
+feat/ui-scaling-pr-X
 
 ### Completed Tasks
 - [x] ...
