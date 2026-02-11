@@ -74,10 +74,15 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 
 ## Tasks
 - [ ] Add viewport snapshot testing (Playwright preferred)
-- [ ] Capture screenshots:
+- [ ] Capture screenshots at all viewport widths that subsequent PRs will assert on:
+  - 320×568
   - 375×667
+  - 600×900
   - 768×1024
+  - 769×1024
+  - 900×900
   - 1024×768
+  - 1200×900
   - 1440×900
 - [ ] Update `.gitignore` to allowlist Playwright snapshots (e.g., `!tests/playwright/**/*.png`) so golden images can be committed
 - [ ] Commit golden images
@@ -217,8 +222,9 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 ## Acceptance Criteria
 - [ ] At viewport widths **320px, 375px, 600px, 768px, 769px, 900px, and 1200px**, Playwright tests capture the bounding boxes (`x`, `y`, `width`, `height`) of the primary content column, header, and footer, and the change in any of these values between adjacent widths does not exceed **10px**
 - [ ] Responsive spacing and typography changes across the viewport widths listed above avoid hard-coded pixel jumps, using fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for the transitions (verified via CSS inspection and Playwright assertions on computed styles)
-- [ ] At viewport widths **320px, 768px, and 1200px**, Playwright typography tests confirm that the computed font-sizes for headings preserve hierarchy (`h1` ≥ `h2` ≥ `h3` ≥ `h4`), and each heading's computed font-size stays within **±2px** of the approved baseline
-- [ ] Visual regression snapshots taken at **320px, 375px, 600px, 768px, 769px, 900px, and 1200px** show diffs only within the explicitly approved containers for this PR (no unexpected changes in global layout, header, footer, or primary content column)
+- [ ] **Baseline definition:** The "approved baseline" for bounding boxes, typography, and visual regressions is the set of Playwright artifacts (PNG snapshots and JSON fixtures of computed styles/bounding boxes) generated in **PR 0 – Foundation** at the viewport widths listed above and checked into `tests/playwright/baseline/`
+- [ ] At viewport widths **320px, 768px, and 1200px**, Playwright typography tests confirm that the computed font-sizes for headings preserve hierarchy (`h1` ≥ `h2` ≥ `h3` ≥ `h4`), and each heading's computed font-size stays within **±2px** of the approved baseline defined above
+- [ ] Visual regression snapshots taken at **320px, 375px, 600px, 768px, 769px, 900px, and 1200px** use the PR 0 baseline artifacts from `tests/playwright/baseline/` and show diffs only within the explicitly approved containers for this PR: root layout container, primary content column, and global header/footer spacing; all other containers must match the approved baseline with zero diffs
 
 ---
 
