@@ -26,8 +26,8 @@ Unchecked boxes = incomplete work.
 - ❌ No component rewrites
 - ❌ No new breakpoints
 - ❌ No layout re-architecture
-- ❌ No container queries
-- ❌ No JS resize / keyboard listeners
+- ❌ No new container queries (existing `container-type: inline-size` on `#appContainer` in `base.css` is allowed)
+- ❌ No additional JS resize / keyboard listeners (existing listeners in `appInitializer.js` calling `recalculateScaling()` are allowed but MUST NOT be duplicated or extended)
 - ❌ No animation changes
 
 If a task requires violating these → **STOP AND ESCALATE**
@@ -37,10 +37,11 @@ If a task requires violating these → **STOP AND ESCALATE**
 ## Allowed Breakpoints (Read-Only)
 
 ```
-Light Mode: ≤600px
-Medium Mode: 601–900px
-Full Mode: >900px
+Mobile Layout: ≤768px (mobile-layout.css)
+Desktop Layout: ≥769px (desktop-layout.css)
 ```
+
+**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px, but the current active system uses the 768px split shown above (see `frontend/game.html` media queries).
 
 Do not introduce or modify breakpoint values.
 
@@ -75,25 +76,27 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `frontend/static/css/shared-base.css` (for tokens)
-- `frontend/static/css/responsive.css` (for breakpoints)
-- `frontend/static/css/layout.css`
+- `frontend/static/css/base.css` (for tokens - this is where active CSS vars live)
+- `frontend/static/css/mobile-layout.css` (for mobile breakpoint scaling)
+- `frontend/static/css/desktop-layout.css` (for desktop breakpoint scaling)
 
 ❌ Do NOT edit component files
+❌ Do NOT edit `responsive.css` or `layout.css` (neutralized behind `.legacy-layout-active`)
 
 ## Tasks
-- [ ] Define scale tokens:
+- [ ] Define scale tokens in `base.css`:
   - `--scale-xxs`
   - `--scale-xs`
   - `--scale-sm`
   - `--scale-md`
   - `--scale-lg`
-- [ ] Assign scale values per breakpoint
-- [ ] Replace hard-coded scaling ONLY in `layout.css`
+- [ ] Assign scale values per breakpoint in `mobile-layout.css` and `desktop-layout.css`
+- [ ] Replace hard-coded scaling values with token references
 - [ ] Ensure monotonic scale progression
 
 ## Commands
-- [ ] `npm run test`
+- [ ] `python -m pytest -v`
+- [ ] `cd frontend && npm run build`
 - [ ] `npx playwright test`
 
 ## Acceptance Criteria
@@ -107,17 +110,17 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `frontend/static/css/layout.css`
 - `frontend/static/css/mobile-layout.css`
 - `frontend/static/css/desktop-layout.css`
+- `frontend/static/css/components/modals.css` (for modal wrapper constraints)
 
 ## Explicit Targets (ONLY THESE)
-- Main app container
-- Modal wrapper
-- Card grid container
-- Primary side panel
+- Main app container (`#appContainer`)
+- Modal wrapper (`.modal`, `#emojiModal`, etc. in modals.css)
+- Card grid container (if present in layout files)
+- Primary side panel (panels in layout files)
 
-❌ Do NOT add constraints to individual components
+❌ Do NOT add constraints to individual component internals
 
 ## Tasks
 - [ ] Add `min-width` to prevent collapse
@@ -126,11 +129,12 @@ Do not introduce or modify breakpoint values.
 - [ ] Prefer `%`, `rem`, `vh`, `vw`
 
 ## Commands
-- [ ] `npm run test`
+- [ ] `python -m pytest -v`
+- [ ] `cd frontend && npm run build`
 - [ ] `npx playwright test`
 
 ## Acceptance Criteria
-- [ ] No horizontal scroll ≤600px (Light Mode)
+- [ ] No horizontal scroll ≤768px (Mobile Layout)
 - [ ] No clipping at 200% zoom
 - [ ] No new snapshot diffs
 
@@ -140,10 +144,10 @@ Do not introduce or modify breakpoint values.
 
 ## Scope Boundary
 **You may edit only:**
-- `frontend/static/css/layout.css`
-- `frontend/static/css/responsive.css`
 - `frontend/static/css/mobile-layout.css`
 - `frontend/static/css/desktop-layout.css`
+
+❌ Do NOT edit `layout.css` or `responsive.css` (neutralized behind `.legacy-layout-active`)
 
 ## Explicit Targets
 - Root layout container
@@ -159,7 +163,8 @@ Do not introduce or modify breakpoint values.
 - [ ] Remove abrupt breakpoint jumps
 
 ## Commands
-- [ ] `npm run test`
+- [ ] `python -m pytest -v`
+- [ ] `cd frontend && npm run build`
 - [ ] `npx playwright test --update-snapshots`
 
 ## Acceptance Criteria
@@ -187,7 +192,7 @@ Do not introduce or modify breakpoint values.
 - [ ] Prevent keyboard overlap via CSS only
 
 ## Commands
-- [ ] `npx playwright test --project=mobile`
+- [ ] `npx playwright test --project=mobile-chrome --project=mobile-safari`
 
 ## Acceptance Criteria
 - [ ] All primary actions reachable one-handed
@@ -217,7 +222,8 @@ Do not introduce or modify breakpoint values.
 | 1440px | 100% | [ ] |
 
 ## Commands
-- [ ] `npm run test`
+- [ ] `python -m pytest -v`
+- [ ] `cd frontend && npm run build`
 - [ ] `npx playwright test`
 
 ## Acceptance Criteria
