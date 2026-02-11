@@ -76,6 +76,7 @@
     flex-direction: column;
     height: 100vh;
     width: 100vw;
+    max-width: 1600px; /* Enable scaling on ultra-wide displays while maintaining reasonable upper bound */
     overflow: hidden;
     position: relative;
   }

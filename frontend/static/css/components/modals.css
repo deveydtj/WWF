@@ -40,6 +40,8 @@
   position: relative;
   z-index: var(--z-modal-content);
   pointer-events: auto;
+  max-width: min(90vw, 32rem);
+  max-height: 90vh;
 }
 
 #emojiModal.show #emojiModalBox {
@@ -71,6 +73,8 @@
   border-radius: 12px;
   padding: 20px;
   text-align: center;
+  max-width: min(90vw, 28rem);
+  max-height: 90vh;
 }
 
 #closeCallBox button {

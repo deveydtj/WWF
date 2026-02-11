@@ -54,6 +54,7 @@
     flex-direction: column;
     height: 100dvh; /* Dynamic viewport height for mobile */
     width: 100vw;
+    max-width: 100%; /* Fill available space on mobile */
     overflow: hidden;
     position: relative;
   }
