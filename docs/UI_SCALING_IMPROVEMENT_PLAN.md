@@ -1,501 +1,268 @@
-# WordSquad UI Scaling Improvement Plan
+# 📐 UI Responsive & Scaling Improvements – Unified Implementation Plan
+> **Copilot Coding Agent–Safe Version (Strict Rails & Checklists)**
 
-## Executive Summary
+This file is intentionally written so a **GitHub Copilot Coding Agent** can complete each PR
+**independently, deterministically, and with minimal risk**.
 
-This document provides a comprehensive, step-by-step plan to improve UI scaling reliability across all device types. The current scaling system, while functional, can lead to UI elements shrinking too small during browser zoom or on-the-fly viewport changes. This plan breaks down improvements into small, manageable PRs suitable for level 1 engineers to complete.
-
-## Problem Statement
-
-### Current Issues
-
-1. **On-the-fly scaling problems**: Browser zoom and dynamic viewport changes can cause UI elements to shrink below usable sizes
-2. **Hard width caps**: Fixed maximum widths prevent proper scaling on ultra-wide displays
-3. **Breakpoint boundary issues**: Elements can behave unpredictably at breakpoint transitions (600px, 768px, 900px)
-4. **Mobile keyboard interference**: Virtual keyboard appearance can compress UI elements
-5. **Inconsistent scaling tokens**: Multiple scaling systems (CSS vars, JS calculations) sometimes conflict
-
-### Current Architecture Overview
-
-**CSS Files:**
-- `mobile-layout.css` - Mobile-specific layout (≤768px)
-- `desktop-layout.css` - Desktop-specific layout (>768px)
-- `responsive.css` - Legacy responsive system (deprecated but active in fallback)
-- `modern-responsive.css` - Modern CSS features (deprecated but active in fallback)
-- `shared-base.css` - Common styles across layouts
-
-**JavaScript Files:**
-- `responsiveScaling.js` - Main scaling calculation system
-- `enhancedScaling.js` - Advanced device-aware scaling
-- `layoutManager.js` - Layout mode management
-
-### Success Criteria
-
-1. ✅ UI elements maintain minimum usable sizes at all zoom levels
-2. ✅ Smooth scaling transitions without sudden jumps
-3. ✅ Consistent behavior across all modern browsers
-4. ✅ Touch targets remain ≥44px on mobile devices
-5. ✅ No element overlap or layout breaking
-6. ✅ Virtual keyboard handling doesn't break layout
-7. ✅ Ultra-wide displays scale properly without arbitrary caps
-
-## Improvement Strategy
-
-### Phase 1: Establish Scaling Tokens and Constraints
-**Goal:** Create a single source of truth for scaling values and constraints
-
-#### PR #1: Define Responsive Scaling Tokens
-**Complexity:** Low  
-**Files to modify:** `frontend/static/css/shared-base.css`
-
-**Tasks:**
-1. Add comprehensive CSS custom properties for scaling
-2. Define minimum and maximum size constraints
-3. Create fluid scaling tokens using `clamp()`
-4. Add touch target size constants
-5. Document each token with comments
-
-**Testing:**
-- Visual inspection at different zoom levels (75%, 100%, 125%, 150%)
-- Verify no hardcoded pixel values override tokens
-- Check all UI elements respect minimum sizes
-
-**Acceptance Criteria:**
-- [ ] All scaling tokens defined with clear comments
-- [ ] `clamp()` functions used for fluid sizing
-- [ ] Minimum touch target size guaranteed
-- [ ] Tokens work at 75%, 100%, 125%, 150% zoom
+Agents MUST follow the rails defined in each PR.
 
 ---
 
-#### PR #2: Remove Hard Width Caps
-**Complexity:** Medium  
-**Files to modify:** 
-- `frontend/static/css/desktop-layout.css`
-- `frontend/static/css/mobile-layout.css`
-- `frontend/static/css/components/*.css`
+## How Agents Should Use This File
 
-**Tasks:**
-1. Identify all `max-width` constraints in CSS files
-2. Replace fixed max-widths with fluid values
-3. Update container constraints to use percentage-based limits
-4. Add viewport-based max-widths where needed
-5. Test on ultra-wide displays (2560px+)
+1. Pick **one PR section only**
+2. Create a branch named exactly: `ui-scaling/pr-X`
+3. Edit **only the files explicitly listed**
+4. Check off tasks as completed
+5. Stop immediately when acceptance criteria are met
 
-**Files to check:**
-1. `desktop-layout.css` - Remove `.game-container` max-width caps
-2. `mobile-layout.css` - Check for unnecessary width constraints
-3. `components/board.css` - Update board container max-widths
-4. `components/panels.css` - Update panel max-widths
-5. `components/keyboard.css` - Update keyboard max-widths
-
-**Testing:**
-- Test on 1920px, 2560px, and 3440px viewports
-- Verify board scales proportionally
-- Ensure panels don't become too wide
-- Check mobile layouts still constrain properly
-
-**Acceptance Criteria:**
-- [ ] No arbitrary max-width values (e.g., 1400px, 500px)
-- [ ] Ultra-wide displays (>2560px) scale properly
-- [ ] Mobile layouts maintain constraints
-- [ ] Board remains centered and proportional
+Unchecked boxes = incomplete work.
 
 ---
 
-### Phase 2: Improve Mobile Scaling Reliability
-**Goal:** Ensure mobile devices handle zoom and virtual keyboards gracefully
+## Global Hard Constraints (DO NOT VIOLATE)
 
-#### PR #3: Enhance Mobile Viewport Handling
-**Complexity:** Medium  
-**Files to modify:** 
-- `frontend/static/css/mobile-layout.css`
-- `frontend/static/js/responsiveScaling.js`
+- ❌ No visual redesign
+- ❌ No component rewrites
+- ❌ No new breakpoints
+- ❌ No layout re-architecture
+- ❌ No container queries
+- ❌ No JS resize / keyboard listeners
+- ❌ No animation changes
 
-**Tasks:**
-1. Add modern viewport units (dvh, svh, lvh) with fallbacks
-2. Improve virtual keyboard detection
-3. Add safe-area-inset handling for notched devices
-4. Create keyboard-safe viewport calculations
-5. Update mobile breakpoint behavior
-
-**Testing:**
-- Test on iOS Safari, Chrome, Firefox mobile
-- Test with virtual keyboard open/closed
-- Test on notched devices (iPhone X+)
-- Test at different zoom levels
-- Test in landscape and portrait orientations
-
-**Acceptance Criteria:**
-- [ ] Virtual keyboard doesn't break layout
-- [ ] Modern viewport units work correctly
-- [ ] Safe areas respected on notched devices
-- [ ] Minimum sizes maintained when keyboard open
-- [ ] No content hidden below keyboard
+If a task requires violating these → **STOP AND ESCALATE**
 
 ---
 
-#### PR #4: Add Zoom Level Protection
-**Complexity:** Medium  
-**Files to modify:** 
-- `frontend/static/js/responsiveScaling.js`
-- `frontend/static/css/shared-base.css`
+## Allowed Breakpoints (Read-Only)
 
-**Tasks:**
-1. Detect browser zoom level
-2. Adjust scaling calculations based on zoom
-3. Enforce minimum sizes at high zoom levels
-4. Add visual indicator for extreme zoom
-5. Test zoom protection across browsers
+```
+≤480px
+481–768px
+769–1024px
+1025–1440px
+≥1441px
+```
 
-**Testing:**
-- Test at 50%, 75%, 100%, 125%, 150%, 200% zoom
-- Test on Chrome, Firefox, Safari, Edge
-- Verify minimum sizes maintained
-- Check that warnings appear appropriately
-- Test zoom in/out transitions
-
-**Acceptance Criteria:**
-- [ ] Zoom level detected accurately
-- [ ] Minimum sizes maintained at all zoom levels
-- [ ] No layout breaking at extreme zoom (50%, 200%)
-- [ ] Zoom-adjusted calculations prevent shrinking
-- [ ] Works across all major browsers
+Do not introduce or modify breakpoint values.
 
 ---
 
-### Phase 3: Improve Breakpoint Transitions
-**Goal:** Eliminate layout jumps and inconsistencies at breakpoint boundaries
+# ✅ PR 0 – Baseline & Safety Net
 
-#### PR #5: Smooth Breakpoint Transitions
-**Complexity:** Medium  
-**Files to modify:**
-- `frontend/static/css/mobile-layout.css`
-- `frontend/static/css/desktop-layout.css`
-- `frontend/static/css/shared-base.css`
+## Scope Boundary
+**You may edit only:**
+- `tests/e2e/**`
+- `tests/snapshots/**`
 
-**Tasks:**
-1. Add transition zones around critical breakpoints
-2. Use container queries for component-level responsiveness
-3. Add smooth transitions between breakpoints
-4. Test resize behavior across breakpoints
-5. Eliminate sudden layout shifts
+## Tasks
+- [ ] Add viewport snapshot testing (Playwright preferred)
+- [ ] Capture screenshots:
+  - 375×667
+  - 768×1024
+  - 1024×768
+  - 1440×900
+- [ ] Commit golden images
 
-**Testing:**
-- Slowly resize browser across 768px breakpoint
-- Check for sudden jumps or shifts
-- Test on iOS Safari (notoriously difficult breakpoints)
-- Verify smooth transitions
-- Test orientation changes
+## Commands
+- [ ] `pnpm test:e2e`
+- [ ] `pnpm test:snapshots`
 
-**Acceptance Criteria:**
-- [ ] No sudden layout jumps at breakpoints
-- [ ] Smooth visual transitions during resize
-- [ ] Container queries work correctly
-- [ ] Touch targets remain adequate during transitions
-- [ ] Works on iOS Safari
+## Acceptance Criteria
+- [ ] All tests pass
+- [ ] Zero UI code touched
 
 ---
 
-#### PR #6: Consolidate Scaling Systems
-**Complexity:** High  
-**Files to modify:**
-- `frontend/static/js/responsiveScaling.js`
-- `frontend/static/js/enhancedScaling.js`
+# ✅ PR 1 – Scaling Tokens & CSS Foundations
 
-**Tasks:**
-1. Merge duplicate scaling logic from multiple files
-2. Create single source of truth for scaling calculations
-3. Remove conflicts between CSS and JS scaling
-4. Add proper fallback chain
-5. Document scaling decision hierarchy
+## Scope Boundary
+**You may edit only:**
+- `styles/tokens.css`
+- `styles/breakpoints.css`
+- `styles/layout.css`
 
-**Testing:**
-- Test all device sizes with CSS disabled
-- Test with JavaScript disabled
-- Verify fallback chain works
-- Check that CSS is preferred when available
-- Ensure no conflicts between systems
+❌ Do NOT edit component files
 
-**Acceptance Criteria:**
-- [ ] Single scaling system with clear hierarchy
-- [ ] CSS-first approach works
-- [ ] JS fallback works when CSS fails
-- [ ] Emergency fallback prevents total failure
-- [ ] No conflicts between scaling sources
-- [ ] Clear logging of which system is active
+## Tasks
+- [ ] Define scale tokens:
+  - `--scale-xxs`
+  - `--scale-xs`
+  - `--scale-sm`
+  - `--scale-md`
+  - `--scale-lg`
+- [ ] Assign scale values per breakpoint
+- [ ] Replace hard-coded scaling ONLY in `layout.css`
+- [ ] Ensure monotonic scale progression
 
----
+## Commands
+- [ ] `pnpm lint`
+- [ ] `pnpm test:css`
 
-### Phase 4: Comprehensive Testing
-**Goal:** Validate improvements across all devices and scenarios
-
-#### PR #7: Expand Test Coverage
-**Complexity:** Medium-High  
-**Files to create/modify:**
-- `tests/playwright/responsive-scaling.spec.js` (new)
-- `tests/playwright/zoom-handling.spec.js` (new)
-- `tests/playwright/ui-responsiveness.spec.js` (update)
-
-**Tasks:**
-1. Create comprehensive scaling tests
-2. Add zoom level testing
-3. Test virtual keyboard scenarios
-4. Add breakpoint transition tests
-5. Create visual regression tests
-
-**Test Plan Structure:**
-
-
-**Acceptance Criteria:**
-- [ ] All viewport tests pass
-- [ ] All zoom tests pass
-- [ ] Breakpoint transition tests pass
-- [ ] Virtual keyboard tests pass
-- [ ] Edge case tests pass
-- [ ] No test failures on any supported browser
+## Acceptance Criteria
+- [ ] Desktop visually unchanged
+- [ ] No snapshot diffs
+- [ ] Tokens defined in ONE location only
 
 ---
 
-### Phase 5: Documentation and Monitoring
-**Goal:** Document improvements and set up ongoing monitoring
+# ✅ PR 2 – Width & Height Constraints
 
-#### PR #8: Update Documentation
-**Complexity:** Low  
-**Files to create/modify:**
-- `docs/RESPONSIVE_SCALING.md` (new)
-- `docs/REQUIREMENTS.md` (update)
-- `README.md` (update)
+## Scope Boundary
+**You may edit only:**
+- `styles/layout.css`
+- `styles/containers.css`
 
-**Tasks:**
-1. Create comprehensive scaling documentation
-2. Document token system
-3. Add troubleshooting guide
-4. Update architecture docs
-5. Add developer guidelines
+## Explicit Targets (ONLY THESE)
+- Main app container
+- Modal wrapper
+- Card grid container
+- Primary side panel
 
-**Documentation Structure:**
+❌ Do NOT add constraints to individual components
 
-# Run scaling tests
-npm run test:scaling
+## Tasks
+- [ ] Add `min-width` to prevent collapse
+- [ ] Add `max-width` to prevent over-expansion
+- [ ] Add `min-height` where clipping occurs
+- [ ] Prefer `%`, `rem`, `vh`, `vw`
 
-# Test specific viewport
-npm run test:scaling -- --viewport=mobile
+## Commands
+- [ ] `pnpm lint`
+- [ ] `pnpm test:e2e`
 
-# Test zoom levels
-npm run test:scaling -- --zoom
-
-**Acceptance Criteria:**
-- [ ] Complete scaling documentation created
-- [ ] Token reference table included
-- [ ] Troubleshooting guide comprehensive
-- [ ] Developer guidelines clear
-- [ ] Browser support documented
+## Acceptance Criteria
+- [ ] No horizontal scroll ≤480px
+- [ ] No clipping at 200% zoom
+- [ ] No new snapshot diffs
 
 ---
 
-#### PR #9: Add Scaling Analytics
-**Complexity:** Medium  
-**Files to create/modify:**
-- `frontend/static/js/scalingAnalytics.js` (new)
-- `frontend/static/js/main.js` (update to import analytics)
+# ✅ PR 3 – Breakpoint Transition Alignment
 
-**Tasks:**
-1. Create scaling analytics module
-2. Track scaling events and issues
-3. Log problematic viewport/zoom combinations
-4. Create performance metrics
-5. Add optional user reporting
+## Scope Boundary
+**You may edit only:**
+- `styles/layout.css`
+- `styles/breakpoints.css`
 
-**Acceptance Criteria:**
-- [ ] Scaling events logged correctly
-- [ ] Issues tracked and categorized
-- [ ] Performance metrics collected
-- [ ] Health checks run automatically
-- [ ] Analytics data exportable
-- [ ] Console commands work for debugging
+## Explicit Targets
+- Root layout container
+- Primary content column
+- Global header/footer spacing
+
+❌ Do NOT touch component spacing
+
+## Tasks
+- [ ] Normalize padding using existing spacing tokens
+- [ ] Normalize margins across breakpoints
+- [ ] Align typography scale with existing tokens
+- [ ] Remove abrupt breakpoint jumps
+
+## Commands
+- [ ] `pnpm lint`
+- [ ] `pnpm test:snapshots`
+
+## Acceptance Criteria
+- [ ] Continuous resize produces no snapping
+- [ ] Typography hierarchy unchanged
+- [ ] Snapshot diffs limited to approved containers
 
 ---
 
-## Test Plan Summary
+# ✅ PR 4 – Mobile Interaction Safety
 
-### Manual Testing Checklist
+## Scope Boundary
+**You may edit only:**
+- `styles/mobile.css`
+- `styles/layout.css`
 
-#### Mobile Devices (≤768px)
-- [ ] iPhone SE (320px width) - portrait and landscape
-- [ ] iPhone 12 (390px width) - portrait and landscape
-- [ ] iPhone 12 Pro Max (428px width) - portrait and landscape
-- [ ] Android small (360px width) - portrait and landscape
-- [ ] iPad Mini (768px width) - portrait and landscape
+## Explicit Targets
+- Primary navigation buttons
+- Form submit buttons
+- Icon-only buttons
 
-**For each device:**
-- [ ] Board tiles are clearly visible (≥24px)
-- [ ] Keyboard keys are tappable (≥44px)
-- [ ] Virtual keyboard doesn't hide board
-- [ ] All UI elements fit without scrolling
-- [ ] Touch targets are comfortable
-- [ ] No element overlap
-- [ ] Zoom in/out works correctly (2-finger pinch)
+## Tasks
+- [ ] Enforce 44px minimum tap target
+- [ ] Add safe-area padding using `env(safe-area-inset-*)`
+- [ ] Prevent keyboard overlap via CSS only
 
-#### Tablet Devices (768-1200px)
-- [ ] iPad Air (820px width) - portrait and landscape
-- [ ] iPad Pro 11" (834px width) - portrait and landscape
-- [ ] iPad Pro 12.9" (1024px width) - portrait and landscape
+## Commands
+- [ ] `pnpm test:e2e --device=mobile`
 
-**For each device:**
-- [ ] Layout uses appropriate breakpoint
-- [ ] Tile sizes scale proportionally
-- [ ] Keyboard remains usable
-- [ ] Panels don't overlap content
-- [ ] Touch targets adequate
+## Acceptance Criteria
+- [ ] All primary actions reachable one-handed
+- [ ] No element hidden behind notch/keyboard
 
-#### Desktop (>1200px)
-- [ ] 1366x768 (common laptop)
-- [ ] 1920x1080 (Full HD)
-- [ ] 2560x1440 (2K)
-- [ ] 3440x1440 (ultrawide)
-- [ ] 3840x2160 (4K)
+---
 
-**For each resolution:**
-- [ ] Board is centered
-- [ ] Tiles don't exceed 70px
-- [ ] No arbitrary width caps
-- [ ] Panels arranged properly
-- [ ] UI scales appropriately
+# ✅ PR 5 – Validation Matrix & Final QA
 
-#### Browser Zoom Testing
-Test at these zoom levels on each device category:
-- [ ] 50%
-- [ ] 75%
-- [ ] 90%
-- [ ] 100%
-- [ ] 110%
-- [ ] 125%
-- [ ] 150%
-- [ ] 200%
+## Scope Boundary
+**Read-only except tests**
+- `tests/**`
 
-**For each zoom level:**
-- [ ] Layout doesn't break
-- [ ] Minimum sizes maintained
-- [ ] No element overlap
-- [ ] Board remains playable
-- [ ] Keyboard remains usable
+## Tasks
+- [ ] Run full test suite
+- [ ] Validate viewport matrix below
+- [ ] Update snapshots ONLY if expected
 
-#### Breakpoint Transition Testing
-- [ ] Slowly resize from 320px to 3840px
-- [ ] No sudden layout jumps
-- [ ] Smooth tile size transitions
-- [ ] Elements remain visible throughout
-- [ ] Breakpoint at 768px is smooth
+## Viewport Validation Matrix
 
-#### Edge Cases
-- [ ] Extremely narrow (240px)
-- [ ] Extremely wide (5120px)
-- [ ] Extremely short (400px height)
-- [ ] Extreme zoom (50% and 200%)
-- [ ] Virtual keyboard + zoom
-- [ ] Orientation change during play
-- [ ] Browser fullscreen mode
-- [ ] Split-screen mode
+| Viewport | Zoom | Pass |
+|--------|------|------|
+| 375px | 100% | [ ] |
+| 375px | 200% | [ ] |
+| 768px | 100% | [ ] |
+| 1024px | 125% | [ ] |
+| 1440px | 100% | [ ] |
 
-### Automated Test Coverage
+## Commands
+- [ ] `pnpm test`
+- [ ] `pnpm test:snapshots`
 
-Run these test suites after each PR:
+## Acceptance Criteria
+- [ ] All rows pass
+- [ ] No unexplained diffs
 
+---
 
-### Performance Benchmarks
+## Definition of Done (ALL PRs)
 
-After implementing all PRs, measure:
+- [ ] Scope boundary respected
+- [ ] Tasks fully checked off
+- [ ] Acceptance criteria met
+- [ ] Tests passing
+- [ ] No hard constraints violated
 
-- [ ] Time to first meaningful paint: <1.5s
-- [ ] Time to interactive: <2.5s
-- [ ] Scaling calculation time: <50ms
-- [ ] Resize event response: <100ms
-- [ ] Breakpoint transition: <200ms
-- [ ] Memory usage: <50MB
-- [ ] No layout thrashing detected
+---
 
-### Regression Testing
+## AI Agent STOP Conditions
 
-Before merging each PR:
-- [ ] All existing UI tests pass
-- [ ] No visual regressions (screenshot comparison)
-- [ ] Performance hasn't degraded
-- [ ] No new console errors
-- [ ] Accessibility scores maintained
+STOP immediately if:
+- [ ] A redesign is required
+- [ ] A component rewrite seems necessary
+- [ ] You need to edit files outside scope
+- [ ] Desktop regression detected
+- [ ] A rule conflict cannot be resolved
 
-## Success Metrics
+---
 
-After completing all PRs, the system should achieve:
+## Required PR Template
 
-### Functional Metrics
-- ✅ 100% of viewports 320px-5120px render correctly
-- ✅ 100% of zoom levels 50%-200% remain usable
-- ✅ 0 layout breaking bugs at any breakpoint
-- ✅ Touch targets ≥44px on all mobile devices
-- ✅ Tile sizes always within 24-70px range
-- ✅ Virtual keyboard handling 100% reliable
+```
+### PR
+ui-scaling/pr-X
 
-### Performance Metrics
-- ✅ Scaling calculation <50ms
-- ✅ Breakpoint transition <200ms
-- ✅ Zero layout thrashing
-- ✅ Memory usage <50MB increase
+### Completed Tasks
+- [x] ...
 
-### User Experience Metrics
-- ✅ Zero sudden layout jumps
-- ✅ Smooth zoom experience
-- ✅ Consistent behavior across browsers
-- ✅ No element overlap ever
-- ✅ Playable at all tested sizes
+### Files Changed
+- list files
 
-### Code Quality Metrics
-- ✅ Single source of truth for scaling
-- ✅ 90%+ test coverage
-- ✅ Clear documentation
-- ✅ No duplicate scaling logic
-- ✅ Maintainable codebase
+### Validation
+- Commands run
+- Viewports tested
 
-## Maintenance Plan
-
-### Monthly
-- Review scaling analytics
-- Check for new problematic viewports
-- Update tests for new devices
-- Monitor performance metrics
-
-### Quarterly
-- Comprehensive manual testing
-- Browser compatibility check
-- Update documentation
-- Review and optimize code
-
-### Annually
-- Major refactoring if needed
-- Technology upgrade review
-- Complete test suite update
-- User feedback incorporation
-
-## Rollback Plan
-
-If any PR causes issues:
-
-1. **Immediate:** Revert the PR
-2. **Investigate:** Review logs and analytics
-3. **Fix:** Address root cause
-4. **Test:** Comprehensive testing
-5. **Redeploy:** Merge fix
-
-Each PR is independent and can be reverted without breaking the system.
-
-## Conclusion
-
-This plan provides a comprehensive, step-by-step approach to improving UI scaling reliability. Each PR is small, focused, and suitable for level 1 engineers to implement. The extensive test plan ensures nothing breaks during implementation.
-
-By the end of this plan:
-- UI scaling will be reliable across all devices
-- Browser zoom will work seamlessly
-- Virtual keyboards won't break layouts
-- Ultra-wide displays will scale properly
-- The codebase will be cleaner and more maintainable
-
-All improvements are backwards compatible and can be implemented incrementally without disrupting the current system.
+### Screenshots
+- Before / After
+```
