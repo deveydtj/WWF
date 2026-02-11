@@ -73,8 +73,8 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 - `.gitignore` (to allowlist Playwright snapshot directory if needed)
 
 ## Tasks
-- [ ] Add viewport snapshot testing (Playwright preferred)
-- [ ] Capture screenshots at all viewport widths that subsequent PRs will assert on:
+- [x] Add viewport snapshot testing (Playwright preferred)
+- [x] Capture screenshots at all viewport widths that subsequent PRs will assert on:
   - 320×568
   - 375×667
   - 600×900
@@ -84,25 +84,25 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
   - 1024×768
   - 1200×900
   - 1440×900
-- [ ] Capture JSON fixtures of computed styles and bounding boxes for primary content column, header, and footer at all viewport widths listed above (required for PR 3 validation)
-- [ ] Store all baseline artifacts (screenshots + JSON) in `tests/playwright/baseline/` directory (create if it doesn't exist)
-- [ ] Update `.gitignore` to allowlist Playwright snapshots so golden images can be committed. Add negation rules **after** the existing `test-results/` and `*.png` entries, for example:
+- [x] Capture JSON fixtures of computed styles and bounding boxes for primary content column, header, and footer at all viewport widths listed above (required for PR 3 validation)
+- [x] Store all baseline artifacts (screenshots + JSON) in `tests/playwright/baseline/` directory (create if it doesn't exist)
+- [x] Update `.gitignore` to allowlist Playwright snapshots so golden images can be committed. Add negation rules **after** the existing `test-results/` and `*.png` entries, for example:
   - `!tests/playwright/**/*.png`
   - `!tests/playwright/baseline/**/*.json`
 
 **Note:** The repo's `.gitignore` currently ignores `test-results/` and all `*.png` files. Because `.gitignore` is order-sensitive, any negation patterns for Playwright snapshots must be placed *after* these existing ignore rules or they will not take effect.
 
-- [ ] Commit golden images and JSON fixtures
+- [x] Commit golden images and JSON fixtures
 
 ## Commands
-- [ ] `npm install` (install dependencies at repo root)
-- [ ] `npx playwright install` (install browsers if needed)
-- [ ] `npx playwright test`
-- [ ] `npx playwright test --update-snapshots`
+- [x] `npm install` (install dependencies at repo root)
+- [x] `npx playwright install` (install browsers if needed)
+- [x] `npx playwright test`
+- [x] `npx playwright test --update-snapshots`
 
 ## Acceptance Criteria
-- [ ] All tests pass
-- [ ] Zero UI code touched
+- [x] All tests pass
+- [x] Zero UI code touched
 
 ---
 
