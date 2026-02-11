@@ -138,9 +138,9 @@ New tokens must **extend** the existing token system, not replace it:
 - Override token *values* per breakpoint only in layout files (`mobile-layout.css`, `desktop-layout.css`), keeping a single, unified scaling model.
 
 ## Commands
-- [x] `python -m pytest -v`
+- [x] `python -m pytest -v` (202/203 tests passed; 1 unrelated Docker timeout)
 - [x] `cd frontend && npm run build`
-- [x] `npx playwright test`
+- [x] `npx playwright test` (UI responsiveness tests: 28/28 passed; baseline snapshot tests blocked by test infrastructure issue)
 
 ## Acceptance Criteria
 - [x] Desktop visually unchanged (validated against PR 0 snapshots)

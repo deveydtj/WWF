@@ -45,9 +45,10 @@
   --current-scale-factor: 1;
   --current-tile-size: var(--tile-size);
   
-  /* Semantic scale tokens - derived from --ui-scale / --current-scale-factor
+  /* Semantic scale tokens - breakpoint-tuned, unitless multipliers
    * These are size tiers for typography, spacing, and component sizing
-   * Values are overridden per breakpoint in mobile-layout.css and desktop-layout.css
+   * Base values defined here; overridden per breakpoint in mobile-layout.css and desktop-layout.css
+   * Used alongside existing --ui-scale / --current-scale-factor system
    */
   --scale-xxs: 0.75;  /* Extra extra small - for very compact elements */
   --scale-xs: 0.875;  /* Extra small - for small text, tight spacing */
