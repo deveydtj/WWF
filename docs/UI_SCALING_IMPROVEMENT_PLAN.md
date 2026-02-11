@@ -48,11 +48,13 @@ Desktop Layout: ≥769px (desktop-layout.css)
 - `@media (min-width: 1200px)` in desktop-layout.css
 - `@media (min-width: 1551px)` in desktop-layout.css
 
-**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px. The **current layout-switch system** between `mobile-layout.css` and `desktop-layout.css` uses the 768px split shown above (see `frontend/game.html` media queries).
+**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px.
+The **CSS layout-switch system** between `mobile-layout.css` and `desktop-layout.css` uses the 768px / 769px split shown above (see `frontend/game.html` media queries).
+Separately, `900px` is still an **active behavioral threshold** in existing JS (e.g., popup positioning / device categorization) and Playwright tests; agents MUST preserve those usages and MUST NOT add alternative pixel thresholds.
 
 **Editing rules:**
 - ❌ Do NOT introduce new breakpoint values
-- ❌ Do NOT modify any existing breakpoint threshold values (768, 769, 375, 600, 1200, 1551, etc.)
+- ❌ Do NOT modify any existing breakpoint threshold values (including 375, 600, 768, 769, 900, 1200, 1551, etc.), whether they appear in CSS, JS, or tests
 - ✅ DO edit CSS rules *inside* existing breakpoint blocks when those files are in-scope for the PR
 
 ---
@@ -77,6 +79,7 @@ Desktop Layout: ≥769px (desktop-layout.css)
 **Note:** The repo's `.gitignore` currently ignores all `*.png` files and `test-results/`. You must allowlist the Playwright snapshot directory to commit golden images.
 
 ## Commands
+- [ ] `npx playwright install` (install browsers if needed)
 - [ ] `npx playwright test`
 - [ ] `npx playwright test --update-snapshots`
 
@@ -98,15 +101,17 @@ Desktop Layout: ≥769px (desktop-layout.css)
 ❌ Do NOT edit `responsive.css` or `layout.css` (neutralized behind `.legacy-layout-active`)
 
 ## Tasks
-- [ ] Define scale tokens in `base.css`:
+- [ ] Define scale tokens in `base.css` (extending existing `--ui-scale`, `--current-scale-factor`, `--tile-size` system):
   - `--scale-xxs`
   - `--scale-xs`
   - `--scale-sm`
   - `--scale-md`
   - `--scale-lg`
-- [ ] Assign scale values per breakpoint in `mobile-layout.css` and `desktop-layout.css`
+- [ ] Assign scale values per breakpoint in `mobile-layout.css` and `desktop-layout.css` (token *overrides* per breakpoint; token *names* centralized in `base.css`)
 - [ ] Replace hard-coded scaling values with token references
 - [ ] Ensure monotonic scale progression
+
+**Note:** Existing tokens (`--ui-scale`, `--current-scale-factor`, `--tile-size`) are already used across base/component styles. New tokens should extend this system, not replace it. Define token *names* in ONE location (`base.css`); breakpoint-specific *values* can override in layout files.
 
 ## Commands
 - [ ] `python -m pytest -v`
@@ -116,7 +121,7 @@ Desktop Layout: ≥769px (desktop-layout.css)
 ## Acceptance Criteria
 - [ ] Desktop visually unchanged
 - [ ] No snapshot diffs
-- [ ] Tokens defined in ONE location only
+- [ ] Token *names* defined in ONE location only (`base.css`); breakpoint-specific overrides allowed in layout files
 
 ---
 
