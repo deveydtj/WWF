@@ -341,14 +341,14 @@
     flex: 1;
     min-width: 0;
     height: 48px;
-    font-size: clamp(16px, 2.5vw, 18px); /* Smooth transition from mobile */
+    font-size: 18px; /* Fixed at desktop, transitioned from mobile clamp(16px, 3vw, 18px) */
     padding: 0 var(--pad-x); /* Use token */
   }
   
   #submitGuess {
     min-width: 100px;
     height: 48px;
-    font-size: clamp(16px, 2.5vw, 18px); /* Smooth transition from mobile */
+    font-size: 18px; /* Fixed at desktop, transitioned from mobile clamp(16px, 3vw, 18px) */
     font-weight: bold;
   }
   
@@ -512,14 +512,14 @@
     flex: 1;
     min-width: 0;
     height: 40px;
-    font-size: clamp(12px, 2vw, 14px); /* Smooth transition */
+    font-size: 14px; /* Fixed at desktop, transitioned from mobile clamp(16px, 3vw, 18px) */
     padding: 0 clamp(8px, 1.5vw, 12px); /* Smooth transition */
   }
   
   #chatSend {
     min-width: 60px;
     height: 40px;
-    font-size: clamp(12px, 2vw, 14px); /* Smooth transition */
+    font-size: 14px; /* Fixed at desktop, transitioned from mobile clamp(16px, 3vw, 18px) */
   }
   
   /* ─────────────────────────────────
