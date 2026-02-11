@@ -11,10 +11,16 @@ Agents MUST follow the rails defined in each PR.
 ## How Agents Should Use This File
 
 1. Pick **one PR section only**
-2. Create a branch following repo convention: `feat/ui-scaling-pr-X` or `fix/ui-scaling-pr-X`
+2. Create a branch following repo convention: `feat/ui-scaling-pr-X` (all PRs are feature enhancements, use `feat/` prefix consistently)
 3. Edit **only the files explicitly listed**
 4. Check off tasks as completed
 5. Stop immediately when acceptance criteria are met
+
+**PR Dependencies:**
+- PR 0: No prerequisites (foundation)
+- PRs 1-4: **Prerequisite: PR 0 must be completed** (snapshot tests required for validation)
+- PR 5: **Prerequisites: PRs 0-4 must be completed** (validates all changes)
+- PRs 1-4 should be done **sequentially** to avoid conflicts (multiple PRs may modify same files like `base.css`)
 
 Unchecked boxes = incomplete work.
 
@@ -109,9 +115,16 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
   - `--scale-lg`
 - [ ] Assign scale values per breakpoint in `mobile-layout.css` and `desktop-layout.css` (token *overrides* per breakpoint; token *names* centralized in `base.css`)
 - [ ] Replace hard-coded scaling values with token references
-- [ ] Ensure monotonic scale progression
+- [ ] Ensure monotonic scale progression (values for `--scale-xxs` through `--scale-lg` must be strictly increasing, and for any given token, values at larger breakpoints must not be smaller than at smaller breakpoints)
 
-**Note:** Existing tokens (`--ui-scale`, `--current-scale-factor`, `--tile-size`) are already used across base/component styles. New tokens should extend this system, not replace it. Define token *names* in ONE location (`base.css`); breakpoint-specific *values* can override in layout files.
+**Note:** The `--scale-*` tokens are **semantic size tiers** (e.g., for typography, spacing, and component sizing) that sit *on top of* the existing numeric scaling system:
+- `--ui-scale` / `--current-scale-factor` remain the **global numeric controls** for overall UI zoom/responsiveness.
+- `--scale-xxs` → `--scale-lg` are **relative multipliers/tiers** that should be derived from the current `--ui-scale` / `--current-scale-factor` values for each breakpoint.
+- `--tile-size` and other component-level sizes should read from these tokens where appropriate (e.g., `--tile-size` may be defined in terms of `--scale-md` or similar), not introduce a separate scaling system.
+
+New tokens must **extend** the existing token system, not replace it:
+- Define token *names* and their semantic ordering in ONE location (`base.css`).
+- Override token *values* per breakpoint only in layout files (`mobile-layout.css`, `desktop-layout.css`), keeping a single, unified scaling model.
 
 ## Commands
 - [ ] `python -m pytest -v`
@@ -119,9 +132,11 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 - [ ] `npx playwright test`
 
 ## Acceptance Criteria
-- [ ] Desktop visually unchanged
-- [ ] No snapshot diffs
+- [ ] Desktop visually unchanged (validated against PR 0 snapshots)
+- [ ] No snapshot diffs (compared to PR 0 baseline)
 - [ ] Token *names* defined in ONE location only (`base.css`); breakpoint-specific overrides allowed in layout files
+
+**Prerequisite:** PR 0 must be completed and snapshot tests passing before starting this PR.
 
 ---
 
@@ -131,21 +146,21 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 **You may edit only:**
 - `frontend/static/css/mobile-layout.css`
 - `frontend/static/css/desktop-layout.css`
-- `frontend/static/css/components/modals.css` (for modal wrapper constraints)
+- `frontend/static/css/components/modals.css` **(explicit exception to "no component files" rule – modal wrapper constraints only, e.g., `.modal`, `#emojiModal`; do NOT modify inner component styles)**
 - `frontend/static/css/base.css` (if adjusting `#appContainer` max-width)
 
 ## Explicit Targets (ONLY THESE)
 - Main app container (`#appContainer`)
-  - **Note:** `#appContainer` already has `max-width: 980px` in `base.css`. Decide: keep, remove, or override in layout files
+  - **Note:** `#appContainer` already has `max-width: 980px` in `base.css` with documented rationale (readability, reference layout matching). **Decision criteria:** Remove if goal is full-width scaling on ultra-wide displays; keep if maintaining centered content with readable line lengths; override per-breakpoint if different behavior needed for mobile vs desktop.
 - Modal wrapper (`.modal`, `#emojiModal`, etc. in modals.css)
-- Card grid container (if present in layout files)
+- Main grid layout container (`#mainGrid` – desktop three-column layout)
 - Primary side panel (panels in layout files)
 
 ❌ Do NOT add constraints to individual component internals
 
 ## Tasks
 - [ ] Review existing `max-width: 980px` on `#appContainer` in `base.css`
-- [ ] Decide: keep cap, remove it, or override in `mobile-layout.css`/`desktop-layout.css`
+- [ ] Decide based on criteria: remove for ultra-wide scaling, keep for centered content, or override per breakpoint
 - [ ] Add `min-width` to prevent collapse (if not already present)
 - [ ] Add `min-height` where clipping occurs
 - [ ] Prefer `%`, `rem`, `vh`, `vw`
@@ -190,7 +205,8 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 - [ ] `npx playwright test --update-snapshots`
 
 ## Acceptance Criteria
-- [ ] Continuous resize produces no snapping
+- [ ] During continuous resize from 320px–1200px, no single layout shift (change in position or size) for the primary content column, header, or footer exceeds 10px at any breakpoint boundary
+- [ ] Responsive spacing and typography changes across breakpoints avoid hard-coded pixel jumps (use fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for transitions)
 - [ ] Typography hierarchy unchanged
 - [ ] Snapshot diffs limited to approved containers
 
@@ -213,8 +229,8 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 
 ## Tasks
 - [ ] Enforce 44px minimum tap target on buttons (in `buttons.css` and/or `mobile-layout.css`)
-- [ ] Verify existing safe-area padding (via `env(safe-area-inset-*)`) on `#appContainer` in `base.css` and adjust `mobile-layout.css` if needed, without adding a second layer
-- [ ] Prevent keyboard overlap via CSS only
+- [ ] Verify existing safe-area padding (via `env(safe-area-inset-*)`) on `#appContainer` in `base.css` and on the specific mobile elements in `mobile-layout.css` before making changes. Safe-area insets are already applied to `#appContainer` padding in `base.css` (lines 118–122) and to targeted mobile elements in `mobile-layout.css` (e.g., lines 62, 114, 698, 713). Only increase these values if necessary; do **not** duplicate the `env()` padding on the same element (avoid adding a second safe-area layer).
+- [ ] Prevent keyboard overlap primarily via CSS (e.g., use `env(keyboard-inset-height)` and sufficient bottom padding on scrollable containers); you MAY rely on existing `detectVirtualKeyboard` behavior in `enhancedScaling.js` but MUST NOT add new resize/keyboard listeners
 
 ## Commands
 - [ ] `npx playwright test --project=mobile-chrome --project=mobile-safari`
@@ -238,13 +254,13 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
 
 ## Viewport Validation Matrix
 
-| Viewport | Zoom | Pass |
-|--------|------|------|
-| 375px | 100% | [ ] |
-| 375px | 200% | [ ] |
-| 768px | 100% | [ ] |
-| 1024px | 125% | [ ] |
-| 1440px | 100% | [ ] |
+| Viewport (W×H) | Zoom | Pass |
+|----------------|------|------|
+| 375×667        | 100% | [ ] |
+| 375×667        | 200% | [ ] |
+| 768×1024       | 100% | [ ] |
+| 1024×768       | 125% | [ ] |
+| 1440×900       | 100% | [ ] |
 
 ## Commands
 - [ ] `python -m pytest -v`
