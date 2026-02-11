@@ -172,8 +172,18 @@ New tokens must **extend** the existing token system, not replace it:
 
 ## Acceptance Criteria
 - [ ] No horizontal scroll ≤768px (Mobile Layout)
-- [ ] No clipping at 200% zoom
+- [ ] No clipping when UI is scaled to 200% using the manual zoom procedure in [Manual 200% Zoom Check](#manual-200-zoom-check)
 - [ ] No new snapshot diffs
+
+### Manual 200% Zoom Check
+For each supported browser (Chrome, Firefox, Safari, Edge):
+1. Open the game at the relevant route.
+2. Set the viewport width to approximately 768px (or use device emulation for a narrow phone-width viewport).
+3. Use the browser's built-in zoom controls to set page zoom to **200%**.
+4. Scroll through the page and verify:
+   - No essential UI elements are clipped or hidden behind container edges.
+   - All interactive controls (keyboard, buttons, menus, scoreboard, chat) remain fully visible and reachable.
+   - No horizontal scrollbar appears due to layout overflow caused by scaling.
 
 ---
 
@@ -205,10 +215,10 @@ New tokens must **extend** the existing token system, not replace it:
 - [ ] `npx playwright test`
 
 ## Acceptance Criteria
-- [ ] During continuous resize from 320px–1200px, no single layout shift (change in position or size) for the primary content column, header, or footer exceeds 10px at any breakpoint boundary
-- [ ] Responsive spacing and typography changes across breakpoints avoid hard-coded pixel jumps (use fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for transitions)
-- [ ] Typography hierarchy unchanged
-- [ ] Snapshot diffs limited to approved containers
+- [ ] At viewport widths **320px, 375px, 600px, 768px, 769px, 900px, and 1200px**, Playwright tests capture the bounding boxes (`x`, `y`, `width`, `height`) of the primary content column, header, and footer, and the change in any of these values between adjacent widths does not exceed **10px**
+- [ ] Responsive spacing and typography changes across the viewport widths listed above avoid hard-coded pixel jumps, using fluid techniques such as `clamp()`, `calc()`, viewport units, or CSS custom properties for the transitions (verified via CSS inspection and Playwright assertions on computed styles)
+- [ ] At viewport widths **320px, 768px, and 1200px**, Playwright typography tests confirm that the computed font-sizes for headings preserve hierarchy (`h1` ≥ `h2` ≥ `h3` ≥ `h4`), and each heading's computed font-size stays within **±2px** of the approved baseline
+- [ ] Visual regression snapshots taken at **320px, 375px, 600px, 768px, 769px, 900px, and 1200px** show diffs only within the explicitly approved containers for this PR (no unexpected changes in global layout, header, footer, or primary content column)
 
 ---
 
