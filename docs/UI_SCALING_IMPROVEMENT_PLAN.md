@@ -90,11 +90,12 @@ Separately, `900px` is still an **active behavioral threshold** in existing JS (
   - `!tests/playwright/**/*.png`
   - `!tests/playwright/baseline/**/*.json`
 
-**Note:** The repo's `.gitignore` currently ignores all `*.png` files (line 56) and `test-results/` (line 55). Because `.gitignore` is order-sensitive, any negation patterns for Playwright snapshots must be placed *after* these ignore rules or they will not take effect.
+**Note:** The repo's `.gitignore` currently ignores `test-results/` and all `*.png` files. Because `.gitignore` is order-sensitive, any negation patterns for Playwright snapshots must be placed *after* these existing ignore rules or they will not take effect.
 
 - [ ] Commit golden images and JSON fixtures
 
 ## Commands
+- [ ] `npm install` (install dependencies at repo root)
 - [ ] `npx playwright install` (install browsers if needed)
 - [ ] `npx playwright test`
 - [ ] `npx playwright test --update-snapshots`
@@ -170,8 +171,7 @@ New tokens must **extend** the existing token system, not replace it:
 ❌ Do NOT add constraints to individual component internals
 
 ## Tasks
-- [ ] Review existing `max-width: 980px` on `#appContainer` in `base.css`
-- [ ] Decide based on criteria: remove for ultra-wide scaling, keep for centered content, or override per breakpoint
+- [ ] Apply the `#appContainer` max-width behavior: remove the 980px cap, use `max-width: 1600px` for ultra-wide displays, and `max-width: 100%` for mobile viewports (≤768px)
 - [ ] Add `min-width` to prevent collapse (if not already present)
 - [ ] Add `min-height` where clipping occurs
 - [ ] Prefer `%`, `rem`, `vh`, `vw`
@@ -184,7 +184,8 @@ New tokens must **extend** the existing token system, not replace it:
 ## Acceptance Criteria
 - [ ] No horizontal scroll ≤768px (Mobile Layout)
 - [ ] No clipping when UI is scaled to 200% using the manual zoom procedure in [Manual 200% Zoom Check](#manual-200-zoom-check)
-- [ ] No new snapshot diffs
+- [ ] Snapshot diffs are limited to expected layout changes from updated `#appContainer` constraints on wide viewports (e.g., ≥1200px)
+- [ ] Visual regression baseline is refreshed after verifying and approving the expected snapshot diffs for these containers/areas
 
 ### Manual 200% Zoom Check
 For each supported browser (Chrome, Firefox, Safari, Edge):
@@ -258,8 +259,8 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 - [ ] `npx playwright test --project=mobile-chrome --project=mobile-safari`
 
 ## Acceptance Criteria
-- [ ] All targeted buttons (primary navigation, form submit, icon-only) are within the bottom 75% of the mobile viewport height (viewports ≤ 768px wide) and have minimum 44px tap targets
-- [ ] No element hidden behind notch/keyboard (manual on-device QA on iPhone 12+ and representative Android device; not deterministically covered by Playwright tests)
+- [ ] All targeted buttons (primary navigation, form submit, icon-only) have a minimum 44px tap target and remain fully visible within the safe visual area on mobile viewports (≤ 768px wide), without being clipped by notches, home indicators, or the on-screen keyboard
+- [ ] No critical UI element (including targeted buttons) is hidden or partially obscured by device notches, home indicators, or virtual keyboards (validated via manual on-device QA on iPhone 12+ and a representative Android device; this is not deterministically covered by Playwright tests)
 
 ---
 
