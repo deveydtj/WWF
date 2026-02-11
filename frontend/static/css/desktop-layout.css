@@ -34,6 +34,19 @@
 
 @media (min-width: 769px) {
   /* ─────────────────────────────────
+     Desktop Scale Token Overrides
+     ───────────────────────────────── */
+  
+  :root {
+    /* Desktop scale values - standard progression */
+    --scale-xxs: 0.75;  /* Extra extra small */
+    --scale-xs: 0.875;  /* Extra small */
+    --scale-sm: 1;      /* Small */
+    --scale-md: 1.125;  /* Medium - baseline */
+    --scale-lg: 1.25;   /* Large */
+  }
+  
+  /* ─────────────────────────────────
      CSS Variables for Desktop
      ───────────────────────────────── */
   
@@ -573,6 +586,13 @@
 
 @media (min-width: 1200px) {
   :root {
+    /* Large desktop scale values - more spacious */
+    --scale-xxs: 0.8;   /* Extra extra small */
+    --scale-xs: 0.9;    /* Extra small */
+    --scale-sm: 1.05;   /* Small */
+    --scale-md: 1.175;  /* Medium - increased baseline */
+    --scale-lg: 1.35;   /* Large */
+    
     --tile-size: clamp(56px, 4vw, 65px);
     --tile-gap: clamp(6px, 0.6vw, 8px);
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
@@ -612,6 +632,13 @@
 
 @media (min-width: 1551px) {
   :root {
+    /* Ultra-wide scale values - maximum comfortable sizing */
+    --scale-xxs: 0.85;  /* Extra extra small */
+    --scale-xs: 0.95;   /* Extra small */
+    --scale-sm: 1.1;    /* Small */
+    --scale-md: 1.25;   /* Medium - maximum baseline */
+    --scale-lg: 1.45;   /* Large */
+    
     --tile-size: 65px;
     --tile-gap: 8px;
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
