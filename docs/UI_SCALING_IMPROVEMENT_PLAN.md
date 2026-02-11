@@ -41,9 +41,9 @@ Mobile Layout: ≤768px (mobile-layout.css)
 Desktop Layout: ≥769px (desktop-layout.css)
 ```
 
-**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px, but the current active system uses the 768px split shown above (see `frontend/game.html` media queries).
+**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px. The **current layout-switch system** between `mobile-layout.css` and `desktop-layout.css` uses the 768px split shown above (see `frontend/game.html` media queries). Additional breakpoint-based rules (for example `@media (max-width: 600px)` and other widths in `frontend/static/css/**`) are still active and MUST be treated as read-only.
 
-Do not introduce or modify breakpoint values.
+Do not introduce new breakpoint values or modify any existing breakpoint values (including 768/769 and other media-query thresholds) anywhere in the CSS.
 
 ---
 
@@ -113,9 +113,11 @@ Do not introduce or modify breakpoint values.
 - `frontend/static/css/mobile-layout.css`
 - `frontend/static/css/desktop-layout.css`
 - `frontend/static/css/components/modals.css` (for modal wrapper constraints)
+- `frontend/static/css/base.css` (if adjusting `#appContainer` max-width)
 
 ## Explicit Targets (ONLY THESE)
 - Main app container (`#appContainer`)
+  - **Note:** `#appContainer` already has `max-width: 980px` in `base.css`. Decide: keep, remove, or override in layout files
 - Modal wrapper (`.modal`, `#emojiModal`, etc. in modals.css)
 - Card grid container (if present in layout files)
 - Primary side panel (panels in layout files)
@@ -123,8 +125,9 @@ Do not introduce or modify breakpoint values.
 ❌ Do NOT add constraints to individual component internals
 
 ## Tasks
-- [ ] Add `min-width` to prevent collapse
-- [ ] Add `max-width` to prevent over-expansion
+- [ ] Review existing `max-width: 980px` on `#appContainer` in `base.css`
+- [ ] Decide: keep cap, remove it, or override in `mobile-layout.css`/`desktop-layout.css`
+- [ ] Add `min-width` to prevent collapse (if not already present)
 - [ ] Add `min-height` where clipping occurs
 - [ ] Prefer `%`, `rem`, `vh`, `vw`
 
@@ -179,7 +182,10 @@ Do not introduce or modify breakpoint values.
 ## Scope Boundary
 **You may edit only:**
 - `frontend/static/css/mobile-layout.css`
-- `frontend/static/css/layout.css`
+- `frontend/static/css/components/buttons.css` (for tap targets)
+- `frontend/static/css/base.css` (for safe-area verification only)
+
+❌ Do NOT edit `layout.css` (neutralized behind `.legacy-layout-active` - has no effect)
 
 ## Explicit Targets
 - Primary navigation buttons
@@ -187,8 +193,8 @@ Do not introduce or modify breakpoint values.
 - Icon-only buttons
 
 ## Tasks
-- [ ] Enforce 44px minimum tap target
-- [ ] Add safe-area padding using `env(safe-area-inset-*)`
+- [ ] Enforce 44px minimum tap target on buttons (in `buttons.css` and/or `mobile-layout.css`)
+- [ ] Verify existing safe-area padding (via `env(safe-area-inset-*)`) on `#appContainer` in `base.css` and adjust `mobile-layout.css` if needed, without adding a second layer
 - [ ] Prevent keyboard overlap via CSS only
 
 ## Commands
