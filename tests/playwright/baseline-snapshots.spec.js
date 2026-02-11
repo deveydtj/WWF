@@ -12,11 +12,21 @@
  *    - Footer elements
  * 
  * All artifacts are stored in tests/playwright/baseline/ and committed to git.
+ * 
+ * USAGE:
+ * - Baseline generation (one-time): GENERATE_BASELINE=1 npx playwright test baseline-snapshots.spec.js --project=chromium
+ * - Validation (regression test): npx playwright test baseline-snapshots.spec.js
+ * 
+ * The baseline generation mode is gated by GENERATE_BASELINE env var and runs only on chromium
+ * to avoid race conditions from multiple projects writing to the same files.
  */
 
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
+
+// Check if we're in baseline generation mode
+const GENERATE_BASELINE = process.env.GENERATE_BASELINE === '1';
 
 /**
  * Required viewport configurations from PR 0 specification
@@ -122,8 +132,17 @@ function ensureBaselineDir() {
 // ============================================================================
 
 test.describe('PR 0 - Baseline Viewport Snapshots', () => {
+  // Skip these tests unless we're generating the baseline
+  test.skip(!GENERATE_BASELINE, 'Baseline generation disabled (set GENERATE_BASELINE=1 to enable)');
+  
   for (const viewport of BASELINE_VIEWPORTS) {
-    test(`Capture baseline at ${viewport.name}`, async ({ page }) => {
+    test(`Capture baseline at ${viewport.name}`, async ({ page }, testInfo) => {
+      // Only run on chromium to avoid race conditions
+      if (testInfo.project.name !== 'chromium') {
+        test.skip();
+        return;
+      }
+      
       // Set viewport size
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       
@@ -152,14 +171,13 @@ test.describe('PR 0 - Baseline Viewport Snapshots', () => {
         elementData[key] = await captureElementData(page, selector);
       }
       
-      // Add viewport info
+      // Add viewport info (no timestamp for deterministic fixtures)
       const fixtureData = {
         viewport: {
           width: viewport.width,
           height: viewport.height,
           name: viewport.name,
         },
-        capturedAt: new Date().toISOString(),
         elements: elementData,
       };
       
@@ -185,6 +203,9 @@ test.describe('PR 0 - Baseline Viewport Snapshots', () => {
 // ============================================================================
 
 test.describe('PR 0 - Baseline Typography Hierarchy', () => {
+  // Skip these tests unless we're generating the baseline
+  test.skip(!GENERATE_BASELINE, 'Baseline generation disabled (set GENERATE_BASELINE=1 to enable)');
+  
   const TYPOGRAPHY_VIEWPORTS = [
     { width: 320, height: 568 },
     { width: 768, height: 1024 },
@@ -192,7 +213,13 @@ test.describe('PR 0 - Baseline Typography Hierarchy', () => {
   ];
   
   for (const viewport of TYPOGRAPHY_VIEWPORTS) {
-    test(`Capture heading typography at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    test(`Capture heading typography at ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
+      // Only run on chromium to avoid race conditions
+      if (testInfo.project.name !== 'chromium') {
+        test.skip();
+        return;
+      }
+      
       await page.setViewportSize(viewport);
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
@@ -227,7 +254,6 @@ test.describe('PR 0 - Baseline Typography Hierarchy', () => {
       
       const typographyData = {
         viewport,
-        capturedAt: new Date().toISOString(),
         headings,
       };
       
@@ -263,6 +289,9 @@ test.describe('PR 0 - Baseline Typography Hierarchy', () => {
 // ============================================================================
 
 test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
+  // Skip these tests unless we're generating the baseline
+  test.skip(!GENERATE_BASELINE, 'Baseline generation disabled (set GENERATE_BASELINE=1 to enable)');
+  
   // Test the specific adjacent width pairs from PR 3 acceptance criteria
   const ADJACENT_PAIRS = [
     { from: 320, to: 375 },
@@ -276,7 +305,13 @@ test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
   const HEIGHT = 900;
   
   for (const pair of ADJACENT_PAIRS) {
-    test(`Baseline transition ${pair.from}px → ${pair.to}px`, async ({ page }) => {
+    test(`Baseline transition ${pair.from}px → ${pair.to}px`, async ({ page }, testInfo) => {
+      // Only run on chromium to avoid race conditions
+      if (testInfo.project.name !== 'chromium') {
+        test.skip();
+        return;
+      }
+      
       // Capture at first width
       await page.setViewportSize({ width: pair.from, height: HEIGHT });
       await page.goto('game.html');
@@ -306,7 +341,6 @@ test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
       const transitionData = {
         fromViewport: { width: pair.from, height: HEIGHT },
         toViewport: { width: pair.to, height: HEIGHT },
-        capturedAt: new Date().toISOString(),
         elements: {
           from: elementsFrom,
           to: elementsTo,
@@ -335,6 +369,68 @@ test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
           };
           
           console.log(`  ${key} changes: x=${changes.x}px, y=${changes.y}px, width=${changes.width}px, height=${changes.height}px`);
+        }
+      }
+    });
+  }
+});
+
+// ============================================================================
+// Test Suite: Baseline Validation (Visual Regression)
+// ============================================================================
+
+test.describe('PR 0 - Baseline Validation', () => {
+  // Skip validation tests in baseline generation mode
+  test.skip(GENERATE_BASELINE, 'Validation disabled in baseline generation mode');
+  
+  for (const viewport of BASELINE_VIEWPORTS) {
+    test(`Validate UI at ${viewport.name} matches baseline`, async ({ page }) => {
+      // Set viewport size
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      
+      // Navigate to game page
+      await page.goto('game.html');
+      await page.waitForLoadState('networkidle');
+      
+      // Wait a bit for any dynamic content to settle
+      await page.waitForTimeout(500);
+      
+      const baselineDir = path.join(__dirname, 'baseline');
+      
+      // 1. Validate that baseline artifacts exist
+      const snapshotPath = path.join(baselineDir, `${viewport.name}.png`);
+      const fixturePath = path.join(baselineDir, `${viewport.name}.json`);
+      
+      expect(fs.existsSync(snapshotPath), `Baseline screenshot missing: ${snapshotPath}`).toBeTruthy();
+      expect(fs.existsSync(fixturePath), `Baseline fixture missing: ${fixturePath}`).toBeTruthy();
+      
+      // 2. Capture current element data
+      const elementData = {};
+      for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
+        elementData[key] = await captureElementData(page, selector);
+      }
+      
+      // 3. Load baseline fixture
+      const baselineFixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+      
+      // 4. Compare critical element properties against baseline
+      for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
+        const current = elementData[key];
+        const baseline = baselineFixture.elements[key];
+        
+        if (baseline && baseline.exists && current.exists) {
+          // Verify element visibility hasn't changed unexpectedly
+          expect(current.visible).toBe(baseline.visible);
+          
+          // Verify bounding box dimensions haven't changed significantly
+          if (baseline.boundingBox && current.boundingBox) {
+            const widthDiff = Math.abs(current.boundingBox.width - baseline.boundingBox.width);
+            const heightDiff = Math.abs(current.boundingBox.height - baseline.boundingBox.height);
+            
+            // Allow up to 2px difference for rendering variations across runs
+            expect(widthDiff).toBeLessThanOrEqual(2);
+            expect(heightDiff).toBeLessThanOrEqual(2);
+          }
         }
       }
     });
