@@ -36,14 +36,24 @@ If a task requires violating these → **STOP AND ESCALATE**
 
 ## Allowed Breakpoints (Read-Only)
 
+**Primary layout switch:**
 ```
 Mobile Layout: ≤768px (mobile-layout.css)
 Desktop Layout: ≥769px (desktop-layout.css)
 ```
 
-**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px. The **current layout-switch system** between `mobile-layout.css` and `desktop-layout.css` uses the 768px split shown above (see `frontend/game.html` media queries). Additional breakpoint-based rules (for example `@media (max-width: 600px)` and other widths in `frontend/static/css/**`) are still active and MUST be treated as read-only.
+**Existing sub-breakpoints (also read-only):**
+- `@media (max-width: 375px)` in mobile-layout.css
+- `@media (max-width: 600px)` in base.css
+- `@media (min-width: 1200px)` in desktop-layout.css
+- `@media (min-width: 1551px)` in desktop-layout.css
 
-Do not introduce new breakpoint values or modify any existing breakpoint values (including 768/769 and other media-query thresholds) anywhere in the CSS.
+**Note:** Legacy docs reference Light ≤600px / Medium 601-900px / Full >900px. The **current layout-switch system** between `mobile-layout.css` and `desktop-layout.css` uses the 768px split shown above (see `frontend/game.html` media queries).
+
+**Editing rules:**
+- ❌ Do NOT introduce new breakpoint values
+- ❌ Do NOT modify any existing breakpoint threshold values (768, 769, 375, 600, 1200, 1551, etc.)
+- ✅ DO edit CSS rules *inside* existing breakpoint blocks when those files are in-scope for the PR
 
 ---
 
@@ -52,6 +62,7 @@ Do not introduce new breakpoint values or modify any existing breakpoint values 
 ## Scope Boundary
 **You may edit only:**
 - `tests/playwright/**`
+- `.gitignore` (to allowlist Playwright snapshot directory if needed)
 
 ## Tasks
 - [ ] Add viewport snapshot testing (Playwright preferred)
@@ -60,7 +71,10 @@ Do not introduce new breakpoint values or modify any existing breakpoint values 
   - 768×1024
   - 1024×768
   - 1440×900
+- [ ] Update `.gitignore` to allowlist Playwright snapshots (e.g., `!tests/playwright/**/*.png`) so golden images can be committed
 - [ ] Commit golden images
+
+**Note:** The repo's `.gitignore` currently ignores all `*.png` files and `test-results/`. You must allowlist the Playwright snapshot directory to commit golden images.
 
 ## Commands
 - [ ] `npx playwright test`
