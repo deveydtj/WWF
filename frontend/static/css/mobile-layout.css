@@ -72,7 +72,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 clamp(12px, 2vw, 16px); /* Smooth transition to desktop 16px */
+    padding: 0 16px; /* Match desktop fixed value to avoid breakpoint jump */
     padding-top: max(0px, env(safe-area-inset-top));
     background: var(--bg-color);
     z-index: var(--z-ui-component);
@@ -321,7 +321,7 @@
     z-index: var(--z-keyboard);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--kb-gap); /* Match desktop to avoid breakpoint jump */
   }
   
   .keyboard-row {
