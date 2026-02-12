@@ -196,7 +196,7 @@ Ensure Submit and Reset buttons scale together:
 
 #### Tasks
 
-- [ ] Add button sizing tokens to `base.css`
+- [ ] Use existing button sizing tokens from `base.css` (no new tokens needed)
 - [ ] Refactor `#optionsToggle` and `#chatNotify` positioning
 - [ ] Update input area button layout to scale with board
 - [ ] Ensure all buttons meet 44px touch target on mobile
@@ -280,36 +280,22 @@ The desktop grid layout is already implemented in `desktop-layout.css` (lines 14
 }
 ```
 
-**Step 3: Mobile Panel Overlays**
+**Step 3: Refine Existing Mobile Panel Overlays**
 
-In `mobile-layout.css`:
+Mobile overlays already exist in `mobile-layout.css` using `#historyBox`, `#definitionBox`, `#chatBox` with `.active`/`.visible` states. Focus on refining the existing implementation:
 ```css
 @media (max-width: 768px) {
-  .panel-box {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: var(--z-panel-overlay);
-    background: var(--bg-color);
-    padding: var(--panel-overlay-padding);
-    display: none;  /* Hidden by default */
-    flex-direction: column;
-    overflow-y: auto;
-    transform: translateY(100%);
-    transition: transform 0.3s ease-out;
-  }
+  /* Existing panels: #historyBox, #definitionBox, #chatBox */
+  /* Already have .active/.visible state handling in mobile-layout.css */
   
-  .panel-box.active {
-    display: flex;
-    transform: translateY(0);
-  }
-  
-  /* Ensure safe area insets */
-  .panel-box {
-    padding-top: max(var(--panel-overlay-padding), env(safe-area-inset-top));
-    padding-bottom: max(var(--panel-overlay-padding), env(safe-area-inset-bottom));
+  /* Refine existing overlay positioning and transitions */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    /* Already positioned as fixed overlays */
+    /* Ensure z-index uses existing token: var(--z-panel-overlay) */
+    /* Padding already includes safe-area-inset handling */
+    /* Existing transform/transition for slide-in animation */
   }
 }
 ```
@@ -397,8 +383,8 @@ In `desktop-layout.css`:
     position: relative;  /* Not fixed */
     width: 100%;
     max-width: var(--board-width);
-    margin: var(--keyboard-padding) auto 0;
-    padding: var(--keyboard-padding);
+    margin: var(--kb-gap) auto 0;
+    padding: var(--kb-gap);
   }
   
   .key {
@@ -407,7 +393,7 @@ In `desktop-layout.css`:
     font-size: var(--key-font);
   }
   
-  .key-row {
+  .keyboard-row {  /* Note: existing class is .keyboard-row, not .key-row */
     display: flex;
     gap: var(--kb-gap);
     justify-content: center;
@@ -427,24 +413,19 @@ In `mobile-layout.css`:
     left: 0;
     right: 0;
     background: var(--bg-color);
-    padding: var(--keyboard-padding);
+    padding: var(--kb-gap);
     padding-bottom: max(
-      var(--keyboard-padding),
+      var(--kb-gap),
       env(safe-area-inset-bottom)
     );
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
     z-index: var(--z-keyboard);
   }
   
-  /* Account for virtual keyboard */
+  /* Account for virtual keyboard using existing env() support */
   #keyboard {
-    transform: translateY(0);
-    transition: transform 0.3s ease;
-  }
-  
-  /* When virtual keyboard is visible, slide up on-screen keyboard */
-  body.virtual-keyboard-visible #keyboard {
-    transform: translateY(calc(var(--keyboard-inset-height, 0px)));
+    /* Existing CSS already uses env(keyboard-inset-height, 0px) in padding calculations */
+    /* No additional transform needed - let existing system handle virtual keyboard */
   }
   
   .key {
@@ -457,29 +438,32 @@ In `mobile-layout.css`:
 
 **Step 4: Integrate with Existing Virtual Keyboard Detection**
 
-Reuse the existing virtual keyboard detection system already implemented in the codebase:
+The codebase already has virtual keyboard detection and CSS uses `env(keyboard-inset-height, 0px)`:
 ```javascript
 // Virtual keyboard detection is ALREADY IMPLEMENTED in:
 // - appInitializer.js (lines 455-461): visualViewport resize listener
 // - enhancedScaling.js (lines 60-68): detectVirtualKeyboard() method
 // - utils.js (lines 917-926, 983-984): virtual keyboard offset/detection
-
-// Ensure the existing system:
-// 1. Updates document.body.style.setProperty('--keyboard-inset-height', '<px value>')
-// 2. Adds/removes the 'virtual-keyboard-visible' class on <body>
-// 3. No new event listeners or pixel thresholds should be added
-
-// The CSS above is designed to respond to these existing mechanisms
+//
+// Current behavior:
+// - JS adjusts transforms/layout for virtual keyboard appearance
+// - CSS already uses env(keyboard-inset-height, 0px) for safe spacing
+//   (see mobile-layout.css, responsive.css, modern-responsive.css)
+//
+// No additional JavaScript needed - the existing system handles virtual keyboard:
+// - Provides env(keyboard-inset-height) for CSS consumption
+// - Adjusts layout via existing viewport handlers
+// - No new event listeners or thresholds required
 ```
 
 #### Tasks
 
-- [ ] Add keyboard sizing tokens to `base.css`
+- [ ] Use existing keyboard sizing tokens from `base.css` (`--key-h`, `--kb-gap`, `--key-font`)
 - [ ] Refactor desktop keyboard positioning (relative, not fixed)
-- [ ] Update mobile keyboard to handle virtual keyboard conflicts
+- [ ] Update mobile keyboard to work with existing virtual keyboard detection
 - [ ] Ensure key sizes scale proportionally with viewport
-- [ ] Add safe-area-inset handling for mobile keyboards
-- [ ] Implement visual viewport detection for virtual keyboard
+- [ ] Verify safe-area-inset handling works with existing mobile keyboard CSS
+- [ ] Integrate with existing `visualViewport` detection (no new listeners needed)
 - [ ] Test keyboard on various mobile devices (iOS, Android)
 - [ ] Verify keyboard doesn't obscure input area
 
@@ -528,12 +512,12 @@ In `components/leaderboard.css`:
   width: calc(var(--tile-size) * 0.4);
   height: calc(var(--tile-size) * 0.4);
   font-size: calc(var(--tile-size) * 0.3);
-  background: var(--correct-color);
+  background: var(--correct-bg);  /* Use existing token */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-badge);
+  z-index: var(--z-popup-message);  /* Use existing z-index token */
   pointer-events: none;
 }
 ```
@@ -548,18 +532,15 @@ In `components/board.css`:
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(var(--correct-rgb), 0.3);
-  border: 2px solid var(--correct-color);
+  background: rgba(106, 170, 100, 0.3);  /* --correct-bg color with alpha */
+  border: 2px solid var(--correct-bg);
   border-radius: 4px;
-  z-index: var(--z-tile-overlay);
+  z-index: var(--z-board-overlay);  /* Use existing board overlay z-index */
   pointer-events: none;
-  animation: hint-pulse 1s ease-in-out infinite;
+  animation: hint-pulse 1s ease-in-out infinite;  /* Animation already exists in animations.css */
 }
 
-@keyframes hint-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
+/* Note: hint-pulse animation already defined in animations.css line 65 */
 ```
 
 **Step 3: Toast Notification Positioning**
@@ -571,16 +552,17 @@ Ensure toasts appear above keyboard:
   top: calc(var(--tile-size) * 2);
   left: 50%;
   transform: translateX(-50%);
-  z-index: var(--z-toast);
+  z-index: var(--z-popup-message);  /* Use existing toast z-index token */
   max-width: 80vw;
   padding: calc(var(--tile-size) * 0.3);
 }
 
-/* Mobile: Account for keyboard */
+/* Mobile: Place near top to avoid keyboard overlap */
 @media (max-width: 768px) {
   .toast-notification {
-    bottom: calc(var(--keyboard-height, 200px) + var(--tile-size));
-    top: auto;
+    top: calc(var(--tile-size) * 1.5);
+    /* Don't rely on --keyboard-height (set to 'auto', not a length) */
+    /* Position from top ensures visibility above keyboard */
   }
 }
 ```
