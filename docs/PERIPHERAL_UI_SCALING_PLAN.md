@@ -198,10 +198,11 @@ Ensure Submit and Reset buttons scale together:
 
 - [x] Add button font scaling token to `base.css` (--button-font-scale)
 - [x] Refactor `#optionsToggle` and `#chatNotify` positioning
-- [x] Update input area button layout to scale with board
 - [x] Ensure all buttons meet 44px touch target on mobile
 - [x] Test button positioning at all breakpoints (375px, 768px, 1024px, 1440px)
 - [x] Verify no overlap with board or other elements
+
+Note: Input area buttons (`#submitGuess`, `#holdReset`) already use `--uniform-button-width` and `--uniform-button-height` tokens from previous work and required no changes in this PR.
 
 #### Acceptance Criteria
 

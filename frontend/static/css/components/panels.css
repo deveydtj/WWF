@@ -24,6 +24,7 @@
   box-shadow: 2px 2px 4px var(--shadow-color-dark),
               -2px -2px 4px var(--shadow-color-light);
   transition: color 0.2s ease, box-shadow 0.2s ease;
+  z-index: var(--z-ui-component);
 }
 
 #chatNotify {
