@@ -268,7 +268,7 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 
 ## Acceptance Criteria
 - [x] All targeted buttons (primary navigation, form submit, icon-only) have a minimum 44px tap target and remain fully visible within the safe visual area on mobile viewports (≤ 768px wide), without being clipped by notches, home indicators, or the on-screen keyboard
-  - **Implementation**: Added `min-width: 44px; min-height: 44px` to `.emoji-choice` buttons in `buttons.css` and `mobile-layout.css`
+  - **Implementation**: `.emoji-choice` buttons use `min-width`/`min-height` set via `var(--min-touch-target)` (configured to be ≥ 44px and scaled via JS) in `buttons.css` and `mobile-layout.css`
   - **Implementation**: Added `min-height: 44px; min-width: 80px` to modal action buttons in `mobile-layout.css`
   - **Verified**: Most buttons already had 44px+ dimensions: `#mobileMenuToggle`, `#optionsToggle`, `#chatNotify`, `#submitGuess`, panel close buttons, `.mobile-menu-item`, `#hostControls` buttons, and `.key` keyboard keys
 - [x] Safe-area padding verified: properly applied in `base.css` (#appContainer) and `mobile-layout.css` (mobile-specific elements) without duplication
