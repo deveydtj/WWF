@@ -686,22 +686,36 @@
   
   /* Emoji choice buttons - ensure 44px minimum tap target */
   .emoji-choice {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
   
   /* Modal action buttons - ensure 44px minimum tap target */
-  #closeCallBox button,
-  #infoBox button,
-  #shareBox button,
-  #waitingOverlay button,
-  #optionsMenu button {
+  #closeCallBox button:not(.close-btn),
+  #infoBox button:not(.close-btn),
+  #shareBox button:not(.close-btn),
+  #waitingOverlay button:not(.close-btn),
+  #optionsMenu button:not(.close-btn) {
     min-height: 44px;
     min-width: 80px; /* Wider for text buttons to be readable */
     padding: 12px 16px;
+  }
+
+  /* Modal close buttons - 44x44 tap target without extra padding */
+  #closeCallBox .close-btn,
+  #infoBox .close-btn,
+  #shareBox .close-btn,
+  #waitingOverlay .close-btn,
+  #optionsMenu .close-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* ─────────────────────────────────
@@ -717,7 +731,7 @@
   #historyBox,
   #definitionBox,
   #chatBox {
-    max-height: calc(100vh - 60px - env(keyboard-inset-height, 0px));
+    max-height: calc(100vh - env(keyboard-inset-height, 0px));
   }
 }
 
@@ -758,7 +772,7 @@
   
   /* Reduce padding on very small screens */
   #mainGrid {
-    padding: calc(68px + env(safe-area-inset-top)) 8px 170px;
+    padding: calc(68px + env(safe-area-inset-top)) 8px max(170px, calc(170px + env(keyboard-inset-height, 0px)));
   }
   
   #boardArea {
