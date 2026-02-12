@@ -44,6 +44,9 @@
     --scale-sm: 1;      /* Small */
     --scale-md: 1.125;  /* Medium - baseline */
     --scale-lg: 1.25;   /* Large */
+    
+    /* Desktop button font scale override */
+    --button-font-scale: 0.35; /* Desktop uses slightly smaller font for tighter layout */
   }
   
   /* ─────────────────────────────────
@@ -295,35 +298,17 @@
     user-select: none;
   }
   
-  /* Board controls */
+  /* Board controls - positioning only (sizing in components/panels.css) */
   #optionsToggle {
     position: absolute;
     top: 16px;
     right: 16px;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    padding: 0;
-    font-size: 20px;
-    z-index: var(--z-ui-component);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   #chatNotify {
     position: absolute;
     bottom: 16px;
     right: 16px;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    padding: 0;
-    font-size: 20px;
-    z-index: var(--z-ui-component);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   /* ─────────────────────────────────

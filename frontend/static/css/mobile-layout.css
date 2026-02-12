@@ -230,34 +230,17 @@
     justify-content: center;
   }
   
+  /* Board controls - positioning only (sizing in components/panels.css) */
   #optionsToggle {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    padding: 0;
-    font-size: 24px;
-    z-index: var(--z-ui-component);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   #chatNotify {
     position: absolute;
     bottom: 8px;
     right: 8px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    padding: 0;
-    font-size: 24px;
-    z-index: var(--z-ui-component);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   /* ─────────────────────────────────

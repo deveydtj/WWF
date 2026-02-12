@@ -3,19 +3,20 @@
    ───────────────────────────────────────────── */
 
 /* Option toggles and menu */
+/* Base button styles - positioning handled by mobile-layout.css and desktop-layout.css */
 #optionsToggle {
-  font-size: 24px; /* Standardized font size for consistent emoji sizing */
+  font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale with tile size using token */
   background: var(--bg-color);
   border: none;
   cursor: pointer;
-  padding: 0; /* Remove padding to ensure exact centering */
+  padding: 0;
   color: var(--text-color-light);
   line-height: 1;
-  position: absolute;
-  top: 0;
-  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
-  width: 40px; /* Constrain width to prevent expanding too wide */
-  height: 40px; /* Match width for consistent button size */
+  /* Size uses existing scale tokens to ensure consistent sizing with board */
+  width: calc(var(--tile-size) * var(--scale-md));
+  height: calc(var(--tile-size) * var(--scale-md));
+  min-width: var(--min-touch-target); /* Ensure 44px minimum touch target */
+  min-height: var(--min-touch-target);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,21 +24,22 @@
   box-shadow: 2px 2px 4px var(--shadow-color-dark),
               -2px -2px 4px var(--shadow-color-light);
   transition: color 0.2s ease, box-shadow 0.2s ease;
+  z-index: var(--z-ui-component);
 }
 
 #chatNotify {
-  font-size: 24px; /* Standardized font size for consistent emoji sizing */
+  font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale with tile size using token */
   background: var(--bg-color);
   border: none;
   cursor: pointer;
-  padding: 0; /* Remove padding to ensure exact centering */
+  padding: 0;
   color: var(--text-color-light);
   line-height: 1;
-  position: absolute;
-  top: 36px;
-  left: calc(50% + var(--board-width) / 2 + var(--tile-gap));
-  width: 40px; /* Constrain width to match options button */
-  height: 40px; /* Match width for consistent button size */
+  /* Size uses existing scale tokens to ensure consistent sizing with board */
+  width: calc(var(--tile-size) * var(--scale-md));
+  height: calc(var(--tile-size) * var(--scale-md));
+  min-width: var(--min-touch-target); /* Ensure 44px minimum touch target */
+  min-height: var(--min-touch-target);
   display: flex;
   align-items: center;
   justify-content: center;
