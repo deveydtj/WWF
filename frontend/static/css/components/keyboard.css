@@ -26,14 +26,13 @@
 }
 
 .key {
-  /* Use responsive key sizing tokens for smooth scaling across viewports */
+  /* Use responsive key sizing tokens that follow JS-computed values */
   height: var(--key-size);
-  width: var(--key-size);
-  max-width: var(--key-size);
   /* Use flex to distribute space naturally across keys in each row.
      This allows proper handling of varying key counts per row. */
   flex: 1 1 auto;
-  min-width: var(--min-touch-target); /* Ensure minimum touch target */
+  min-width: 0; /* Allow keys to shrink on narrow screens; height maintains touch target */
+  max-width: var(--key-size); /* Cap maximum size */
   border: none;
   background-color: var(--key-bg);
   border-radius: var(--radius);

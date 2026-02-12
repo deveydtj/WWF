@@ -40,11 +40,13 @@
   --key-font: 16px;
   --ui-font: 14px;
   
-  /* Enhanced keyboard sizing tokens - responsive with clamp() for smooth scaling */
-  --key-size: clamp(44px, 8vw, 58px); /* Responsive key size */
+  /* Enhanced keyboard sizing tokens - derived from JS-driven sizing for viewport-fit consistency
+   * These tokens follow the JS-computed values in responsiveScaling.js to ensure accurate viewport calculations
+   * The JS updates --key-h and --key-font; these tokens reference those for consistency */
+  --key-size: var(--key-h); /* Key height follows JS-computed sizing */
   --key-size-wide: calc(var(--key-size) * 1.5); /* Wide keys (Enter, Backspace) */
-  --key-font-size: clamp(13px, 2.5vw, 18px); /* Responsive key font */
-  --key-font-size-wide: clamp(11px, 2vw, 16px); /* Wide key font */
+  --key-font-size: var(--key-font); /* Key font follows JS-computed sizing */
+  --key-font-size-wide: calc(var(--key-font-size) * 0.9); /* Slightly smaller for wide keys */
   
   /* UI scaling */
   --ui-scale: 1;

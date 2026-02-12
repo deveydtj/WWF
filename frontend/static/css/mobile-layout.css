@@ -313,10 +313,10 @@
     gap: var(--kb-gap); /* Use token for consistency */
   }
   
-  /* Key sizing handled by base tokens with responsive clamp() */
+  /* Key sizing handled by base tokens that follow JS calculations */
   .key {
     flex: 1;
-    min-width: var(--min-touch-target); /* Ensure minimum touch target */
+    min-width: 0; /* Allow keys to shrink on very narrow screens; height maintains touch target */
     max-width: var(--key-size);
     height: var(--key-size);
     font-size: var(--key-font-size);

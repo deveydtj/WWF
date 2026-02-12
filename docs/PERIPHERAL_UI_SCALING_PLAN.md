@@ -459,8 +459,8 @@ The codebase already has virtual keyboard detection and CSS uses `env(keyboard-i
 
 #### Tasks
 
-- [x] Use existing keyboard sizing tokens from `base.css` (`--key-h`, `--kb-gap`, `--key-font`)
-- [x] Add new responsive keyboard sizing tokens (`--key-size`, `--key-size-wide`, `--key-font-size`, `--key-font-size-wide`)
+- [x] Leverage existing JS-driven keyboard sizing tokens from `base.css` (`--key-h`, `--kb-gap`, `--key-font`) that are computed by responsiveScaling.js
+- [x] Add derivative keyboard sizing tokens (`--key-size`, `--key-size-wide`, `--key-font-size`, `--key-font-size-wide`) that reference JS-computed values for consistency with viewport-fit logic
 - [x] Refactor desktop keyboard positioning (relative, not fixed)
 - [x] Update mobile keyboard to work with existing virtual keyboard detection
 - [x] Ensure key sizes scale proportionally with viewport using clamp() functions
