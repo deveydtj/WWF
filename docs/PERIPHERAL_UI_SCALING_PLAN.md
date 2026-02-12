@@ -196,7 +196,7 @@ Ensure Submit and Reset buttons scale together:
 
 #### Tasks
 
-- [x] Use existing button sizing tokens from `base.css` (no new tokens needed)
+- [x] Add button font scaling token to `base.css` (--button-font-scale)
 - [x] Refactor `#optionsToggle` and `#chatNotify` positioning
 - [x] Update input area button layout to scale with board
 - [x] Ensure all buttons meet 44px touch target on mobile
