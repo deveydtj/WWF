@@ -348,7 +348,7 @@
   #submitGuess {
     min-width: 100px;
     height: 48px;
-    font-size: 18px; /* Fixed at desktop, transitioned from mobile clamp(16px, 3vw, 18px) */
+    font-size: 16px; /* Match mobile max (clamp(14px, 3vw, 16px)) to keep smooth at breakpoint */
     font-weight: bold;
   }
   
