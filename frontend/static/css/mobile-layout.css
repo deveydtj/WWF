@@ -327,7 +327,7 @@
   .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: 4px;
+    gap: 6px; /* Match desktop to avoid breakpoint jump */
   }
   
   .key {
@@ -732,7 +732,7 @@
   /* Smaller header - preserve safe area insets */
   #lobbyHeader {
     height: 56px;
-    padding: 0 8px;
+    padding: 0 clamp(8px, 2.133vw, 16px); /* Smooth transition avoiding abrupt jump at 375px */
     padding-top: max(0px, env(safe-area-inset-top));
   }
   
