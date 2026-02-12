@@ -355,13 +355,13 @@
   #holdReset {
     min-width: 80px;
     height: 48px;
-    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition from mobile */
+    font-size: 16px; /* Match mobile max (clamp(14px, 2.5vw, 16px)) to keep smooth at breakpoint */
   }
   
   /* Message display */
   #message {
     text-align: center;
-    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition from mobile */
+    font-size: 16px; /* Match mobile max (clamp(14px, 2.5vw, 16px)) to keep smooth at breakpoint */
     min-height: 24px;
     margin: var(--kb-gap) 0; /* Use token */
   }
