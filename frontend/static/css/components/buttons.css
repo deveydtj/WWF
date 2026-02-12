@@ -70,6 +70,12 @@
   position: relative;
   background: none;
   padding: 4px;
+  /* Ensure minimum 44px tap target for mobile accessibility */
+  min-width: var(--min-touch-target);
+  min-height: var(--min-touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .emoji-choice:hover {

@@ -679,6 +679,46 @@
     -webkit-user-select: text;
     user-select: text;
   }
+
+  /* ─────────────────────────────────
+     Minimum Tap Target Enforcement (44px)
+     ───────────────────────────────── */
+  
+  /* Emoji choice buttons - ensure 44px minimum tap target */
+  .emoji-choice {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Modal action buttons - ensure 44px minimum tap target */
+  #closeCallBox button,
+  #infoBox button,
+  #shareBox button,
+  #waitingOverlay button,
+  #optionsMenu button {
+    min-height: 44px;
+    min-width: 80px; /* Wider for text buttons to be readable */
+    padding: 12px 16px;
+  }
+
+  /* ─────────────────────────────────
+     Keyboard Overlap Prevention
+     ───────────────────────────────── */
+  
+  /* Main content area - adjust bottom padding for virtual keyboard */
+  #mainGrid {
+    padding-bottom: max(180px, calc(180px + env(keyboard-inset-height, 0px)));
+  }
+  
+  /* Scrollable containers - ensure content remains visible above keyboard */
+  #historyBox,
+  #definitionBox,
+  #chatBox {
+    max-height: calc(100vh - 60px - env(keyboard-inset-height, 0px));
+  }
 }
 
 /* ═══════════════════════════════════
