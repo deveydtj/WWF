@@ -72,16 +72,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 16px; /* Match desktop fixed value to avoid breakpoint jump */
     padding-top: max(0px, env(safe-area-inset-top));
     background: var(--bg-color);
     z-index: var(--z-ui-component);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    gap: 8px;
+    gap: var(--kb-gap); /* Use existing token */
   }
   
   #lobbyCode {
-    font-size: 14px;
+    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition to desktop 16px */
     font-weight: bold;
     flex-shrink: 0;
   }
@@ -101,7 +101,7 @@
   
   #hostControls {
     display: flex;
-    gap: 8px;
+    gap: var(--kb-gap); /* Use existing token */
     flex-shrink: 0;
   }
   
@@ -124,8 +124,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    padding: calc(72px + env(safe-area-inset-top)) 12px 180px; /* Top padding for fixed header + safe area, bottom for keyboard */
+    gap: clamp(12px, 2.604vw, 20px); /* Reaches 20px at 768px to match desktop */
+    padding: calc(72px + env(safe-area-inset-top)) clamp(12px, 2.083vw, 16px) 180px; /* Reaches 16px at 768px, top padding for fixed header + safe area, bottom for keyboard */
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -137,7 +137,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: clamp(12px, 2vw, 16px); /* Smooth transition to desktop */
     width: 100%;
     max-width: 100%;
   }
@@ -146,7 +146,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: clamp(12px, 2vw, 16px); /* Smooth transition to desktop */
     width: 100%;
   }
   
@@ -159,14 +159,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--kb-gap); /* Use existing token */
   }
   
   .mobile-title-row {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: var(--kb-gap); /* Use existing token */
     flex-wrap: wrap;
   }
   
@@ -266,24 +266,24 @@
   
   #inputArea {
     display: flex;
-    gap: 8px;
+    gap: 12px; /* Match desktop to avoid breakpoint jump */
     width: 100%;
     max-width: 360px;
-    padding: 0 8px;
+    padding: 0 var(--kb-gap); /* Use existing token */
   }
   
   #guessInput {
     flex: 1;
     min-width: 0;
     height: 44px;
-    font-size: 16px;
-    padding: 0 12px;
+    font-size: clamp(16px, 3vw, 18px); /* Min 16px to avoid iOS zoom; still slightly fluid */
+    padding: 0 clamp(12px, 2vw, 16px); /* Smooth transition to desktop */
   }
   
   #submitGuess {
     min-width: 80px;
     height: 44px;
-    font-size: 16px;
+    font-size: clamp(14px, 3vw, 16px); /* Smooth transition to desktop */
     font-weight: bold;
   }
   
@@ -294,15 +294,15 @@
   #holdReset {
     min-width: 80px;
     height: 44px;
-    font-size: 14px;
+    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition to desktop */
   }
   
   /* Message display */
   #message {
     text-align: center;
-    font-size: 14px;
+    font-size: clamp(14px, 2.5vw, 16px); /* Smooth transition to desktop */
     min-height: 20px;
-    margin: 4px 0;
+    margin: calc(var(--kb-gap) * 0.5) 0; /* Use token-based margin */
   }
   
   /* ─────────────────────────────────
@@ -315,19 +315,19 @@
     left: 0;
     right: 0;
     background: var(--bg-color);
-    padding: 8px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding: var(--kb-gap); /* Use existing token */
+    padding-bottom: max(var(--kb-gap), env(safe-area-inset-bottom)); /* Use token */
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
     z-index: var(--z-keyboard);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--kb-gap); /* Match desktop to avoid breakpoint jump */
   }
   
   .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: 4px;
+    gap: 6px; /* Match desktop to avoid breakpoint jump */
   }
   
   .key {
@@ -361,7 +361,7 @@
     z-index: var(--z-panel-overlay);
     display: flex;
     flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     visibility: hidden;
@@ -391,7 +391,7 @@
     z-index: var(--z-panel-overlay);
     display: flex;
     flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     visibility: hidden;
@@ -421,7 +421,7 @@
     z-index: var(--z-panel-overlay);
     display: flex;
     flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
     overflow: hidden;
     visibility: hidden;
     opacity: 0;
@@ -444,13 +444,13 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    margin-bottom: 12px;
+    margin-bottom: clamp(8px, 1.5vw, 12px); /* Smooth transition */
   }
   
   /* Chat form */
   #chatForm {
     display: flex;
-    gap: 8px;
+    gap: var(--kb-gap); /* Use existing token */
     padding-bottom: env(safe-area-inset-bottom);
   }
   
@@ -458,14 +458,14 @@
     flex: 1;
     min-width: 0;
     height: 44px;
-    font-size: 16px;
-    padding: 0 12px;
+    font-size: clamp(16px, 3vw, 18px); /* Min 16px to avoid iOS zoom; still slightly fluid */
+    padding: 0 clamp(12px, 2vw, 16px); /* Smooth transition to desktop */
   }
   
   #chatSend {
     min-width: 70px;
     height: 44px;
-    font-size: 16px;
+    font-size: clamp(14px, 3vw, 16px); /* Smooth transition to desktop */
   }
   
   /* Panel close buttons */
@@ -495,7 +495,7 @@
     z-index: var(--z-panel-overlay);
     display: flex;
     flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) 16px 16px;
+    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     visibility: hidden;
@@ -515,11 +515,11 @@
   
   #playerClose {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: clamp(8px, 1.5vw, 12px); /* Smooth transition */
+    right: clamp(8px, 1.5vw, 12px); /* Smooth transition */
     width: 44px;
     height: 44px;
-    font-size: 20px;
+    font-size: clamp(18px, 4vw, 20px); /* Smooth transition */
     z-index: calc(var(--z-panel-overlay) + 1);
   }
   
@@ -538,10 +538,10 @@
     max-height: calc(100dvh - 100px);
     overflow-y: auto;
     z-index: var(--z-options-menu);
-    padding: 16px;
+    padding: var(--pad-x); /* Use token */
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: clamp(8px, 1.5vw, 12px); /* Smooth transition */
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -732,7 +732,7 @@
   /* Smaller header - preserve safe area insets */
   #lobbyHeader {
     height: 56px;
-    padding: 0 8px;
+    padding: 0 clamp(8px, 2.133vw, 16px); /* Smooth transition avoiding abrupt jump at 375px */
     padding-top: max(0px, env(safe-area-inset-top));
   }
   
