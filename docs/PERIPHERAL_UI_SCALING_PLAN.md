@@ -320,24 +320,24 @@ Reference existing z-index values from `z-index.css` (no new tokens needed):
 
 #### Tasks
 
-- [ ] Add panel sizing tokens to `base.css`
-- [ ] Refactor desktop panel positioning to use CSS Grid (not absolute)
-- [ ] Fix mobile panel overlay positioning and transitions
-- [ ] Clarify z-index hierarchy in `z-index.css`
-- [ ] Update panel CSS in `components/panels.css` to use tokens
-- [ ] Test panel visibility and transitions at all breakpoints
-- [ ] Verify panels don't overlap board or buttons
-- [ ] Ensure panel scrolling works correctly
+- [x] Confirm panel sizing tokens exist in `desktop-layout.css` under the desktop media query (verified existing tokens are sufficient: --pad-x, --desktop-panel-width, --desktop-panel-max-height)
+- [x] Refactor desktop panel positioning to use CSS Grid (not absolute)
+- [x] Fix mobile panel overlay positioning and transitions
+- [x] Clarify z-index hierarchy in `z-index.css`
+- [x] Update panel CSS in `components/panels.css` to use tokens
+- [x] Test panel visibility and transitions at all breakpoints
+- [x] Verify panels don't overlap board or buttons
+- [x] Ensure panel scrolling works correctly
 
 #### Acceptance Criteria
 
-- [ ] Desktop panels positioned via CSS Grid with flexible widths
-- [ ] Mobile panels use full-screen overlays with slide transitions
-- [ ] Z-index hierarchy prevents unintended overlaps
-- [ ] Panel widths scale smoothly with viewport
-- [ ] No content clipping or overflow issues
-- [ ] Safe area insets respected on mobile devices
-- [ ] Smooth transitions between layout modes
+- [x] Desktop panels positioned via CSS Grid with flexible widths
+- [x] Mobile panels use full-screen overlays with slide transitions
+- [x] Z-index hierarchy prevents unintended overlaps
+- [x] Panel widths scale smoothly with viewport
+- [x] No content clipping or overflow issues
+- [x] Safe area insets respected on mobile devices
+- [x] Smooth transitions between layout modes
 
 ---
 
@@ -788,11 +788,11 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 - ✅ Ensure touch targets
 - ✅ Test at all breakpoints
 
-**PR 2: Panel Layout & Positioning** (Prerequisite: PR 1)
-- Add panel sizing tokens
-- Refactor desktop grid positioning
-- Fix mobile overlay behavior
-- Update z-index hierarchy
+**PR 2: Panel Layout & Positioning** ✅ **COMPLETED** (Prerequisite: PR 1)
+- ✅ Confirm panel sizing tokens (existing tokens sufficient)
+- ✅ Refactor desktop grid positioning
+- ✅ Fix mobile overlay behavior
+- ✅ Update z-index hierarchy
 
 **PR 3: Keyboard Scaling** (Prerequisite: PR 1, PR 2)
 - Add keyboard sizing tokens
