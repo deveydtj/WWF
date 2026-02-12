@@ -265,7 +265,7 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 ## Commands
 - [x] `cd frontend && npm run build` (completed successfully)
 - [x] `python -m pytest -v` (202 passed, 1 Docker timeout unrelated)
-- [x] `npx playwright test ui-responsiveness.spec.js --project=chromium` (28/28 tests passed - validates mobile viewport behavior, element visibility, and interaction targets)
+- [x] `npx playwright test ui-responsiveness.spec.js --project=chromium` (28/28 tests passed - validates mobile viewport behavior and element visibility on mobile viewports; tap target size assertions are covered by pr5-validation-matrix.spec.js)
 - [x] `npx playwright test pr5-validation-matrix.spec.js` (validates 44px minimum tap target on mobile viewports)
 
 ## Acceptance Criteria
