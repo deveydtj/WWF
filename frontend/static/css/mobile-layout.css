@@ -713,7 +713,7 @@
   
   /* Main content area - adjust bottom padding for virtual keyboard */
   #mainGrid {
-    padding-bottom: max(180px, calc(180px + env(keyboard-inset-height, 0px)));
+    padding-bottom: calc(180px + env(keyboard-inset-height, 0px));
   }
   
   /* Scrollable containers - ensure content remains visible above keyboard */
