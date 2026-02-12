@@ -65,6 +65,10 @@
   --uniform-button-width: max(calc(var(--tile-size) * var(--scale-lg)), var(--min-touch-target));
   --uniform-button-height: max(calc(var(--tile-size) * var(--scale-sm)), var(--min-touch-target));
   
+  /* Button font scaling - proportional to tile size */
+  --button-font-scale: 0.4; /* Mobile/default: 40% of tile-size for icon buttons */
+  --button-font-scale-desktop: 0.35; /* Desktop: slightly smaller for tighter layout */
+  
   /* Modern viewport support with dvh */
   --viewport-height: 100vh;
   --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));

@@ -240,7 +240,7 @@
     min-width: var(--min-touch-target); /* Ensures 44px minimum */
     min-height: var(--min-touch-target);
     padding: 0;
-    font-size: calc(var(--tile-size) * 0.4); /* Scale font with tile size */
+    font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale font with tile size using token */
     z-index: var(--z-ui-component);
     display: flex;
     align-items: center;
@@ -257,7 +257,7 @@
     min-width: var(--min-touch-target); /* Ensures 44px minimum */
     min-height: var(--min-touch-target);
     padding: 0;
-    font-size: calc(var(--tile-size) * 0.4); /* Scale font with tile size */
+    font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale font with tile size using token */
     z-index: var(--z-ui-component);
     display: flex;
     align-items: center;

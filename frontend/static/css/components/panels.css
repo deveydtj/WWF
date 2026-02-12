@@ -5,7 +5,7 @@
 /* Option toggles and menu */
 /* Base button styles - positioning handled by mobile-layout.css and desktop-layout.css */
 #optionsToggle {
-  font-size: calc(var(--tile-size) * 0.4); /* Scale with tile size instead of fixed 24px */
+  font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale with tile size using token */
   background: var(--bg-color);
   border: none;
   cursor: pointer;
@@ -27,7 +27,7 @@
 }
 
 #chatNotify {
-  font-size: calc(var(--tile-size) * 0.4); /* Scale with tile size instead of fixed 24px */
+  font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale with tile size using token */
   background: var(--bg-color);
   border: none;
   cursor: pointer;

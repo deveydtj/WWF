@@ -306,7 +306,7 @@
     min-width: var(--min-touch-target);
     min-height: var(--min-touch-target);
     padding: 0;
-    font-size: calc(var(--tile-size) * 0.35); /* Scale font with tile size */
+    font-size: calc(var(--tile-size) * var(--button-font-scale-desktop)); /* Desktop uses slightly smaller font */
     z-index: var(--z-ui-component);
     display: flex;
     align-items: center;
@@ -323,7 +323,7 @@
     min-width: var(--min-touch-target);
     min-height: var(--min-touch-target);
     padding: 0;
-    font-size: calc(var(--tile-size) * 0.35); /* Scale font with tile size */
+    font-size: calc(var(--tile-size) * var(--button-font-scale-desktop)); /* Desktop uses slightly smaller font */
     z-index: var(--z-ui-component);
     display: flex;
     align-items: center;
