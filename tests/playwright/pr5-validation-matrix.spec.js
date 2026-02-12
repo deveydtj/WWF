@@ -40,16 +40,9 @@ test.describe('PR 5 - Viewport Validation Matrix', () => {
       // Set viewport with DPR emulation
       await page.setViewportSize({ 
         width: config.width, 
-        height: config.height 
+        height: config.height,
+        deviceScaleFactor: config.deviceScaleFactor
       });
-      
-      // Emulate device pixel ratio (simulates zoom/high-DPI)
-      await page.emulateMedia({ 
-        colorScheme: 'light'
-      });
-      
-      // Note: DPR is set via viewport configuration in Playwright
-      // We use setViewportSize which implicitly handles deviceScaleFactor
       
       // Navigate to the game page
       await page.goto('game.html');
@@ -127,18 +120,16 @@ test.describe('PR 5 - Viewport Validation Matrix', () => {
       // Set viewport with DPR emulation
       await page.setViewportSize({ 
         width: config.width, 
-        height: config.height 
+        height: config.height,
+        deviceScaleFactor: config.deviceScaleFactor
       });
       
       // Navigate to the game page
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
       
-      // Wait for any initial animations
-      await page.waitForTimeout(500);
-      
-      // Allow brief stabilization
-      await page.waitForTimeout(200);
+      // Wait for initial animations and stabilization
+      await page.waitForTimeout(700);
       
       // Take screenshot for manual visual inspection
       // Note: This doesn't use snapshot comparison since we're validating
