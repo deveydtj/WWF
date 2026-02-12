@@ -38,7 +38,7 @@
    */
   --z-panel-base: 20;              /* Desktop panels in CSS Grid */
   --z-panel-content: 25;           /* Panel content layer */
-  --z-panel-overlay: 30;           /* Mobile/tablet panel overlays (historyBox, definitionBox, chatBox) */
+  --z-panel-overlay: 30;           /* Mobile/tablet full-screen panel overlays (e.g. history, definitions, chat, player sidebar) */
   --z-panel-notification: 30;      /* Chat notification badge */
   --z-panel-interactive: 35;       /* Interactive elements within panels */
   
