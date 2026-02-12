@@ -77,12 +77,6 @@
   /* Touch and accessibility */
   --min-touch-target: 44px;
   --accessibility-scale: 1;
-  
-  /* Panel sizing 
-   * Used for calculating consistent padding in mobile/tablet panel overlays
-   * Scales proportionally with tile size to maintain visual harmony with the game board
-   */
-  --panel-overlay-padding: calc(var(--tile-size) * var(--scale-md));
 }
 
 /* Use dynamic viewport height when supported */

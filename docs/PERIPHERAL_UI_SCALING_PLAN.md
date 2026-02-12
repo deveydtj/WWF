@@ -320,7 +320,7 @@ Reference existing z-index values from `z-index.css` (no new tokens needed):
 
 #### Tasks
 
-- [x] Add panel sizing tokens to `base.css`
+- [x] Add panel sizing tokens to `base.css` (verified existing tokens are sufficient: --pad-x, --desktop-panel-width, --desktop-panel-max-height)
 - [x] Refactor desktop panel positioning to use CSS Grid (not absolute)
 - [x] Fix mobile panel overlay positioning and transitions
 - [x] Clarify z-index hierarchy in `z-index.css`
