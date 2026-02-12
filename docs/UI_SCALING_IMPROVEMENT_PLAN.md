@@ -272,7 +272,7 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
   - **Implementation**: Added `min-height: 44px; min-width: 80px` to modal action buttons in `mobile-layout.css`
   - **Verified**: Most buttons already had 44px+ dimensions: `#mobileMenuToggle`, `#optionsToggle`, `#chatNotify`, `#submitGuess`, panel close buttons, `.mobile-menu-item`, `#hostControls` buttons, and `.key` keyboard keys
 - [x] Safe-area padding verified: properly applied in `base.css` (#appContainer) and `mobile-layout.css` (mobile-specific elements) without duplication
-- [x] Keyboard overlap prevention implemented via `env(keyboard-inset-height)` in `mobile-layout.css` for `#mainGrid` and panel boxes
+- [x] Keyboard overlap prevention implemented in `mobile-layout.css` via `env(keyboard-inset-height, 0px)` for `#mainGrid` and via `max-height: var(--viewport-height, 100dvh)` for panel boxes
 - [ ] No critical UI element (including targeted buttons) is hidden or partially obscured by device notches, home indicators, or virtual keyboards (validated via manual on-device QA on iPhone 12+ and a representative Android device; this is not deterministically covered by Playwright tests)
 
 ---
