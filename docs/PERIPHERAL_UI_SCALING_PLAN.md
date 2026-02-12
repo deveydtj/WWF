@@ -119,44 +119,50 @@ Create a cohesive peripheral UI scaling system that:
 
 #### Implementation Strategy
 
-**Step 1: Establish Button Sizing Tokens**
+**Step 1: Use Existing Button Sizing Tokens**
 
-Add to `base.css`:
+Leverage existing tokens from `base.css`:
 ```css
 :root {
-  /* Button sizing tokens tied to tile-size */
-  --button-size-sm: calc(var(--tile-size) * 0.6);    /* Small icons */
-  --button-size-md: calc(var(--tile-size) * 0.8);    /* Standard buttons */
-  --button-size-lg: calc(var(--tile-size) * 1.0);    /* Large touch targets */
+  /* Use existing semantic scale tokens for button sizing */
+  /* --scale-xxs: 0.75  (Extra extra small) */
+  /* --scale-xs: 0.875  (Extra small) */
+  /* --scale-sm: 1      (Small) */
+  /* --scale-md: 1.125  (Medium - baseline) */
+  /* --scale-lg: 1.25   (Large - prominent) */
   
-  /* Minimum touch targets for mobile */
-  --min-touch-target: max(44px, var(--button-size-md));
+  /* Use existing minimum touch target token */
+  /* --min-touch-target: 44px (already defined) */
+  
+  /* Use existing uniform button sizing */
+  /* --uniform-button-width: max(calc(var(--tile-size) * var(--scale-lg)), var(--min-touch-target)) */
+  /* --uniform-button-height: max(calc(var(--tile-size) * var(--scale-sm)), var(--min-touch-target)) */
 }
 ```
 
 **Step 2: Refactor Button Positioning**
 
-In `components/buttons.css`, replace absolute positioning:
+In `components/panels.css`, replace absolute positioning for `#optionsToggle` and `#chatNotify`:
 
 ```css
-/* Desktop: Position relative to board container */
+/* Desktop: Position relative to board container using existing scale tokens */
 @media (min-width: 769px) {
   #optionsToggle {
     position: relative;  /* Changed from absolute */
-    width: var(--button-size-md);
-    height: var(--button-size-md);
+    width: calc(var(--tile-size) * var(--scale-md));
+    height: calc(var(--tile-size) * var(--scale-md));
     /* Remove left: calc() - let flexbox/grid handle positioning */
   }
   
   #chatNotify {
     position: relative;
-    width: var(--button-size-md);
-    height: var(--button-size-md);
+    width: calc(var(--tile-size) * var(--scale-md));
+    height: calc(var(--tile-size) * var(--scale-md));
     /* Remove top/left calc() */
   }
 }
 
-/* Mobile: Ensure touch targets */
+/* Mobile: Ensure touch targets using existing token */
 @media (max-width: 768px) {
   .mobile-menu-item,
   #optionsToggle,
@@ -229,50 +235,46 @@ Ensure Submit and Reset buttons scale together:
 
 #### Implementation Strategy
 
-**Step 1: Define Panel Sizing Tokens**
+**Step 1: Use Existing Panel Sizing Tokens**
 
-Add to `base.css`:
+Reference existing tokens from `desktop-layout.css`:
 ```css
 :root {
-  /* Panel dimensions */
-  --panel-width-desktop: clamp(240px, 20vw, 320px);
-  --panel-padding: clamp(12px, 2vw, 24px);
-  --panel-gap: calc(var(--tile-size) * 0.3);
+  /* Use existing desktop panel width token (defined in desktop-layout.css) */
+  /* --desktop-panel-width: 240px (base) */
+  /* --desktop-panel-width: 280px (at 1200px+ breakpoint) */
   
-  /* Panel overlay (mobile) */
-  --panel-overlay-padding: calc(var(--tile-size) * 0.4);
+  /* Use existing desktop spacing tokens */
+  /* --desktop-grid-gap: 20px */
+  /* --desktop-content-padding: 16px */
+  
+  /* Panel overlay padding can use existing scale tokens */
+  --panel-overlay-padding: calc(var(--tile-size) * var(--scale-md));
 }
 ```
 
-**Step 2: Desktop Panel Grid Layout**
+**Step 2: Refine Existing Desktop Panel Grid**
 
-In `desktop-layout.css`:
+The desktop grid layout is already implemented in `desktop-layout.css` (lines 142-166). Focus on refining spacing within the existing structure:
 ```css
 @media (min-width: 769px) {
-  #mainGrid {
-    display: grid;
-    grid-template-columns: 
-      var(--panel-width-desktop)      /* History panel */
-      minmax(400px, 800px)            /* Center (board + input) */
-      var(--panel-width-desktop);     /* Definition/Chat panels */
-    gap: var(--panel-gap);
-    padding: var(--panel-padding);
-    align-items: start;
-    justify-content: center;
-  }
+  /* The grid is already defined with:
+   * grid-template-columns: var(--desktop-panel-width) 1fr var(--desktop-panel-width);
+   * grid-template-areas: "left center right";
+   * Dynamic column adjustments based on panel visibility already implemented
+   */
   
+  /* Refine panel constraints using existing tokens */
   #historyBox {
-    grid-column: 1;
-    position: relative;  /* Not absolute */
-    max-height: calc(100vh - var(--panel-padding) * 2);
+    /* Already has grid-area: left */
+    max-height: var(--desktop-panel-max-height);
     overflow-y: auto;
   }
   
   #definitionBox,
   #chatBox {
-    grid-column: 3;
-    position: relative;
-    max-height: calc(100vh - var(--panel-padding) * 2);
+    /* Already have grid-area: right */
+    max-height: var(--desktop-panel-max-height);
     overflow-y: auto;
   }
 }
@@ -312,17 +314,20 @@ In `mobile-layout.css`:
 }
 ```
 
-**Step 4: Z-Index Hierarchy**
+**Step 4: Use Existing z-index Hierarchy**
 
-Update `z-index.css` to clarify panel stacking:
+Reference existing z-index values from `z-index.css` (no new tokens needed):
 ```css
 :root {
-  /* Panel z-index hierarchy */
-  --z-panel-base: 100;
-  --z-panel-overlay: 200;     /* Mobile panel overlays */
-  --z-panel-notification: 150; /* Chat notification badge */
-  --z-modal: 300;              /* Modals above all panels */
-  --z-keyboard: 50;            /* Keyboard below panels */
+  /* Use existing panel z-index hierarchy (from z-index.css) */
+  /* --z-panel-base: 20 */
+  /* --z-panel-overlay: 30        (Mobile panel overlays) */
+  /* --z-panel-notification: 30   (Chat notification badge) */
+  /* --z-keyboard: 10             (Keyboard below panels) */
+  
+  /* Use existing modal z-index tokens */
+  /* --z-modal-backdrop: 60       (Backdrop behind modal content) */
+  /* --z-modal-content: 65        (Modal content above all panels) */
 }
 ```
 
@@ -368,16 +373,18 @@ Update `z-index.css` to clarify panel stacking:
 
 #### Implementation Strategy
 
-**Step 1: Keyboard Sizing Tokens**
+**Step 1: Use Existing Keyboard Sizing Tokens**
 
-Add to `base.css`:
+Reference existing keyboard tokens from `base.css`:
 ```css
 :root {
-  /* Keyboard sizing */
-  --key-size: clamp(24px, 6vmin, 44px);
-  --key-gap: clamp(3px, 0.5vmin, 6px);
-  --key-font-size: clamp(12px, 2.5vmin, 18px);
-  --keyboard-padding: clamp(8px, 1.5vmin, 16px);
+  /* Use existing keyboard sizing tokens (already defined in base.css) */
+  /* --key-h: 44px          (key height) */
+  /* --kb-gap: 8px          (keyboard gap) */
+  /* --key-font: 16px       (key font size) */
+  
+  /* If enhanced responsive sizing is needed, use clamp() with existing token names */
+  /* Maintain token name consistency with existing codebase */
 }
 ```
 
@@ -395,16 +402,16 @@ In `desktop-layout.css`:
   }
   
   .key {
-    min-width: var(--key-size);
-    min-height: var(--key-size);
-    font-size: var(--key-font-size);
+    min-width: var(--key-h);
+    min-height: var(--key-h);
+    font-size: var(--key-font);
   }
   
   .key-row {
     display: flex;
-    gap: var(--key-gap);
+    gap: var(--kb-gap);
     justify-content: center;
-    margin-bottom: var(--key-gap);
+    margin-bottom: var(--kb-gap);
   }
 }
 ```
@@ -443,23 +450,26 @@ In `mobile-layout.css`:
   .key {
     min-width: var(--min-touch-target);
     min-height: var(--min-touch-target);
-    font-size: var(--key-font-size);
+    font-size: var(--key-font);
   }
 }
 ```
 
-**Step 4: Handle Virtual Keyboard Overlap**
+**Step 4: Integrate with Existing Virtual Keyboard Detection**
 
-Add JavaScript detection (minimal change to existing code):
+Reuse the existing virtual keyboard detection system already implemented in the codebase:
 ```javascript
-// In enhancedScaling.js or keyboard manager
-if ('visualViewport' in window) {
-  window.visualViewport.addEventListener('resize', () => {
-    const keyboardHeight = window.innerHeight - window.visualViewport.height;
-    document.body.style.setProperty('--keyboard-inset-height', `${keyboardHeight}px`);
-    document.body.classList.toggle('virtual-keyboard-visible', keyboardHeight > 100);
-  });
-}
+// Virtual keyboard detection is ALREADY IMPLEMENTED in:
+// - appInitializer.js (lines 455-461): visualViewport resize listener
+// - enhancedScaling.js (lines 60-68): detectVirtualKeyboard() method
+// - utils.js (lines 917-926, 983-984): virtual keyboard offset/detection
+
+// Ensure the existing system:
+// 1. Updates document.body.style.setProperty('--keyboard-inset-height', '<px value>')
+// 2. Adds/removes the 'virtual-keyboard-visible' class on <body>
+// 3. No new event listeners or pixel thresholds should be added
+
+// The CSS above is designed to respond to these existing mechanisms
 ```
 
 #### Tasks
@@ -609,15 +619,20 @@ Ensure toasts appear above keyboard:
 
 #### Implementation Strategy
 
-**Step 1: Container Sizing Tokens**
+**Step 1: Use Existing Container Sizing**
 
-Add to `base.css`:
+Reference existing container sizing from `desktop-layout.css`:
 ```css
 :root {
-  /* Container constraints */
-  --app-max-width: 1600px;
-  --app-padding: clamp(12px, 2vw, 24px);
-  --content-max-width: min(var(--board-width) + var(--panel-width-desktop) * 2 + var(--panel-gap) * 2, var(--app-max-width));
+  /* Container max-width already defined in desktop-layout.css line 79 */
+  /* #appContainer { max-width: 1600px; } */
+  
+  /* If tokenizing is needed, define in desktop-layout.css (not base.css) */
+  /* --desktop-max-width: 1600px; */
+  
+  /* Use existing desktop spacing tokens */
+  /* --desktop-content-padding: 16px (already defined) */
+  /* --desktop-grid-gap: 20px (already defined) */
 }
 ```
 
@@ -626,16 +641,16 @@ Add to `base.css`:
 Update spacing across layouts:
 ```css
 #appContainer {
-  max-width: var(--app-max-width);
-  padding: var(--app-padding);
+  max-width: 1600px; /* Already defined in desktop-layout.css */
+  padding: var(--desktop-content-padding);
   margin: 0 auto;
 }
 
 #mainGrid {
   width: 100%;
-  max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: var(--panel-padding);
+  padding: var(--desktop-content-padding);
+  gap: var(--desktop-grid-gap);
 }
 
 #boardArea {
@@ -702,7 +717,7 @@ Fine-tune spacing at key breakpoints:
 
 ### Automated Tests (Playwright)
 
-Create test suite `peripheral-ui-scaling.spec.js`:
+Create test suite following existing naming pattern (e.g., `pr6-peripheral-ui.spec.js`):
 
 ```javascript
 // Test button positioning
@@ -890,14 +905,14 @@ All new tokens extend the existing system:
 ### File Changes
 
 **Files to Modify:**
-- `frontend/static/css/base.css` - Add new sizing tokens
-- `frontend/static/css/components/buttons.css` - Refactor positioning
-- `frontend/static/css/components/panels.css` - Update panel layout
-- `frontend/static/css/components/keyboard.css` - Fix keyboard scaling
+- `frontend/static/css/base.css` - Reference and use existing sizing tokens
+- `frontend/static/css/components/panels.css` - Refactor `#optionsToggle` and `#chatNotify` positioning, update panel layout
+- `frontend/static/css/components/buttons.css` - Refactor button positioning (for buttons defined here)
+- `frontend/static/css/components/keyboard.css` - Fix keyboard scaling using existing tokens
 - `frontend/static/css/components/leaderboard.css` - Hint badge positioning
 - `frontend/static/css/mobile-layout.css` - Mobile-specific adjustments
-- `frontend/static/css/desktop-layout.css` - Desktop-specific adjustments
-- `frontend/static/css/z-index.css` - Clarify hierarchy
+- `frontend/static/css/desktop-layout.css` - Desktop-specific adjustments, refine existing grid
+- `frontend/static/css/z-index.css` - Reference existing hierarchy (clarify in comments if needed)
 
 **No New Files Required** - All changes integrate into existing CSS architecture
 
@@ -954,41 +969,84 @@ Post-implementation improvements to consider:
 
 ### A. Current CSS Token Reference
 
-Existing tokens to leverage:
+Existing tokens to leverage (from `frontend/static/css/base.css`):
 ```css
---tile-size: /* Scales from 20px to 65px */
---board-width: /* Calculated from tile-size */
---ui-scale: /* Global scaling factor */
---current-scale-factor: /* Current scaling value */
---tile-gap: /* Space between tiles */
+/* Tile and board sizing */
+--tile-size: 56px;  /* Base value, scales via clamp() in layout files */
+--board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+--tile-gap: var(--gap);
+--gap: 10px;
+
+/* Keyboard sizing */
+--key-h: 44px;
+--kb-gap: 8px;
+--key-font: 16px;
+
+/* Semantic scale tokens (for sizing tiers) */
+--scale-xxs: 0.75;   /* Extra extra small */
+--scale-xs: 0.875;   /* Extra small */
+--scale-sm: 1;       /* Small */
+--scale-md: 1.125;   /* Medium - baseline */
+--scale-lg: 1.25;    /* Large - prominent */
+
+/* Uniform button sizing */
+--uniform-button-width: max(calc(var(--tile-size) * var(--scale-lg)), var(--min-touch-target));
+--uniform-button-height: max(calc(var(--tile-size) * var(--scale-sm)), var(--min-touch-target));
+
+/* Touch targets */
+--min-touch-target: 44px;
+
+/* Desktop panel sizing (from desktop-layout.css) */
+--desktop-panel-width: 240px;  /* Base, increases to 280px at 1200px+ */
+--desktop-grid-gap: 20px;
+--desktop-content-padding: 16px;
 ```
 
 ### B. Z-Index Hierarchy
 
-Current and proposed values:
+Current hierarchy should align with `frontend/static/css/z-index.css` (reference existing tokens):
 ```css
---z-keyboard: 50;
---z-ui-component: 100;
---z-panel-base: 100;
---z-badge: 150;
---z-panel-notification: 150;
---z-tile-overlay: 175;
---z-panel-overlay: 200;
---z-toast: 250;
---z-modal: 300;
+/* Board-level overlays (also used for tile overlays) */
+--z-board-overlay: 6;
+
+/* UI Components */
+--z-keyboard: 10;
+--z-ui-component: 15;
+
+/* Panels */
+--z-panel-base: 20;
+--z-panel-content: 25;
+--z-panel-overlay: 30;        /* Mobile panel overlays */
+--z-panel-notification: 30;   /* Chat notification badge */
+
+/* Interactive Elements */
+--z-options-menu: 40;
+
+/* Modals and Popups */
+--z-modal-backdrop: 60;       /* Backdrop behind modal content */
+--z-modal-content: 65;        /* Modal content above all panels */
+--z-popup-message: 70;        /* Lightweight toasts / popup messages */
+
+/* System Overlays */
+--z-system-message: 85;       /* Higher-priority messages / alerts */
+
+/* Note: There is no dedicated --z-badge token; badges should reuse an appropriate
+   existing level (typically --z-popup-message or --z-system-message). */
 ```
 
 ### C. Breakpoint Reference
 
 Standard breakpoints (do not modify):
 - **≤375px**: Ultra-small mobile
-- **≤600px**: Mobile devices (Light mode)
-- **601-900px**: Tablets (Medium mode)
-- **≤768px**: Mobile layout boundary
-- **≥769px**: Desktop layout boundary
-- **>900px**: Full desktop (Full mode)
+- **≤600px**: Compact/small mobile (sub-range within mobile layout)
+- **601-900px**: Tablets / medium-width viewports
+- **≤768px**: Mobile layout boundary (CSS mobile layout)
+- **≥769px**: Desktop layout boundary (CSS desktop layout)
+- **>900px**: Wide desktop content range
 - **≥1200px**: Large desktop
-- **≥1440px**: Extra-large desktop
+- **≥1440px**: Extra-large desktop / wide monitors
+
+Note: "Light/Medium/Full mode" terminology references a legacy system. The primary layout switch occurs at 768px/769px between mobile-layout.css and desktop-layout.css.
 
 ### D. Touch Target Guidelines
 
