@@ -303,32 +303,31 @@ For each supported browser (Chrome, Firefox, Safari, Edge):
 | 1024×768       | 125%                 | [x] |
 | 1440×900       | 100%                 | [x] |
 
-**Note:** All visual regression baseline tests pass (5/5). Layout integrity tests show 3 failures related to pre-existing issues:
-- Submit button tap target size on desktop viewports (pre-existing, not a regression from PRs 1-4)
+**Note:** All visual regression baseline tests pass (5/5). Layout integrity tests show 1 failure related to pre-existing issues:
 - Typography hierarchy h1<h3 on mobile (pre-existing issue in baseline)
 
-These are documented as known issues and do not block PR 5 completion, as they existed before the UI scaling improvements.
+This is documented as a known issue and does not block PR 5 completion, as it existed before the UI scaling improvements.
 
 ## Commands
 - [x] `python -m pytest -v` (202/203 tests passed; 1 unrelated Docker timeout)
 - [x] `cd frontend && npm run build` (completed successfully)
 - [x] `npx playwright test` (UI responsiveness tests: 28/28 passed)
-- [x] `npx playwright test pr5-validation-matrix.spec.js --project=chromium` (9/12 passed; 3 failures are pre-existing issues)
+- [x] `npx playwright test pr5-validation-matrix.spec.js --project=chromium` (11/12 passed; 1 failure is pre-existing issue)
 
 ## Acceptance Criteria
 - [x] All viewport matrix rows validated with DPR emulation
 - [x] All visual regression baseline tests pass (5/5)
-- [x] No unexplained diffs (3 failing tests are due to pre-existing issues documented above)
+- [x] No unexplained diffs (1 failing test is due to pre-existing issue documented above)
 
 ---
 
 ## Definition of Done (ALL PRs)
 
 For PR 5 specifically:
-- [x] Scope boundary respected (only modified tests/** directory)
+- [x] Scope boundary respected (code changes limited to tests/** directory; docs/UI_SCALING_IMPROVEMENT_PLAN.md updated as meta-documentation)
 - [x] Tasks fully checked off
 - [x] Acceptance criteria met (all viewport matrix validated, visual regression tests pass)
-- [x] Tests passing (28/28 UI responsiveness, 9/12 PR5 validation with documented pre-existing issues)
+- [x] Tests passing (28/28 UI responsiveness, 11/12 PR5 validation with documented pre-existing issue)
 - [x] No hard constraints violated
 
 ---
