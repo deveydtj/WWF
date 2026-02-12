@@ -245,7 +245,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: clamp(8px, 1.5vw, 12px); /* Smooth transition from mobile 8px */
+    gap: var(--kb-gap); /* Match mobile gap to avoid breakpoint jump */
     margin-top: var(--kb-gap); /* Use token */
   }
   
@@ -363,7 +363,7 @@
     text-align: center;
     font-size: 16px; /* Match mobile max (clamp(14px, 2.5vw, 16px)) to keep smooth at breakpoint */
     min-height: 24px;
-    margin: var(--kb-gap) 0; /* Use token */
+    margin: calc(var(--kb-gap) * 0.5) 0; /* Match mobile to avoid jump at 768/769px */
   }
   
   /* ─────────────────────────────────
@@ -390,7 +390,7 @@
     min-width: 0;
     max-width: 52px;
     height: 52px;
-    font-size: clamp(14px, 2vw, 16px); /* Smooth transition */
+    font-size: 14px; /* Match mobile fixed value to avoid breakpoint jump */
     font-weight: bold;
     padding: 0;
     cursor: pointer;
@@ -484,8 +484,8 @@
   #definitionClose,
   #chatClose {
     position: absolute;
-    top: var(--kb-gap); /* Use token */
-    right: var(--kb-gap); /* Use token */
+    top: clamp(8px, 1.5vw, 12px); /* Match mobile to eliminate breakpoint jump */
+    right: clamp(8px, 1.5vw, 12px); /* Match mobile to eliminate breakpoint jump */
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -513,7 +513,7 @@
     min-width: 0;
     height: 40px;
     font-size: 18px; /* Match mobile max (clamp(16px, 3vw, 18px)) to keep smooth at breakpoint */
-    padding: 0 clamp(8px, 1.5vw, 12px); /* Smooth transition */
+    padding: 0 clamp(12px, 2vw, 16px); /* Match mobile max to avoid breakpoint jump */
   }
   
   #chatSend {
