@@ -761,7 +761,7 @@
   
   /* Reduce padding on very small screens */
   #mainGrid {
-    padding: calc(68px + env(safe-area-inset-top)) 8px max(170px, calc(170px + env(keyboard-inset-height, 0px)));
+    padding: calc(68px + env(safe-area-inset-top)) 8px calc(170px + env(keyboard-inset-height, 0px));
   }
   
   #boardArea {
