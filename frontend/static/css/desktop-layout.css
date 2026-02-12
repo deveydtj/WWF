@@ -44,6 +44,9 @@
     --scale-sm: 1;      /* Small */
     --scale-md: 1.125;  /* Medium - baseline */
     --scale-lg: 1.25;   /* Large */
+    
+    /* Desktop button font scale override */
+    --button-font-scale: 0.35; /* Desktop uses slightly smaller font for tighter layout */
   }
   
   /* ─────────────────────────────────
@@ -295,11 +298,6 @@
     user-select: none;
   }
   
-  /* Override button font scale for desktop */
-  :root {
-    --button-font-scale: 0.35; /* Desktop uses slightly smaller font for tighter layout */
-  }
-
   /* Board controls - positioning only (sizing in components/panels.css) */
   #optionsToggle {
     position: absolute;
