@@ -39,20 +39,22 @@ const CRITICAL_ELEMENTS = {
 
 test.describe('PR 5 - Viewport Validation Matrix', () => {
   for (const config of VALIDATION_MATRIX) {
-    test(`${config.label} - Layout integrity`, async ({ page, browser }) => {
+    test(`${config.label} - Layout integrity`, async ({ browser }, testInfo) => {
       // Create a new browser context with DPR emulation
       // DPR must be set at context creation time, not via setViewportSize
-      const context = await browser.newContext({
+      // Inherit project-level context options (including baseURL)
+      const contextOptions = {
+        ...(testInfo.project.use || {}),
         viewport: {
           width: config.width,
           height: config.height,
         },
         deviceScaleFactor: config.deviceScaleFactor,
-      });
-      
-      const dprPage = await context.newPage();
+      };
+      const context = await browser.newContext(contextOptions);
       
       try {
+        const dprPage = await context.newPage();
         // Navigate to the game page
         await dprPage.goto('game.html');
         await dprPage.waitForLoadState('networkidle');
@@ -128,7 +130,7 @@ test.describe('PR 5 - Viewport Validation Matrix', () => {
       }
     });
     
-    test(`${config.label} - Visual regression baseline`, async ({ page, browser }, testInfo) => {
+    test(`${config.label} - Visual regression baseline`, async ({ browser }, testInfo) => {
       // Skip screenshot generation unless explicitly enabled and running on chromium
       // to avoid file write collisions from parallel test execution
       test.skip(!GENERATE_SCREENSHOTS || testInfo.project.name !== 'chromium', 
@@ -136,13 +138,16 @@ test.describe('PR 5 - Viewport Validation Matrix', () => {
       
       // Create a new browser context with DPR emulation
       // DPR must be set at context creation time, not via setViewportSize
-      const context = await browser.newContext({
+      // Inherit project-level context options (including baseURL)
+      const contextOptions = {
+        ...(testInfo.project.use || {}),
         viewport: {
           width: config.width,
           height: config.height,
         },
         deviceScaleFactor: config.deviceScaleFactor,
-      });
+      };
+      const context = await browser.newContext(contextOptions);
       
       try {
         const dprPage = await context.newPage();

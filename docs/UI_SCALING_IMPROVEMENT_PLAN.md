@@ -311,7 +311,7 @@ This is documented as a known issue and does not block PR 5 completion, as it ex
 ## Commands
 - [x] `python -m pytest -v` (202/203 tests passed; 1 unrelated Docker timeout)
 - [x] `cd frontend && npm run build` (completed successfully)
-- [x] `npx playwright test` (UI responsiveness tests: 28/28 passed)
+- [x] `npx playwright test --project=chromium` (UI responsiveness tests: 28/28 passed)
 - [x] `npx playwright test pr5-validation-matrix.spec.js --project=chromium` (11/12 passed; 1 failure is pre-existing issue)
 
 ## Acceptance Criteria
