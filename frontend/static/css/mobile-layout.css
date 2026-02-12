@@ -310,23 +310,24 @@
   .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: 6px; /* Match desktop to avoid breakpoint jump */
+    gap: var(--kb-gap); /* Use token for consistency */
   }
   
+  /* Key sizing handled by base tokens with responsive clamp() */
   .key {
     flex: 1;
-    min-width: 0;
-    max-width: 48px;
-    height: 48px;
-    font-size: 14px;
+    min-width: var(--min-touch-target); /* Ensure minimum touch target */
+    max-width: var(--key-size);
+    height: var(--key-size);
+    font-size: var(--key-font-size);
     font-weight: bold;
     padding: 0;
   }
   
   .key.wide {
     flex: 1.5;
-    max-width: 72px;
-    font-size: 12px;
+    max-width: var(--key-size-wide);
+    font-size: var(--key-font-size-wide);
   }
   
   /* ─────────────────────────────────

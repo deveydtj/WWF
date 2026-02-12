@@ -26,15 +26,18 @@
 }
 
 .key {
-  height: var(--key-h);
+  /* Use responsive key sizing tokens for smooth scaling across viewports */
+  height: var(--key-size);
+  width: var(--key-size);
+  max-width: var(--key-size);
   /* Use flex to distribute space naturally across keys in each row.
      This allows proper handling of varying key counts per row. */
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: var(--min-touch-target); /* Ensure minimum touch target */
   border: none;
   background-color: var(--key-bg);
   border-radius: var(--radius);
-  font-size: var(--key-font);
+  font-size: var(--key-font-size);
   font-weight: 800;
   text-transform: uppercase;
   cursor: pointer;
@@ -54,7 +57,8 @@
 .key.wide { 
   /* Wide keys (Enter, Backspace) span more space using flex-grow */
   flex: 1.5 1 auto;
-  font-size: clamp(11px, var(--key-font) * 0.9, 15px);
+  max-width: var(--key-size-wide);
+  font-size: var(--key-font-size-wide);
   letter-spacing: 0.02em;
 }
 
