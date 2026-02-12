@@ -29,12 +29,17 @@
   --z-points-popup-mobile: 9;
   --z-ui-component: 15;
   
-  /* Level 3: Panels (20-39) */
-  --z-panel-base: 20;
-  --z-panel-content: 25;
-  --z-panel-overlay: 30; /* For medium/mobile panel overlays */
-  --z-panel-notification: 30;
-  --z-panel-interactive: 35;
+  /* Level 3: Panels (20-39)
+   * Panel hierarchy ensures proper stacking in both desktop and mobile layouts:
+   * - Desktop: Panels use z-panel-base (20) within CSS Grid layout
+   * - Mobile: Panels use z-panel-overlay (30) for full-screen overlays
+   * - Close buttons get z-panel-overlay + 1 to ensure they're always clickable
+   */
+  --z-panel-base: 20;              /* Desktop panels in CSS Grid */
+  --z-panel-content: 25;           /* Panel content layer */
+  --z-panel-overlay: 30;           /* Mobile/tablet panel overlays (historyBox, definitionBox, chatBox) */
+  --z-panel-notification: 30;      /* Chat notification badge */
+  --z-panel-interactive: 35;       /* Interactive elements within panels */
   
   /* Level 4: Interactive Elements (40-59) */
   --z-options-menu: 40;
