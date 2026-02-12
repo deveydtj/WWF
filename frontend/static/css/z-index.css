@@ -33,7 +33,8 @@
    * Panel hierarchy ensures proper stacking in both desktop and mobile layouts:
    * - Desktop: Panels use z-panel-base (20) within CSS Grid layout
    * - Mobile: Panels use z-panel-overlay (30) for full-screen overlays
-   * - Close buttons get z-panel-overlay + 1 to ensure they're always clickable
+   * - Close buttons: Use calc(var(--z-panel-overlay) + 1) inline to ensure they're always clickable
+   *   (not defined as a token since it's context-dependent on parent panel z-index)
    */
   --z-panel-base: 20;              /* Desktop panels in CSS Grid */
   --z-panel-content: 25;           /* Panel content layer */
