@@ -196,21 +196,21 @@ Ensure Submit and Reset buttons scale together:
 
 #### Tasks
 
-- [ ] Use existing button sizing tokens from `base.css` (no new tokens needed)
-- [ ] Refactor `#optionsToggle` and `#chatNotify` positioning
-- [ ] Update input area button layout to scale with board
-- [ ] Ensure all buttons meet 44px touch target on mobile
-- [ ] Test button positioning at all breakpoints (375px, 768px, 1024px, 1440px)
-- [ ] Verify no overlap with board or other elements
+- [x] Use existing button sizing tokens from `base.css` (no new tokens needed)
+- [x] Refactor `#optionsToggle` and `#chatNotify` positioning
+- [x] Update input area button layout to scale with board
+- [x] Ensure all buttons meet 44px touch target on mobile
+- [x] Test button positioning at all breakpoints (375px, 768px, 1024px, 1440px)
+- [x] Verify no overlap with board or other elements
 
 #### Acceptance Criteria
 
-- [ ] All buttons scale proportionally with `--tile-size`
-- [ ] No absolute positioning with complex calc() expressions
-- [ ] Mobile buttons meet 44px minimum touch target
-- [ ] Desktop buttons maintain consistent spacing from board
-- [ ] No overlap at any viewport size (320px to 2560px)
-- [ ] Visual regression tests pass
+- [x] All buttons scale proportionally with `--tile-size`
+- [x] No absolute positioning with complex calc() expressions
+- [x] Mobile buttons meet 44px minimum touch target
+- [x] Desktop buttons maintain consistent spacing from board
+- [x] No overlap at any viewport size (320px to 2560px)
+- [x] Visual regression tests pass
 
 ---
 
@@ -781,11 +781,11 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 
 ### PR Sequence
 
-**PR 1: Button Positioning & Sizing** (Prerequisite: None)
-- Add button sizing tokens
-- Refactor button positioning
-- Ensure touch targets
-- Test at all breakpoints
+**PR 1: Button Positioning & Sizing** ✅ **COMPLETED**
+- ✅ Add button sizing tokens
+- ✅ Refactor button positioning
+- ✅ Ensure touch targets
+- ✅ Test at all breakpoints
 
 **PR 2: Panel Layout & Positioning** (Prerequisite: PR 1)
 - Add panel sizing tokens

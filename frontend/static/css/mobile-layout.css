@@ -234,11 +234,13 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    /* Size scales with tile-size, ensuring 44px minimum for mobile touch targets */
+    width: calc(var(--tile-size) * var(--scale-md));
+    height: calc(var(--tile-size) * var(--scale-md));
+    min-width: var(--min-touch-target); /* Ensures 44px minimum */
+    min-height: var(--min-touch-target);
     padding: 0;
-    font-size: 24px;
+    font-size: calc(var(--tile-size) * 0.4); /* Scale font with tile size */
     z-index: var(--z-ui-component);
     display: flex;
     align-items: center;
@@ -249,11 +251,13 @@
     position: absolute;
     bottom: 8px;
     right: 8px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    /* Size scales with tile-size, ensuring 44px minimum for mobile touch targets */
+    width: calc(var(--tile-size) * var(--scale-md));
+    height: calc(var(--tile-size) * var(--scale-md));
+    min-width: var(--min-touch-target); /* Ensures 44px minimum */
+    min-height: var(--min-touch-target);
     padding: 0;
-    font-size: 24px;
+    font-size: calc(var(--tile-size) * 0.4); /* Scale font with tile size */
     z-index: var(--z-ui-component);
     display: flex;
     align-items: center;
