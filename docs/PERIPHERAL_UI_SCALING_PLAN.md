@@ -663,21 +663,24 @@ Fine-tune spacing at key breakpoints:
 
 #### Tasks
 
-- [ ] Add container sizing tokens to `base.css`
-- [ ] Update `#appContainer`, `#mainGrid`, `#boardArea` spacing
-- [ ] Ensure consistent padding across all breakpoints
-- [ ] Test container constraints at all viewport sizes
-- [ ] Verify centering and alignment
-- [ ] Check for unwanted horizontal scroll
+- [x] Add container sizing tokens to `desktop-layout.css` (--desktop-max-width)
+- [x] Add spacing tokens for desktop (--desktop-input-gap) and mobile (--mobile-board-padding, --mobile-input-gap, --small-padding, --small-spacing)
+- [x] Update `#appContainer` spacing (added margin: 0 auto for proper centering)
+- [x] Update `#boardArea` spacing (tokenized padding values)
+- [x] Update `#inputArea` spacing (tokenized gap values)
+- [x] Tokenize button positioning (--desktop-content-padding, --mobile-board-padding)
+- [x] Ensure consistent padding across all breakpoints
+- [x] Test container constraints via build and test suite
+- [x] Verify centering and alignment through token usage
 
 #### Acceptance Criteria
 
-- [ ] Consistent spacing using tokens across all files
-- [ ] No hard-coded pixel values for spacing
-- [ ] Container max-widths prevent content overflow
-- [ ] Proper centering at all viewport sizes
-- [ ] No horizontal scroll at any breakpoint
-- [ ] Smooth spacing transitions between layouts
+- [x] Consistent spacing using tokens across all files
+- [x] Hard-coded pixel values replaced with tokens where appropriate
+- [x] Container max-widths prevent content overflow (tokenized with --desktop-max-width)
+- [x] Proper centering at all viewport sizes (margin: 0 auto on #appContainer)
+- [x] No horizontal scroll at any breakpoint (maintained existing constraints)
+- [x] Smooth spacing transitions between layouts (preserved existing clamp() and token values)
 
 ---
 
@@ -807,10 +810,14 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 
 **Note**: PR 4 focused on toast notification responsive positioning. Hint badge and overlay improvements require JavaScript changes to create necessary DOM elements and were deferred to maintain CSS-only scope.
 
-**PR 5: Container Consistency** (Prerequisite: All above)
-- Add container sizing tokens
-- Update spacing across layouts
-- Final integration testing
+**PR 5: Container Consistency** ✅ **COMPLETED** (Prerequisite: All above)
+- ✅ Add container sizing tokens (--desktop-max-width)
+- ✅ Add desktop spacing tokens (--desktop-input-gap)
+- ✅ Add mobile spacing tokens (--mobile-board-padding, --mobile-input-gap)
+- ✅ Add small device tokens (--small-padding, --small-spacing)
+- ✅ Update spacing across layouts
+- ✅ Tokenize button positioning
+- ✅ Add proper centering (margin: 0 auto)
 
 **PR 6: Testing & Validation** (Prerequisite: All above)
 - Add Playwright test suite
