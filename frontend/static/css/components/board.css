@@ -165,7 +165,7 @@
   bottom: 0;
   background: rgba(106, 170, 100, 0.3); /* --correct-bg color with alpha */
   border: 2px solid var(--correct-bg);
-  border-radius: calc(var(--tile-size) * 0.07); /* Scale border-radius with tile size */
+  border-radius: inherit; /* Match the parent tile's rounded corners */
   z-index: var(--z-board-overlay);
   pointer-events: none;
   animation: hint-pulse 1s ease-in-out infinite;
