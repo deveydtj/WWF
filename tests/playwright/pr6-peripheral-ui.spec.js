@@ -27,6 +27,13 @@ const TEST_VIEWPORTS = [
 ];
 
 /**
+ * Touch target thresholds
+ * Standard is 44px minimum, but we allow 43px due to sub-pixel rendering
+ */
+const TOUCH_TARGET_MINIMUM = 43; // Allow 1px tolerance for sub-pixel rendering (standard is 44px)
+const KEYBOARD_KEY_MINIMUM = 40; // Relaxed for keyboard keys in static context where JS may not execute fully
+
+/**
  * Peripheral UI elements to test
  */
 const PERIPHERAL_ELEMENTS = {
@@ -106,8 +113,8 @@ test.describe('PR 6 - Button Positioning & Sizing', () => {
             const minDimension = Math.min(submitBox.width, submitBox.height);
             expect(
               minDimension,
-              `Submit button should meet 44px minimum touch target at ${viewport.label} (got ${minDimension}px)`
-            ).toBeGreaterThanOrEqual(43); // Allow 1px tolerance for rounding
+              `Submit button should meet minimum touch target at ${viewport.label} (got ${minDimension}px)`
+            ).toBeGreaterThanOrEqual(TOUCH_TARGET_MINIMUM);
           }
         }
       }
@@ -235,14 +242,14 @@ test.describe('PR 6 - Keyboard Layout & Scaling', () => {
                   `Keyboard key should have positive size at ${viewport.label} (got ${minDimension}px)`
                 ).toBeGreaterThan(0);
                 
-                // On mobile (especially larger mobile), prefer keys approaching 44px
+                // On larger mobile viewports (768px), prefer keys approaching touch target minimum
                 // Note: At 375px with static context, keys may be smaller due to JS not running
-                // This test validates structure rather than enforcing exact dimensions
+                // This test validates structure; actual touch target enforcement happens in runtime
                 if (viewport.isMobile && viewport.width >= 768) {
                   expect(
                     minDimension,
-                    `Keyboard key should approach 44px minimum on larger mobile at ${viewport.label} (got ${minDimension}px)`
-                  ).toBeGreaterThanOrEqual(40); // More relaxed for testing purposes
+                    `Keyboard key should approach minimum touch target on larger mobile at ${viewport.label} (got ${minDimension}px)`
+                  ).toBeGreaterThanOrEqual(KEYBOARD_KEY_MINIMUM);
                 }
               }
             }
@@ -424,6 +431,12 @@ test.describe('PR 6 - Viewport Responsiveness Matrix', () => {
 
 test.describe('PR 6 - Integration Tests', () => {
   test('All peripheral elements coexist without layout conflicts', async ({ page }) => {
+    // Register error listener before first page load to catch all errors
+    const errors = [];
+    page.on('pageerror', (error) => {
+      errors.push(error.message);
+    });
+
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto('game.html');
     await page.waitForLoadState('networkidle');
@@ -447,15 +460,6 @@ test.describe('PR 6 - Integration Tests', () => {
     }
 
     // Verify no JavaScript errors occurred during load
-    const errors = [];
-    page.on('pageerror', (error) => {
-      errors.push(error.message);
-    });
-
-    await page.reload();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
-
     expect(
       errors.length,
       `No JavaScript errors should occur during page load. Errors: ${errors.join(', ')}`
