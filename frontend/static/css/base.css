@@ -248,7 +248,7 @@ h1 {
 #messagePopup {
   display: none;
   position: fixed;
-  top: calc(var(--tile-size) * 2);
+  top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 2);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-color);

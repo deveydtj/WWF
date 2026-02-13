@@ -571,21 +571,21 @@ Ensure toasts appear above keyboard:
 
 #### Tasks
 
-- [x] Fix hint badge positioning relative to player emoji
-- [x] Add hint tile overlay styling
+- [ ] Fix hint badge positioning relative to player emoji *(deferred - requires DOM changes)*
+- [ ] Add hint tile overlay styling *(deferred - requires DOM changes)*
 - [x] Update toast notification positioning to avoid keyboard
-- [x] Ensure hint elements respect z-index hierarchy
-- [x] Test hint visibility in all layout modes
-- [x] Verify hint badge scales with leaderboard
+- [x] Ensure toast notifications respect z-index hierarchy
+- [x] Test toast visibility in all layout modes
+- [x] Verify toast notifications scale with tile-size
 
 #### Acceptance Criteria
 
-- [x] Hint badge always visible next to player emoji
-- [x] Hint overlay clearly indicates selectable tiles
+- [ ] Hint badge always visible next to player emoji *(deferred - requires DOM changes)*
+- [ ] Hint overlay clearly indicates selectable tiles *(deferred - requires DOM changes)*
 - [x] Toast notifications never obscured by keyboard
-- [x] All hint elements scale with tile-size token
+- [x] Toast notifications scale with tile-size token
 - [x] Z-index hierarchy prevents conflicts
-- [x] Smooth animations on hint appearance
+- [x] Toast respects safe-area-inset on notched devices
 
 ---
 
@@ -801,10 +801,12 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 - ✅ Fix mobile keyboard positioning
 - ✅ Integrate with existing virtual keyboard detection
 
-**PR 4: Hints & Notifications** ✅ **COMPLETED** (Prerequisite: PR 2)
-- ✅ Fix hint badge positioning
-- ✅ Add hint overlay styling
+**PR 4: Hints & Notifications** ✅ **PARTIALLY COMPLETED** (Prerequisite: PR 2)
+- [ ] Fix hint badge positioning *(deferred - requires DOM changes)*
+- [ ] Add hint overlay styling *(deferred - requires DOM changes)*
 - ✅ Update toast positioning
+
+**Note**: PR 4 focused on toast notification responsive positioning. Hint badge and overlay improvements require JavaScript changes to create necessary DOM elements and were deferred to maintain CSS-only scope.
 
 **PR 5: Container Consistency** (Prerequisite: All above)
 - Add container sizing tokens
