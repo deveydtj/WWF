@@ -800,7 +800,7 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 - ✅ Fix mobile keyboard positioning
 - ✅ Integrate with existing virtual keyboard detection
 
-**PR 4: Hints & Notifications** ✅ **PARTIALLY COMPLETED** (Prerequisite: PR 2)
+**PR 4: Hints & Notifications** ⚠️ **PARTIALLY COMPLETED** (Prerequisite: PR 2)
 - [ ] Fix hint badge positioning *(deferred - requires DOM changes)*
 - [ ] Add hint overlay styling *(deferred - requires DOM changes)*
 - ✅ Update toast positioning
