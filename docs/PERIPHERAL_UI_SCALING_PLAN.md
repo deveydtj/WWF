@@ -547,11 +547,11 @@ In `components/board.css`:
 
 **Step 3: Toast Notification Positioning**
 
-Ensure toasts appear above keyboard:
+Ensure toasts appear above keyboard and respect safe-area insets:
 ```css
-.toast-notification {
+#messagePopup {
   position: fixed;
-  top: calc(var(--tile-size) * 2);
+  top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 2);
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--z-popup-message);  /* Use existing toast z-index token */
@@ -559,12 +559,11 @@ Ensure toasts appear above keyboard:
   padding: calc(var(--tile-size) * 0.3);
 }
 
-/* Mobile: Place near top to avoid keyboard overlap */
+/* Mobile: Place near top to avoid keyboard overlap, respecting safe area */
 @media (max-width: 768px) {
-  .toast-notification {
-    top: calc(var(--tile-size) * 1.5);
-    /* Don't rely on --keyboard-height (set to 'auto', not a length) */
-    /* Position from top ensures visibility above keyboard */
+  #messagePopup {
+    top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 1.5);
+    /* Position from top ensures visibility above system UI and keyboard */
   }
 }
 ```
