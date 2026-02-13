@@ -74,7 +74,6 @@
 .player-emoji {
   margin-right: calc(6px * var(--ui-scale));
   font-size: calc(1.2em * var(--ui-scale));
-  position: relative; /* For absolute positioning of hint badge */
 }
 
 .player-score {
@@ -96,8 +95,8 @@
   50% { background: var(--correct-shadow-light); }
 }
 
-/* Daily Double hint badge - for #titleHintBadge */
 .hint-badge {
+  margin-left: 6px;
   font-size: calc(0.75em * var(--ui-scale));
   animation: hint-pulse 4s ease-in-out infinite;
 }
