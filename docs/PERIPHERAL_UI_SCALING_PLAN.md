@@ -829,7 +829,7 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 - ✅ Viewport responsiveness matrix (375px, 768px, 1024px, 1440px)
 - ✅ Integration tests for layout integrity
 
-**Test Coverage**: 24 test cases covering all peripheral UI elements across multiple viewports and layout modes. All tests passing with chromium.
+**Test Coverage**: 24 test cases covering all peripheral UI elements across multiple viewports and layout modes. Tests currently validated with the Playwright chromium project; additional browser projects (firefox, webkit, mobile-chrome, mobile-safari) defined in config but not yet validated for this test suite.
 
 ---
 

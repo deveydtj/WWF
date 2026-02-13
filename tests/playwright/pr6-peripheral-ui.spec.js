@@ -67,29 +67,42 @@ test.describe('PR 6 - Button Positioning & Sizing', () => {
         const button = page.locator(selector);
         const buttonCount = await button.count();
 
-        if (buttonCount > 0) {
-          const isVisible = await button.isVisible().catch(() => false);
-          if (isVisible) {
-            const buttonBox = await button.boundingBox();
-            if (buttonBox) {
-              // Check button is within viewport (not positioned off-screen)
-              expect(
-                buttonBox.x,
-                `${name} button should be within viewport horizontally at ${viewport.label}`
-              ).toBeGreaterThanOrEqual(0);
-              
-              expect(
-                buttonBox.x + buttonBox.width,
-                `${name} button should not extend beyond viewport at ${viewport.label}`
-              ).toBeLessThanOrEqual(viewport.width);
-              
-              // Check button has reasonable size
-              expect(
-                buttonBox.width * buttonBox.height,
-                `${name} button should have positive area at ${viewport.label}`
-              ).toBeGreaterThan(0);
-            }
-          }
+        // Assert button exists in DOM (fail if missing)
+        expect(
+          buttonCount,
+          `${name} button (${selector}) should exist in DOM at ${viewport.label}`
+        ).toBeGreaterThan(0);
+
+        // Assert button is visible
+        const isVisible = await button.isVisible();
+        expect(
+          isVisible,
+          `${name} button should be visible at ${viewport.label}`
+        ).toBeTruthy();
+
+        const buttonBox = await button.boundingBox();
+        expect(
+          buttonBox,
+          `${name} button should have bounding box at ${viewport.label}`
+        ).not.toBeNull();
+
+        if (buttonBox) {
+          // Check button is within viewport (not positioned off-screen)
+          expect(
+            buttonBox.x,
+            `${name} button should be within viewport horizontally at ${viewport.label}`
+          ).toBeGreaterThanOrEqual(0);
+          
+          expect(
+            buttonBox.x + buttonBox.width,
+            `${name} button should not extend beyond viewport at ${viewport.label}`
+          ).toBeLessThanOrEqual(viewport.width);
+          
+          // Check button has reasonable size
+          expect(
+            buttonBox.width * buttonBox.height,
+            `${name} button should have positive area at ${viewport.label}`
+          ).toBeGreaterThan(0);
         }
       }
     });
@@ -103,20 +116,32 @@ test.describe('PR 6 - Button Positioning & Sizing', () => {
       const submitButton = page.locator(PERIPHERAL_ELEMENTS.buttons.submit);
       const submitCount = await submitButton.count();
 
-      if (submitCount > 0) {
-        const isVisible = await submitButton.isVisible().catch(() => false);
-        if (isVisible) {
-          const submitBox = await submitButton.boundingBox();
-          
-          if (submitBox && viewport.isMobile) {
-            // Minimum touch target is 44px on mobile (PR 1 requirement)
-            const minDimension = Math.min(submitBox.width, submitBox.height);
-            expect(
-              minDimension,
-              `Submit button should meet minimum touch target at ${viewport.label} (got ${minDimension}px)`
-            ).toBeGreaterThanOrEqual(TOUCH_TARGET_MINIMUM);
-          }
-        }
+      // Assert submit button exists in DOM (fail if missing)
+      expect(
+        submitCount,
+        `Submit button should exist in DOM at ${viewport.label}`
+      ).toBeGreaterThan(0);
+
+      // Assert submit button is visible
+      const isVisible = await submitButton.isVisible();
+      expect(
+        isVisible,
+        `Submit button should be visible at ${viewport.label}`
+      ).toBeTruthy();
+
+      const submitBox = await submitButton.boundingBox();
+      expect(
+        submitBox,
+        `Submit button should have bounding box at ${viewport.label}`
+      ).not.toBeNull();
+      
+      if (submitBox && viewport.isMobile) {
+        // Minimum touch target is 44px on mobile (PR 1 requirement)
+        const minDimension = Math.min(submitBox.width, submitBox.height);
+        expect(
+          minDimension,
+          `Submit button should meet minimum touch target at ${viewport.label} (got ${minDimension}px)`
+        ).toBeGreaterThanOrEqual(TOUCH_TARGET_MINIMUM);
       }
     });
   }
@@ -134,17 +159,21 @@ test.describe('PR 6 - Panel Layout & Positioning', () => {
       const panel = page.locator(selector);
       const panelCount = await panel.count();
 
-      if (panelCount > 0) {
-        const position = await panel.evaluate((el) => {
-          return window.getComputedStyle(el).position;
-        });
+      // Assert panel exists in DOM (fail if missing)
+      expect(
+        panelCount,
+        `${name} panel (${selector}) should exist in DOM at mobile viewport`
+      ).toBeGreaterThan(0);
 
-        // Panels should use fixed or absolute positioning on mobile for overlay behavior
-        expect(
-          ['fixed', 'absolute'].includes(position),
-          `${name} panel should use overlay positioning (fixed/absolute) on mobile, got: ${position}`
-        ).toBeTruthy();
-      }
+      const position = await panel.evaluate((el) => {
+        return window.getComputedStyle(el).position;
+      });
+
+      // Panels should use fixed or absolute positioning on mobile for overlay behavior
+      expect(
+        ['fixed', 'absolute'].includes(position),
+        `${name} panel should use overlay positioning (fixed/absolute) on mobile, got: ${position}`
+      ).toBeTruthy();
     }
   });
 
@@ -192,13 +221,25 @@ test.describe('PR 6 - Panel Layout & Positioning', () => {
       const panel = page.locator(selector);
       const panelCount = await panel.count();
 
-      if (panelCount > 0) {
-        const zIndex = await panel.evaluate((el) => {
-          return window.getComputedStyle(el).zIndex;
-        });
-        zIndexes[name] = zIndex;
-      }
+      // Assert panel exists in DOM (fail if missing)
+      expect(
+        panelCount,
+        `${name} panel (${selector}) should exist in DOM for z-index check`
+      ).toBeGreaterThan(0);
+
+      const zIndex = await panel.evaluate((el) => {
+        return window.getComputedStyle(el).zIndex;
+      });
+      zIndexes[name] = zIndex;
     }
+
+    // Verify we collected all expected panels
+    const expectedPanels = Object.keys(PERIPHERAL_ELEMENTS.panels);
+    const collectedPanels = Object.keys(zIndexes);
+    expect(
+      collectedPanels.length,
+      `Should have z-index values for all ${expectedPanels.length} panels`
+    ).toBe(expectedPanels.length);
 
     // All panels should have explicit z-index (not 'auto')
     for (const [name, zIndex] of Object.entries(zIndexes)) {
@@ -221,38 +262,60 @@ test.describe('PR 6 - Keyboard Layout & Scaling', () => {
       const keyboard = page.locator(PERIPHERAL_ELEMENTS.keyboard);
       const keyboardCount = await keyboard.count();
 
-      if (keyboardCount > 0) {
-        const isVisible = await keyboard.isVisible().catch(() => false);
-        if (isVisible) {
-          // Check all keyboard keys
-          const keys = await keyboard.locator('.key').all();
-          
-          if (keys.length > 0) {
-            // Sample a few keys to check sizing
-            const keysToTest = keys.slice(0, Math.min(5, keys.length));
+      // Assert keyboard exists in DOM (fail if missing)
+      expect(
+        keyboardCount,
+        `Keyboard should exist in DOM at ${viewport.label}`
+      ).toBeGreaterThan(0);
+
+      // Assert keyboard is visible
+      const isVisible = await keyboard.isVisible();
+      expect(
+        isVisible,
+        `Keyboard should be visible at ${viewport.label}`
+      ).toBeTruthy();
+
+      // Check all keyboard keys
+      const keys = await keyboard.locator('.key').all();
+      expect(
+        keys.length,
+        `Keyboard should have keys at ${viewport.label}`
+      ).toBeGreaterThan(0);
+      
+      // On mobile viewports, validate touch target requirements for all keys
+      if (viewport.isMobile) {
+        for (const key of keys) {
+          const keyBox = await key.boundingBox();
+          if (keyBox) {
+            const minDimension = Math.min(keyBox.width, keyBox.height);
             
-            for (const key of keysToTest) {
-              const keyBox = await key.boundingBox();
-              if (keyBox) {
-                const minDimension = Math.min(keyBox.width, keyBox.height);
-                
-                // Keys should have positive dimensions
-                expect(
-                  minDimension,
-                  `Keyboard key should have positive size at ${viewport.label} (got ${minDimension}px)`
-                ).toBeGreaterThan(0);
-                
-                // On larger mobile viewports (768px), prefer keys approaching touch target minimum
-                // Note: At 375px with static context, keys may be smaller due to JS not running
-                // This test validates structure; actual touch target enforcement happens in runtime
-                if (viewport.isMobile && viewport.width >= 768) {
-                  expect(
-                    minDimension,
-                    `Keyboard key should approach minimum touch target on larger mobile at ${viewport.label} (got ${minDimension}px)`
-                  ).toBeGreaterThanOrEqual(KEYBOARD_KEY_MINIMUM);
-                }
-              }
+            // Keys should have positive dimensions
+            expect(
+              minDimension,
+              `Keyboard key should have positive size at ${viewport.label} (got ${minDimension}px)`
+            ).toBeGreaterThan(0);
+            
+            // On larger mobile viewports (768px), validate touch target minimum
+            // At 375px with static context, keys may be smaller due to JS not fully executing
+            if (viewport.width >= 768) {
+              expect(
+                minDimension,
+                `Keyboard key should meet minimum touch target on larger mobile at ${viewport.label} (got ${minDimension}px)`
+              ).toBeGreaterThanOrEqual(KEYBOARD_KEY_MINIMUM);
             }
+          }
+        }
+      } else {
+        // On desktop, just verify keys have positive dimensions (sample check)
+        const sampleKeys = keys.slice(0, Math.min(5, keys.length));
+        for (const key of sampleKeys) {
+          const keyBox = await key.boundingBox();
+          if (keyBox) {
+            const minDimension = Math.min(keyBox.width, keyBox.height);
+            expect(
+              minDimension,
+              `Keyboard key should have positive size at ${viewport.label}`
+            ).toBeGreaterThan(0);
           }
         }
       }
@@ -267,24 +330,36 @@ test.describe('PR 6 - Keyboard Layout & Scaling', () => {
       const keyboard = page.locator(PERIPHERAL_ELEMENTS.keyboard);
       const keyboardCount = await keyboard.count();
 
-      if (keyboardCount > 0) {
-        const isVisible = await keyboard.isVisible().catch(() => false);
-        if (isVisible) {
-          const keyboardBox = await keyboard.boundingBox();
-          
-          if (keyboardBox) {
-            // Keyboard should be within reasonable viewport bounds
-            expect(
-              keyboardBox.y,
-              `Keyboard should be positioned within viewport at ${viewport.label}`
-            ).toBeGreaterThanOrEqual(0);
+      // Assert keyboard exists in DOM (fail if missing)
+      expect(
+        keyboardCount,
+        `Keyboard should exist in DOM at ${viewport.label}`
+      ).toBeGreaterThan(0);
 
-            expect(
-              keyboardBox.y,
-              `Keyboard should not be pushed too far down at ${viewport.label}`
-            ).toBeLessThan(viewport.height * 1.5); // Allow some scroll but not excessive
-          }
-        }
+      // Assert keyboard is visible
+      const isVisible = await keyboard.isVisible();
+      expect(
+        isVisible,
+        `Keyboard should be visible at ${viewport.label}`
+      ).toBeTruthy();
+
+      const keyboardBox = await keyboard.boundingBox();
+      expect(
+        keyboardBox,
+        `Keyboard should have bounding box at ${viewport.label}`
+      ).not.toBeNull();
+      
+      if (keyboardBox) {
+        // Keyboard should be within reasonable viewport bounds
+        expect(
+          keyboardBox.y,
+          `Keyboard should be positioned within viewport at ${viewport.label}`
+        ).toBeGreaterThanOrEqual(0);
+
+        expect(
+          keyboardBox.y,
+          `Keyboard should not be pushed too far down at ${viewport.label}`
+        ).toBeLessThan(viewport.height * 1.5); // Allow some scroll but not excessive
       }
     });
   }
@@ -300,28 +375,32 @@ test.describe('PR 6 - Toast Notifications', () => {
     const toast = page.locator(PERIPHERAL_ELEMENTS.toast);
     const toastCount = await toast.count();
 
-    if (toastCount > 0) {
-      // Check toast positioning - should be near top on mobile to avoid keyboard
-      const position = await toast.evaluate((el) => {
-        const styles = window.getComputedStyle(el);
-        return {
-          position: styles.position,
-          top: styles.top,
-          bottom: styles.bottom,
-        };
-      });
+    // Assert toast exists in DOM (fail if missing)
+    expect(
+      toastCount,
+      `Toast element (${PERIPHERAL_ELEMENTS.toast}) should exist in DOM`
+    ).toBeGreaterThan(0);
 
-      expect(
-        position.position,
-        'Toast should use fixed or absolute positioning'
-      ).toMatch(/fixed|absolute/);
+    // Check toast positioning - should be near top on mobile to avoid keyboard
+    const position = await toast.evaluate((el) => {
+      const styles = window.getComputedStyle(el);
+      return {
+        position: styles.position,
+        top: styles.top,
+        bottom: styles.bottom,
+      };
+    });
 
-      // Toast should be positioned from top, not bottom, to avoid keyboard
-      expect(
-        position.top,
-        'Toast should have top positioning defined'
-      ).not.toBe('auto');
-    }
+    expect(
+      position.position,
+      'Toast should use fixed or absolute positioning'
+    ).toMatch(/fixed|absolute/);
+
+    // Toast should be positioned from top, not bottom, to avoid keyboard
+    expect(
+      position.top,
+      'Toast should have top positioning defined'
+    ).not.toBe('auto');
   });
 
   test('Toast respects z-index hierarchy', async ({ page }) => {
@@ -333,22 +412,31 @@ test.describe('PR 6 - Toast Notifications', () => {
     const toast = page.locator(PERIPHERAL_ELEMENTS.toast);
     const toastCount = await toast.count();
 
-    if (toastCount > 0) {
-      const zIndex = await toast.evaluate((el) => {
-        return window.getComputedStyle(el).zIndex;
-      });
+    // Assert toast exists in DOM (fail if missing)
+    expect(
+      toastCount,
+      `Toast element (${PERIPHERAL_ELEMENTS.toast}) should exist in DOM`
+    ).toBeGreaterThan(0);
 
-      // Toast should have high z-index (not 'auto') to appear above other elements
-      expect(
-        zIndex !== 'auto' && parseInt(zIndex) > 0,
-        `Toast should have explicit high z-index, got: ${zIndex}`
-      ).toBeTruthy();
-    }
+    const zIndex = await toast.evaluate((el) => {
+      return window.getComputedStyle(el).zIndex;
+    });
+
+    // Toast should have high z-index (not 'auto') to appear above other elements
+    expect(
+      zIndex !== 'auto',
+      `Toast should have explicit z-index, got: ${zIndex}`
+    ).toBeTruthy();
+    
+    expect(
+      parseInt(zIndex),
+      `Toast z-index should be numeric and positive, got: ${zIndex}`
+    ).toBeGreaterThan(0);
   });
 });
 
 test.describe('PR 6 - Viewport Responsiveness Matrix', () => {
-  test('All peripheral elements scale proportionally across viewports', async ({ page }) => {
+  test('Peripheral elements render at all viewports (smoke test)', async ({ page }) => {
     const elementSizes = {};
 
     for (const viewport of TEST_VIEWPORTS) {
@@ -393,7 +481,7 @@ test.describe('PR 6 - Viewport Responsiveness Matrix', () => {
     }
 
     // Verify that elements have reasonable sizing at different viewports
-    // (This is a smoke test - actual proportions are validated by visual inspection)
+    // This is a basic smoke test - actual proportional scaling is validated visually
     for (const [viewportLabel, sizes] of Object.entries(elementSizes)) {
       if (sizes.submitButton) {
         expect(
