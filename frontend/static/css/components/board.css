@@ -153,6 +153,22 @@
 .tile.hint-target {
   border: 2px dashed var(--present-bg);
   cursor: pointer;
+  position: relative; /* For absolute positioning of hint overlay */
+}
+
+/* Hint tile overlay - shown when Daily Double hint is available */
+.tile-hint-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(106, 170, 100, 0.3); /* --correct-bg color with alpha */
+  border: 2px solid var(--correct-bg);
+  border-radius: 4px;
+  z-index: var(--z-board-overlay);
+  pointer-events: none;
+  animation: hint-pulse 1s ease-in-out infinite;
 }
 
 body.hint-selecting .tile:not(.hint-target) {

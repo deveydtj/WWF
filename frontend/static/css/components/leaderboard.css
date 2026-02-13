@@ -74,6 +74,7 @@
 .player-emoji {
   margin-right: calc(6px * var(--ui-scale));
   font-size: calc(1.2em * var(--ui-scale));
+  position: relative; /* For absolute positioning of hint badge */
 }
 
 .player-score {
@@ -95,8 +96,20 @@
   50% { background: var(--correct-shadow-light); }
 }
 
+/* Daily Double hint badge - positioned next to player emoji */
 .hint-badge {
-  margin-left: 6px;
-  font-size: calc(0.75em * var(--ui-scale));
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: calc(var(--tile-size) * 0.4);
+  height: calc(var(--tile-size) * 0.4);
+  font-size: calc(var(--tile-size) * 0.3);
+  background: var(--correct-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-popup-message);
+  pointer-events: none;
   animation: hint-pulse 4s ease-in-out infinite;
 }

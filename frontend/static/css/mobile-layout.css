@@ -706,6 +706,16 @@
   #chatBox {
     max-height: var(--viewport-height, 100dvh);
   }
+  
+  /* ─────────────────────────────────
+     Toast Notifications - Avoid Keyboard
+     ───────────────────────────────── */
+  
+  /* Mobile: Place toast near top to avoid keyboard overlap */
+  #messagePopup {
+    top: calc(var(--tile-size) * 1.5);
+    /* Position from top ensures visibility above keyboard */
+  }
 }
 
 /* ═══════════════════════════════════
