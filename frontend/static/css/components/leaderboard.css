@@ -96,25 +96,8 @@
   50% { background: var(--correct-shadow-light); }
 }
 
-/* Daily Double hint badge - base styles */
+/* Daily Double hint badge - for #titleHintBadge */
 .hint-badge {
   font-size: calc(0.75em * var(--ui-scale));
   animation: hint-pulse 4s ease-in-out infinite;
-}
-
-/* Hint badge in leaderboard - positioned next to player emoji */
-.player-emoji .hint-badge {
-  position: absolute;
-  top: calc(var(--tile-size) * -0.07);  /* Scale positioning with tile size */
-  right: calc(var(--tile-size) * -0.07);
-  width: calc(var(--tile-size) * 0.4);
-  height: calc(var(--tile-size) * 0.4);
-  font-size: calc(var(--tile-size) * 0.3);
-  background: var(--correct-bg);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-ui-component);  /* UI component badge, not a modal popup */
-  pointer-events: none;  /* Only for leaderboard badges, not title badge */
 }
