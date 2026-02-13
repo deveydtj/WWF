@@ -571,21 +571,21 @@ Ensure toasts appear above keyboard:
 
 #### Tasks
 
-- [ ] Fix hint badge positioning relative to player emoji
-- [ ] Add hint tile overlay styling
-- [ ] Update toast notification positioning to avoid keyboard
-- [ ] Ensure hint elements respect z-index hierarchy
-- [ ] Test hint visibility in all layout modes
-- [ ] Verify hint badge scales with leaderboard
+- [x] Fix hint badge positioning relative to player emoji
+- [x] Add hint tile overlay styling
+- [x] Update toast notification positioning to avoid keyboard
+- [x] Ensure hint elements respect z-index hierarchy
+- [x] Test hint visibility in all layout modes
+- [x] Verify hint badge scales with leaderboard
 
 #### Acceptance Criteria
 
-- [ ] Hint badge always visible next to player emoji
-- [ ] Hint overlay clearly indicates selectable tiles
-- [ ] Toast notifications never obscured by keyboard
-- [ ] All hint elements scale with tile-size token
-- [ ] Z-index hierarchy prevents conflicts
-- [ ] Smooth animations on hint appearance
+- [x] Hint badge always visible next to player emoji
+- [x] Hint overlay clearly indicates selectable tiles
+- [x] Toast notifications never obscured by keyboard
+- [x] All hint elements scale with tile-size token
+- [x] Z-index hierarchy prevents conflicts
+- [x] Smooth animations on hint appearance
 
 ---
 
@@ -801,10 +801,10 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 - ✅ Fix mobile keyboard positioning
 - ✅ Integrate with existing virtual keyboard detection
 
-**PR 4: Hints & Notifications** (Prerequisite: PR 2)
-- Fix hint badge positioning
-- Add hint overlay styling
-- Update toast positioning
+**PR 4: Hints & Notifications** ✅ **COMPLETED** (Prerequisite: PR 2)
+- ✅ Fix hint badge positioning
+- ✅ Add hint overlay styling
+- ✅ Update toast positioning
 
 **PR 5: Container Consistency** (Prerequisite: All above)
 - Add container sizing tokens
