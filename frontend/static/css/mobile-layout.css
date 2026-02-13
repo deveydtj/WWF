@@ -43,6 +43,10 @@
     --scale-sm: 0.9;    /* Small */
     --scale-md: 1;      /* Medium - baseline */
     --scale-lg: 1.1;    /* Large */
+    
+    /* Mobile spacing tokens */
+    --mobile-board-padding: 8px;
+    --mobile-input-gap: 12px;
   }
   
   /* ─────────────────────────────────
@@ -185,7 +189,7 @@
     display: flex;
     justify-content: center;
     position: relative;
-    padding: 8px;
+    padding: var(--mobile-board-padding);
     box-sizing: border-box; /* Ensure padding is included in width calculation */
     min-width: 280px; /* Prevent collapse */
   }
@@ -217,8 +221,8 @@
   /* Board buttons - Mobile menu and options */
   #mobileMenuToggle {
     position: absolute;
-    top: 8px;
-    left: 8px;
+    top: var(--mobile-board-padding);
+    left: var(--mobile-board-padding);
     width: 44px;
     height: 44px;
     min-width: 44px;
@@ -233,14 +237,14 @@
   /* Board controls - positioning only (sizing in components/panels.css) */
   #optionsToggle {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: var(--mobile-board-padding);
+    right: var(--mobile-board-padding);
   }
   
   #chatNotify {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    bottom: var(--mobile-board-padding);
+    right: var(--mobile-board-padding);
   }
   
   /* ─────────────────────────────────
@@ -249,7 +253,7 @@
   
   #inputArea {
     display: flex;
-    gap: 12px; /* Match desktop to avoid breakpoint jump */
+    gap: var(--mobile-input-gap);
     width: 100%;
     max-width: 360px;
     padding: 0 var(--kb-gap); /* Use existing token */
@@ -730,6 +734,10 @@
     --scale-sm: 0.85;   /* Small */
     --scale-md: 0.95;   /* Medium - slightly reduced baseline */
     --scale-lg: 1.05;   /* Large */
+    
+    /* Small device spacing tokens */
+    --small-padding: 4px;
+    --small-spacing: 8px;
   }
   
   /* Tighter spacing for small screens */
@@ -755,15 +763,15 @@
   
   /* Reduce padding on very small screens */
   #mainGrid {
-    padding: calc(68px + env(safe-area-inset-top)) 8px calc(170px + env(keyboard-inset-height, 0px));
+    padding: calc(68px + env(safe-area-inset-top)) var(--small-spacing) calc(170px + env(keyboard-inset-height, 0px));
   }
   
   #boardArea {
-    padding: 4px;
+    padding: var(--small-padding);
   }
   
   #inputArea {
-    padding: 0 4px;
+    padding: 0 var(--small-padding);
   }
   
   /* Smaller header - preserve safe area insets */
