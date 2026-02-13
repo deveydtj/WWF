@@ -547,11 +547,11 @@ In `components/board.css`:
 
 **Step 3: Toast Notification Positioning**
 
-Ensure toasts appear above keyboard:
+Ensure toasts appear above keyboard and respect safe-area insets:
 ```css
-.toast-notification {
+#messagePopup {
   position: fixed;
-  top: calc(var(--tile-size) * 2);
+  top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 2);
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--z-popup-message);  /* Use existing toast z-index token */
@@ -559,33 +559,32 @@ Ensure toasts appear above keyboard:
   padding: calc(var(--tile-size) * 0.3);
 }
 
-/* Mobile: Place near top to avoid keyboard overlap */
+/* Mobile: Place near top to avoid keyboard overlap, respecting safe area */
 @media (max-width: 768px) {
-  .toast-notification {
-    top: calc(var(--tile-size) * 1.5);
-    /* Don't rely on --keyboard-height (set to 'auto', not a length) */
-    /* Position from top ensures visibility above keyboard */
+  #messagePopup {
+    top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 1.5);
+    /* Position from top ensures visibility above system UI and keyboard */
   }
 }
 ```
 
 #### Tasks
 
-- [ ] Fix hint badge positioning relative to player emoji
-- [ ] Add hint tile overlay styling
-- [ ] Update toast notification positioning to avoid keyboard
-- [ ] Ensure hint elements respect z-index hierarchy
-- [ ] Test hint visibility in all layout modes
-- [ ] Verify hint badge scales with leaderboard
+- [ ] Fix hint badge positioning relative to player emoji *(deferred - requires DOM changes)*
+- [ ] Add hint tile overlay styling *(deferred - requires DOM changes)*
+- [x] Update toast notification positioning to avoid keyboard
+- [x] Ensure toast notifications respect z-index hierarchy
+- [x] Test toast visibility in all layout modes
+- [x] Verify toast notifications scale with tile-size
 
 #### Acceptance Criteria
 
-- [ ] Hint badge always visible next to player emoji
-- [ ] Hint overlay clearly indicates selectable tiles
-- [ ] Toast notifications never obscured by keyboard
-- [ ] All hint elements scale with tile-size token
-- [ ] Z-index hierarchy prevents conflicts
-- [ ] Smooth animations on hint appearance
+- [ ] Hint badge always visible next to player emoji *(deferred - requires DOM changes)*
+- [ ] Hint overlay clearly indicates selectable tiles *(deferred - requires DOM changes)*
+- [x] Toast notifications never obscured by keyboard
+- [x] Toast notifications scale with tile-size token
+- [x] Z-index hierarchy prevents conflicts
+- [x] Toast respects safe-area-inset on notched devices
 
 ---
 
@@ -801,10 +800,12 @@ Use existing baseline snapshot system from `UI_SCALING_IMPROVEMENT_PLAN.md`:
 - ✅ Fix mobile keyboard positioning
 - ✅ Integrate with existing virtual keyboard detection
 
-**PR 4: Hints & Notifications** (Prerequisite: PR 2)
-- Fix hint badge positioning
-- Add hint overlay styling
-- Update toast positioning
+**PR 4: Hints & Notifications** ⚠️ **PARTIALLY COMPLETED** (Prerequisite: PR 2)
+- [ ] Fix hint badge positioning *(deferred - requires DOM changes)*
+- [ ] Add hint overlay styling *(deferred - requires DOM changes)*
+- ✅ Update toast positioning
+
+**Note**: PR 4 focused on toast notification responsive positioning. Hint badge and overlay improvements require JavaScript changes to create necessary DOM elements and were deferred to maintain CSS-only scope.
 
 **PR 5: Container Consistency** (Prerequisite: All above)
 - Add container sizing tokens

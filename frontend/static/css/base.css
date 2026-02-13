@@ -244,19 +244,21 @@ h1 {
   margin: 5px 0;
 }
 
+/* Toast notification popup - positioned to avoid keyboard overlap */
 #messagePopup {
   display: none;
   position: fixed;
-  top: 20px;
+  top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 2);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-color);
   color: var(--text-color);
-  padding: 10px 20px;
+  max-width: 80vw;
+  padding: calc(var(--tile-size) * 0.3);
   border-radius: 10px;
   box-shadow: 4px 4px 8px var(--shadow-color-dark),
               -4px -4px 8px var(--shadow-color-light);
-  z-index: 100;
+  z-index: var(--z-popup-message);
   pointer-events: none;
   flex: 0 0 auto;
   margin: 5px 0;
