@@ -367,15 +367,16 @@
   .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: var(--kb-gap); /* Use token for consistency */
   }
   
+  /* Key sizing handled by base tokens with responsive clamp() */
   .key {
     flex: 1;
     min-width: 0;
-    max-width: 52px;
-    height: 52px;
-    font-size: 14px; /* Match mobile fixed value to avoid breakpoint jump */
+    max-width: var(--key-size);
+    height: var(--key-size);
+    font-size: var(--key-font-size);
     font-weight: bold;
     padding: 0;
     cursor: pointer;
@@ -384,8 +385,8 @@
   
   .key.wide {
     flex: 1.5;
-    max-width: 78px;
-    font-size: 14px;
+    max-width: var(--key-size-wide);
+    font-size: var(--key-font-size-wide);
   }
   
   .key:hover {
@@ -584,6 +585,9 @@
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
     --board-max-width: 600px;
     --desktop-grid-gap: 24px;
+    
+    /* Keyboard sizing uses base tokens derived from JS-managed --key-h
+       to preserve viewport-fit behavior on large screens */
   }
   
   /* More spacious layout */
@@ -599,16 +603,7 @@
     gap: 8px;
   }
   
-  .key {
-    max-width: 58px;
-    height: 58px;
-    font-size: 18px;
-  }
-  
-  .key.wide {
-    max-width: 87px;
-    font-size: 16px;
-  }
+  /* Keys now use tokens from :root - no need to override here */
 }
 
 /* ═══════════════════════════════════
@@ -631,6 +626,9 @@
     --board-max-width: 700px;
     --desktop-panel-width: 280px;
     --desktop-grid-gap: 32px;
+    
+    /* Keyboard sizing uses base tokens derived from JS-managed --key-h
+       to preserve viewport-fit behavior on ultra-wide screens */
   }
   
   /* Maximum comfortable sizing */
@@ -642,18 +640,10 @@
     font-size: 28px;
   }
   
-  .key {
-    max-width: 60px;
-    height: 60px;
-    font-size: 18px;
-  }
+  /* Keys now use tokens from :root - no need to override here */
+}
   
-  .key.wide {
-    max-width: 90px;
-    font-size: 16px;
-  }
-  
-  /* Wider panels for better readability */
+/* Wider panels for better readability */
   #historyBox,
   #definitionBox,
   #chatBox {
