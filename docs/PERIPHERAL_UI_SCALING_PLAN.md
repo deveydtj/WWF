@@ -463,7 +463,7 @@ The codebase already has virtual keyboard detection and CSS uses `env(keyboard-i
 - [x] Add derivative keyboard sizing tokens (`--key-size`, `--key-size-wide`, `--key-font-size`, `--key-font-size-wide`) that reference JS-computed values for consistency with viewport-fit logic
 - [x] Refactor desktop keyboard positioning (relative, not fixed)
 - [x] Update mobile keyboard to work with existing virtual keyboard detection
-- [x] Ensure key sizes scale proportionally with viewport using clamp() functions
+- [x] Ensure key sizes scale proportionally with viewport using JS-computed sizing tokens (`--key-h`, `--key-font`) that adapt to viewport-fit requirements, with derivative tokens (`--key-size`, `--key-font-size`) referencing these JS-managed values
 - [x] Verify safe-area-inset handling works with existing mobile keyboard CSS
 - [x] Integrate with existing `visualViewport` detection (no new listeners needed)
 - [x] Test keyboard on various viewport sizes (375px, 768px, 1024px, 1440px)

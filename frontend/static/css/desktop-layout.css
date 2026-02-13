@@ -586,11 +586,8 @@
     --board-max-width: 600px;
     --desktop-grid-gap: 24px;
     
-    /* Enhanced keyboard sizing for large screens */
-    --key-size: clamp(52px, 7vw, 58px);
-    --key-size-wide: calc(var(--key-size) * 1.5);
-    --key-font-size: clamp(16px, 2.8vw, 18px);
-    --key-font-size-wide: clamp(14px, 2.3vw, 16px);
+    /* Keyboard sizing uses base tokens derived from JS-managed --key-h
+       to preserve viewport-fit behavior on large screens */
   }
   
   /* More spacious layout */
@@ -630,11 +627,8 @@
     --desktop-panel-width: 280px;
     --desktop-grid-gap: 32px;
     
-    /* Enhanced keyboard sizing for ultra-wide screens */
-    --key-size: clamp(56px, 6vw, 60px);
-    --key-size-wide: calc(var(--key-size) * 1.5);
-    --key-font-size: clamp(17px, 2.5vw, 18px);
-    --key-font-size-wide: clamp(15px, 2vw, 16px);
+    /* Keyboard sizing uses base tokens derived from JS-managed --key-h
+       to preserve viewport-fit behavior on ultra-wide screens */
   }
   
   /* Maximum comfortable sizing */
