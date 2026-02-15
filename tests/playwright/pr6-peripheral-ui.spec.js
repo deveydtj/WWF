@@ -31,7 +31,6 @@ const TEST_VIEWPORTS = [
  * Standard is 44px minimum, but we allow 43px due to sub-pixel rendering
  */
 const TOUCH_TARGET_MINIMUM = 43; // Allow 1px tolerance for sub-pixel rendering (standard is 44px)
-const KEYBOARD_KEY_MINIMUM = 40; // Relaxed for keyboard keys in static context where JS may not execute fully
 
 /**
  * Peripheral UI elements to test
@@ -296,20 +295,18 @@ test.describe('PR 6 - Keyboard Layout & Scaling', () => {
           if (keyBox) {
             const minDimension = Math.min(keyBox.width, keyBox.height);
             
-            // Keys should have positive dimensions
+            // Validate touch target minimum based on viewport
+            // At 375px in static context, JS may not fully execute leading to smaller keys (~30px)
+            // At 768px+, keys should meet full touch target requirements
+            const expectedMinimum = viewport.width < 768 ? 28 : TOUCH_TARGET_MINIMUM;
+            const contextNote = viewport.width < 768 
+              ? ' (relaxed for static context where JS may not execute)' 
+              : '';
+            
             expect(
               minDimension,
-              `Keyboard key should have positive size at ${viewport.label} (got ${minDimension}px)`
-            ).toBeGreaterThan(0);
-            
-            // On larger mobile viewports (768px), validate touch target minimum
-            // At 375px with static context, keys may be smaller due to JS not fully executing
-            if (viewport.width >= 768) {
-              expect(
-                minDimension,
-                `Keyboard key should meet minimum touch target on larger mobile at ${viewport.label} (got ${minDimension}px)`
-              ).toBeGreaterThanOrEqual(KEYBOARD_KEY_MINIMUM);
-            }
+              `Keyboard key should meet touch target minimum at ${viewport.label} (got ${minDimension}px, expected >=${expectedMinimum}px${contextNote})`
+            ).toBeGreaterThanOrEqual(expectedMinimum);
           }
         }
       } else {
