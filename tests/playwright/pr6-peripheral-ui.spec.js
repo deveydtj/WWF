@@ -86,7 +86,7 @@ test.describe('PR 6 - Button Positioning & Sizing', () => {
         ).not.toBeNull();
 
         if (buttonBox) {
-          // Check button is within viewport (not positioned off-screen)
+          // Check button is within viewport horizontally (not positioned off-screen)
           expect(
             buttonBox.x,
             `${name} button should be within viewport horizontally at ${viewport.label}`
@@ -94,8 +94,19 @@ test.describe('PR 6 - Button Positioning & Sizing', () => {
           
           expect(
             buttonBox.x + buttonBox.width,
-            `${name} button should not extend beyond viewport at ${viewport.label}`
+            `${name} button should not extend beyond viewport horizontally at ${viewport.label}`
           ).toBeLessThanOrEqual(viewport.width);
+          
+          // Check button is within viewport vertically
+          expect(
+            buttonBox.y,
+            `${name} button should be within viewport vertically at ${viewport.label}`
+          ).toBeGreaterThanOrEqual(0);
+          
+          expect(
+            buttonBox.y + buttonBox.height,
+            `${name} button should not extend beyond viewport vertically at ${viewport.label}`
+          ).toBeLessThanOrEqual(viewport.height);
           
           // Check button has reasonable size
           expect(
@@ -292,35 +303,54 @@ test.describe('PR 6 - Keyboard Layout & Scaling', () => {
       if (viewport.isMobile) {
         for (const key of keys) {
           const keyBox = await key.boundingBox();
-          if (keyBox) {
-            const minDimension = Math.min(keyBox.width, keyBox.height);
-            
-            // Validate touch target minimum based on viewport
-            // At 375px in static context, JS may not fully execute leading to smaller keys (~30px)
-            // At 768px+, keys should meet full touch target requirements
-            const expectedMinimum = viewport.width < 768 ? 28 : TOUCH_TARGET_MINIMUM;
-            const contextNote = viewport.width < 768 
-              ? ' (relaxed for static context where JS may not execute)' 
-              : '';
-            
-            expect(
-              minDimension,
-              `Keyboard key should meet touch target minimum at ${viewport.label} (got ${minDimension}px, expected >=${expectedMinimum}px${contextNote})`
-            ).toBeGreaterThanOrEqual(expectedMinimum);
+          
+          // Every key should be rendered and have a bounding box; null indicates a non-visible/non-laid-out key
+          expect(
+            keyBox,
+            `Keyboard key should be rendered and have a bounding box at ${viewport.label}`
+          ).not.toBeNull();
+          
+          // Defensive guard for type safety; expectation above will fail if keyBox is null
+          if (!keyBox) {
+            continue;
           }
+          
+          const minDimension = Math.min(keyBox.width, keyBox.height);
+          
+          // Validate touch target minimum based on viewport
+          // At 375px in static context, JS may not fully execute leading to smaller keys (~30px)
+          // At 768px+, keys should meet full touch target requirements
+          const expectedMinimum = viewport.width < 768 ? 28 : TOUCH_TARGET_MINIMUM;
+          const contextNote = viewport.width < 768 
+            ? ' (relaxed for static context where JS may not execute)' 
+            : '';
+          
+          expect(
+            minDimension,
+            `Keyboard key should meet touch target minimum at ${viewport.label} (got ${minDimension}px, expected >=${expectedMinimum}px${contextNote})`
+          ).toBeGreaterThanOrEqual(expectedMinimum);
         }
       } else {
         // On desktop, just verify keys have positive dimensions (sample check)
         const sampleKeys = keys.slice(0, Math.min(5, keys.length));
         for (const key of sampleKeys) {
           const keyBox = await key.boundingBox();
-          if (keyBox) {
-            const minDimension = Math.min(keyBox.width, keyBox.height);
-            expect(
-              minDimension,
-              `Keyboard key should have positive size at ${viewport.label}`
-            ).toBeGreaterThan(0);
+          
+          // Desktop keys should also be rendered and laid out
+          expect(
+            keyBox,
+            `Keyboard key should be rendered and have a bounding box at ${viewport.label}`
+          ).not.toBeNull();
+          
+          if (!keyBox) {
+            continue;
           }
+          
+          const minDimension = Math.min(keyBox.width, keyBox.height);
+          expect(
+            minDimension,
+            `Keyboard key should have positive size at ${viewport.label}`
+          ).toBeGreaterThan(0);
         }
       }
     });
@@ -391,7 +421,6 @@ test.describe('PR 6 - Toast Notifications', () => {
       return {
         position: styles.position,
         top: styles.top,
-        bottom: styles.bottom,
       };
     });
 
