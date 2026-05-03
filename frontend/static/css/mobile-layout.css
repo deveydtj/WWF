@@ -474,6 +474,7 @@
   /* ─────────────────────────────────
      Player Sidebar - Centered Card Modal
      Phase 5: player panel as centered card modal on phone/tablet
+     Phase 6: full-roster experience with heading and close button
      ───────────────────────────────── */
   
   #playerSidebar {
@@ -487,6 +488,7 @@
     background: var(--bg-color);
     border-radius: 20px;
     padding: var(--pad-x);
+    padding-top: calc(var(--pad-x) + 8px);
     box-shadow:
       0 8px 32px var(--shadow-color-dark),
       0 0 0 3px var(--shadow-color-light);
@@ -836,5 +838,34 @@
     height: 44px;
     min-width: 44px;
     font-size: 16px;
+  }
+}
+
+/* ═══════════════════════════════════
+   Phone Layout - Reset in Header
+   Phase 6: reset control lives in the top header on phone (≤600px)
+   ═══════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* Reset wrapper when placed inside the lobby header */
+  #lobbyHeader #resetWrapper {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Compact reset button sized for the header */
+  #lobbyHeader #holdReset {
+    width: auto;
+    min-width: 60px;
+    height: 36px;
+    font-size: 13px;
+    padding: 0 10px;
+    border-radius: 8px;
+  }
+
+  /* Keep reset out of the input area on phone (button is physically moved to header) */
+  #inputArea #resetWrapper {
+    display: none;
   }
 }

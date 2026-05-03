@@ -5,6 +5,7 @@
 
 import { getMyEmoji, applyEmojiVariantStyling, getBaseEmoji, getMyPlayerId } from './emoji.js';
 import { updateHintBadge } from './hintBadge.js';
+import { kickPlayer } from './api.js';
 
 let leaderboard = [];
 let prevLeaderboard = {};
@@ -182,65 +183,106 @@ function renderLeaderboard() {
 }
 
 function renderPlayerSidebar() {
-  const sidebarDiv = document.getElementById('playerSidebar');
-  if (!sidebarDiv) return;
-  
+  const playerList = document.getElementById('playerList');
+  if (!playerList) return;
+
   const myEmoji = getMyEmoji();
-  
-  // Find current player's data - handle both formats: server format {emoji, score, last_active} and old tuple format [emoji, data]
-  const myData = leaderboard.find(item => {
-    if (Array.isArray(item)) {
-      const [emoji] = item;
-      return emoji === myEmoji;
-    } else {
-      return item.emoji === myEmoji;
-    }
-  });
-  if (!myData) {
-    sidebarDiv.innerHTML = '<div class="no-player">No player data</div>';
+  const myPlayerId = getMyPlayerId();
+  const hostToken = localStorage.getItem('hostToken');
+  const lobbyCode = window.LOBBY_CODE;
+
+  if (!leaderboard || leaderboard.length === 0) {
+    playerList.innerHTML = '';
+    document.dispatchEvent(new CustomEvent('playersUpdated', { detail: { playerCount: 0 } }));
     return;
   }
-  
-  // Extract data from either format
-  let score = 0, hint_count = 0, last_active;
-  if (Array.isArray(myData)) {
-    const [, data] = myData;
-    ({ score = 0, hint_count = 0, last_active } = data);
-  } else {
-    ({ score = 0, hint_count = 0, last_active } = myData);
-  }
-  
-  // Create player info display
-  const playerInfo = document.createElement('div');
-  playerInfo.className = 'player-info';
-  
-  const emojiEl = document.createElement('div');
-  emojiEl.className = 'sidebar-emoji';
-  emojiEl.textContent = getBaseEmoji(myEmoji);
-  applyEmojiVariantStyling(emojiEl, myEmoji);
-  
-  if (hint_count > 0) {
-    updateHintBadge(emojiEl, hint_count);
-  }
-  
-  const scoreEl = document.createElement('div');
-  scoreEl.className = 'sidebar-score';
-  scoreEl.innerHTML = `<strong>Score:</strong> ${score}`;
-  
-  const hintsEl = document.createElement('div');
-  hintsEl.className = 'sidebar-hints';
-  hintsEl.innerHTML = `<strong>Hints:</strong> ${hint_count}`;
-  
-  playerInfo.appendChild(emojiEl);
-  playerInfo.appendChild(scoreEl);
-  playerInfo.appendChild(hintsEl);
-  
-  sidebarDiv.innerHTML = '';
-  sidebarDiv.appendChild(playerInfo);
-  
+
+  // Normalize and sort all players by score descending
+  const sortedPlayers = leaderboard
+    .map(item => {
+      if (Array.isArray(item)) {
+        const [emoji, data] = item;
+        return { emoji, ...data };
+      }
+      return item;
+    })
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  const now = Date.now() / 1000;
+  const inactiveCutoff = 5 * 60; // 5 minutes
+
+  playerList.innerHTML = '';
+
+  sortedPlayers.forEach(({ emoji, score = 0, last_active, hint_count = 0, player_id }, index) => {
+    const li = document.createElement('li');
+    li.className = 'player-roster-row';
+    if (emoji === myEmoji) {
+      li.classList.add('current-player');
+    }
+    const isInactive = last_active && (now - last_active > inactiveCutoff);
+    if (isInactive) {
+      li.classList.add('inactive');
+    }
+
+    // Rank
+    const rankEl = document.createElement('span');
+    rankEl.className = 'roster-rank';
+    rankEl.textContent = `#${index + 1}`;
+
+    // Emoji avatar with optional hint badge
+    const emojiEl = document.createElement('span');
+    emojiEl.className = 'roster-emoji';
+    emojiEl.textContent = getBaseEmoji(emoji);
+    applyEmojiVariantStyling(emojiEl, emoji);
+    if (hint_count > 0) {
+      updateHintBadge(emojiEl, hint_count);
+    }
+
+    // Score
+    const scoreEl = document.createElement('span');
+    scoreEl.className = 'roster-score';
+    scoreEl.textContent = score;
+
+    // AFK badge
+    if (isInactive) {
+      const afkEl = document.createElement('span');
+      afkEl.className = 'roster-afk';
+      afkEl.textContent = 'AFK';
+      li.appendChild(rankEl);
+      li.appendChild(emojiEl);
+      li.appendChild(scoreEl);
+      li.appendChild(afkEl);
+    } else {
+      li.appendChild(rankEl);
+      li.appendChild(emojiEl);
+      li.appendChild(scoreEl);
+    }
+
+    // Kick button: shown to host for other players when lobby code is available.
+    // `player_id` is required to identify the target; entries without it (e.g. legacy
+    // server responses) silently skip the kick button rather than crashing.
+    if (hostToken && lobbyCode && player_id && emoji !== myEmoji) {
+      const kickBtn = document.createElement('button');
+      kickBtn.className = 'roster-kick-btn';
+      kickBtn.textContent = '✕';
+      kickBtn.setAttribute('aria-label', `Kick ${emoji}`);
+      kickBtn.setAttribute('title', `Kick ${emoji}`);
+      kickBtn.addEventListener('click', async () => {
+        try {
+          await kickPlayer(emoji, player_id, lobbyCode, hostToken);
+        } catch (err) {
+          console.warn('Kick failed:', err);
+        }
+      });
+      li.appendChild(kickBtn);
+    }
+
+    playerList.appendChild(li);
+  });
+
   // Dispatch event to notify mobile menu manager about player count changes
   document.dispatchEvent(new CustomEvent('playersUpdated', {
-    detail: { playerCount: leaderboard.length }
+    detail: { playerCount: sortedPlayers.length }
   }));
 }
 
