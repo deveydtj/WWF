@@ -62,10 +62,9 @@
     --desktop-header-height: 60px;
     --desktop-panel-max-height: calc(100vh - 160px);
     
-    /* Board sizing - CSS first, JS only adjusts when needed */
-    --tile-size: clamp(48px, 4vw, 60px);
-    --tile-gap: clamp(4px, 0.5vw, 8px);
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    /* Board sizing is owned by responsiveScaling.js at runtime.
+     * --tile-size, --tile-gap, and --board-width are set dynamically
+     * by the JS scaling engine; do not redefine them here. */
     --board-max-width: 500px;
     
     /* Spacing */
@@ -585,14 +584,10 @@
     --scale-md: 1.175;  /* Medium - increased baseline */
     --scale-lg: 1.35;   /* Large */
     
-    --tile-size: clamp(56px, 4vw, 65px);
-    --tile-gap: clamp(6px, 0.6vw, 8px);
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    /* Board sizing is owned by responsiveScaling.js at runtime.
+     * --tile-size, --tile-gap, and --board-width must not be redefined here. */
     --board-max-width: 600px;
     --desktop-grid-gap: 24px;
-    
-    /* Keyboard sizing uses base tokens derived from JS-managed --key-h
-       to preserve viewport-fit behavior on large screens */
   }
   
   /* More spacious layout */
@@ -625,15 +620,11 @@
     --scale-md: 1.25;   /* Medium - maximum baseline */
     --scale-lg: 1.45;   /* Large */
     
-    --tile-size: 65px;
-    --tile-gap: 8px;
-    --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
+    /* Board sizing is owned by responsiveScaling.js at runtime.
+     * --tile-size, --tile-gap, and --board-width must not be redefined here. */
     --board-max-width: 700px;
     --desktop-panel-width: 280px;
     --desktop-grid-gap: 32px;
-    
-    /* Keyboard sizing uses base tokens derived from JS-managed --key-h
-       to preserve viewport-fit behavior on ultra-wide screens */
   }
   
   /* Maximum comfortable sizing */

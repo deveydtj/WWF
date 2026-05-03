@@ -82,6 +82,16 @@
   --viewport-height: 100vh;
   --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));
   
+  /* Modal / popup sizing — CSS baseline fallback values.
+   * These tokens are overridden at runtime by responsiveScaling.js so that
+   * card modals remain proportional to the board across all viewports.
+   * --modal-max-width  : maximum width; JS clamps between 280px–560px then 90vw
+   * --modal-max-height : maximum height; JS clamps between 300px–700px
+   * --modal-padding    : inner padding for modal content areas */
+  --modal-max-width: min(90vw, 512px);
+  --modal-max-height: min(90vh, 700px);
+  --modal-padding: 20px;
+
   /* Touch and accessibility */
   --min-touch-target: 44px;
   --accessibility-scale: 1;
