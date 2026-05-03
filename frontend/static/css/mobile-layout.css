@@ -1,8 +1,8 @@
 /**
  * mobile-layout.css
  * 
- * Complete mobile layout system for WordSquad
- * Target: Viewports ≤768px
+ * Complete phone/tablet layout system for WordSquad
+ * Target: Viewports ≤900px
  * 
  * Part of Phase 2: Mobile Layout Implementation
  * See: docs/LAYOUT_REFACTORING_PLAN.md
@@ -22,16 +22,17 @@
  * - components/*.css
  * 
  * Breakpoint strategy:
- * - Primary: max-width: 768px
+ * - Primary: max-width: 900px
+ * - Phone/tablet boundary: max-width: 600px
  * - Sub-breakpoint: max-width: 375px (very small devices)
  */
 
 /* ===================================
-   MOBILE LAYOUT - Flexbox-based
-   Target: ≤768px
+   PHONE/TABLET LAYOUT - Flexbox-based
+   Target: ≤900px
    =================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   /* ─────────────────────────────────
      Mobile Scale Token Overrides
      ───────────────────────────────── */
@@ -128,8 +129,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(12px, 2.604vw, 20px); /* Reaches 20px at 768px to match desktop */
-    padding: calc(72px + env(safe-area-inset-top)) clamp(12px, 2.083vw, 16px) 180px; /* Reaches 16px at 768px, top padding for fixed header + safe area, bottom for keyboard */
+    gap: clamp(12px, 2.22vw, 20px); /* Reaches 20px at 900px to match desktop */
+    padding: calc(72px + env(safe-area-inset-top)) clamp(12px, 1.78vw, 16px) 180px; /* Reaches 16px at 900px, top padding for fixed header + safe area, bottom for keyboard */
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;

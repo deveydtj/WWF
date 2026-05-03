@@ -24,9 +24,9 @@
    - Touch-optimized sizing and accessibility features
    
    Mode breakpoints reference (for informational purposes):
-   - LIGHT MODE: ≤600px (body[data-mode="light"])
-   - MEDIUM MODE: 601px-900px (body[data-mode="medium"])
-   - FULL MODE: >900px (body[data-mode="full"])
+   - PHONE MODE: ≤600px (body[data-mode="phone"])
+   - TABLET MODE: 601px-900px (body[data-mode="tablet"])
+   - DESKTOP MODE: >900px (body[data-mode="desktop"])
 */
 
 /* Modern viewport units for better mobile support */
@@ -167,7 +167,7 @@
   }
 }
 
-/* Foldable device support - MEDIUM MODE range (601-900px) */
+/* Foldable device support - TABLET MODE range (601-900px) */
 @media (min-width: 601px) and (max-width: 900px) and (orientation: portrait) {
   :root {
     --tile-size: var(--tile-size-tablet);

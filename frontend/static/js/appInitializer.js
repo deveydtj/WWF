@@ -13,6 +13,7 @@ import { initAudio, stopAllSounds, isSoundEnabled } from './audioManager.js';
 import { setupMobileLeaderboard, setupLeaderboardScrolling, renderEmojiStamps } from './leaderboardManager.js';
 import { initResetManager } from './resetManager.js';
 import { updatePanelVisibility } from './panelManager.js';
+import { refreshOverlayStateForLayout } from './overlayState.js';
 import { initHintManager, updateHintState } from './hintManager.js';
 import { updateGlobalPlayerId } from './main.js';
 import { LayoutManager } from './layoutManager.js';
@@ -143,12 +144,12 @@ class AppInitializer {
    * @private
    */
   _updateGameTitle() {
-    // Use layoutManager if available, fallback to width check
-    const isMobile = this.layoutManager ? this.layoutManager.isMobile() : window.innerWidth <= 768;
+    // Use layoutManager if available, fallback to the phone/tablet contract
+    const isSmallLayout = this.layoutManager ? this.layoutManager.isMobile() : window.innerWidth <= 900;
     let title = GAME_NAME;
     
-    // On mobile, include lobby code in the title if available
-    if (isMobile && this.lobbyCode) {
+    // On smaller layouts, include lobby code in the title if available
+    if (isSmallLayout && this.lobbyCode) {
       title = `${GAME_NAME} - ${this.lobbyCode}`;
     }
     
@@ -427,7 +428,12 @@ class AppInitializer {
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        this._updateGameTitle(); // Update title for mobile/desktop
+        const layoutState = this.layoutManager ? this.layoutManager.refresh() : null;
+        if (layoutState) {
+          refreshOverlayStateForLayout(layoutState);
+        }
+
+        this._updateGameTitle(); // Update title for phone/tablet/desktop
         console.log('🔧 Calling repositionResetButton from resize handler');
         repositionResetButton();
         
@@ -468,6 +474,7 @@ class AppInitializer {
       console.log('[AppInitializer] Layout changed:', e.detail);
       // Re-apply scaling when layout changes using new system
       setTimeout(() => recalculateScaling(), 100);
+      refreshOverlayStateForLayout(e.detail.layoutState);
       updatePanelVisibility();
       setupMobileLeaderboard();
     });
@@ -481,7 +488,12 @@ class AppInitializer {
     let orientationTimeout;
 
     const handleOrientationChange = () => {
-      this._updateGameTitle(); // Update title for mobile/desktop
+      const layoutState = this.layoutManager ? this.layoutManager.refresh() : null;
+      if (layoutState) {
+        refreshOverlayStateForLayout(layoutState);
+      }
+
+      this._updateGameTitle(); // Update title for phone/tablet/desktop
       updateVH();
       
       // Layout is automatically detected by LayoutManager
@@ -528,9 +540,7 @@ class AppInitializer {
     updateInputVisibility();
     
     // Show panels if screen is large enough and they have content
-    if (window.innerWidth > 1550) {
-      updatePanelVisibility();
-    }
+    updatePanelVisibility();
   }
 
   /**

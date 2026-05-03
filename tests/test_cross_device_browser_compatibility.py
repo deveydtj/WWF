@@ -208,7 +208,7 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
             self.assertGreaterEqual(device_definitions, 8, f"Should define at least 8 test devices, found {device_definitions}")
     
     def test_layout_modes_properly_implemented(self):
-        """Test that different layout modes (Light, Medium, Full) are properly implemented."""
+        """Test that phone, tablet, and desktop layout modes are properly implemented."""
         frontend_dir = Path(__file__).parent.parent / "frontend"
         
         # Check for layout mode implementation
@@ -216,9 +216,9 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
         responsive_css = frontend_dir / "static" / "css" / "responsive.css"
         
         layout_modes_found = {
-            'light_mode': False,    # Mobile ≤600px
-            'medium_mode': False,   # Tablet 601px-900px  
-            'full_mode': False      # Desktop >900px
+            'phone': False,    # Phone ≤600px
+            'tablet': False,   # Tablet 601px-900px
+            'desktop': False   # Desktop >900px
         }
         
         css_files = [layout_css, responsive_css]
@@ -226,19 +226,21 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
             if css_file.exists():
                 content = css_file.read_text()
                 
-                # Look for mobile/light mode indicators
-                if any(indicator in content.lower() for indicator in ['600px', 'mobile', 'light']):
-                    layout_modes_found['light_mode'] = True
+                # Look for phone mode indicators
+                if any(indicator in content.lower() for indicator in ['600px', 'phone']):
+                    layout_modes_found['phone'] = True
                 
-                # Look for tablet/medium mode indicators
-                if any(indicator in content.lower() for indicator in ['900px', 'tablet', 'medium']):
-                    layout_modes_found['medium_mode'] = True
+                # Look for tablet mode indicators
+                if any(indicator in content.lower() for indicator in ['900px', 'tablet']):
+                    layout_modes_found['tablet'] = True
                 
-                # Look for desktop/full mode indicators
-                if any(indicator in content.lower() for indicator in ['desktop', 'full', 'large']):
-                    layout_modes_found['full_mode'] = True
+                # Look for desktop mode indicators
+                if any(indicator in content.lower() for indicator in ['desktop', 'large']):
+                    layout_modes_found['desktop'] = True
         
-        self.assertTrue(layout_modes_found['light_mode'], "Light mode (mobile) layout should be implemented")
+        self.assertTrue(layout_modes_found['phone'], "Phone layout should be implemented")
+        self.assertTrue(layout_modes_found['tablet'], "Tablet layout should be implemented")
+        self.assertTrue(layout_modes_found['desktop'], "Desktop layout should be implemented")
         print(f"Layout modes found: {layout_modes_found}")
     
 

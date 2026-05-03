@@ -8,12 +8,20 @@ import { setManualPanelToggle, togglePanel, toggleHistory, toggleDefinition, upd
 import { hideChatNotify } from './uiNotifications.js';
 import { showInfo, toggleDarkMode } from './optionsManager.js';
 import { toggleSound } from './audioManager.js';
+import { LAYOUT_MODES } from './layoutModes.js';
+import { getCurrentLayoutState } from './layoutManager.js';
+import {
+  OVERLAYS,
+  closeOverlay,
+  isOverlayOpen,
+  openOverlay,
+  toggleOverlay
+} from './overlayState.js';
 
 class MobileMenuManager {
   constructor() {
     this.mobileMenuPopup = null;
     this.mobileMenuToggle = null;
-    this.isOpen = false;
     this.domManager = null;
     this.lobbyCode = null;
     this.messageHandlers = null;
@@ -77,7 +85,7 @@ class MobileMenuManager {
 
     // ESC key to close
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOpen) {
+      if (e.key === 'Escape' && isOverlayOpen(OVERLAYS.MOBILE_MENU)) {
         this.close();
       }
     });
@@ -112,9 +120,9 @@ class MobileMenuManager {
     if (playersBtn) {
       playersBtn.addEventListener('click', () => {
         this.close();
-        document.body.classList.toggle('players-open');
+        const isOpen = toggleOverlay(OVERLAYS.PLAYERS);
         const playerSidebar = this.domManager.get('playerSidebar');
-        if (document.body.classList.contains('players-open') && playerSidebar) {
+        if (isOpen && playerSidebar) {
           this._focusFirstElement(playerSidebar);
         }
       });
@@ -143,8 +151,8 @@ class MobileMenuManager {
     if (chatBtn) {
       chatBtn.addEventListener('click', () => {
         this.close();
-        setManualPanelToggle('chat', !document.body.classList.contains('chat-open'));
-        const willBeOpen = !document.body.classList.contains('chat-open');
+        setManualPanelToggle('chat', !isOverlayOpen(OVERLAYS.CHAT));
+        const willBeOpen = !isOverlayOpen(OVERLAYS.CHAT);
         togglePanel('chat-open');
         
         // Only hide the notification when opening chat, show it when closing
@@ -158,14 +166,13 @@ class MobileMenuManager {
           }
         }
         
-        if (document.body.classList.contains('chat-open')) {
+        if (isOverlayOpen(OVERLAYS.CHAT)) {
           this._focusChatInput();
         }
         
-        // Restore history panel if it should remain visible in medium mode with grid layout
-        const mode = document.body.dataset.mode;
-        const isHistoryPopup = document.body.dataset.historyPopup === 'true';
-        if (mode === 'medium' && !isHistoryPopup) {
+        // Restore history panel if it should remain visible in tablet mode with grid layout
+        const { mode, historyPopup } = getCurrentLayoutState();
+        if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
           updatePanelVisibility();
         }
       });
@@ -314,10 +321,10 @@ class MobileMenuManager {
    * Open the mobile menu
    */
   open() {
-    if (!this.mobileMenuPopup || this.isOpen) return;
+    if (!this.mobileMenuPopup || isOverlayOpen(OVERLAYS.MOBILE_MENU)) return;
     
     this.mobileMenuPopup.style.display = 'flex';
-    this.isOpen = true;
+    openOverlay(OVERLAYS.MOBILE_MENU);
     
     // Update dynamic content
     this._updatePlayerCount();
@@ -339,10 +346,9 @@ class MobileMenuManager {
    * Close the mobile menu
    */
   close() {
-    if (!this.mobileMenuPopup || !this.isOpen) return;
+    if (!this.mobileMenuPopup || !isOverlayOpen(OVERLAYS.MOBILE_MENU)) return;
     
-    this.mobileMenuPopup.classList.remove('show');
-    this.isOpen = false;
+    closeOverlay(OVERLAYS.MOBILE_MENU);
     
     setTimeout(() => {
       this.mobileMenuPopup.style.display = 'none';
@@ -356,7 +362,7 @@ class MobileMenuManager {
    * Toggle the mobile menu
    */
   toggle() {
-    if (this.isOpen) {
+    if (isOverlayOpen(OVERLAYS.MOBILE_MENU)) {
       this.close();
     } else {
       this.open();
@@ -367,7 +373,7 @@ class MobileMenuManager {
    * Check if menu is currently open
    */
   isMenuOpen() {
-    return this.isOpen;
+    return isOverlayOpen(OVERLAYS.MOBILE_MENU);
   }
 }
 

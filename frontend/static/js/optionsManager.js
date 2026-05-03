@@ -4,6 +4,7 @@
  */
 
 import { applyDarkModePreference, openDialog, closeDialog } from './utils.js';
+import { OVERLAYS, closeOverlay } from './overlayState.js';
 
 // DOM elements
 const optionsMenu = document.getElementById('optionsMenu');
@@ -32,6 +33,8 @@ function resetOptionsMenuPositioning() {
 
 // Helper function to close options menu with cleanup
 function closeOptionsMenu() {
+  closeOverlay(OVERLAYS.OPTIONS);
+
   // Start the close dialog animation first
   closeDialog(optionsMenu);
   

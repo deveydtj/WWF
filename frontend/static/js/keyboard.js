@@ -1,4 +1,5 @@
 import { updateBoard } from './board.js';
+import { OVERLAYS, isOverlayOpen } from './overlayState.js';
 
 /**
  * Handle clicks or touches on the on-screen keyboard.
@@ -23,7 +24,7 @@ export function handleVirtualKey(event, {guessInput, submitGuessHandler, isAnima
       guessInput.value += key.toUpperCase();
     }
     // Don't focus guess input if chat is open and chat input might be focused
-    const chatOpen = document.body.classList.contains('chat-open');
+    const chatOpen = isOverlayOpen(OVERLAYS.CHAT);
     const activeChatInput = document.activeElement && document.activeElement.id === 'chatInput';
     if (!chatOpen || !activeChatInput) {
       guessInput.focus();

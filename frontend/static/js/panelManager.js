@@ -17,19 +17,23 @@
  */
 
 import { focusFirstElement } from './utils.js';
+import { LAYOUT_MODES } from './layoutModes.js';
+import { getCurrentLayoutState } from './layoutManager.js';
+import {
+  OVERLAYS,
+  getManualOverlayState,
+  getOverlayKeyFromClass,
+  isOverlayOpen,
+  setManualOverlayState,
+  setOverlayOpen,
+  toggleOverlay
+} from './overlayState.js';
 
 // DOM elements
 const definitionText = document.getElementById('definitionText');
 const historyBox = document.getElementById('historyBox');
 const definitionBoxEl = document.getElementById('definitionBox');
 const chatBox = document.getElementById('chatBox');
-
-// Track manual panel toggles to avoid overriding user actions
-let manualPanelToggles = {
-  history: false,
-  definition: false,
-  chat: false
-};
 
 function hasHistoryContent() {
   const historyList = document.getElementById('historyList');
@@ -43,117 +47,96 @@ function hasDefinitionContent() {
 
 // Show or hide panels based on content and viewport size
 function updatePanelVisibility() {
-  const mode = document.body.dataset.mode;
-  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
+  const { mode, historyPopup } = getCurrentLayoutState();
+  const manualPanelToggles = getManualOverlayState();
   
-  if (mode === 'full' && !isHistoryPopup) {
-    // Full mode with grid-based panels - show panels if they have content OR if manually toggled
-    if (hasHistoryContent() || manualPanelToggles.history) {
-      document.body.classList.add('history-open');
-    } else if (!manualPanelToggles.history) {
-      document.body.classList.remove('history-open');
-    }
+  if (mode === LAYOUT_MODES.DESKTOP && !historyPopup) {
+    // Desktop mode with grid-based panels - show panels if they have content OR if manually toggled
+    setOverlayOpen(OVERLAYS.HISTORY, hasHistoryContent() || manualPanelToggles.history, {
+      closeCompeting: false
+    });
     
-    if (hasDefinitionContent() || manualPanelToggles.definition) {
-      document.body.classList.add('definition-open');
-    } else if (!manualPanelToggles.definition) {
-      document.body.classList.remove('definition-open');
-    }
-  } else if ((mode === 'full' && isHistoryPopup) || (mode === 'medium' && !isHistoryPopup)) {
-    // Full mode with history popup OR medium mode with grid-based history
-    // History panel can be in grid (medium with space) or popup (full narrow)
-    // In medium mode with grid, history uses grid positioning like full mode
-    if (mode === 'medium' && !isHistoryPopup) {
-      // Medium mode with grid layout - show history if it has content OR if manually toggled
-      if (hasHistoryContent() || manualPanelToggles.history) {
-        document.body.classList.add('history-open');
-      } else if (!manualPanelToggles.history) {
-        document.body.classList.remove('history-open');
-      }
+    setOverlayOpen(OVERLAYS.DEFINITION, hasDefinitionContent() || manualPanelToggles.definition, {
+      closeCompeting: false
+    });
+  } else if ((mode === LAYOUT_MODES.DESKTOP && historyPopup) || (mode === LAYOUT_MODES.TABLET && !historyPopup)) {
+    // Desktop mode with history popup OR tablet mode with grid-based history
+    // History panel can be in grid (tablet with space) or popup (narrow desktop)
+    // In tablet mode with grid, history uses grid positioning like desktop mode
+    if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
+      // Tablet mode with grid layout - show history if it has content OR if manually toggled
+      setOverlayOpen(OVERLAYS.HISTORY, hasHistoryContent() || manualPanelToggles.history, {
+        closeCompeting: false
+      });
       
-      // In medium mode with grid, definition and chat are overlays - respect manual toggles
+      // In tablet mode with grid, definition and chat are overlays - respect manual toggles
       // Don't automatically re-open them just because there's content
-      if (manualPanelToggles.definition && hasDefinitionContent()) {
-        document.body.classList.add('definition-open');
-      } else if (!manualPanelToggles.definition) {
-        document.body.classList.remove('definition-open');
-      }
+      setOverlayOpen(OVERLAYS.DEFINITION, manualPanelToggles.definition && hasDefinitionContent(), {
+        closeCompeting: false
+      });
     } else {
-      // Full mode with history popup - only show history when manually toggled
+      // Desktop mode with history popup - only show history when manually toggled
       if (!manualPanelToggles.history) {
-        document.body.classList.remove('history-open');
+        setOverlayOpen(OVERLAYS.HISTORY, false, { closeCompeting: false });
       }
       
-      // Definition panel in full mode with history popup
-      if (hasDefinitionContent() || manualPanelToggles.definition) {
-        document.body.classList.add('definition-open');
-      } else if (!manualPanelToggles.definition) {
-        document.body.classList.remove('definition-open');
-      }
+      // Definition panel in desktop mode with history popup
+      setOverlayOpen(OVERLAYS.DEFINITION, hasDefinitionContent() || manualPanelToggles.definition, {
+        closeCompeting: false
+      });
     }
   }
 }
 
-// Toggle one of the side panels while closing any others in medium mode or history popup mode
+// Toggle one of the side panels while closing any others in tablet mode or history popup mode
 function togglePanel(panelClass) {
-  const mode = document.body.dataset.mode;
-  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
-  
-  // In medium mode with history popup, or medium mode for non-history panels, close other panels
-  // In medium mode with grid layout, only history can be in grid, others are still overlays
-  if ((mode === 'medium' && (isHistoryPopup || panelClass !== 'history-open')) || 
-      (mode === 'full' && isHistoryPopup && panelClass === 'history-open')) {
-    const wasChatOpen = document.body.classList.contains('chat-open');
-    ['history-open', 'definition-open', 'chat-open', 'info-open'].forEach(c => {
-      if (c !== panelClass) document.body.classList.remove(c);
-    });
-    
-    // If chat was open and is being closed due to another panel opening, restore the chat notification icon
-    if (wasChatOpen && panelClass !== 'chat-open') {
-      const chatNotify = document.getElementById('chatNotify');
-      if (chatNotify) {
-        chatNotify.style.display = 'block';
-      }
+  const overlayKey = getOverlayKeyFromClass(panelClass) || panelClass;
+  const wasChatOpen = isOverlayOpen(OVERLAYS.CHAT);
+  const isOpen = toggleOverlay(overlayKey);
+
+  // If chat was open and is being closed due to another panel opening, restore the chat notification icon
+  if (wasChatOpen && overlayKey !== OVERLAYS.CHAT && !isOverlayOpen(OVERLAYS.CHAT)) {
+    const chatNotify = document.getElementById('chatNotify');
+    if (chatNotify) {
+      chatNotify.style.display = 'block';
     }
   }
-  document.body.classList.toggle(panelClass);
+
+  return isOpen;
 }
 
 function toggleHistory() {
   // Track that this is a manual toggle
-  manualPanelToggles.history = !document.body.classList.contains('history-open');
-  togglePanel('history-open');
-  if (document.body.classList.contains('history-open')) {
+  setManualOverlayState(OVERLAYS.HISTORY, !isOverlayOpen(OVERLAYS.HISTORY));
+  const isOpen = togglePanel('history-open');
+  if (isOpen) {
     focusFirstElement(historyBox);
   }
 }
 
 function toggleDefinition() {
   // Track that this is a manual toggle
-  manualPanelToggles.definition = !document.body.classList.contains('definition-open');
-  togglePanel('definition-open');
-  if (document.body.classList.contains('definition-open')) {
+  setManualOverlayState(OVERLAYS.DEFINITION, !isOverlayOpen(OVERLAYS.DEFINITION));
+  const isOpen = togglePanel('definition-open');
+  if (isOpen) {
     focusFirstElement(definitionBoxEl);
   }
   
-  // Restore history panel if it should remain visible in medium mode with grid layout
-  const mode = document.body.dataset.mode;
-  const isHistoryPopup = document.body.dataset.historyPopup === 'true';
-  if (mode === 'medium' && !isHistoryPopup) {
+  // Restore history panel if it should remain visible in tablet mode with grid layout
+  const { mode, historyPopup } = getCurrentLayoutState();
+  if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
     updatePanelVisibility();
   }
 }
 
 // Get the manual panel toggles for external access
 function getManualPanelToggles() {
-  return manualPanelToggles;
+  return getManualOverlayState();
 }
 
 // Set manual panel toggle state
 function setManualPanelToggle(panel, value) {
-  if (manualPanelToggles.hasOwnProperty(panel)) {
-    manualPanelToggles[panel] = value;
-  }
+  setManualOverlayState(panel, value);
 }
 
 export {

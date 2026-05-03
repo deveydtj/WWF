@@ -1,4 +1,10 @@
 import { getBoardContainerInfo, verifyElementsFitInViewport } from './boardContainer.js';
+import { getCurrentLayoutState, refreshLayoutState } from './layoutManager.js';
+import { OVERLAYS, closeOverlay, openOverlay } from './overlayState.js';
+import {
+  isPhoneLayout,
+  isTabletLayout
+} from './layoutModes.js';
 
 /**
  * Basic mobile device check used to tailor UI behavior.
@@ -9,11 +15,25 @@ export const isMobile =
   /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 /**
- * Check if we're in mobile responsive layout (viewport <= 600px).
- * This matches the CSS media query breakpoint for mobile layout.
+ * Check if we're in phone responsive layout (viewport <= 600px).
+ * This matches the Phase 1 layout contract.
+ */
+export function isPhoneView() {
+  return isPhoneLayout(getCurrentLayoutState().mode);
+}
+
+/**
+ * Check if we're in tablet responsive layout (viewport 601px-900px).
+ */
+export function isTabletView() {
+  return isTabletLayout(getCurrentLayoutState().mode);
+}
+
+/**
+ * Compatibility alias for older call sites.
  */
 export function isMobileView() {
-  return window.innerWidth <= 600;
+  return isPhoneView();
 }
 
 /**
@@ -87,7 +107,7 @@ export function shakeInput(input) {
 
 /**
  * Move the reset button based on viewport width.
- * On mobile, move to appContainer for proper z-index stacking instead of titleBar.
+ * On legacy compact widths, move to appContainer for proper z-index stacking instead of titleBar.
  */
 export function repositionResetButton() {
   const resetWrapper = document.getElementById('resetWrapper');
@@ -106,7 +126,7 @@ export function repositionResetButton() {
   }
   
   if (window.innerWidth <= 768) {
-    // Move to appContainer as direct child (not inside inputArea which is hidden on mobile)
+    // Move to appContainer as direct child (not inside inputArea, which is hidden at compact widths)
     if (resetWrapper.parentElement !== appContainer) {
       // Remove from current parent (inputArea or titleBar)
       if (resetWrapper.parentElement) {
@@ -114,7 +134,7 @@ export function repositionResetButton() {
       }
       // Add to appContainer as first child for proper z-index stacking
       appContainer.insertBefore(resetWrapper, appContainer.firstChild);
-      console.log('✅ Moved reset button to appContainer for mobile layout');
+      console.log('✅ Moved reset button to appContainer for phone layout');
     }
   } else if (resetWrapper.parentElement !== inputArea) {
     // Move back to inputArea for desktop
@@ -152,7 +172,7 @@ export function setGameInputDisabled(disabled) {
  */
 
 /**
- * Update the CSS `--vh` custom property to handle mobile browser chrome.
+ * Update the CSS `--vh` custom property to handle phone and tablet browser chrome.
  */
 export function updateVH() {
   const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -173,96 +193,16 @@ export function updateVH() {
 
 
 /**
- * Set the layout mode (light/medium/full) based on viewport width.
- * Also determines if history panel should be in popup mode on narrow desktop layouts.
+ * Set the layout mode (phone/tablet/desktop) based on viewport width.
+ * Also determines if history panel should be in popup mode when rail space is constrained.
  */
 export function applyLayoutMode() {
-  const width = window.innerWidth;
-  const docEl = (typeof document !== 'undefined' && (document.documentElement || document.body)) || { style: {} };
-  const rootStyles = typeof getComputedStyle === 'function'
-    ? getComputedStyle(docEl)
-    : { getPropertyValue: () => '' };
-  const parseSize = (value, fallback) => {
-    const parsed = parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  };
-  
-  const panelWidth = parseSize(rootStyles.getPropertyValue('--panel-width'), 240);
-  const stampWidth = parseSize(rootStyles.getPropertyValue('--stamp-width'), 60);
-  const computedBoardWidth = parseSize(rootStyles.getPropertyValue('--board-width'), 0);
-  const minBoardWidth = Math.max(computedBoardWidth, 340); // fallback to reasonable board size
-  const gapSize = 15; // Matches medium grid gap
-  const boardArea = typeof document !== 'undefined' ? document.getElementById('boardArea') : null;
-  const rect = boardArea && typeof boardArea.getBoundingClientRect === 'function'
-    ? boardArea.getBoundingClientRect()
-    : { left: (width - minBoardWidth) / 2, right: (width + minBoardWidth) / 2 };
-  const leftSpace = Math.max(0, rect.left);
-  const rightSpace = Math.max(0, width - rect.right);
-  const minPanelSpace = panelWidth + 40; // allow buffer for shadows/margins
-  
-  let mode = 'full';
-  let historyPopup = false; // Track if history panel should be popup on desktop
-  
-  if (width <= 600) {
-    mode = 'light';
-  } else if (width <= 900) {
-    mode = 'medium';
-    
-    // Calculate if there's room for history panel in grid layout
-    const inlineGaps = gapSize * 4; // history | stamp | center | right spacer
-    const margins = 40; // Side margins
-    const minRequiredWidth = panelWidth + stampWidth + minBoardWidth + inlineGaps + margins;
-    
-    // If viewport is wide enough, use grid layout with history panel
-    // Otherwise, keep history as popup overlay
-    historyPopup = width < minRequiredWidth;
-  } else if (width <= 1150) {
-    // Narrow desktop - favor medium mode if side panels would feel cramped
-    if (Math.min(leftSpace, rightSpace) < minPanelSpace * 1.2) {
-      mode = 'medium';
-      historyPopup = true;
-    } else {
-      mode = 'full';
-      historyPopup = true;
-    }
-  } else if (width <= 1550) {
-    // For screens 1151-1550px, allow full mode with all panels in grid
-    mode = 'full';
-    historyPopup = false;
-  } else {
-    // For screens wider than 1550px, use full mode with side panels
-    const boardArea = document.getElementById('boardArea');
-    if (boardArea) {
-      const rect = boardArea.getBoundingClientRect();
-      const leftSpace = rect.left;
-      const rightSpace = width - rect.right;
-      const minPanelWidth = 280; // 17.5rem in pixels (approximately)
-      const margin = 40; // Margin for comfortable spacing
-      
-      // Only use full mode if there's enough space for side panels
-      if (leftSpace < minPanelWidth + margin || rightSpace < minPanelWidth + margin) {
-        mode = 'medium';
-        historyPopup = true; // Force popup layout when downgrading to medium due to space constraints
-      }
-    }
-  }
-  
-  if (document.body.dataset.mode !== mode) {
-    document.body.dataset.mode = mode;
-  }
-  
-  // Set history popup state for CSS to use
-  // Always ensure the value is set as a string
-  const currentHistoryPopup = document.body.dataset.historyPopup;
-  const newHistoryPopup = historyPopup ? 'true' : 'false';
-  if (currentHistoryPopup !== newHistoryPopup) {
-    document.body.dataset.historyPopup = newHistoryPopup;
-  }
+  return refreshLayoutState();
 }
 
 /**
  * Calculate a tile size that fits the board within the viewport.
- * Prevents overlap with the header and leaderboard in full mode.
+ * Prevents overlap with the header and leaderboard in desktop mode.
  * Enhanced version with improved container measurement and guaranteed keyboard visibility.
  *
  * @param {number} rows - Number of board rows
@@ -539,6 +479,10 @@ let lastFocused = null;
 let trapHandler = null;
 let trappedDialog = null;
 
+const DIALOG_OVERLAY_BY_ID = Object.freeze({
+  optionsMenu: OVERLAYS.OPTIONS
+});
+
 function getFocusable(container) {
   return Array.from(
     container.querySelectorAll(
@@ -586,10 +530,16 @@ export function openDialog(dialog) {
   lastFocused = document.activeElement;
   trappedDialog = dialog;
   trapHandler = trapFocus(dialog);
+
+  const overlayKey = DIALOG_OVERLAY_BY_ID[dialog.id];
+  if (overlayKey) {
+    openOverlay(overlayKey, { closeCompeting: false });
+  }
   
   // Show with animation
   dialog.style.display = 'flex';
   dialog.classList.remove('hide');
+  dialog.classList.add('visible');
   dialog.classList.add('show');
 }
 
@@ -599,7 +549,13 @@ export function openDialog(dialog) {
  * @param {HTMLElement} dialog
  */
 export function closeDialog(dialog) {
+  const overlayKey = DIALOG_OVERLAY_BY_ID[dialog.id];
+  if (overlayKey) {
+    closeOverlay(overlayKey);
+  }
+
   dialog.classList.remove('show');
+  dialog.classList.remove('visible');
   dialog.classList.add('hide');
   
   // Wait for animation to complete before hiding

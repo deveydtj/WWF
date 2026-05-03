@@ -9,8 +9,8 @@
    The class is NOT applied by default, so these rules are inactive.
    
    REPLACEMENT FILES (NOW ACTIVE):
-   - mobile-layout.css (for ≤768px viewports)
-   - desktop-layout.css (for >768px viewports)
+   - mobile-layout.css (for ≤900px phone/tablet viewports)
+   - desktop-layout.css (for >900px desktop viewports)
    - shared-base.css (for common base styles)
    
    TODO: Remove this file entirely once migration is validated
@@ -183,7 +183,7 @@ body.chat-open #chatBox {
 }
 
 /* ═══════════════════════════════════════════════
-   FULL MODE: Desktop Grid Layout (≥901px)
+   DESKTOP MODE: Desktop Grid Layout (≥901px)
    ═══════════════════════════════════════════════
    Authoritative full-mode grid definition.
    Grid areas: history | stamp | center | definition | chat
@@ -253,16 +253,16 @@ body.chat-open #chatBox {
 }
 
 /* ═══════════════════════════════════════════════
-   MEDIUM MODE: Tablet Grid Layout (601-900px)
+   TABLET MODE: Tablet Grid Layout (601-900px)
    ═══════════════════════════════════════════════
-   Corresponds to body[data-mode="medium"] set by JS applyLayoutMode()
+   Corresponds to body[data-mode="tablet"] set by JS applyLayoutMode()
    - Single-column grid with center panel
    - Panels use overlay positioning when opened
    - Hybrid grid/overlay approach based on available width
 */
 @media (min-width: 601px) and (max-width: 900px) {
-  /* Base medium grid keeps the center panel anchored with stamp alongside */
-  body[data-mode='medium'] #mainGrid {
+  /* Base tablet grid keeps the center panel anchored with stamp alongside */
+  body[data-mode='tablet'] #mainGrid {
     grid-template-columns: 1fr var(--stamp-width) minmax(auto, var(--board-width)) 1fr;
     grid-template-areas: 
       ". stamp center ."
@@ -272,18 +272,18 @@ body.chat-open #chatBox {
     gap: 15px;
   }
   
-  /* Wider medium viewports can surface the history column inline */
-  body[data-mode='medium']:not([data-history-popup="true"]) #mainGrid {
+  /* Wider tablet viewports can surface the history column inline */
+  body[data-mode='tablet']:not([data-history-popup="true"]) #mainGrid {
     grid-template-columns: 1fr var(--panel-width) var(--stamp-width) minmax(auto, var(--board-width)) 1fr;
     grid-template-areas: 
       ". history stamp center ."
       ". history stamp center .";
   }
   
-  /* Medium mode overlays when panels are forced into popup mode */
-  body[data-mode='medium'][data-history-popup="true"] #historyBox,
-  body[data-mode='medium'][data-history-popup="true"] #definitionBox,
-  body[data-mode='medium'][data-history-popup="true"] #chatBox {
+  /* Tablet mode overlays when panels are forced into popup mode */
+  body[data-mode='tablet'][data-history-popup="true"] #historyBox,
+  body[data-mode='tablet'][data-history-popup="true"] #definitionBox,
+  body[data-mode='tablet'][data-history-popup="true"] #chatBox {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -293,16 +293,16 @@ body.chat-open #chatBox {
     z-index: var(--z-panel-overlay);
   }
   
-  /* Medium mode grid layout keeps history inline but definition/chat as overlays */
-  body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
+  /* Tablet mode grid layout keeps history inline but definition/chat as overlays */
+  body[data-mode='tablet']:not([data-history-popup="true"]) #historyBox {
     position: static;
     transform: none;
     max-width: var(--panel-width);
     max-height: var(--panel-max-height);
   }
   
-  body[data-mode='medium']:not([data-history-popup="true"]) #definitionBox,
-  body[data-mode='medium']:not([data-history-popup="true"]) #chatBox {
+  body[data-mode='tablet']:not([data-history-popup="true"]) #definitionBox,
+  body[data-mode='tablet']:not([data-history-popup="true"]) #chatBox {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -314,9 +314,9 @@ body.chat-open #chatBox {
 }
 
 /* ═══════════════════════════════════════════════
-   LIGHT MODE: Mobile Grid Layout (≤600px)
+   PHONE MODE: Phone Grid Layout (≤600px)
    ═══════════════════════════════════════════════
-   Corresponds to body[data-mode="light"] set by JS applyLayoutMode()
+   Corresponds to body[data-mode="phone"] set by JS applyLayoutMode()
    - Single-column vertical layout optimized for phones
    - Grid template shows only center panel
    - All side panels positioned as overlays (handled in responsive.css)
@@ -329,22 +329,22 @@ body.chat-open #chatBox {
     gap: 0;
   }
   
-  /* Mobile panels as overlays - positioning handled in responsive.css */
-  body[data-mode='light'] #historyBox {
+  /* Phone panels as overlays - positioning handled in responsive.css */
+  body[data-mode='phone'] #historyBox {
     position: fixed;
     bottom: 0;
     left: 0;
     right: auto;
   }
   
-  body[data-mode='light'] #definitionBox {
+  body[data-mode='phone'] #definitionBox {
     position: fixed;
     bottom: 0;
     right: 0;
     left: auto;
   }
   
-  body[data-mode='light'] #chatBox {
+  body[data-mode='phone'] #chatBox {
     position: fixed;
     bottom: 0;
     right: 0;

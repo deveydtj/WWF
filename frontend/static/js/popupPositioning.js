@@ -3,6 +3,9 @@
  * and grid-based constraint system for better popup placement.
  */
 
+import { LAYOUT_MODES, normalizeLayoutMode } from './layoutModes.js';
+import { getCurrentLayoutState } from './layoutManager.js';
+
 /**
  * Viewport boundaries and safe margins
  */
@@ -219,9 +222,9 @@ export function positionPopupEnhanced(popup, anchor, options = {}) {
  * @returns {Object} Positioning result
  */
 export function positionContextMenu(popup, anchor) {
-  // In full mode, center the options menu instead of using edge positioning
-  const currentMode = document.body.dataset.mode;
-  if (currentMode === 'full') {
+  // In desktop mode, center the options menu instead of using edge positioning
+  const currentMode = normalizeLayoutMode(getCurrentLayoutState().mode);
+  if (currentMode === LAYOUT_MODES.DESKTOP) {
     popup.style.position = 'fixed';
     popup.style.top = '50%';
     popup.style.left = '50%';

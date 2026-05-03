@@ -13,6 +13,7 @@ import { showMessage, setGameInputDisabled } from './utils.js';
 import { showChatNotify, showChatMessagePopup } from './uiNotifications.js';
 import { updateResetButton } from './resetManager.js';
 import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility } from './panelManager.js';
+import { OVERLAYS, isOverlayOpen } from './overlayState.js';
 import { STATES } from './stateManager.js';
 import { playClick } from './audioManager.js';
 import { sendEmoji } from './api.js';
@@ -288,7 +289,7 @@ class GameStateManager {
     renderChat(chatMessagesEl, state.chat_messages);
     
     if (state.chat_messages.length > prevChatCount && 
-        !document.body.classList.contains('chat-open')) {
+        !isOverlayOpen(OVERLAYS.CHAT)) {
       showChatNotify();
       
       // Show popup with the latest message

@@ -12,6 +12,15 @@ import { toggleSound } from './audioManager.js';
 import { toggleHintSelection } from './hintManager.js';
 import { sendChatMessage } from './api.js';
 import { alignStampsWithBoardRows } from './leaderboardManager.js';
+import { LAYOUT_MODES } from './layoutModes.js';
+import { getCurrentLayoutState } from './layoutManager.js';
+import {
+  OVERLAYS,
+  closeOverlay,
+  isOverlayOpen,
+  openOverlay,
+  toggleOverlay
+} from './overlayState.js';
 
 class EventListenersManager {
   constructor() {
@@ -78,7 +87,7 @@ class EventListenersManager {
         isAnimating = true;
         
         setManualPanelToggle('history', false);
-        document.body.classList.remove('history-open');
+        closeOverlay(OVERLAYS.HISTORY);
         // Delay position update until after close animation completes
         // Use shorter delay for users with reduced motion preferences
         const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
@@ -100,7 +109,7 @@ class EventListenersManager {
         isAnimating = true;
         
         setManualPanelToggle('definition', false);
-        document.body.classList.remove('definition-open');
+        closeOverlay(OVERLAYS.DEFINITION);
         // Delay position updates until after close animation completes
         // Use shorter delay for users with reduced motion preferences
         const animationDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 320;
@@ -124,7 +133,7 @@ class EventListenersManager {
         this.chatInputFocusProtection = false;
         this.userIntentionallyLeftChat = false;
         setManualPanelToggle('chat', false);
-        document.body.classList.remove('chat-open');
+        closeOverlay(OVERLAYS.CHAT);
         
         // Delay notification display until after close animation completes
         // Use shorter delay for users with reduced motion preferences
@@ -141,8 +150,8 @@ class EventListenersManager {
 
     if (chatNotify) {
       chatNotify.addEventListener('click', () => {
-        setManualPanelToggle('chat', !document.body.classList.contains('chat-open'));
-        const willBeOpen = !document.body.classList.contains('chat-open');
+        setManualPanelToggle('chat', !isOverlayOpen(OVERLAYS.CHAT));
+        const willBeOpen = !isOverlayOpen(OVERLAYS.CHAT);
         togglePanel('chat-open');
         
         // Only hide the notification when opening chat, show it when closing
@@ -153,14 +162,13 @@ class EventListenersManager {
           chatNotify.style.display = 'block';
         }
         
-        if (document.body.classList.contains('chat-open')) {
+        if (isOverlayOpen(OVERLAYS.CHAT)) {
           this._focusChatInput();
         }
         
-        // Restore history panel if it should remain visible in medium mode with grid layout
-        const mode = document.body.dataset.mode;
-        const isHistoryPopup = document.body.dataset.historyPopup === 'true';
-        if (mode === 'medium' && !isHistoryPopup) {
+        // Restore history panel if it should remain visible in tablet mode with grid layout
+        const { mode, historyPopup } = getCurrentLayoutState();
+        if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
           updatePanelVisibility();
         }
       });
@@ -184,14 +192,14 @@ class EventListenersManager {
 
     if (optionsToggle && optionsMenu) {
       optionsToggle.addEventListener('click', () => {
-        if (optionsMenu.style.display === 'flex' || optionsMenu.style.display === 'block') {
+        if (isOverlayOpen(OVERLAYS.OPTIONS)) {
           closeOptionsMenu();
           return;
         }
         
-        const currentMode = document.body.dataset.mode;
-        if (currentMode === 'medium') {
-          // In medium mode, center the options menu on screen
+        const currentMode = getCurrentLayoutState().mode;
+        if (currentMode === LAYOUT_MODES.TABLET) {
+          // In tablet mode, center the options menu on screen
           optionsMenu.style.display = 'flex';
           optionsMenu.style.position = 'fixed';
           optionsMenu.style.top = '50%';
@@ -203,6 +211,7 @@ class EventListenersManager {
           positionContextMenu(optionsMenu, optionsToggle);
         }
         
+        openOverlay(OVERLAYS.OPTIONS);
         openDialog(optionsMenu);
       });
     }
@@ -227,8 +236,8 @@ class EventListenersManager {
 
     if (menuChat) {
       menuChat.addEventListener('click', () => {
-        setManualPanelToggle('chat', !document.body.classList.contains('chat-open'));
-        const willBeOpen = !document.body.classList.contains('chat-open');
+        setManualPanelToggle('chat', !isOverlayOpen(OVERLAYS.CHAT));
+        const willBeOpen = !isOverlayOpen(OVERLAYS.CHAT);
         togglePanel('chat-open');
         
         // Only hide the notification when opening chat, show it when closing
@@ -242,14 +251,13 @@ class EventListenersManager {
           }
         }
         
-        if (document.body.classList.contains('chat-open')) {
+        if (isOverlayOpen(OVERLAYS.CHAT)) {
           this._focusChatInput();
         }
         
-        // Restore history panel if it should remain visible in medium mode with grid layout
-        const mode = document.body.dataset.mode;
-        const isHistoryPopup = document.body.dataset.historyPopup === 'true';
-        if (mode === 'medium' && !isHistoryPopup) {
+        // Restore history panel if it should remain visible in tablet mode with grid layout
+        const { mode, historyPopup } = getCurrentLayoutState();
+        if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
           updatePanelVisibility();
         }
         
@@ -338,8 +346,8 @@ class EventListenersManager {
 
     if (playerToggleBtn && playerSidebar) {
       playerToggleBtn.addEventListener('click', () => {
-        document.body.classList.toggle('players-open');
-        if (document.body.classList.contains('players-open')) {
+        const isOpen = toggleOverlay(OVERLAYS.PLAYERS);
+        if (isOpen) {
           focusFirstElement(playerSidebar);
         }
       });
@@ -347,7 +355,7 @@ class EventListenersManager {
 
     if (playerCloseBtn) {
       playerCloseBtn.addEventListener('click', () => {
-        document.body.classList.remove('players-open');
+        closeOverlay(OVERLAYS.PLAYERS);
       });
     }
   }
@@ -423,8 +431,8 @@ class EventListenersManager {
     chatInput.addEventListener('blur', (e) => {
       console.log('Chat input lost focus to:', e.relatedTarget);
       
-      if (this.chatInputFocusProtection && 
-          document.body.classList.contains('chat-open') && 
+      if (this.chatInputFocusProtection &&
+          isOverlayOpen(OVERLAYS.CHAT) &&
           !this.userIntentionallyLeftChat) {
         
         const relatedTarget = e.relatedTarget;
@@ -437,8 +445,8 @@ class EventListenersManager {
         
         if (!isGameElement) {
           setTimeout(() => {
-            if (document.body.classList.contains('chat-open') && 
-                document.activeElement !== chatInput && 
+            if (isOverlayOpen(OVERLAYS.CHAT) &&
+                document.activeElement !== chatInput &&
                 !this.userIntentionallyLeftChat) {
               console.log('Reclaiming focus for chat input');
               chatInput.focus();
@@ -469,7 +477,7 @@ class EventListenersManager {
 
     if (guessInput) {
       guessInput.addEventListener('click', () => {
-        if (document.body.classList.contains('chat-open')) {
+        if (isOverlayOpen(OVERLAYS.CHAT)) {
           this.userIntentionallyLeftChat = true;
           this.chatInputFocusProtection = false;
           console.log('User clicked on game input - disabling chat focus protection');
@@ -477,7 +485,7 @@ class EventListenersManager {
       });
 
       guessInput.addEventListener('focus', () => {
-        if (document.body.classList.contains('chat-open')) {
+        if (isOverlayOpen(OVERLAYS.CHAT)) {
           this.userIntentionallyLeftChat = true;
           this.chatInputFocusProtection = false;
           console.log('Game input received focus - disabling chat focus protection');

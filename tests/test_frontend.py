@@ -20,6 +20,9 @@ EXPECTED_MODULES = [
     'keyboard.js',
     'hintState.js',
     'stateManager.js',
+    'layoutManager.js',
+    'layoutModes.js',
+    'overlayState.js',
     'main.js',
     'utils.js'
 ]
@@ -169,18 +172,18 @@ def test_apply_state_updates_definition_text():
     assert 'state.definition' in text or 'state.last_definition' in text
 
 
-def test_side_panels_centered_and_limited_in_medium_mode():
+def test_side_panels_centered_and_limited_in_tablet_mode():
     css = read_css()
-    # Medium mode now has conditional behavior based on data-history-popup
+    # Tablet mode now has conditional behavior based on data-history-popup
     # When history is popup (not enough space), all panels are overlays
-    assert "body[data-mode='medium'][data-history-popup=\"true\"] #historyBox" in css
-    assert "body[data-mode='medium'][data-history-popup=\"true\"] #definitionBox" in css
-    assert "body[data-mode='medium'][data-history-popup=\"true\"] #chatBox" in css
+    assert "body[data-mode='tablet'][data-history-popup=\"true\"] #historyBox" in css
+    assert "body[data-mode='tablet'][data-history-popup=\"true\"] #definitionBox" in css
+    assert "body[data-mode='tablet'][data-history-popup=\"true\"] #chatBox" in css
     # When history is in grid (enough space), definition and chat are still overlays
-    assert "body[data-mode='medium']:not([data-history-popup=\"true\"]) #definitionBox" in css
-    assert "body[data-mode='medium']:not([data-history-popup=\"true\"]) #chatBox" in css
+    assert "body[data-mode='tablet']:not([data-history-popup=\"true\"]) #definitionBox" in css
+    assert "body[data-mode='tablet']:not([data-history-popup=\"true\"]) #chatBox" in css
     # History box uses grid positioning when there's space
-    assert "body[data-mode='medium']:not([data-history-popup=\"true\"]) #historyBox" in css
+    assert "body[data-mode='tablet']:not([data-history-popup=\"true\"]) #historyBox" in css
     assert 'position: fixed;' in css
     assert 'transform: translate(-50%, -50%);' in css
     assert 'max-width: 90%;' in css
@@ -204,7 +207,7 @@ def test_options_menu_clamped_to_viewport():
     assert 'export function positionPopup' in utils_text
 
 
-def test_side_panels_fixed_to_bottom_in_light_mode():
+def test_side_panels_fixed_to_bottom_in_phone_mode():
     css = read_css()
     patterns = [
         r"@media \(max-width: 600px\)[\s\S]*?#historyBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*left: 0",
@@ -389,13 +392,144 @@ global.document = {
   }
 };
 applyLayoutMode();
-console.log(document.body.dataset.mode);
+console.log(JSON.stringify({
+  mode: document.body.dataset.mode,
+  layout: document.body.dataset.layout,
+  historyPopup: document.body.dataset.historyPopup
+}));
 """
     result = subprocess.run(
         ['node', '--input-type=module', '-e', script],
         capture_output=True, text=True, check=True
     )
-    assert result.stdout.strip() == 'medium'
+    data = json.loads(result.stdout.strip())
+    assert data == {'mode': 'desktop', 'layout': 'desktop', 'historyPopup': 'true'}
+
+
+def test_layout_modes_follow_phase_one_contract():
+    script = """
+import { getLayoutModeForWidth, normalizeLayoutMode } from './frontend/static/js/layoutModes.js';
+console.log(JSON.stringify({
+  widths: [600, 601, 900, 901].map(getLayoutModeForWidth),
+  aliases: ['light', 'medium', 'full', 'mobile'].map(normalizeLayoutMode)
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['widths'] == ['phone', 'tablet', 'tablet', 'desktop']
+    assert data['aliases'] == ['phone', 'tablet', 'desktop', 'phone']
+
+
+def test_layout_manager_applies_phase_one_body_state():
+    script = """
+global.window = {
+  innerWidth: 800,
+  matchMedia() { return { addEventListener(){} }; }
+};
+const classState = {};
+global.document = {
+  body: {
+    dataset: {},
+    classList: {
+      toggle(name, enabled) { classState[name] = enabled; }
+    }
+  },
+  dispatchEvent(){}
+};
+const { LayoutManager } = await import('./frontend/static/js/layoutManager.js');
+const manager = new LayoutManager();
+console.log(JSON.stringify({
+  layout: manager.getCurrentLayout(),
+  mode: document.body.dataset.mode,
+  datasetLayout: document.body.dataset.layout,
+  historyPopup: document.body.dataset.historyPopup,
+  classes: classState
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip().splitlines()[-1])
+    assert data['layout'] == 'tablet'
+    assert data['mode'] == 'tablet'
+    assert data['datasetLayout'] == 'tablet'
+    assert data['historyPopup'] == 'false'
+    assert data['classes']['tablet-layout'] is True
+    assert data['classes']['phone-layout'] is False
+    assert data['classes']['desktop-layout'] is False
+
+
+def test_overlay_state_is_authoritative_for_panel_classes():
+    script = """
+function createClassList() {
+  const values = new Set();
+  return {
+    values,
+    add(name) { values.add(name); },
+    remove(name) { values.delete(name); },
+    contains(name) { return values.has(name); },
+    toggle(name, enabled) {
+      const shouldEnable = enabled === undefined ? !values.has(name) : enabled;
+      if (shouldEnable) values.add(name);
+      else values.delete(name);
+      return shouldEnable;
+    }
+  };
+}
+
+const elements = {};
+['historyBox', 'definitionBox', 'chatBox', 'playerSidebar', 'optionsMenu', 'mobileMenuPopup'].forEach((id) => {
+  elements[id] = {
+    id,
+    attributes: {},
+    classList: createClassList(),
+    setAttribute(name, value) { this.attributes[name] = value; }
+  };
+});
+
+const bodyClassList = createClassList();
+global.window = { innerWidth: 800 };
+global.document = {
+  body: {
+    dataset: {},
+    classList: bodyClassList
+  },
+  getElementById(id) { return elements[id] || null; },
+  dispatchEvent() {}
+};
+
+const { refreshLayoutState } = await import('./frontend/static/js/layoutManager.js');
+const { OVERLAYS, openOverlay, isOverlayOpen, getOpenOverlays } = await import('./frontend/static/js/overlayState.js');
+
+refreshLayoutState();
+openOverlay(OVERLAYS.HISTORY, { closeCompeting: false });
+openOverlay(OVERLAYS.CHAT);
+openOverlay(OVERLAYS.DEFINITION);
+
+console.log(JSON.stringify({
+  active: getOpenOverlays(),
+  bodyClasses: Array.from(bodyClassList.values).sort(),
+  historyVisible: elements.historyBox.classList.contains('visible'),
+  chatOpen: isOverlayOpen(OVERLAYS.CHAT),
+  definitionOpen: isOverlayOpen(OVERLAYS.DEFINITION)
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['active'] == ['history', 'definition']
+    assert 'history-open' in data['bodyClasses']
+    assert 'definition-open' in data['bodyClasses']
+    assert 'chat-open' not in data['bodyClasses']
+    assert data['historyVisible'] is True
+    assert data['chatOpen'] is False
+    assert data['definitionOpen'] is True
 
 
 def test_announce_updates_live_region():

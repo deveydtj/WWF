@@ -30,7 +30,7 @@
   --z-ui-component: 15;
   
   /* Level 3: Panels (20-39)
-   * Panel hierarchy ensures proper stacking in both desktop and mobile layouts:
+   * Panel hierarchy ensures proper stacking in phone, tablet, and desktop layouts:
    * - Desktop: Panels use --z-panel-base (20) within CSS Grid layout
    * - Mobile: Panels use --z-panel-overlay (30) for full-screen overlays
    * - Close buttons: Should sit above their parent panel overlay (e.g. using

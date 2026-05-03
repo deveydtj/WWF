@@ -2,9 +2,9 @@
  * desktop-layout.css
  * 
  * Complete desktop layout system for WordSquad
- * Target: Viewports >768px
+ * Target: Viewports >900px
  * 
- * Layout refactoring complete - using single 768px breakpoint system
+ * Layout refactoring complete - using the Phase 1 desktop breakpoint
  * 
  * Architecture:
  * - CSS Grid-based layout (three columns)
@@ -22,17 +22,17 @@
  * - components/*.css
  * 
  * Breakpoint strategy:
- * - Primary: min-width: 769px
+ * - Primary: min-width: 901px
  * - Sub-breakpoint: min-width: 1200px (large desktop)
  * - Sub-breakpoint: min-width: 1551px (ultra-wide)
  */
 
 /* ===================================
    DESKTOP LAYOUT - CSS Grid-based
-   Target: >768px
+   Target: >900px
    =================================== */
 
-@media (min-width: 769px) {
+@media (min-width: 901px) {
   /* ─────────────────────────────────
      Desktop Scale Token Overrides
      ───────────────────────────────── */
@@ -353,7 +353,7 @@
     text-align: center;
     font-size: 16px; /* Match mobile max (clamp(14px, 2.5vw, 16px)) to keep smooth at breakpoint */
     min-height: 24px;
-    margin: calc(var(--kb-gap) * 0.5) 0; /* Match mobile to avoid jump at 768/769px */
+    margin: calc(var(--kb-gap) * 0.5) 0; /* Match phone/tablet to avoid jump at 900/901px */
   }
   
   /* ─────────────────────────────────

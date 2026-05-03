@@ -9,8 +9,8 @@
    The class is NOT applied by default, so these rules are inactive.
    
    REPLACEMENT FILES (NOW ACTIVE):
-   - mobile-layout.css (for ≤768px viewports)
-   - desktop-layout.css (for >768px viewports)
+   - mobile-layout.css (for ≤900px phone/tablet viewports)
+   - desktop-layout.css (for >900px desktop viewports)
    - shared-base.css (for common base styles)
    
    TODO: Remove this file entirely once migration is validated
@@ -30,19 +30,19 @@
  * 
  * WordSquad uses a three-mode responsive layout system:
  * 
- * 1. LIGHT MODE (≤600px) - Mobile/Vertical Stack Layout
+ * 1. PHONE MODE (≤600px) - Phone Vertical Stack Layout
  *    - Single-column vertical layout optimized for phones
  *    - Panels use fixed positioning overlays
  *    - Tile size: min(8vmin, 32px) for touch accessibility
  *    - Keyboard handling with dynamic viewport height support
  * 
- * 2. MEDIUM MODE (601px-900px) - Tablet Three-Panel Layout  
+ * 2. TABLET MODE (601px-900px) - Tablet Three-Panel Layout
  *    - Three-panel horizontal layout for tablets
  *    - Left, center, and right panel zones defined
  *    - Tile size: min(8vmin, 42px) for balanced touch/precision
  *    - Panel animations and overlay system
  * 
- * 3. FULL MODE (>900px) - Desktop Layout
+ * 3. DESKTOP MODE (>900px) - Desktop Layout
  *    - Full three-panel desktop experience
  *    - Larger tile sizes for precision input
  *    - Advanced panel positioning and scaling
@@ -56,7 +56,7 @@
  */
 
 /* ═══════════════════════════════════════════════
-   LIGHT MODE: Mobile Layout (≤600px)
+   PHONE MODE: Mobile Layout (≤600px)
    ═══════════════════════════════════════════════ */
 @media (max-width: 600px) {
   :root {
@@ -397,44 +397,44 @@
 }
 
 /* ═══════════════════════════════════════════════
-   MEDIUM MODE: Tablet Three-Panel Layout (601px-900px)
+   TABLET MODE: Tablet Three-Panel Layout (601px-900px)
    ═══════════════════════════════════════════════
-   Corresponds to body[data-mode="medium"] set by JS applyLayoutMode()
+   Corresponds to body[data-mode="tablet"] set by JS applyLayoutMode()
    - Mode-specific adaptations for tablet layouts
    - Panel overlay behaviors and animations
    - Touch-optimized sizing and spacing
 */
 @media (min-width: 601px) and (max-width: 900px) {
   /* 
-   * Medium Mode Layout Calculations:
+   * Tablet Mode Layout Calculations:
    * - Grid contract defined in layout.css (center anchored, optional history column)
    * - Definition and chat always use overlays
    * - Tile size optimized for tablet touch precision: min(8vmin, 42px)
    */
   
-  body[data-mode='medium'] #centerPanel {
+  body[data-mode='tablet'] #centerPanel {
     width: min(100%, var(--board-width));
     max-width: var(--board-width);
     min-width: auto;              /* allow shrinking alongside overlays */
     justify-self: center;         /* explicit safety to center this item */
   }
    
-  /* Hide player count in medium mode to save space and prevent input field overlap */
-  body[data-mode='medium'] #playerCount {
+  /* Hide player count in tablet mode to save space and prevent input field overlap */
+  body[data-mode='tablet'] #playerCount {
     display: none;
   }
 
-  /* Shared overlay sizing for medium mode */
-  body[data-mode='medium'] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
+  /* Shared overlay sizing for tablet mode */
+  body[data-mode='tablet'] #historyBox,
+  body[data-mode='tablet'] #definitionBox,
+  body[data-mode='tablet'] #chatBox {
     width: clamp(16rem, 70vw, var(--panel-width));
   }
 
-  /* Medium overlays: history when popup, definition & chat always overlays */
-  body[data-mode='medium'][data-history-popup="true"] #historyBox,
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
+  /* Tablet overlays: history when popup, definition & chat always overlays */
+  body[data-mode='tablet'][data-history-popup="true"] #historyBox,
+  body[data-mode='tablet'] #definitionBox,
+  body[data-mode='tablet'] #chatBox {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -445,8 +445,8 @@
     max-height: 80vh;
   }
   
-  /* In medium mode with grid layout, history panel uses grid positioning */
-  body[data-mode='medium']:not([data-history-popup="true"]) #historyBox {
+  /* In tablet mode with grid layout, history panel uses grid positioning */
+  body[data-mode='tablet']:not([data-history-popup="true"]) #historyBox {
     position: static;
     transform: none;
     grid-area: history;
@@ -456,37 +456,37 @@
   }
 
   /* Ensure overlay panels are not treated as grid items */
-  body[data-mode='medium'] #definitionBox,
-  body[data-mode='medium'] #chatBox {
+  body[data-mode='tablet'] #definitionBox,
+  body[data-mode='tablet'] #chatBox {
     grid-area: auto;
   }
 
-  /* Override base positioning for medium mode */
-  body[data-mode='medium'] #optionsToggle {
+  /* Override base positioning for tablet mode */
+  body[data-mode='tablet'] #optionsToggle {
     position: absolute;
     right: calc(-36px - 10px); /* Position to the right of board area with gap - matches base positioning */
     left: auto;
   }
   
-  body[data-mode='medium'] #chatNotify {
+  body[data-mode='tablet'] #chatNotify {
     position: absolute;
     right: calc(-36px - 10px); /* Position to the right of board area with gap - matches base positioning */
     left: auto;
   }
 
-  /* Fix title bar layout for medium screens - override mobile layout */
-  body[data-mode='medium'] #titleBar {
+  /* Fix title bar layout for tablet screens - override phone layout */
+  body[data-mode='tablet'] #titleBar {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
   }
   
-  body[data-mode='medium'] #titleBar .mobile-title-row {
+  body[data-mode='tablet'] #titleBar .mobile-title-row {
     display: contents;
   }
   
-  body[data-mode='medium'] #titleBar h1 {
+  body[data-mode='tablet'] #titleBar h1 {
     order: 2;
     flex: 1;
     margin: 0;
@@ -494,25 +494,25 @@
     font-size: calc(1.4rem * var(--ui-scale)); /* Reduced from 1.8rem to 1.4rem */
   }
   
-  body[data-mode='medium'] #resetWrapper {
+  body[data-mode='tablet'] #resetWrapper {
     order: 1;
     margin-left: 0;
   }
   
-  body[data-mode='medium'] #titleBar .mobile-leaderboard-container {
+  body[data-mode='tablet'] #titleBar .mobile-leaderboard-container {
     order: 3;
     flex: 0 0 auto;
     max-width: none;
   }
 
-  body[data-mode='medium'] #historyClose,
-  body[data-mode='medium'] #definitionClose,
-  body[data-mode='medium'] #chatClose {
+  body[data-mode='tablet'] #historyClose,
+  body[data-mode='tablet'] #definitionClose,
+  body[data-mode='tablet'] #chatClose {
     display: block;
   }
 
   :root {
-    /* Medium screens: Use smaller tiles to prevent input field from being hidden */
+    /* Tablet screens: Use smaller tiles to prevent input field from being hidden */
     --tile-size: min(8vmin, 42px);
     --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   }
@@ -527,7 +527,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center content horizontally in medium mode */
+    align-items: center; /* Center content horizontally in tablet mode */
   }
 
   /* Board area should only take space it needs */
@@ -537,7 +537,7 @@
     height: auto; /* Allow height to be calculated from board content */
   }
 
-  /* Add proper spacing between input area and keyboard in medium mode */
+  /* Add proper spacing between input area and keyboard in tablet mode */
   #inputArea {
     display: flex;
     flex-direction: row;
@@ -551,9 +551,9 @@
 }
 
 /* ═══════════════════════════════════════════════
-   FULL MODE: Desktop Layout (>900px)
+   DESKTOP MODE: Desktop Layout (>900px)
    ═══════════════════════════════════════════════
-   Corresponds to body[data-mode="full"] set by JS applyLayoutMode()
+   Corresponds to body[data-mode="desktop"] set by JS applyLayoutMode()
    - Mode-specific desktop adaptations
    - Transform origins for panel animations
 */
@@ -570,11 +570,11 @@
   }
 }
 
-/* Full Mode - Standard Desktop (901px-1199px)
-   Corresponds to body[data-mode="full"] - standard desktop range */
+/* Desktop Mode - Standard Desktop (901px-1199px)
+   Corresponds to body[data-mode="desktop"] - standard desktop range */
 @media (min-width: 901px) and (max-width: 1199px) {
   /* 
-   * Full Mode Standard Desktop Calculations:
+   * Desktop Mode Standard Desktop Calculations:
    * - Three-panel desktop layout with full panel visibility
    * - Tile size: min(9vmin, 48px) for precision mouse/trackpad input  
    * - Enhanced board scaling with proper panel positioning
@@ -586,11 +586,11 @@
   }
 }
 
-/* Full Mode - Large Desktop (1200px-1550px)
-   Corresponds to body[data-mode="full"] - large desktop range */
+/* Desktop Mode - Large Desktop (1200px-1550px)
+   Corresponds to body[data-mode="desktop"] - large desktop range */
 @media (min-width: 1200px) and (max-width: 1550px) {
   /* 
-   * Full Mode Large Desktop Calculations:
+   * Desktop Mode Large Desktop Calculations:
    * - Enhanced tile sizing for larger displays: 50px fixed
    * - UI scale protection to prevent overly small interface elements
    * - Emoji size optimization for better readability
@@ -613,11 +613,11 @@
   /* Large screens use unified button sizing */
 }
 
-/* Full Mode - Ultra-Wide Desktop (≥1551px)
-   Corresponds to body[data-mode="full"] - ultra-wide desktop range */
+/* Desktop Mode - Ultra-Wide Desktop (≥1551px)
+   Corresponds to body[data-mode="desktop"] - ultra-wide desktop range */
 @media (min-width: 1551px) {
   /* 
-   * Full Mode Ultra-Wide Desktop Calculations:
+   * Desktop Mode Ultra-Wide Desktop Calculations:
    * - Maximum tile size: 65px for optimal visibility without excess
    * - Fixed gap sizing: 6px for consistent spacing
    * - UI scale maintained for ultra-wide displays

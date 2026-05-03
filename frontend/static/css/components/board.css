@@ -91,12 +91,12 @@
   }
 }
 
-/* Medium mode - hide stamp area since panels become overlays */
+/* Tablet mode - hide stamp area since panels become overlays */
 @media (min-width: 601px) and (max-width: 900px) {
   /* Grid structure is handled in layout.css */
   
   #stampContainer {
-    display: none; /* Hide stamps in medium mode */
+    display: none; /* Hide stamps in tablet mode */
   }
 }
 
