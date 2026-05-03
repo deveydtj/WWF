@@ -336,96 +336,97 @@
   }
   
   /* ─────────────────────────────────
-     Mobile Panels - Full-Screen Overlays
+     Shared Panel Backdrop
+     Blurred overlay behind all card modals on phone/tablet
      ───────────────────────────────── */
-  
-  /* History Panel */
-  #historyBox {
+
+  #panelBackdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bg-color);
-    z-index: var(--z-panel-overlay);
-    display: flex;
-    flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.33);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: var(--z-panel-backdrop);
     visibility: hidden;
     opacity: 0;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    transition: opacity 0.25s ease-out, visibility 0s 0.25s;
     pointer-events: none;
   }
-  
-  #historyBox.active,
-  #historyBox.visible {
+
+  body.history-open #panelBackdrop,
+  body.definition-open #panelBackdrop,
+  body.chat-open #panelBackdrop,
+  body.players-open #panelBackdrop {
     visibility: visible;
     opacity: 1;
-    transform: translateX(0);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    transition: opacity 0.25s ease-out, visibility 0s 0s;
     pointer-events: auto;
   }
-  
-  /* Definition Panel */
-  #definitionBox {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bg-color);
-    z-index: var(--z-panel-overlay);
-    display: flex;
-    flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(100%);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
-    pointer-events: none;
-  }
-  
-  #definitionBox.active,
-  #definitionBox.visible {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
-    pointer-events: auto;
-  }
-  
-  /* Chat Panel */
+
+  /* ─────────────────────────────────
+     Phone/Tablet Panels - Centered Card Modals
+     Phase 5: secondary panels as centered card modals with blurred backdrop
+     ───────────────────────────────── */
+
+  /* Shared card modal base for all panels */
+  #historyBox,
+  #definitionBox,
   #chatBox {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: calc(100% - 40px);
+    max-width: 480px;
+    max-height: min(80dvh, 600px);
     background: var(--bg-color);
+    border-radius: 20px;
+    padding: var(--pad-x);
+    box-shadow:
+      0 8px 32px var(--shadow-color-dark),
+      0 0 0 3px var(--shadow-color-light);
     z-index: var(--z-panel-overlay);
-    display: flex;
-    flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
-    overflow: hidden;
     visibility: hidden;
     opacity: 0;
-    transform: translateX(100%);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out, visibility 0s 0.25s;
     pointer-events: none;
+    box-sizing: border-box;
   }
-  
+
+  #historyBox.active,
+  #historyBox.visible,
+  #definitionBox.active,
+  #definitionBox.visible,
   #chatBox.active,
   #chatBox.visible {
+    transform: translate(-50%, -50%) scale(1);
     visibility: visible;
     opacity: 1;
-    transform: translateX(0);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out, visibility 0s 0s;
     pointer-events: auto;
+  }
+
+  /* History Panel */
+  #historyBox {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Definition Panel */
+  #definitionBox {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Chat Panel */
+  #chatBox {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   
   /* Chat messages area */
@@ -471,34 +472,41 @@
   }
   
   /* ─────────────────────────────────
-     Player Sidebar - Mobile Overlay
+     Player Sidebar - Centered Card Modal
+     Phase 5: player panel as centered card modal on phone/tablet
      ───────────────────────────────── */
   
   #playerSidebar {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: calc(100% - 40px);
+    max-width: 480px;
+    max-height: min(80dvh, 600px);
     background: var(--bg-color);
+    border-radius: 20px;
+    padding: var(--pad-x);
+    box-shadow:
+      0 8px 32px var(--shadow-color-dark),
+      0 0 0 3px var(--shadow-color-light);
     z-index: var(--z-panel-overlay);
     display: flex;
     flex-direction: column;
-    padding: calc(60px + env(safe-area-inset-top)) var(--pad-x) var(--pad-x); /* Use token for consistent padding */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     visibility: hidden;
     opacity: 0;
-    transform: translateX(100%);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0.3s;
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out, visibility 0s 0.25s;
     pointer-events: none;
+    box-sizing: border-box;
   }
   
   #playerSidebar.visible {
+    transform: translate(-50%, -50%) scale(1);
     visibility: visible;
     opacity: 1;
-    transform: translateX(0);
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0s 0s;
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out, visibility 0s 0s;
     pointer-events: auto;
   }
   
@@ -705,12 +713,10 @@
     padding-bottom: calc(180px + env(keyboard-inset-height, 0px));
   }
   
-  /* Scrollable containers - ensure content remains visible above keyboard */
-  #historyBox,
-  #definitionBox,
-  #chatBox {
-    max-height: var(--viewport-height, 100dvh);
-  }
+  /* Scrollable containers - card modals use min(80dvh, 600px) from their base
+   * definition; this rule previously capped full-screen panels to the real
+   * viewport height. For card modals, dvh already tracks the dynamic viewport
+   * so no additional override is needed here. */
   
   /* ─────────────────────────────────
      Toast Notifications - Avoid Keyboard
@@ -720,6 +726,44 @@
   #messagePopup {
     top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 1.5);
     /* Position from top ensures visibility above system UI and keyboard */
+  }
+}
+
+/* ═══════════════════════════════════
+   Reduced Motion Support
+   Applies within the ≤900px breakpoint only
+   ═══════════════════════════════════ */
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  /* Remove scale animation from panel card modals; keep only opacity transition */
+  #historyBox,
+  #definitionBox,
+  #chatBox,
+  #playerSidebar {
+    transform: translate(-50%, -50%);
+    transition: opacity 0.2s ease-out, visibility 0s 0.2s;
+  }
+
+  #historyBox.active,
+  #historyBox.visible,
+  #definitionBox.active,
+  #definitionBox.visible,
+  #chatBox.active,
+  #chatBox.visible,
+  #playerSidebar.visible {
+    transform: translate(-50%, -50%);
+    transition: opacity 0.2s ease-out, visibility 0s 0s;
+  }
+
+  #panelBackdrop {
+    transition: opacity 0.15s ease-out, visibility 0s 0.15s;
+  }
+
+  body.history-open #panelBackdrop,
+  body.definition-open #panelBackdrop,
+  body.chat-open #panelBackdrop,
+  body.players-open #panelBackdrop {
+    transition: opacity 0.15s ease-out, visibility 0s 0s;
   }
 }
 

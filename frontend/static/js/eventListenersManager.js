@@ -55,6 +55,7 @@ class EventListenersManager {
     this.messageHandlers = config.messageHandlers;
     
     this._setupPanelEventListeners();
+    this._setupPanelBackdropListener();
     this._setupOptionsEventListeners();
     this._setupModalEventListeners();
     this._setupPlayerSidebarEventListeners();
@@ -130,8 +131,7 @@ class EventListenersManager {
         if (isAnimating) return;
         isAnimating = true;
         
-        this.chatInputFocusProtection = false;
-        this.userIntentionallyLeftChat = false;
+        this._cleanupChatState();
         setManualPanelToggle('chat', false);
         closeOverlay(OVERLAYS.CHAT);
         
@@ -173,6 +173,50 @@ class EventListenersManager {
         }
       });
     }
+  }
+
+  /**
+   * Reset chat focus protection state when the chat panel is closed.
+   * Called from both the close button handler and the backdrop click handler
+   * to keep cleanup logic in one place.
+   * @private
+   */
+  _cleanupChatState() {
+    this.chatInputFocusProtection = false;
+    this.userIntentionallyLeftChat = false;
+  }
+
+  /**
+   * Setup panel backdrop click-off dismissal for phone/tablet card modals.
+   * Clicking the backdrop closes any open secondary panel.
+   * @private
+   */
+  _setupPanelBackdropListener() {
+    const panelBackdrop = document.getElementById('panelBackdrop');
+    if (!panelBackdrop) return;
+
+    panelBackdrop.addEventListener('click', () => {
+      if (isOverlayOpen(OVERLAYS.HISTORY)) {
+        setManualPanelToggle(OVERLAYS.HISTORY, false);
+        closeOverlay(OVERLAYS.HISTORY);
+      }
+      if (isOverlayOpen(OVERLAYS.DEFINITION)) {
+        setManualPanelToggle(OVERLAYS.DEFINITION, false);
+        closeOverlay(OVERLAYS.DEFINITION);
+      }
+      if (isOverlayOpen(OVERLAYS.CHAT)) {
+        this._cleanupChatState();
+        setManualPanelToggle(OVERLAYS.CHAT, false);
+        closeOverlay(OVERLAYS.CHAT);
+        const chatNotify = document.getElementById('chatNotify');
+        if (chatNotify) {
+          chatNotify.style.display = 'block';
+        }
+      }
+      if (isOverlayOpen(OVERLAYS.PLAYERS)) {
+        closeOverlay(OVERLAYS.PLAYERS);
+      }
+    });
   }
 
   /**
