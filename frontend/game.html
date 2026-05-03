@@ -30,14 +30,17 @@
   <!-- Animations (shared) -->
   <link rel="stylesheet" href="static/css/animations.css">
   
-  <!-- DEPRECATED: Old layout system (to be removed in Phase 7) -->
-  <!-- These files are still active and required for current functionality -->
-  <link rel="stylesheet" href="static/css/modern-responsive.css">
-  <link rel="stylesheet" href="static/css/layout.css">
-  <link rel="stylesheet" href="static/css/responsive.css">
 </head>
 
 <body>
+  <!-- Phase 7: Portrait-only phone overlay - shown when phone is in landscape mode -->
+  <div id="landscapeOverlay" role="alertdialog" aria-modal="true" aria-label="Rotate device">
+    <div id="landscapeOverlayContent">
+      <div id="landscapeOverlayIcon">📱</div>
+      <p id="landscapeOverlayText">Please rotate your device to portrait mode to play.</p>
+    </div>
+  </div>
+
   <div id="appContainer">
     <!-- Shared backdrop for panel card modals on phone and tablet -->
     <div id="panelBackdrop" aria-hidden="true"></div>

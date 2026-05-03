@@ -118,6 +118,9 @@ class AppInitializer {
       // 9. Initialize panels and layout
       this._initializePanelsAndLayout();
       
+      // 10. Phase 7: Best-effort portrait lock for phone mode
+      this._lockPortraitOrientation();
+      
       // 11. Initialize network and game state
       await this._initializeNetworkAndGameState();
       
@@ -480,6 +483,29 @@ class AppInitializer {
       updatePanelVisibility();
       setupMobileLeaderboard();
     });
+  }
+
+  /**
+   * Phase 7: Best-effort portrait orientation lock for phone-sized viewports.
+   * Uses the Screen Orientation API where supported; silently ignores errors
+   * on browsers that do not support locking (e.g., iOS Safari).
+   * @private
+   */
+  _lockPortraitOrientation() {
+    try {
+      if (
+        typeof screen !== 'undefined' &&
+        screen.orientation &&
+        typeof screen.orientation.lock === 'function'
+      ) {
+        screen.orientation.lock('portrait').catch(() => {
+          // Silently ignore – locking is best-effort and may be denied
+          // by the browser (e.g., desktop, or browsers that don't support it).
+        });
+      }
+    } catch (_) {
+      // Ignore any synchronous errors from older browsers
+    }
   }
 
   /**
