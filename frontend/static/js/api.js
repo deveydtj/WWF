@@ -125,6 +125,25 @@ export async function leaveLobbyRequest(lobbyId, emoji, playerId) {
 }
 
 /**
+ * Kick a player from the lobby (host only).
+ *
+ * @param {string} emoji - Emoji of the player to kick.
+ * @param {string} playerId - Player ID of the player to kick.
+ * @param {string} lobbyId - Lobby code.
+ * @param {string} hostToken - Host token for authorization.
+ * @returns {Promise<Object>} Response payload.
+ */
+export async function kickPlayer(emoji, playerId, lobbyId, hostToken) {
+  const url = `/lobby/${lobbyId}/kick`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emoji, player_id: playerId, host_token: hostToken })
+  });
+  return r.json();
+}
+
+/**
  * Listen for server-sent game state updates.
  *
  * @param {(state:Object)=>void} onMessage - Callback for each update.

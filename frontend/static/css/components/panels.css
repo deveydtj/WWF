@@ -391,6 +391,113 @@ body.players-open #playerSidebar {
   opacity: 0.5;
 }
 
+/* Full-roster player list */
+.player-sidebar-heading {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+#playerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.player-roster-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg-color);
+  box-shadow: 2px 2px 5px var(--shadow-color-dark),
+              -2px -2px 5px var(--shadow-color-light);
+  transition: opacity 0.2s ease;
+}
+
+.player-roster-row.current-player {
+  box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+              inset -2px -2px 5px var(--inset-shadow-light),
+              0 0 0 2px var(--correct-bg);
+}
+
+.player-roster-row.inactive {
+  opacity: 0.5;
+}
+
+.roster-rank {
+  font-size: 12px;
+  color: var(--text-color-light);
+  min-width: 24px;
+  flex-shrink: 0;
+}
+
+.roster-emoji {
+  font-size: 22px;
+  line-height: 1;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.roster-score {
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+  text-align: right;
+  color: var(--text-color);
+}
+
+.roster-afk {
+  font-size: 11px;
+  color: var(--text-color-light);
+  background: var(--shadow-color-dark);
+  border-radius: 4px;
+  padding: 2px 5px;
+  flex-shrink: 0;
+}
+
+.roster-kick-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--bg-color);
+  color: var(--text-color-light);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 4px var(--shadow-color-dark),
+              -2px -2px 4px var(--shadow-color-light);
+  transition: color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.roster-kick-btn:hover {
+  color: #e55;
+}
+
+.roster-kick-btn:active {
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+}
+
+.no-players {
+  color: var(--text-color-light);
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+  font-size: 14px;
+}
+
 /* Initial layout states */
 #emojiModal,
 #closeCallPopup,
