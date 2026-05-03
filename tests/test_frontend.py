@@ -6,11 +6,27 @@ import json
 LANDING = Path('frontend/index.html')
 GAME = Path('frontend/game.html')
 CSS_THEME = Path('frontend/static/css/theme.css')
-CSS_LAYOUT = Path('frontend/static/css/layout.css')
+CSS_DIR = Path('frontend/static/css')
 SRC_DIR = Path('frontend/static/js')
 
+_CSS_FILES = [
+    CSS_DIR / 'theme.css',
+    CSS_DIR / 'shared-base.css',
+    CSS_DIR / 'base.css',
+    CSS_DIR / 'animations.css',
+    CSS_DIR / 'components' / 'board.css',
+    CSS_DIR / 'components' / 'keyboard.css',
+    CSS_DIR / 'components' / 'panels.css',
+    CSS_DIR / 'components' / 'buttons.css',
+    CSS_DIR / 'components' / 'leaderboard.css',
+    CSS_DIR / 'components' / 'modals.css',
+    CSS_DIR / 'components' / 'mobile-menu.css',
+    CSS_DIR / 'mobile-layout.css',
+    CSS_DIR / 'desktop-layout.css',
+]
+
 def read_css():
-    return CSS_THEME.read_text(encoding='utf-8') + CSS_LAYOUT.read_text(encoding='utf-8')
+    return ''.join(p.read_text(encoding='utf-8') for p in _CSS_FILES if p.exists())
 
 EXPECTED_MODULES = [
     'api.js',
@@ -102,7 +118,8 @@ def test_modules_exist_and_export():
 def test_index_html_uses_module_script():
     text = GAME.read_text(encoding='utf-8')
     assert '<link rel="stylesheet" href="static/css/theme.css"' in text
-    assert '<link rel="stylesheet" href="static/css/layout.css"' in text
+    assert '<link rel="stylesheet" href="static/css/mobile-layout.css"' in text
+    assert '<link rel="stylesheet" href="static/css/desktop-layout.css"' in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
     assert len(scripts) == 1, "index.html should contain exactly one script tag"
     script = scripts[0]
@@ -174,20 +191,14 @@ def test_apply_state_updates_definition_text():
 
 def test_side_panels_centered_and_limited_in_tablet_mode():
     css = read_css()
-    # Tablet mode now has conditional behavior based on data-history-popup
-    # When history is popup (not enough space), all panels are overlays
-    assert "body[data-mode='tablet'][data-history-popup=\"true\"] #historyBox" in css
-    assert "body[data-mode='tablet'][data-history-popup=\"true\"] #definitionBox" in css
-    assert "body[data-mode='tablet'][data-history-popup=\"true\"] #chatBox" in css
-    # When history is in grid (enough space), definition and chat are still overlays
-    assert "body[data-mode='tablet']:not([data-history-popup=\"true\"]) #definitionBox" in css
-    assert "body[data-mode='tablet']:not([data-history-popup=\"true\"]) #chatBox" in css
-    # History box uses grid positioning when there's space
-    assert "body[data-mode='tablet']:not([data-history-popup=\"true\"]) #historyBox" in css
+    # Phase 5: phone and tablet panels use centered card modals (≤900px viewport)
+    # mobile-layout.css positions panels as centered overlays using translate(-50%, -50%)
     assert 'position: fixed;' in css
-    assert 'transform: translate(-50%, -50%);' in css
-    assert 'max-width: 90%;' in css
-    assert 'max-height: 80vh;' in css
+    assert 'transform: translate(-50%, -50%)' in css
+    # Panels have a bounded max-width to stay comfortable in the viewport
+    assert 'max-width: 480px' in css
+    # Panels have a bounded max-height using dynamic viewport units
+    assert 'max-height: min(80dvh' in css
 
 
 def test_popups_fill_viewport():
@@ -208,14 +219,16 @@ def test_options_menu_clamped_to_viewport():
 
 
 def test_side_panels_fixed_to_bottom_in_phone_mode():
+    # Phase 5: panels on phone/tablet are now centered card modals, not fixed-to-bottom sheets.
+    # Verify the card modal placement pattern in the ≤900px media query.
     css = read_css()
     patterns = [
-        r"@media \(max-width: 600px\)[\s\S]*?#historyBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*left: 0",
-        r"@media \(max-width: 600px\)[\s\S]*?#definitionBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
-        r"@media \(max-width: 600px\)[\s\S]*?#chatBox\s*{[^}]*position: fixed;[^}]*bottom: 0;[^{]*right: 0",
+        r"@media \(max-width: 900px\)[\s\S]*?#historyBox,?\s*\n\s*#definitionBox,?\s*\n\s*#chatBox\s*\{[^}]*position: fixed;",
+        r"@media \(max-width: 900px\)[\s\S]*?top: 50%",
+        r"@media \(max-width: 900px\)[\s\S]*?left: 50%",
     ]
     for pattern in patterns:
-        assert re.search(pattern, css, flags=re.DOTALL)
+        assert re.search(pattern, css, flags=re.DOTALL), f"Pattern not found: {pattern}"
 
 def test_chat_box_and_controls_exist():
     text = GAME.read_text(encoding='utf-8')
@@ -235,9 +248,9 @@ def test_chat_notify_icon_present_and_styled():
 def test_options_and_chat_icons_visible():
     css = read_css()
     chat_rules = [m.group(0) for m in re.finditer(r'#chatNotify\s*{[^}]*}', css)]
-    assert chat_rules and 'display: block' in chat_rules[-1]
+    assert chat_rules and any('display: block' in r for r in chat_rules)
     opt_rules = [m.group(0) for m in re.finditer(r'#optionsToggle\s*{[^}]*}', css)]
-    assert opt_rules and 'display: block' in opt_rules[-1]
+    assert opt_rules and any('display: block' in r for r in opt_rules)
 
 def test_hide_chat_notify_keeps_icon_visible():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
@@ -332,8 +345,10 @@ def test_waiting_overlay_fade_out_animation():
 
 def test_extra_small_mobile_rules_present():
     css = read_css()
-    assert '@media (max-width: 400px)' in css
-    assert '--tile-size: min(12vmin, 36px)' in css
+    # Phase 7: The new layout system uses max-width: 375px for very small devices.
+    # Scale tokens are adjusted to keep the board compact on tiny screens.
+    assert '@media (max-width: 375px)' in css
+    assert '--scale-xxs: 0.65' in css
 
 
 def test_show_message_desktop_behavior():

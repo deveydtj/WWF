@@ -211,9 +211,9 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
         """Test that phone, tablet, and desktop layout modes are properly implemented."""
         frontend_dir = Path(__file__).parent.parent / "frontend"
         
-        # Check for layout mode implementation
-        layout_css = frontend_dir / "static" / "css" / "layout.css"
-        responsive_css = frontend_dir / "static" / "css" / "responsive.css"
+        # Check for layout mode implementation in the new authoritative layout files
+        mobile_css = frontend_dir / "static" / "css" / "mobile-layout.css"
+        desktop_css = frontend_dir / "static" / "css" / "desktop-layout.css"
         
         layout_modes_found = {
             'phone': False,    # Phone ≤600px
@@ -221,7 +221,7 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
             'desktop': False   # Desktop >900px
         }
         
-        css_files = [layout_css, responsive_css]
+        css_files = [mobile_css, desktop_css]
         for css_file in css_files:
             if css_file.exists():
                 content = css_file.read_text()
@@ -243,6 +243,5 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
         self.assertTrue(layout_modes_found['desktop'], "Desktop layout should be implemented")
         print(f"Layout modes found: {layout_modes_found}")
     
-
 if __name__ == '__main__':
     unittest.main()

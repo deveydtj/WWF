@@ -842,6 +842,70 @@
 }
 
 /* ═══════════════════════════════════
+   Phase 7: Portrait-Only Phone Handling
+   Landscape overlay for phones in landscape mode
+   ═══════════════════════════════════ */
+
+/* Default: overlay is hidden */
+#landscapeOverlay {
+  display: none;
+}
+
+/* Show overlay only on phone-sized viewports in landscape orientation */
+@media (max-width: 600px) and (orientation: landscape) {
+  #landscapeOverlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg-color, #e8e8e8);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    text-align: center;
+  }
+
+  #landscapeOverlayContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 360px;
+    padding: 32px 24px;
+    border-radius: 20px;
+    background: var(--bg-color, #e8e8e8);
+    box-shadow:
+      8px 8px 16px var(--shadow-color-dark, rgba(0, 0, 0, 0.15)),
+      -8px -8px 16px var(--shadow-color-light, rgba(255, 255, 255, 0.8));
+  }
+
+  #landscapeOverlayIcon {
+    font-size: 48px;
+    animation: rotate-hint 2s ease-in-out infinite;
+  }
+
+  #landscapeOverlayText {
+    font-size: 18px;
+    color: var(--text-color, #333);
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Prevent scrolling the game page while overlay is shown */
+  body {
+    overflow: hidden;
+  }
+}
+
+@keyframes rotate-hint {
+  0%, 100% { transform: rotate(0deg); }
+  30%       { transform: rotate(-90deg); }
+  70%       { transform: rotate(-90deg); }
+}
+
+/* ═══════════════════════════════════
    Phone Layout - Reset in Header
    Phase 6: reset control lives in the top header on phone (≤600px)
    ═══════════════════════════════════ */

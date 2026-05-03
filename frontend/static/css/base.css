@@ -340,3 +340,27 @@ h1 {
 #message.negative {
   color: #ba1c1c;
 }
+
+/* Waiting overlay - shown while the lobby is loading */
+#waitingOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+#waitingOverlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#waitingOverlay.fade-out {
+  animation: fadeOutOverlay 0.35s ease forwards;
+  pointer-events: none;
+}
