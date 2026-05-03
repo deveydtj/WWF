@@ -106,7 +106,19 @@ function tuneSizing() {
   root.style.setProperty("--current-scale-factor", scaleFactor);
   root.style.setProperty("--current-tile-size", tile + "px");
 
-  console.log(`📐 Scaling applied: tile=${tile}px, keyH=${r.keyH}px, boardW=${boardWidth}px, scale=${scaleFactor.toFixed(2)}`);
+  // Modal / popup sizing tokens — owned by this scaling engine so that card
+  // modals stay proportional to the board and always fit the viewport.
+  // --modal-max-width  : 110% of board width, capped at 560px and 90vw (smallest wins)
+  // --modal-max-height : 85% of viewport height, clamped between 300px and 700px
+  // --modal-padding    : scales gently with tile size
+  const modalMaxWidth = clamp(Math.round(boardWidth * 1.10), 280, 560);
+  const modalMaxHeight = clamp(Math.round(vh * 0.85), 300, 700);
+  const modalPadding = clamp(Math.round(tile * 0.40), 16, 28);
+  root.style.setProperty("--modal-max-width", Math.min(modalMaxWidth, Math.round(vw * 0.90)) + "px");
+  root.style.setProperty("--modal-max-height", modalMaxHeight + "px");
+  root.style.setProperty("--modal-padding", modalPadding + "px");
+
+  console.log(`📐 Scaling applied: tile=${tile}px, keyH=${r.keyH}px, boardW=${boardWidth}px, scale=${scaleFactor.toFixed(2)}, modalW=${Math.min(modalMaxWidth, Math.round(vw * 0.90))}px`);
 }
 
 /**

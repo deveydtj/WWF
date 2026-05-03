@@ -33,7 +33,7 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 18px;
-  padding: 28px 22px;
+  padding: var(--modal-padding, 20px);
   text-align: center;
   transform: translateY(-20px) scale(0.95);
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
@@ -41,8 +41,8 @@
   z-index: var(--z-modal-content);
   pointer-events: auto;
   box-sizing: border-box;
-  max-width: min(90vw, 32rem);
-  max-height: 90vh;
+  max-width: var(--modal-max-width, min(90vw, 512px));
+  max-height: var(--modal-max-height, min(90vh, 700px));
   overflow-y: auto;
 }
 
@@ -83,11 +83,11 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 12px;
-  padding: 20px;
+  padding: var(--modal-padding, 20px);
   text-align: center;
   box-sizing: border-box;
-  max-width: min(90vw, 28rem);
-  max-height: 90vh;
+  max-width: var(--modal-max-width, min(90vw, 512px));
+  max-height: var(--modal-max-height, min(90vh, 700px));
   overflow-y: auto;
 }
 
@@ -120,10 +120,10 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 12px;
-  padding: 20px;
+  padding: var(--modal-padding, 20px);
   box-sizing: border-box;
-  max-width: min(90vw, 26.25rem);
-  max-height: 90vh;
+  max-width: var(--modal-max-width, min(90vw, 512px));
+  max-height: var(--modal-max-height, min(90vh, 700px));
   overflow-y: auto;
   text-align: left;
 }
@@ -156,10 +156,10 @@
   box-shadow: 0 8px 32px var(--shadow-color-dark),
               0 0 0 3px var(--shadow-color-light);
   border-radius: 12px;
-  padding: 20px;
+  padding: var(--modal-padding, 20px);
   text-align: center;
   box-sizing: border-box;
-  max-width: min(90vw, 22.5rem);
+  max-width: var(--modal-max-width, min(90vw, 512px));
 }
 
 #shareActions {
