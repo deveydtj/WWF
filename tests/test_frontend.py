@@ -711,6 +711,136 @@ console.log(JSON.stringify({ count: board.children.length, cls: board.children[0
     assert data['tab'] == -1
 
 
+def test_update_board_renders_current_guess_state():
+    script = """
+import { createBoard, updateBoard } from './frontend/static/js/board.js';
+
+function classList() {
+  return {
+    add(){},
+    remove(){},
+    toggle(){}
+  };
+}
+
+global.document = {
+  createElement() {
+    return {
+      className: '',
+      textContent: '',
+      tabIndex: 0,
+      style: {},
+      classList: classList(),
+      addEventListener(){}
+    };
+  }
+};
+
+const board = { innerHTML: '', children: [], appendChild(el){ this.children.push(el); } };
+createBoard(board, 2);
+updateBoard(board, { guesses: [] }, 'cr', 2, false);
+console.log(JSON.stringify(board.children.slice(0, 5).map(tile => tile.textContent)));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data == ['C', 'R', '', '', '']
+
+
+def test_keyboard_updates_shared_current_guess_state():
+    script = """
+const documentListeners = {};
+global.window = { innerWidth: 1200 };
+global.getComputedStyle = () => ({ getPropertyValue: () => '' });
+global.document = {
+  body: {
+    dataset: {},
+    classList: {
+      toggle(){},
+      contains(){ return false; }
+    }
+  },
+  activeElement: null,
+  addEventListener(type, handler) { documentListeners[type] = handler; },
+  dispatchEvent(){},
+  getElementById() { return null; }
+};
+
+const { setupTypingListeners } = await import('./frontend/static/js/keyboard.js');
+
+function keyElement(key) {
+  return {
+    dataset: { key },
+    classList: { contains(name) { return name === 'key'; } }
+  };
+}
+
+const keyboardEl = {
+  listeners: {},
+  addEventListener(type, handler) { this.listeners[type] = handler; },
+  querySelector() { return null; }
+};
+let focused = false;
+const guessInput = {
+  value: 'ZZZZZ',
+  disabled: false,
+  listeners: {},
+  addEventListener(type, handler) { this.listeners[type] = handler; },
+  focus() { focused = true; }
+};
+const submitButton = { addEventListener(){} };
+
+let currentGuess = '';
+let renderCount = 0;
+let prevented = false;
+setupTypingListeners({
+  keyboardEl,
+  guessInput,
+  submitButton,
+  submitGuessHandler(){},
+  updateBoardFromTyping() { renderCount += 1; },
+  isAnimating: () => false,
+  getCurrentGuess: () => currentGuess,
+  setCurrentGuess(value) {
+    currentGuess = value;
+    guessInput.value = value.toUpperCase();
+  }
+});
+
+keyboardEl.listeners.click({
+  target: keyElement('c'),
+  cancelable: true,
+  preventDefault() { prevented = true; }
+});
+
+guessInput.value = 'crane!';
+guessInput.listeners.input.call(guessInput);
+
+global.document.activeElement = global.document.body;
+documentListeners.keydown({
+  key: 'Backspace',
+  preventDefault(){},
+  target: global.document.body
+});
+
+console.log(JSON.stringify({ currentGuess, input: guessInput.value, renderCount, prevented, focused }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data == {
+        'currentGuess': 'cran',
+        'input': 'CRAN',
+        'renderCount': 3,
+        'prevented': True,
+        'focused': True
+    }
+
+
 def test_hard_mode_constraints_and_validation():
     script = """
 import { updateHardModeConstraints, isValidHardModeGuess } from './frontend/static/js/board.js';

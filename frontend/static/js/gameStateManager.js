@@ -31,6 +31,7 @@ class GameStateManager {
     this.maxRows = 6;
     this.requiredLetters = new Set();
     this.greenPositions = {};
+    this.currentGuess = '';
     
     // Daily double state
     this.dailyDoubleRow = null;
@@ -222,6 +223,99 @@ class GameStateManager {
   }
 
   /**
+   * Normalize any guess-like value into the canonical in-progress guess state.
+   * The visible desktop input mirrors this state, but the board and submission
+   * flow read from here.
+   * @param {string} value
+   * @returns {string}
+   */
+  normalizeCurrentGuess(value) {
+    return String(value || '').replace(/[^a-zA-Z]/g, '').toLowerCase().slice(0, 5);
+  }
+
+  /**
+   * Set the in-progress guess and refresh dependent UI.
+   * @param {string} value
+   * @param {{render?: boolean}} [options]
+   * @returns {string}
+   */
+  setCurrentGuess(value, options = {}) {
+    const { render = true } = options;
+    const nextGuess = this.normalizeCurrentGuess(value);
+    const changed = nextGuess !== this.currentGuess;
+
+    this.currentGuess = nextGuess;
+    this._syncGuessInput();
+
+    if (render && changed) {
+      this.renderCurrentGuess();
+    }
+
+    return this.currentGuess;
+  }
+
+  /**
+   * Append one letter to the in-progress guess.
+   * @param {string} letter
+   * @returns {string}
+   */
+  appendCurrentGuessLetter(letter) {
+    if (this.currentGuess.length >= 5 || !/^[a-z]$/i.test(letter)) {
+      return this.currentGuess;
+    }
+
+    return this.setCurrentGuess(this.currentGuess + letter);
+  }
+
+  /**
+   * Remove the final letter from the in-progress guess.
+   * @returns {string}
+   */
+  deleteCurrentGuessLetter() {
+    return this.setCurrentGuess(this.currentGuess.slice(0, -1));
+  }
+
+  /**
+   * Clear the in-progress guess.
+   * @param {{render?: boolean}} [options]
+   * @returns {string}
+   */
+  clearCurrentGuess(options = {}) {
+    return this.setCurrentGuess('', options);
+  }
+
+  /**
+   * Mirror the canonical guess state into the desktop input.
+   * @private
+   */
+  _syncGuessInput() {
+    const guessInput = this.domManager ? this.domManager.get('guessInput') : null;
+    if (guessInput && guessInput.value !== this.currentGuess.toUpperCase()) {
+      guessInput.value = this.currentGuess.toUpperCase();
+    }
+  }
+
+  /**
+   * Re-render the active board row from the canonical current guess.
+   */
+  renderCurrentGuess() {
+    const board = this.domManager ? this.domManager.get('board') : null;
+    const latestState = this.getLatestState();
+    if (!board || !latestState) return;
+
+    updateBoard(
+      board,
+      latestState,
+      this.currentGuess,
+      this.maxRows,
+      this.gameState.is(STATES.GAME_OVER),
+      -1,
+      this.dailyDoubleHint,
+      this.dailyDoubleRow
+    );
+  }
+
+  /**
    * Attempt to re-register the player's emoji with the server for auto-reconnection
    * @private
    * @returns {Promise<boolean>} True if reconnection was successful, false otherwise
@@ -324,16 +418,16 @@ class GameStateManager {
    */
   _updateBoardAndGameState(state, prevGuessCount) {
     const board = this.domManager ? this.domManager.get('board') : null;
-    const guessInput = this.domManager ? this.domManager.get('guessInput') : null;
     const keyboard = this.domManager ? this.domManager.get('keyboard') : null;
     
-    if (!board || !guessInput || !keyboard) return;
+    if (!board || !keyboard) return;
     
     this.maxRows = state.max_rows || 6;
+    this._syncGuessInput();
     const animateRow = state.guesses && state.guesses.length > prevGuessCount ? 
                       state.guesses.length - 1 : -1;
     
-    updateBoard(board, state, guessInput, this.maxRows, 
+    updateBoard(board, state, this.currentGuess, this.maxRows, 
                this.gameState.is(STATES.GAME_OVER), animateRow, 
                this.dailyDoubleHint, this.dailyDoubleRow);
     
@@ -412,6 +506,7 @@ class GameStateManager {
   getMaxRows() { return this.maxRows; }
   getRequiredLetters() { return this.requiredLetters; }
   getGreenPositions() { return this.greenPositions; }
+  getCurrentGuess() { return this.currentGuess; }
   getDailyDoubleRow() { return this.dailyDoubleRow; }
   getDailyDoubleHint() { return this.dailyDoubleHint; }
   getDailyDoubleAvailable() { return this.dailyDoubleAvailable; }

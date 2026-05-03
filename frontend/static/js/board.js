@@ -28,11 +28,12 @@ function animateLetterIn(tile, letter) {
 }
 
 /**
- * Render all guesses and the current input onto the board.
+ * Render all guesses and the current guess state onto the board.
  * Existing tiles are cleared before applying new status classes.
  */
-export function updateBoard(board, state, guessInput, rows = 6, gameOver = false, animateRow = -1, hint = null, hintRow = null) {
+export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver = false, animateRow = -1, hint = null, hintRow = null) {
   const guesses = state.guesses;
+  const activeGuess = String(currentGuess || '').slice(0, 5);
   const tiles = board.children;
   
   // Store previous state to detect new letters
@@ -80,8 +81,8 @@ export function updateBoard(board, state, guessInput, rows = 6, gameOver = false
           tile.textContent = hint.letter.toUpperCase();
         }
         tile.classList.add('ghost');
-      } else if (i < guessInput.value.length) {
-        const newLetter = guessInput.value[i].toUpperCase();
+      } else if (i < activeGuess.length) {
+        const newLetter = activeGuess[i].toUpperCase();
         if (previousTexts[tileIndex] !== newLetter) {
           animateLetterIn(tile, newLetter);
         } else {

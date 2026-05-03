@@ -317,7 +317,9 @@ class AppInitializer {
         submitButton,
         submitGuessHandler: this._getSubmitGuessHandler(),
         updateBoardFromTyping: () => this._updateBoardFromTyping(),
-        isAnimating: () => false
+        isAnimating: () => false,
+        getCurrentGuess: () => this.gameStateManager.getCurrentGuess(),
+        setCurrentGuess: (value) => this.gameStateManager.setCurrentGuess(value, { render: false })
       });
     }
   }
@@ -594,17 +596,17 @@ class AppInitializer {
    */
   _updateBoardFromTyping() {
     const board = this.domManager.get('board');
-    const guessInput = this.domManager.get('guessInput');
     const latestState = this.gameStateManager.getLatestState();
     const maxRows = this.gameStateManager.getMaxRows();
     const dailyDoubleHint = this.gameStateManager.getDailyDoubleHint();
     const dailyDoubleRow = this.gameStateManager.getDailyDoubleRow();
+    const currentGuess = this.gameStateManager.getCurrentGuess();
     
-    if (board && latestState && guessInput) {
+    if (board && latestState) {
       updateBoardFromTyping(
         board, 
         latestState, 
-        guessInput, 
+        currentGuess, 
         maxRows, 
         this.gameState.is(STATES.GAME_OVER), 
         dailyDoubleHint, 

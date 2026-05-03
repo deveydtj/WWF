@@ -77,19 +77,19 @@ async function initializeApp() {
   console.log('🚀 Application initialized successfully');
 }
 
-// Handle guess submission from input or keyboard
+// Handle guess submission from the shared currentGuess state.
 async function submitGuessHandler() {
   console.log('🎮 submitGuessHandler called');
   const gameState = gameStateManager.gameState;
   if (gameState?.is(STATES.GAME_OVER)) return;
   
   const guessInput = domManager.get('guessInput');
-  if (!guessInput) return;
+  const shakeTarget = guessInput || domManager.get('board');
   
-  const guess = guessInput.value.trim().toLowerCase();
+  const guess = gameStateManager.getCurrentGuess().trim().toLowerCase();
   
   if (guess.length !== 5) {
-    shakeInput(guessInput);
+    if (shakeTarget) shakeInput(shakeTarget);
     showMessage('Please enter a 5-letter word.', {
       messageEl: domManager.get('messageEl'),
       messagePopup: domManager.get('messagePopup')
@@ -106,7 +106,7 @@ async function submitGuessHandler() {
       messagePopup: domManager.get('messagePopup')
     })
   )) {
-    shakeInput(guessInput);
+    if (shakeTarget) shakeInput(shakeTarget);
     return;
   }
   
@@ -159,7 +159,7 @@ async function submitGuessHandler() {
     }
   }
   
-  guessInput.value = '';
+  gameStateManager.clearCurrentGuess();
   
   if (resp.status === 'ok') {
     gameStateManager.applyState(resp.state);
@@ -212,7 +212,7 @@ async function submitGuessHandler() {
         messagePopup: domManager.get('messagePopup')
       });
     }
-    shakeInput(guessInput);
+    if (shakeTarget) shakeInput(shakeTarget);
   }
 }
 
