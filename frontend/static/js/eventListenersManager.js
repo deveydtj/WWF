@@ -199,12 +199,10 @@ class EventListenersManager {
       if (isOverlayOpen(OVERLAYS.HISTORY)) {
         setManualPanelToggle(OVERLAYS.HISTORY, false);
         closeOverlay(OVERLAYS.HISTORY);
-      }
-      if (isOverlayOpen(OVERLAYS.DEFINITION)) {
+      } else if (isOverlayOpen(OVERLAYS.DEFINITION)) {
         setManualPanelToggle(OVERLAYS.DEFINITION, false);
         closeOverlay(OVERLAYS.DEFINITION);
-      }
-      if (isOverlayOpen(OVERLAYS.CHAT)) {
+      } else if (isOverlayOpen(OVERLAYS.CHAT)) {
         this._cleanupChatState();
         setManualPanelToggle(OVERLAYS.CHAT, false);
         closeOverlay(OVERLAYS.CHAT);
@@ -212,8 +210,7 @@ class EventListenersManager {
         if (chatNotify) {
           chatNotify.style.display = 'block';
         }
-      }
-      if (isOverlayOpen(OVERLAYS.PLAYERS)) {
+      } else if (isOverlayOpen(OVERLAYS.PLAYERS)) {
         closeOverlay(OVERLAYS.PLAYERS);
       }
     });
