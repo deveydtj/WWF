@@ -86,6 +86,7 @@
     margin: 0 auto; /* Center container on ultra-wide displays */
     overflow: hidden;
     position: relative;
+    padding: 0; /* Reset base.css safe-area padding - not needed on desktop */
   }
   
   /* ─────────────────────────────────
@@ -272,14 +273,12 @@
      ───────────────────────────────── */
   
   #boardArea {
-    width: var(--board-width);
+    width: 100%;
     max-width: var(--board-max-width);
     min-width: 280px; /* Prevent collapse, consistent with mobile */
     display: flex;
     justify-content: center;
     position: relative;
-    padding: var(--pad-x); /* Use token */
-    box-sizing: border-box;
   }
   
   #board {
@@ -302,17 +301,17 @@
     user-select: none;
   }
   
-  /* Board controls - positioning only (sizing in components/panels.css) */
+  /* Board controls - positioned just outside the right edge of the tile grid */
   #optionsToggle {
     position: absolute;
-    top: var(--desktop-content-padding);
-    right: var(--desktop-content-padding);
+    top: 0;
+    right: calc(-1 * var(--desktop-content-padding));
   }
   
   #chatNotify {
     position: absolute;
-    bottom: var(--desktop-content-padding);
-    right: var(--desktop-content-padding);
+    bottom: 0;
+    right: calc(-1 * var(--desktop-content-padding));
   }
   
   /* ─────────────────────────────────
