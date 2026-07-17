@@ -1,8 +1,8 @@
 /**
- * PR 6 – Testing & Validation for Peripheral UI Elements
+ * Peripheral UI Element Testing & Validation
  * 
  * Comprehensive test suite for peripheral UI element scaling and positioning
- * as specified in the PERIPHERAL_UI_SCALING_PLAN.md PR 6 section.
+ * across the supported responsive layouts.
  * 
  * Tests validate:
  * - Button positioning and sizing (no board overlap)

@@ -4,9 +4,6 @@
  * Complete phone/tablet layout system for WordSquad
  * Target: Viewports ≤900px
  * 
- * Part of Phase 2: Mobile Layout Implementation
- * See: docs/LAYOUT_REFACTORING_PLAN.md
- * 
  * Architecture:
  * - Flexbox-based layout (no CSS Grid)
  * - Vertical stacking

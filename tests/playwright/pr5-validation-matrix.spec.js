@@ -1,8 +1,8 @@
 /**
- * PR 5 – Validation Matrix & Final QA
+ * Responsive Layout Validation Matrix
  * 
  * Tests the viewport matrix with DPR (Device Pixel Ratio) emulation
- * as specified in the UI_SCALING_IMPROVEMENT_PLAN.md PR 5 section.
+ * to verify layout behavior on standard and high-density displays.
  * 
  * Note: Playwright doesn't support true browser zoom (Ctrl/Cmd +/-),
  * so "Zoom" values are implemented as DPR emulation, which simulates
@@ -15,7 +15,7 @@ const { test, expect } = require('@playwright/test');
 const GENERATE_SCREENSHOTS = process.env.GENERATE_SCREENSHOTS === '1';
 
 /**
- * Validation Matrix from PR 5
+ * Responsive layout validation matrix
  * Each entry tests viewport dimensions with specific DPR
  */
 const VALIDATION_MATRIX = [
