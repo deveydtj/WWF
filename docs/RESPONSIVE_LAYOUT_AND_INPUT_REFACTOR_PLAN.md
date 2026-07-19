@@ -700,7 +700,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
 
 ## Tasks
 
-- [ ] **4.1 Implement the metrics engine as pure calculations.**
+- [x] **4.1 Implement the metrics engine as pure calculations.**
   - Separate measurement input from token output.
   - Unit-test the calculations without the DOM.
   - Include width-constrained, height-constrained, and panel-constrained cases.

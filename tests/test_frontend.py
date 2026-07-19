@@ -596,6 +596,111 @@ console.log(JSON.stringify({
     }
 
 
+def test_layout_metrics_engine_calculates_width_constrained_board_without_dom():
+    script = """
+import { calculateBoardMetrics } from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+console.log(JSON.stringify(calculateBoardMetrics(
+  { width: 300, height: 700 },
+  { tileGap: 8, preferredTileMaximum: 66 }
+)));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    metrics = json.loads(result.stdout.strip())
+    assert metrics == {
+        'columns': 5,
+        'rows': 6,
+        'tileSize': 53,
+        'tileGap': 8,
+        'inlineSize': 297,
+        'blockSize': 358,
+        'limitingAxis': 'width',
+        'availableInlineSize': 300,
+        'availableBlockSize': 700,
+        'widthConstrainedTileSize': 53.6,
+        'heightConstrainedTileSize': 110,
+        'unusedInlineSize': 3,
+        'unusedBlockSize': 342,
+    }
+
+
+def test_layout_metrics_engine_calculates_height_constrained_board_without_dom():
+    script = """
+import { calculateBoardMetrics } from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+console.log(JSON.stringify(calculateBoardMetrics(
+  { width: 700, height: 340 },
+  { tileGap: 8, preferredTileMaximum: 66 }
+)));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    metrics = json.loads(result.stdout.strip())
+    assert metrics['tileSize'] == 50
+    assert metrics['inlineSize'] == 282
+    assert metrics['blockSize'] == 340
+    assert metrics['limitingAxis'] == 'height'
+    assert metrics['unusedBlockSize'] == 0
+
+
+def test_layout_metrics_engine_uses_measured_panel_constrained_gameplay_region():
+    script = """
+import {
+  calculateLayoutMetrics,
+  createLayoutMetricTokens
+} from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+const measurements = {
+  visualViewport: { width: 1440, height: 900, offsetTop: 4, offsetLeft: 2 },
+  appContainer: { width: 1400, height: 860 },
+  gameplayContainer: { width: 340, height: 650 },
+  boardBudget: { width: 720, height: 650 },
+  headerBlockSize: 60,
+  safeArea: { top: 0, right: 0, bottom: 20, left: 0 }
+};
+const before = JSON.stringify(measurements);
+const metrics = calculateLayoutMetrics(
+  measurements,
+  { tileGap: 8, preferredTileMaximum: 66 }
+);
+const tokens = createLayoutMetricTokens(metrics);
+
+console.log(JSON.stringify({
+  metrics,
+  tokens,
+  inputsUnchanged: before === JSON.stringify(measurements),
+  metricsFrozen: Object.isFrozen(metrics),
+  boardFrozen: Object.isFrozen(metrics.board),
+  tokensFrozen: Object.isFrozen(tokens),
+  hasDomGlobals: typeof document !== 'undefined' || typeof window !== 'undefined'
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['metrics']['gameplayContainer'] == {'width': 340, 'height': 650}
+    assert data['metrics']['boardBudget'] == {'width': 340, 'height': 650}
+    assert data['metrics']['board']['tileSize'] == 61
+    assert data['metrics']['board']['inlineSize'] == 337
+    assert data['metrics']['board']['limitingAxis'] == 'width'
+    assert data['tokens']['--game-inline-size'] == '340px'
+    assert data['tokens']['--board-inline-size'] == '337px'
+    assert data['tokens']['--tile-size'] == '61px'
+    assert data['tokens']['--safe-bottom-space'] == '20px'
+    assert data['inputsUnchanged'] is True
+    assert data['metricsFrozen'] is True
+    assert data['boardFrozen'] is True
+    assert data['tokensFrozen'] is True
+    assert data['hasDomGlobals'] is False
+
+
 def test_layout_profile_decisions_distinguish_capabilities_at_equal_size():
     script = """
 import { decideLayoutProfile } from './frontend/static/js/layout/layoutProfileDecisions.js';
