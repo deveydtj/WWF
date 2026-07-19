@@ -609,7 +609,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
   - After a virtual key, leave focus on the activated button or restore focus to a stable gameplay container.
   - Confirm that no native keyboard appears.
 
-- [ ] **2.3 Replace parallel `touchstart` and `click` mutation listeners.**
+- [x] **2.3 Replace parallel `touchstart` and `click` mutation listeners.**
   - Prefer `click` for accessible button activation, or use a carefully designed pointer event path.
   - Ensure touch, mouse, keyboard activation, and assistive technology trigger exactly one mutation.
 

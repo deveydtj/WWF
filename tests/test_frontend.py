@@ -1335,6 +1335,7 @@ keyboardEl.listeners.click({
   cancelable: true,
   preventDefault() { prevented = true; }
 });
+const currentGuessAfterVirtualActivation = currentGuess;
 
 guessInput.value = 'crane!';
 guessInput.listeners.input.call(guessInput);
@@ -1353,7 +1354,9 @@ console.log(JSON.stringify({
   prevented,
   guessInputFocused,
   virtualKeyFocused,
-  submitCount
+  submitCount,
+  currentGuessAfterVirtualActivation,
+  keyboardListenerTypes: Object.keys(keyboardEl.listeners).sort()
 }));
 """
     result = subprocess.run(
@@ -1368,7 +1371,68 @@ console.log(JSON.stringify({
         'prevented': True,
         'guessInputFocused': False,
         'virtualKeyFocused': True,
-        'submitCount': 0
+        'submitCount': 0,
+        'currentGuessAfterVirtualActivation': 'c',
+        'keyboardListenerTypes': ['click']
+    }
+
+
+def test_virtual_keyboard_delegates_nested_key_content_to_one_click_mutation():
+    script = """
+global.document = { addEventListener() {}, activeElement: null, body: {} };
+
+const { InputController } = await import('./frontend/static/js/inputController.js');
+const { setupTypingListeners } = await import('./frontend/static/js/keyboard.js');
+
+let currentGuess = 'ab';
+let changeCount = 0;
+const backspaceButton = {
+  dataset: { key: 'Backspace' },
+  classList: { contains(name) { return name === 'key'; } },
+  focus() {}
+};
+const nestedIcon = {
+  classList: { contains() { return false; } },
+  closest(selector) { return selector === '.key' ? backspaceButton : null; }
+};
+const keyboardEl = {
+  listeners: {},
+  addEventListener(type, handler) { this.listeners[type] = handler; },
+  querySelector() { return null; }
+};
+const guessInput = {
+  disabled: false,
+  addEventListener() {}
+};
+const submitButton = { addEventListener() {} };
+const inputController = new InputController({
+  getCurrentGuess: () => currentGuess,
+  setCurrentGuess(value) { currentGuess = value; },
+  submitGuess() {},
+  onGuessChanged() { changeCount += 1; }
+});
+
+setupTypingListeners({ keyboardEl, guessInput, submitButton, inputController });
+keyboardEl.listeners.click({
+  target: nestedIcon,
+  cancelable: true,
+  preventDefault() {}
+});
+
+console.log(JSON.stringify({
+  currentGuess,
+  changeCount,
+  listenerTypes: Object.keys(keyboardEl.listeners).sort()
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'currentGuess': 'a',
+        'changeCount': 1,
+        'listenerTypes': ['click']
     }
 
 

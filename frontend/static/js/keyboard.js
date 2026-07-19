@@ -2,23 +2,31 @@ import { updateBoard } from './board.js';
 import { INPUT_OUTCOMES } from './inputController.js';
 
 /**
- * Handle clicks or touches on the on-screen keyboard.
+ * Handle an activation click on the on-screen keyboard.
+ *
+ * Native button click events provide one activation path for touch, mouse,
+ * keyboard, and assistive technology. Delegation also allows nested key
+ * content (such as the Backspace label or icon) to activate its button.
  *
  * @param {Event} event
  * @param {{inputController:import('./inputController.js').InputController}} opts
  * @returns {string}
  */
 export function handleVirtualKey(event, { inputController }) {
-  if (!event.target.classList.contains('key')) return INPUT_OUTCOMES.IGNORED;
+  const target = event.target;
+  const keyElement = target?.classList?.contains('key')
+    ? target
+    : target?.closest?.('.key');
+  if (!keyElement) return INPUT_OUTCOMES.IGNORED;
 
   // Only prevent default if the event is cancelable to avoid browser intervention warnings
   if (event.cancelable) {
     event.preventDefault();
   }
 
-  const outcome = inputController.routeKey(event.target.dataset.key, 'virtual-keyboard');
-  if (typeof event.target.focus === 'function') {
-    event.target.focus({ preventScroll: true });
+  const outcome = inputController.routeKey(keyElement.dataset.key, 'virtual-keyboard');
+  if (typeof keyElement.focus === 'function') {
+    keyElement.focus({ preventScroll: true });
   }
 
   return outcome;
@@ -42,7 +50,6 @@ export function setupTypingListeners({
   const guessState = { inputController };
 
   keyboardEl.addEventListener('click', (e) => handleVirtualKey(e, guessState));
-  keyboardEl.addEventListener('touchstart', (e) => handleVirtualKey(e, guessState));
   submitButton.addEventListener('click', () => inputController.submit('submit-button'));
   guessInput.addEventListener('input', function () {
     inputController.replace(this.value, 'guess-field');
