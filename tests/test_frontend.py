@@ -535,6 +535,190 @@ console.log(JSON.stringify(invalidProfiles.map((profile) => {
     assert messages[1] == 'Unknown layout profile density: tiny'
 
 
+def test_layout_profile_panel_capacity_boundaries_use_measured_space():
+    script = """
+import { calculatePanelCapacity } from './frontend/static/js/layout/layoutProfileDecisions.js';
+
+const panelMinimums = { inlineSize: 240, gap: 16, outerGutters: 32 };
+const gameplayMinimums = {
+  inlineSize: 480,
+  blockSize: 600,
+  splitLandscapeInlineSize: 640,
+  splitLandscapeBlockSize: 320
+};
+const snapshot = (width, height = 600) => ({
+  appContainer: { width, height },
+  visualViewport: { width, height },
+  pointer: 'fine',
+  hover: true
+});
+
+console.log(JSON.stringify({
+  belowOneRail: calculatePanelCapacity(
+    snapshot(767), panelMinimums, gameplayMinimums
+  ),
+  exactOneRail: calculatePanelCapacity(
+    snapshot(768), panelMinimums, gameplayMinimums
+  ),
+  belowTwoRails: calculatePanelCapacity(
+    snapshot(1023), panelMinimums, gameplayMinimums
+  ),
+  exactTwoRails: calculatePanelCapacity(
+    snapshot(1024), panelMinimums, gameplayMinimums
+  ),
+  insufficientHeight: calculatePanelCapacity(
+    snapshot(1024, 599), panelMinimums, gameplayMinimums
+  )
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'belowOneRail': 0,
+        'exactOneRail': 1,
+        'belowTwoRails': 1,
+        'exactTwoRails': 2,
+        'insufficientHeight': 0,
+    }
+
+
+def test_layout_profile_decisions_distinguish_capabilities_at_equal_size():
+    script = """
+import { decideLayoutProfile } from './frontend/static/js/layout/layoutProfileDecisions.js';
+
+const panelMinimums = { inlineSize: 240, gap: 16, outerGutters: 32 };
+const gameplayMinimums = {
+  inlineSize: 480,
+  blockSize: 600,
+  splitLandscapeInlineSize: 640,
+  splitLandscapeBlockSize: 320
+};
+const snapshot = (pointer, hover) => ({
+  layoutViewport: { width: 1024, height: 768 },
+  visualViewport: { width: 1024, height: 768 },
+  appContainer: { width: 1024, height: 768 },
+  orientation: 'landscape',
+  pointer,
+  hover
+});
+
+const touch = decideLayoutProfile(
+  snapshot('coarse', false), panelMinimums, gameplayMinimums,
+  { showOnscreenKeyboardOnDesktop: false }
+);
+const keyboard = decideLayoutProfile(
+  snapshot('fine', true), panelMinimums, gameplayMinimums,
+  { showOnscreenKeyboardOnDesktop: false }
+);
+const hybrid = decideLayoutProfile(
+  snapshot('mixed', true), panelMinimums, gameplayMinimums,
+  { showOnscreenKeyboardOnDesktop: false }
+);
+
+console.log(JSON.stringify({ touch, keyboard, hybrid }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+
+    assert data['touch'] == {
+        'density': 'spacious',
+        'interaction': 'touch-first',
+        'gameFlow': 'split-landscape',
+        'panelCapacity': 1,
+        'panelPresentation': {
+            'history': 'left-rail',
+            'definition': 'modal',
+            'chat': 'modal',
+            'players': 'modal',
+        },
+        'showGuessField': False,
+        'showOnscreenKeyboard': True,
+        'compactHeader': False,
+    }
+    assert data['keyboard'] == {
+        'density': 'spacious',
+        'interaction': 'keyboard-first',
+        'gameFlow': 'vertical',
+        'panelCapacity': 2,
+        'panelPresentation': {
+            'history': 'left-rail',
+            'definition': 'right-rail',
+            'chat': 'right-rail',
+            'players': 'right-rail',
+        },
+        'showGuessField': True,
+        'showOnscreenKeyboard': False,
+        'compactHeader': False,
+    }
+    assert data['hybrid']['interaction'] == 'hybrid'
+    assert data['hybrid']['panelCapacity'] == 1
+    assert data['hybrid']['showGuessField'] is False
+    assert data['hybrid']['showOnscreenKeyboard'] is True
+
+
+def test_layout_profile_decision_output_is_immutable_and_inputs_are_unchanged():
+    script = """
+import { decideLayoutProfile } from './frontend/static/js/layout/layoutProfileDecisions.js';
+
+const snapshot = {
+  appContainer: { width: 600, height: 900 },
+  visualViewport: { width: 600, height: 900 },
+  orientation: 'portrait',
+  pointer: 'coarse',
+  hover: false
+};
+const panelMinimums = { inlineSize: 240, gap: 16, outerGutters: 32 };
+const gameplayMinimums = {
+  inlineSize: 480,
+  blockSize: 600,
+  splitLandscapeInlineSize: 640,
+  splitLandscapeBlockSize: 320
+};
+const preferences = { showOnscreenKeyboardOnDesktop: false };
+const before = JSON.stringify({ snapshot, panelMinimums, gameplayMinimums, preferences });
+const profile = decideLayoutProfile(
+  snapshot, panelMinimums, gameplayMinimums, preferences
+);
+
+console.log(JSON.stringify({
+  profile,
+  profileFrozen: Object.isFrozen(profile),
+  panelsFrozen: Object.isFrozen(profile.panelPresentation),
+  inputsUnchanged: before === JSON.stringify({
+    snapshot, panelMinimums, gameplayMinimums, preferences
+  })
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data['profile'] == {
+        'density': 'compact',
+        'interaction': 'touch-first',
+        'gameFlow': 'vertical',
+        'panelCapacity': 0,
+        'panelPresentation': {
+            'history': 'modal',
+            'definition': 'modal',
+            'chat': 'modal',
+            'players': 'modal',
+        },
+        'showGuessField': False,
+        'showOnscreenKeyboard': True,
+        'compactHeader': True,
+    }
+    assert data['profileFrozen'] is True
+    assert data['panelsFrozen'] is True
+    assert data['inputsUnchanged'] is True
+
+
 def test_layout_manager_applies_phase_one_body_state():
     script = """
 global.window = {

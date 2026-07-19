@@ -566,7 +566,7 @@ Define one authoritative layout state that represents actual UX behavior.
   - `showOnscreenKeyboard`
   - `compactHeader`
 
-- [ ] **1.3 Create pure profile decision functions.**
+- [x] **1.3 Create pure profile decision functions.**
   - Input: viewport snapshot, panel minimums, gameplay minimums, preference state.
   - Output: immutable layout profile.
   - No DOM writes in the decision functions.
