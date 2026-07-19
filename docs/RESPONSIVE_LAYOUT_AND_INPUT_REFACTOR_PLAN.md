@@ -613,7 +613,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
   - Prefer `click` for accessible button activation, or use a carefully designed pointer event path.
   - Ensure touch, mouse, keyboard activation, and assistive technology trigger exactly one mutation.
 
-- [ ] **2.4 Make the guess field an optional presentation.**
+- [x] **2.4 Make the guess field an optional presentation.**
   - Keep the field only as a desktop/laptop mirror if product design retains it.
   - Bind it to `currentGuess` through the controller.
   - On touch-first layouts, apply `hidden`, `aria-hidden`, and tab-order behavior through the profile.

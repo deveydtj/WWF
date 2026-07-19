@@ -32,6 +32,7 @@ import { updateInputVisibility } from './uiNotifications.js';
 import { updateHintBadge } from './hintBadge.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { InputController } from './inputController.js';
+import { applyGuessFieldPresentation } from './guessFieldPresentation.js';
 
 class AppInitializer {
   constructor() {
@@ -72,6 +73,7 @@ class AppInitializer {
     
     // Initialize layout manager (new deterministic layout system)
     this.layoutManager = new LayoutManager();
+    this._applyGuessFieldPresentation(this.layoutManager.getCurrentLayoutProfile());
     installLayoutDiagnostics(() => this.layoutManager.getCurrentLayoutState());
     console.log('[AppInitializer] Layout manager initialized:', this.layoutManager.getCurrentLayout());
     
@@ -490,6 +492,19 @@ class AppInitializer {
       updatePanelVisibility();
       setupMobileLeaderboard();
     });
+
+    document.addEventListener('layoutprofilechange', (e) => {
+      this._applyGuessFieldPresentation(e.detail.profile);
+    });
+  }
+
+  /**
+   * Keep the optional text field aligned with the capability profile. The
+   * InputController remains its only mutation path when the field is visible.
+   * @private
+   */
+  _applyGuessFieldPresentation(profile) {
+    applyGuessFieldPresentation(profile, this.domManager.get('guessInput'));
   }
 
   /**

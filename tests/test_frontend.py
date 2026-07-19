@@ -1377,6 +1377,68 @@ console.log(JSON.stringify({
     }
 
 
+def test_guess_field_presentation_follows_capability_profile_without_disabling_input():
+    script = """
+const attributes = new Map();
+let blurred = false;
+const guessInput = {
+  value: 'CRANE',
+  disabled: false,
+  hidden: false,
+  setAttribute(name, value) { attributes.set(name, value); },
+  removeAttribute(name) { attributes.delete(name); },
+  blur() { blurred = true; }
+};
+global.document = { activeElement: guessInput };
+
+const { applyGuessFieldPresentation } = await import(
+  './frontend/static/js/guessFieldPresentation.js'
+);
+
+applyGuessFieldPresentation({ showGuessField: false }, guessInput);
+const hiddenState = {
+  hidden: guessInput.hidden,
+  ariaHidden: attributes.get('aria-hidden'),
+  tabindex: attributes.get('tabindex'),
+  blurred,
+  disabled: guessInput.disabled,
+  value: guessInput.value
+};
+
+applyGuessFieldPresentation({ showGuessField: true }, guessInput);
+const visibleState = {
+  hidden: guessInput.hidden,
+  ariaHidden: attributes.has('aria-hidden'),
+  tabindex: attributes.has('tabindex'),
+  disabled: guessInput.disabled,
+  value: guessInput.value
+};
+
+console.log(JSON.stringify({ hiddenState, visibleState }));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'hiddenState': {
+            'hidden': True,
+            'ariaHidden': 'true',
+            'tabindex': '-1',
+            'blurred': True,
+            'disabled': False,
+            'value': 'CRANE',
+        },
+        'visibleState': {
+            'hidden': False,
+            'ariaHidden': False,
+            'tabindex': False,
+            'disabled': False,
+            'value': 'CRANE',
+        },
+    }
+
+
 def test_virtual_keyboard_delegates_nested_key_content_to_one_click_mutation():
     script = """
 global.document = { addEventListener() {}, activeElement: null, body: {} };

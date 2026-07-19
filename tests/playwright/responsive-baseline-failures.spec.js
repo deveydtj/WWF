@@ -33,33 +33,55 @@ function overlapArea(first, second) {
 }
 
 test.describe('Phase 0.5 expected responsive failures', () => {
-  test('virtual-key activation does not focus the word-entry field on touch layouts', async ({
-    page,
-    deterministicLobby,
-  }) => {
-    await page.setViewportSize(PHONE_VIEWPORT);
-    await deterministicLobby.openActive();
+  test.describe('touch-first phone input', () => {
+    test.use({ hasTouch: true });
 
-    const guessInput = page.locator('#guessInput');
-    await guessInput.blur();
-    await page.locator('.key[data-key="q"]').click();
+    test('virtual-key activation does not focus the word-entry field on touch layouts', async ({
+      page,
+      deterministicLobby,
+    }) => {
+      await page.setViewportSize(PHONE_VIEWPORT);
+      await deterministicLobby.openActive();
 
-    await expect(guessInput).not.toBeFocused();
+      const guessInput = page.locator('#guessInput');
+      await guessInput.blur();
+      await page.locator('.key[data-key="q"]').click();
+
+      await expect(guessInput).not.toBeFocused();
+    });
+
+    test('phone word entry is hidden, aria-hidden, and removed from tab order', async ({
+      page,
+      deterministicLobby,
+    }) => {
+      await page.setViewportSize(PHONE_VIEWPORT);
+      await deterministicLobby.openActive();
+
+      const guessInput = page.locator('#guessInput');
+      await expect.soft(guessInput).toBeHidden();
+      await expect.soft(guessInput).toHaveAttribute('aria-hidden', 'true');
+      await expect(guessInput).toHaveAttribute('tabindex', '-1');
+    });
   });
 
-  test('phone word entry is hidden, aria-hidden, and removed from tab order', async ({
-    page,
-    deterministicLobby,
-  }) => {
-    test.fail(true, 'Baseline: the phone guess field remains a visible, tabbable input.');
+  test.describe('keyboard-first input', () => {
+    test.use({ hasTouch: false, isMobile: false });
 
-    await page.setViewportSize(PHONE_VIEWPORT);
-    await deterministicLobby.openActive();
+    test('word entry is visible and mirrors controller state', async ({
+      page,
+      deterministicLobby,
+    }) => {
+      await page.setViewportSize({ width: 1200, height: 900 });
+      await deterministicLobby.openActive();
 
-    const guessInput = page.locator('#guessInput');
-    await expect.soft(guessInput).toBeHidden();
-    await expect.soft(guessInput).toHaveAttribute('aria-hidden', 'true');
-    await expect(guessInput).toHaveAttribute('tabindex', '-1');
+      const guessInput = page.locator('#guessInput');
+      await expect(guessInput).toBeVisible();
+      await expect(guessInput).not.toHaveAttribute('aria-hidden', 'true');
+      await expect(guessInput).not.toHaveAttribute('tabindex', '-1');
+
+      await page.locator('.key[data-key="q"]').click();
+      await expect(guessInput).toHaveValue('Q');
+    });
   });
 
   test('tablet rail capacity falls back to modal presentation when height is constrained', async ({

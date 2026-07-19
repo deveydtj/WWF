@@ -84,7 +84,9 @@ async function submitGuessHandler() {
   if (gameState?.is(STATES.GAME_OVER)) return;
   
   const guessInput = domManager.get('guessInput');
-  const shakeTarget = guessInput || domManager.get('board');
+  const shakeTarget = guessInput && !guessInput.hidden
+    ? guessInput
+    : domManager.get('board');
   
   const guess = gameStateManager.getCurrentGuess().trim().toLowerCase();
   

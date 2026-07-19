@@ -28,6 +28,21 @@ import {
   getLayoutModeForWidth,
   isSmallLayout
 } from './layoutModes.js';
+import { decideLayoutProfile } from './layout/layoutProfileDecisions.js';
+import { loadLayoutPreferences } from './layout/layoutPreferences.js';
+
+const PROFILE_PANEL_MINIMUMS = Object.freeze({
+  inlineSize: 240,
+  gap: 16,
+  outerGutters: 32
+});
+
+const PROFILE_GAMEPLAY_MINIMUMS = Object.freeze({
+  inlineSize: 480,
+  blockSize: 600,
+  splitLandscapeInlineSize: 640,
+  splitLandscapeBlockSize: 320
+});
 
 const DEFAULT_LAYOUT_STATE = Object.freeze({
   mode: LAYOUT_MODES.DESKTOP,
@@ -84,6 +99,73 @@ function normalizeLayoutState(state) {
 
 function layoutStatesEqual(a, b) {
   return Boolean(a && b && a.mode === b.mode && a.historyPopup === b.historyPopup);
+}
+
+function profilesEqual(a, b) {
+  return Boolean(a && b && JSON.stringify(a) === JSON.stringify(b));
+}
+
+function mediaQueryMatches(query) {
+  return Boolean(typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia(query).matches);
+}
+
+function getPointerCapability() {
+  const primaryCoarse = mediaQueryMatches('(pointer: coarse)');
+  const primaryFine = mediaQueryMatches('(pointer: fine)');
+  const anyCoarse = mediaQueryMatches('(any-pointer: coarse)');
+  const anyFine = mediaQueryMatches('(any-pointer: fine)');
+
+  if ((primaryCoarse && anyFine) || (primaryFine && anyCoarse)) return 'mixed';
+  if (primaryCoarse || (anyCoarse && !anyFine)) return 'coarse';
+  return 'fine';
+}
+
+function getPositiveDimension(...values) {
+  return values.find((value) => Number.isFinite(value) && value > 0) || 1;
+}
+
+/**
+ * Build the capability profile consumed by newly migrated UI behavior.
+ * Legacy layout classes remain independent until the responsive shell is
+ * replaced in Phase 5.
+ */
+export function calculateLayoutProfile() {
+  const browserWindow = typeof window !== 'undefined' ? window : null;
+  const layoutWidth = getPositiveDimension(browserWindow?.innerWidth, 1200);
+  const layoutHeight = getPositiveDimension(browserWindow?.innerHeight, 768);
+  const visualWidth = getPositiveDimension(browserWindow?.visualViewport?.width, layoutWidth);
+  const visualHeight = getPositiveDimension(browserWindow?.visualViewport?.height, layoutHeight);
+  const appRect = typeof document !== 'undefined'
+    && typeof document.getElementById === 'function'
+    ? document.getElementById('appContainer')?.getBoundingClientRect?.()
+    : null;
+
+  return decideLayoutProfile({
+    layoutViewport: { width: layoutWidth, height: layoutHeight },
+    visualViewport: { width: visualWidth, height: visualHeight },
+    appContainer: {
+      width: getPositiveDimension(appRect?.width, layoutWidth),
+      height: getPositiveDimension(appRect?.height, layoutHeight)
+    },
+    orientation: layoutWidth > layoutHeight ? 'landscape' : 'portrait',
+    pointer: getPointerCapability(),
+    hover: mediaQueryMatches('(hover: hover)')
+  }, PROFILE_PANEL_MINIMUMS, PROFILE_GAMEPLAY_MINIMUMS, loadLayoutPreferences());
+}
+
+function applyLayoutProfileToDocument(profile) {
+  const body = getDocumentBody();
+  if (!body) return;
+
+  body.dataset.density = profile.density;
+  body.dataset.interaction = profile.interaction;
+  body.dataset.gameFlow = profile.gameFlow;
+  body.dataset.panelCapacity = String(profile.panelCapacity);
+  body.dataset.showGuessField = String(profile.showGuessField);
+  body.dataset.showOnscreenKeyboard = String(profile.showOnscreenKeyboard);
+  body.dataset.compactHeader = String(profile.compactHeader);
 }
 
 /**
@@ -223,6 +305,8 @@ export class LayoutManager {
     // Current layout state
     this.currentState = refreshLayoutState();
     this.currentLayout = this.currentState.mode;
+    this.currentProfile = calculateLayoutProfile();
+    applyLayoutProfileToDocument(this.currentProfile);
     
     // Set up media query listeners
     this.setupListeners();
@@ -258,7 +342,12 @@ export class LayoutManager {
     this.mediaQueries = [
       window.matchMedia(`(max-width: ${this.breakpoints.PHONE_MAX}px)`),
       window.matchMedia(`(min-width: ${this.breakpoints.PHONE_MAX + 1}px) and (max-width: ${this.breakpoints.TABLET_MAX}px)`),
-      window.matchMedia(`(min-width: ${this.breakpoints.TABLET_MAX + 1}px)`)
+      window.matchMedia(`(min-width: ${this.breakpoints.TABLET_MAX + 1}px)`),
+      window.matchMedia('(pointer: coarse)'),
+      window.matchMedia('(pointer: fine)'),
+      window.matchMedia('(any-pointer: coarse)'),
+      window.matchMedia('(any-pointer: fine)'),
+      window.matchMedia('(hover: hover)')
     ];
 
     this.mediaQueries.forEach((query) => {
@@ -365,6 +454,13 @@ export class LayoutManager {
   getCurrentLayoutState() {
     return { ...this.currentState };
   }
+
+  /**
+   * Get the immutable capability profile used by migrated UI behavior.
+   */
+  getCurrentLayoutProfile() {
+    return this.currentProfile;
+  }
   
   /**
    * Get the legacy compact/desktop breakpoint value.
@@ -390,8 +486,25 @@ export class LayoutManager {
    */
   refresh() {
     const newState = this.detectLayoutState();
+    const newProfile = calculateLayoutProfile();
+    const previousProfile = this.currentProfile;
+
     if (!layoutStatesEqual(newState, this.currentState)) {
       this.handleLayoutChange(newState);
+    }
+
+    if (!profilesEqual(newProfile, previousProfile)) {
+      this.currentProfile = newProfile;
+      applyLayoutProfileToDocument(newProfile);
+
+      if (typeof document !== 'undefined' && typeof CustomEvent !== 'undefined') {
+        document.dispatchEvent(new CustomEvent('layoutprofilechange', {
+          detail: {
+            profile: newProfile,
+            previousProfile
+          }
+        }));
+      }
     }
 
     return { ...this.currentState };
