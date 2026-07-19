@@ -504,7 +504,7 @@ Capture the current behavior and create reliable test fixtures before changing l
 
 ## Tasks
 
-- [ ] **0.1 Create a responsive audit document.**
+- [x] **0.1 Create a responsive audit document.**
   - Add `docs/responsive/CURRENT_STATE_AUDIT.md`.
   - Record screenshots and measurements for every target viewport in the test matrix.
   - Record whether board, keyboard, header, input row, and panels fit.

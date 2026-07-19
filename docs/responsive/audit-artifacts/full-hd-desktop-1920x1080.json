@@ -1,0 +1,309 @@
+{
+  "scenario": {
+    "slug": "full-hd-desktop-1920x1080",
+    "label": "Full HD desktop",
+    "width": 1920,
+    "height": 1080,
+    "capability": "fine / hover",
+    "hasTouch": false,
+    "isMobile": false
+  },
+  "observed": {
+    "layoutMode": "desktop",
+    "historyPopup": false,
+    "bodyClasses": [
+      "desktop-layout"
+    ],
+    "pointerCoarse": false,
+    "anyPointerCoarse": false,
+    "hover": true,
+    "anyHover": true,
+    "orientation": "landscape",
+    "layoutViewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "visualViewport": {
+      "width": 1920,
+      "height": 1080,
+      "offsetLeft": 0,
+      "offsetTop": 0
+    }
+  },
+  "page": {
+    "clientWidth": 1920,
+    "scrollWidth": 1920,
+    "scrollHeight": 1080,
+    "horizontalOverflow": false
+  },
+  "elements": {
+    "appContainer": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 160,
+        "y": 76,
+        "left": 160,
+        "top": 76,
+        "width": 1600,
+        "height": 1080,
+        "right": 1760,
+        "bottom": 1156
+      },
+      "display": "flex",
+      "position": "relative",
+      "overflowX": "hidden",
+      "overflowY": "hidden",
+      "fitsVisualViewport": false
+    },
+    "lobbyHeader": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "left": 0,
+        "top": 0,
+        "width": 1920,
+        "height": 60,
+        "right": 1920,
+        "bottom": 60
+      },
+      "display": "flex",
+      "position": "fixed",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "fitsVisualViewport": true
+    },
+    "titleBar": {
+      "exists": true,
+      "visible": false,
+      "rect": {
+        "x": 610,
+        "y": 178,
+        "left": 610,
+        "top": 178,
+        "width": 700,
+        "height": 0,
+        "right": 1310,
+        "bottom": 178
+      },
+      "display": "flex",
+      "position": "relative",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "fitsVisualViewport": null
+    },
+    "board": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 771,
+        "y": 199,
+        "left": 771,
+        "top": 199,
+        "width": 378,
+        "height": 468,
+        "right": 1149,
+        "bottom": 667
+      },
+      "display": "grid",
+      "position": "static",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "fitsVisualViewport": true
+    },
+    "inputArea": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 771,
+        "y": 683,
+        "left": 771,
+        "top": 683,
+        "width": 378,
+        "height": 48,
+        "right": 1149,
+        "bottom": 731
+      },
+      "display": "flex",
+      "position": "static",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "fitsVisualViewport": true
+    },
+    "guessInput": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 771,
+        "y": 683,
+        "left": 771,
+        "top": 683,
+        "width": 158.31,
+        "height": 48,
+        "right": 929.31,
+        "bottom": 731
+      },
+      "display": "block",
+      "position": "static",
+      "overflowX": "clip",
+      "overflowY": "clip",
+      "fitsVisualViewport": true
+    },
+    "keyboard": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 771,
+        "y": 797,
+        "left": 771,
+        "top": 797,
+        "width": 378,
+        "height": 199,
+        "right": 1149,
+        "bottom": 996
+      },
+      "display": "flex",
+      "position": "relative",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "fitsVisualViewport": true
+    },
+    "landscapeOverlay": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 779.72,
+        "y": 0,
+        "left": 779.72,
+        "top": 0,
+        "width": 360.55,
+        "height": 76,
+        "right": 1140.27,
+        "bottom": 76
+      },
+      "display": "block",
+      "position": "static",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "fitsVisualViewport": true
+    }
+  },
+  "tile": {
+    "x": 771,
+    "y": 199,
+    "left": 771,
+    "top": 199,
+    "width": 68,
+    "height": 68,
+    "right": 839,
+    "bottom": 267
+  },
+  "fit": {
+    "boardFits": true,
+    "keyboardFits": true,
+    "headerFits": true,
+    "inputAreaFits": true,
+    "boardKeyboardOverlap": false,
+    "rotatePromptVisible": true,
+    "rotatePromptCoversViewport": false
+  },
+  "panels": {
+    "history": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 192,
+        "y": 168,
+        "left": 192,
+        "top": 168,
+        "width": 312,
+        "height": 952,
+        "right": 504,
+        "bottom": 1120
+      },
+      "display": "flex",
+      "position": "relative",
+      "overflowX": "hidden",
+      "overflowY": "auto",
+      "fitsVisualViewport": false,
+      "inferredPresentation": "rail-like",
+      "role": "dialog",
+      "ariaModal": "true"
+    },
+    "definition": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 1448,
+        "y": 168,
+        "left": 1448,
+        "top": 168,
+        "width": 312,
+        "height": 952,
+        "right": 1760,
+        "bottom": 1120
+      },
+      "display": "flex",
+      "position": "relative",
+      "overflowX": "hidden",
+      "overflowY": "auto",
+      "fitsVisualViewport": false,
+      "inferredPresentation": "rail-like",
+      "role": "dialog",
+      "ariaModal": "true"
+    },
+    "chat": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 1448,
+        "y": 168,
+        "left": 1448,
+        "top": 168,
+        "width": 312,
+        "height": 952,
+        "right": 1760,
+        "bottom": 1120
+      },
+      "display": "flex",
+      "position": "relative",
+      "overflowX": "hidden",
+      "overflowY": "hidden",
+      "fitsVisualViewport": false,
+      "inferredPresentation": "rail-like",
+      "role": "dialog",
+      "ariaModal": "true"
+    },
+    "players": {
+      "exists": true,
+      "visible": true,
+      "rect": {
+        "x": 0,
+        "y": 328,
+        "left": 0,
+        "top": 328,
+        "width": 105.72,
+        "height": 424,
+        "right": 105.72,
+        "bottom": 752
+      },
+      "display": "block",
+      "position": "fixed",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "fitsVisualViewport": true,
+      "inferredPresentation": "modal-like",
+      "role": "dialog",
+      "ariaModal": "true"
+    }
+  },
+  "virtualKey": {
+    "activated": true,
+    "activeElementAfter": "guessInput",
+    "guessInputFocused": true,
+    "nativeKeyboardObservableInHeadlessBrowser": false,
+    "nativeKeyboardRiskOnTouchDevice": false
+  }
+}
