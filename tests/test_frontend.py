@@ -922,18 +922,15 @@ console.log(JSON.stringify(properties));
 
 def test_keyboard_sizing_uses_layout_tokens_without_container_scaling():
     responsive_scaling = (SRC_DIR / 'responsiveScaling.js').read_text(encoding='utf-8')
-    legacy_sizing = '\n'.join(
-        (SRC_DIR / filename).read_text(encoding='utf-8')
-        for filename in ['utils.js', 'boardContainer.js']
-    )
+    utility_source = (SRC_DIR / 'utils.js').read_text(encoding='utf-8')
     base_css = (CSS_DIR / 'base.css').read_text(encoding='utf-8')
     keyboard_css = (CSS_DIR / 'components' / 'keyboard.css').read_text(encoding='utf-8')
 
-    assert 'applyMobileKeyboardAdjustments' not in legacy_sizing
-    assert 'compactKeyboardForSmallViewports' not in legacy_sizing
+    assert 'applyMobileKeyboardAdjustments' not in utility_source
+    assert 'compactKeyboardForSmallViewports' not in utility_source
     assert not re.search(
         r"keyboard\.style\.transform\s*=\s*[`'\"]scale\(",
-        legacy_sizing,
+        utility_source,
     )
     assert '"--keyboard-key-height"' in responsive_scaling
     assert '"--keyboard-row-gap"' in responsive_scaling
@@ -2194,48 +2191,18 @@ def test_leave_lobby_immediately_updates_url():
     assert "window.history.replaceState(null, '', '/')" in event_text, "window.history.replaceState not found in eventListenersManager.js"
 
 
-def test_fit_board_to_container_returns_sizes():
-    script = """
-import { fitBoardToContainer } from './frontend/static/js/utils.js';
-const boardArea = { clientWidth: 200, style: { marginTop:'10px', marginBottom:'0' }, parentElement: { clientHeight: 400 } };
-const mapping = {
-  boardArea,
-  titleBar: { offsetHeight: 30 },
-  leaderboard: { offsetHeight: 20 },
-  inputArea: { offsetHeight: 20 },
-  keyboard: { 
-    offsetHeight: 80, 
-    style: { marginTop:'5px', marginBottom:'0' },
-    getBoundingClientRect: () => ({ top: 500, bottom: 580, height: 80 })
-  }
-};
-const docEl = { style: { setProperty(k,v){ this[k]=v; } } };
-global.document = {
-  getElementById(id){ return mapping[id] || null; },
-  documentElement: docEl
-};
-global.window = {
-  innerHeight: 800,
-  innerWidth: 1024,
-  visualViewport: null
-};
-global.getComputedStyle = (el) => ({
-  marginTop: el.style?.marginTop || '0',
-  marginBottom: el.style?.marginBottom || '0',
-  getPropertyValue: () => '10'
-});
-const out1 = fitBoardToContainer(6);
-boardArea.parentElement.clientHeight = 250;
-const out2 = fitBoardToContainer(6);
-console.log(JSON.stringify({ out1, out2, css: docEl.style }));
-"""
-    result = subprocess.run(
-        ['node', '--input-type=module', '-e', script],
-        capture_output=True, text=True, check=True
-    )
-    data = json.loads(result.stdout.strip())
-    assert round(data['out1']['tile'], 2) == 29.17  # Updated expected value
-    assert round(data['out1']['board'], 2) == 185.83  # Updated expected value
-    assert data['out2']['tile'] < data['out1']['tile']  # Second result should be smaller
-    assert data['css']['--tile-size'] == '20px'
-    assert data['css']['--board-width'] == '140px'
+def test_legacy_production_sizing_paths_are_removed():
+    utils_source = (SRC_DIR / 'utils.js').read_text(encoding='utf-8')
+    scaling_source = (SRC_DIR / 'responsiveScaling.js').read_text(encoding='utf-8')
+    app_initializer = (SRC_DIR / 'appInitializer.js').read_text(encoding='utf-8')
+
+    assert not (SRC_DIR / 'boardContainer.js').exists()
+    assert not (SRC_DIR / 'enhancedScaling.js').exists()
+    assert 'fitBoardToContainer' not in utils_source
+    assert 'ensureKeyboardVisibility' not in utils_source
+    assert 'adjustKeyboardForViewport' not in utils_source
+    assert "from './boardContainer.js'" not in utils_source
+    assert 'window.boardScalingTests' not in scaling_source
+    assert 'window.tuneSizing' not in scaling_source
+    assert 'window.recalculateScaling' not in scaling_source
+    assert 'recalculateScaling(viewportSnapshot)' in app_initializer

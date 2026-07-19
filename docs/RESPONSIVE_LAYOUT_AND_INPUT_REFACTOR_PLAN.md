@@ -724,7 +724,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
   - Apply internal scrolling to content regions.
   - Keep close controls inside the visible bounds.
 
-- [ ] **4.6 Remove legacy production sizing paths.**
+- [x] **4.6 Remove legacy production sizing paths.**
   - Retire `fitBoardToContainer()` after all callers use the new engine.
   - Retire compatibility wrappers in `boardContainer.js` that mutate production layout.
   - Move test-only helpers into test modules.

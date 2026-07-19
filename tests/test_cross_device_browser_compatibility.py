@@ -195,17 +195,20 @@ class TestCrossDeviceBrowserCompatibility(unittest.TestCase):
             for device_type in device_types:
                 self.assertIn(device_type, content, f"{device_type} testing should be included")
         
-        # Check JavaScript testing utilities
-        board_container = frontend_dir / "static" / "js" / "boardContainer.js"
-        self.assertTrue(board_container.exists(), "Board container JavaScript should exist")
-        
-        if board_container.exists():
-            content = board_container.read_text()
-            self.assertIn('testBoardScalingAcrossDevices', content, "Device testing function should exist")
-            
-            # Should define multiple test devices
-            device_definitions = content.count("{ name: '")
-            self.assertGreaterEqual(device_definitions, 8, f"Should define at least 8 test devices, found {device_definitions}")
+        # Device definitions and measurement helpers belong to the browser test,
+        # not to production JavaScript or mutable window globals.
+        content = cypress_test.read_text()
+        self.assertIn('function captureScaling(win)', content)
+        self.assertIn('DEVICE_SIZES', content)
+        device_definitions = content.count("{ name: '")
+        self.assertGreaterEqual(device_definitions, 8, f"Should define at least 8 test devices, found {device_definitions}")
+
+        production_scaling = (frontend_dir / "static" / "js" / "responsiveScaling.js").read_text()
+        self.assertNotIn('window.boardScalingTests', production_scaling)
+        self.assertFalse(
+            (frontend_dir / "static" / "js" / "boardContainer.js").exists(),
+            "Legacy board container module should not remain in production"
+        )
     
     def test_layout_modes_properly_implemented(self):
         """Test that phone, tablet, and desktop layout modes are properly implemented."""

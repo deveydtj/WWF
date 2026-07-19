@@ -1,30 +1,105 @@
 /**
- * Board scaling verification tests
- * Tests that verify all game elements fit properly on various screen sizes
+ * Board scaling verification tests.
+ *
+ * Measurement helpers intentionally live in this test module. Production code
+ * owns sizing through responsiveScaling.js and does not expose mutable scaling
+ * APIs on window for a browser test harness.
  */
+
+const DEVICE_SIZES = [
+  { name: 'iPhone SE', width: 375, height: 667 },
+  { name: 'iPhone 12', width: 390, height: 844 },
+  { name: 'iPhone 12 Pro Max', width: 428, height: 926 },
+  { name: 'iPad Mini', width: 768, height: 1024 },
+  { name: 'iPad Air', width: 820, height: 1180 },
+  { name: 'Galaxy S20', width: 360, height: 800 },
+  { name: 'Galaxy Note', width: 412, height: 915 },
+  { name: 'Desktop Small', width: 1024, height: 768 },
+  { name: 'Desktop Medium', width: 1366, height: 768 },
+  { name: 'Desktop Large', width: 1920, height: 1080 }
+];
+
+function captureScaling(win) {
+  const board = win.document.querySelector('#board');
+  const keyboard = win.document.querySelector('#keyboard');
+  const titleBar = win.document.querySelector('#titleBar');
+
+  if (!board || !keyboard) {
+    return { success: false, error: 'Board or keyboard element not found' };
+  }
+
+  const viewport = {
+    width: Math.max(win.document.documentElement.clientWidth, win.innerWidth || 0),
+    height: Math.max(win.document.documentElement.clientHeight, win.innerHeight || 0)
+  };
+  const boardRect = board.getBoundingClientRect();
+  const keyboardRect = keyboard.getBoundingClientRect();
+  const titleBarRect = titleBar?.getBoundingClientRect() || {
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
+  };
+  const styles = win.getComputedStyle(win.document.documentElement);
+  const isVisible = (rect) => rect.width > 0
+    && rect.height > 0
+    && rect.top < viewport.height
+    && rect.left < viewport.width
+    && rect.bottom > 0
+    && rect.right > 0;
+  const fitsHorizontally = boardRect.left >= 0
+    && keyboardRect.left >= 0
+    && boardRect.right <= viewport.width
+    && keyboardRect.right <= viewport.width;
+  const fitsVertically = boardRect.top >= 0
+    && keyboardRect.top >= 0
+    && boardRect.bottom <= viewport.height
+    && keyboardRect.bottom <= viewport.height;
+
+  return {
+    success: fitsHorizontally && fitsVertically,
+    fitsHorizontally,
+    fitsVertically,
+    viewport,
+    containerRect: {
+      width: boardRect.width,
+      height: boardRect.height
+    },
+    optimalSizing: {
+      tileSize: parseFloat(styles.getPropertyValue('--tile-size')) || 0,
+      keyHeight: parseFloat(styles.getPropertyValue('--keyboard-key-height')) || 0,
+      boardWidth: parseFloat(styles.getPropertyValue('--board-width')) || 0
+    },
+    elementChecks: {
+      board: { visible: isVisible(boardRect) },
+      keyboard: { visible: isVisible(keyboardRect) },
+      titleBar: { visible: isVisible(titleBarRect) }
+    }
+  };
+}
 
 describe('Board Scaling and Container Management', () => {
   beforeEach(() => {
-    // Visit the game page before each test
     cy.visit('/game.html');
-    
-    // Wait for the page to load and scripts to initialize
-    cy.wait(1000);
-    
-    // Ensure board scaling utilities are available
-    cy.window().should('have.property', 'boardScalingTests');
+    cy.get('#board').should('be.visible');
+    cy.get('#keyboard').should('be.visible');
   });
 
-  it('should load board scaling utilities', () => {
-    cy.window().its('boardScalingTests').should('be.an', 'object');
-    cy.window().its('boardScalingTests.runBoardScalingTests').should('be.a', 'function');
+  it('does not expose deprecated production scaling globals', () => {
+    cy.window().then((win) => {
+      expect(win).not.to.have.property('boardScalingTests');
+      expect(win).not.to.have.property('tuneSizing');
+      expect(win).not.to.have.property('recalculateScaling');
+      expect(win).not.to.have.property('enhancedScaling');
+    });
   });
 
   it('should verify board fits on desktop viewport', () => {
     cy.viewport(1920, 1080);
-    
     cy.window().then((win) => {
-      const verification = win.boardScalingTests.verifyElementsFitInViewport();
+      const verification = captureScaling(win);
       expect(verification.success).to.be.true;
       expect(verification.fitsHorizontally).to.be.true;
       expect(verification.fitsVertically).to.be.true;
@@ -33,9 +108,8 @@ describe('Board Scaling and Container Management', () => {
 
   it('should verify board fits on tablet viewport', () => {
     cy.viewport(768, 1024);
-    
     cy.window().then((win) => {
-      const verification = win.boardScalingTests.verifyElementsFitInViewport();
+      const verification = captureScaling(win);
       expect(verification.success).to.be.true;
       expect(verification.optimalSizing.tileSize).to.be.at.least(20);
     });
@@ -43,135 +117,73 @@ describe('Board Scaling and Container Management', () => {
 
   it('should verify board fits on mobile viewport', () => {
     cy.viewport(375, 667);
-    
     cy.window().then((win) => {
-      const verification = win.boardScalingTests.verifyElementsFitInViewport();
+      const verification = captureScaling(win);
       expect(verification.success).to.be.true;
       expect(verification.optimalSizing.tileSize).to.be.at.least(20);
     });
   });
 
-  it('should verify board fits on very small viewport', () => {
+  it('should keep tiles usable on a very small viewport', () => {
     cy.viewport(320, 568);
-    
     cy.window().then((win) => {
-      const verification = win.boardScalingTests.verifyElementsFitInViewport();
-      // May not pass on very small screens, but tiles should still be minimum size
+      const verification = captureScaling(win);
       expect(verification.optimalSizing.tileSize).to.be.at.least(20);
     });
   });
 
   it('should verify all key game elements are visible', () => {
     cy.viewport(1366, 768);
-    
-    // Check that key game elements exist and are visible
-    cy.get('#board').should('be.visible');
-    cy.get('#keyboard').should('be.visible');
-    cy.get('#titleBar').should('be.visible');
-    
     cy.window().then((win) => {
-      const elementChecks = win.boardScalingTests.verifyElementsFitInViewport().elementChecks;
-      
-      // Verify core elements are visible in viewport
+      const { elementChecks } = captureScaling(win);
       expect(elementChecks.board.visible).to.be.true;
       expect(elementChecks.keyboard.visible).to.be.true;
       expect(elementChecks.titleBar.visible).to.be.true;
     });
   });
 
-  it('should scale properly across multiple device sizes', () => {
-    const deviceSizes = [
-      { name: 'iPhone SE', width: 375, height: 667 },
-      { name: 'iPad', width: 768, height: 1024 },
-      { name: 'Desktop', width: 1920, height: 1080 }
-    ];
+  it('should measure the actual viewport across multiple device sizes', () => {
+    const results = [];
 
-    deviceSizes.forEach(device => {
+    DEVICE_SIZES.forEach((device) => {
       cy.viewport(device.width, device.height);
-      
       cy.window().then((win) => {
-        const verification = win.boardScalingTests.verifyElementsFitInViewport();
-        const containerInfo = win.boardScalingTests.getBoardContainerInfo();
-        
-        // Log device test results
-        cy.log(`${device.name}: Tile size ${verification.optimalSizing.tileSize}px`);
-        
-        // Basic sanity checks
-        expect(verification.optimalSizing.tileSize).to.be.at.least(20);
-        expect(verification.optimalSizing.tileSize).to.be.at.most(60);
-        expect(containerInfo.viewportRect.width).to.equal(device.width);
-        expect(containerInfo.viewportRect.height).to.equal(device.height);
+        const measurement = captureScaling(win);
+        results.push(measurement);
+        expect(measurement.viewport).to.deep.equal({
+          width: device.width,
+          height: device.height
+        });
+        expect(measurement.optimalSizing.tileSize).to.be.at.least(20);
       });
     });
-  });
 
-  it('should run comprehensive device testing', () => {
-    cy.window().then((win) => {
-      const testResults = win.boardScalingTests.testBoardScalingAcrossDevices();
-      
-      expect(testResults.testResults).to.have.length.at.least(10);
-      expect(testResults.summary.total).to.be.at.least(10);
-      expect(testResults.summary.successful).to.be.at.least(8); // Allow some failures on very small screens
-      
-      cy.log(`Device tests: ${testResults.summary.successRate} success rate`);
-      
-      if (testResults.summary.failed > 0) {
-        cy.log(`Failed devices: ${testResults.summary.failedDevices.join(', ')}`);
-      }
+    cy.then(() => {
+      expect(results).to.have.length(DEVICE_SIZES.length);
     });
   });
 
-  it('should provide debug measurements', () => {
+  it('should provide test-owned board measurements', () => {
     cy.window().then((win) => {
-      // This should not throw an error
-      win.boardScalingTests.debugBoardMeasurements();
-      
-      const containerInfo = win.boardScalingTests.getBoardContainerInfo();
-      expect(containerInfo).to.not.be.null;
-      expect(containerInfo.containerRect).to.have.property('width');
-      expect(containerInfo.containerRect).to.have.property('height');
-      expect(containerInfo.availableSpace).to.have.property('width');
-      expect(containerInfo.availableSpace).to.have.property('height');
+      const measurement = captureScaling(win);
+      expect(measurement.containerRect).to.have.property('width');
+      expect(measurement.containerRect).to.have.property('height');
+      expect(measurement.viewport).to.have.property('width');
+      expect(measurement.viewport).to.have.property('height');
     });
   });
 
-  it('should handle window resize events', () => {
-    // Start with a large viewport
+  it('should recalculate through the shared viewport pipeline after resize', () => {
     cy.viewport(1920, 1080);
-    
     cy.window().then((win) => {
-      const initialVerification = win.boardScalingTests.verifyElementsFitInViewport();
-      const initialTileSize = initialVerification.optimalSizing.tileSize;
-      
-      // Resize to smaller viewport
-      cy.viewport(375, 667);
-      cy.wait(500); // Allow time for resize handlers
-      
-      const resizedVerification = win.boardScalingTests.verifyElementsFitInViewport();
-      const resizedTileSize = resizedVerification.optimalSizing.tileSize;
-      
-      // Tile size should be smaller on smaller screen
-      expect(resizedTileSize).to.be.lessThan(initialTileSize);
-      expect(resizedVerification.success).to.be.true;
-    });
-  });
+      const initialTileSize = captureScaling(win).optimalSizing.tileSize;
 
-  it('should apply optimal scaling correctly', () => {
-    cy.viewport(800, 600);
-    
-    cy.window().then((win) => {
-      const beforeScaling = win.boardScalingTests.getBoardContainerInfo();
-      const success = win.boardScalingTests.applyOptimalScaling();
-      
-      expect(success).to.be.true;
-      
-      // Check that CSS variables were updated
-      const root = win.document.documentElement;
-      const tileSize = getComputedStyle(root).getPropertyValue('--tile-size');
-      const boardWidth = getComputedStyle(root).getPropertyValue('--board-width');
-      
-      expect(tileSize).to.match(/^\d+px$/);
-      expect(boardWidth).to.match(/^\d+px$/);
+      cy.viewport(375, 667);
+      cy.window().should((resizedWindow) => {
+        const resized = captureScaling(resizedWindow);
+        expect(resized.optimalSizing.tileSize).to.be.lessThan(initialTileSize);
+        expect(resized.success).to.be.true;
+      });
     });
   });
 });

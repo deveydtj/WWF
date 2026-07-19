@@ -435,7 +435,3 @@ initializeApp().then(() => {
 }).catch(error => {
   console.error('💥 Failed to start application:', error);
 });
-
-// Note: Board scaling test utilities are now exposed by responsiveScaling.js
-// The new scaling system automatically exposes window.boardScalingTests with full
-// backward compatibility for existing Cypress tests. No need to load old boardContainer.js.

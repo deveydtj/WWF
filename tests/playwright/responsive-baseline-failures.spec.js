@@ -106,23 +106,26 @@ test.describe('Phase 0.5 expected responsive failures', () => {
     expect(shortCapacity).toBe(0);
   });
 
-  test('cross-device scaling helper measures each requested viewport', async ({
+  test('legacy scaling globals are absent from production', async ({
     page,
     deterministicLobby,
   }) => {
-    test.fail(true, 'Baseline: the helper repeats the live viewport measurement under different device names.');
-
     await page.setViewportSize({ width: 1024, height: 768 });
     await deterministicLobby.openActive();
 
-    const results = await page.evaluate(
-      () => window.boardScalingTests.testBoardScalingAcrossDevices().testResults
-    );
+    const deprecatedGlobals = await page.evaluate(() => ({
+      boardScalingTests: Object.hasOwn(window, 'boardScalingTests'),
+      tuneSizing: Object.hasOwn(window, 'tuneSizing'),
+      recalculateScaling: Object.hasOwn(window, 'recalculateScaling'),
+      enhancedScaling: Object.hasOwn(window, 'enhancedScaling'),
+    }));
 
-    expect(results).toHaveLength(10);
-    for (const result of results) {
-      expect(result.verification.viewport).toEqual(result.dimensions);
-    }
+    expect(deprecatedGlobals).toEqual({
+      boardScalingTests: false,
+      tuneSizing: false,
+      recalculateScaling: false,
+      enhancedScaling: false,
+    });
   });
 
   test('compact gameplay has no keyboard overflow or board overlap', async ({
