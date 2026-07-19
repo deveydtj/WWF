@@ -1,31 +1,24 @@
 import { updateBoard } from './board.js';
 import { OVERLAYS, isOverlayOpen } from './overlayState.js';
+import { INPUT_OUTCOMES } from './inputController.js';
 
 /**
  * Handle clicks or touches on the on-screen keyboard.
  *
  * @param {Event} event
- * @param {{guessInput:HTMLInputElement, submitGuessHandler:Function, isAnimating:Function, getCurrentGuess:Function, setCurrentGuess:Function}} opts
- * @param {Function} updateBoardFromTyping
+ * @param {{guessInput:HTMLInputElement, inputController:import('./inputController.js').InputController}} opts
+ * @returns {string}
  */
-export function handleVirtualKey(event, opts, updateBoardFromTyping) {
-  const { guessInput, submitGuessHandler, isAnimating } = opts;
-  if (event.target.classList.contains('key') && !guessInput.disabled && !isAnimating()) {
-    // Only prevent default if the event is cancelable to avoid browser intervention warnings
-    if (event.cancelable) {
-      event.preventDefault();
-    }
-    const key = event.target.dataset.key;
-    const currentValue = getCurrentGuessValue(opts);
-    if (key === 'Enter') {
-      submitGuessHandler();
-    } else if (key === 'Backspace') {
-      setCurrentGuessValue(opts, currentValue.slice(0, -1));
-      updateBoardFromTyping();
-    } else if (currentValue.length < 5 && /^[a-z]$/i.test(key)) {
-      setCurrentGuessValue(opts, currentValue + key);
-      updateBoardFromTyping();
-    }
+export function handleVirtualKey(event, { guessInput, inputController }) {
+  if (!event.target.classList.contains('key')) return INPUT_OUTCOMES.IGNORED;
+
+  // Only prevent default if the event is cancelable to avoid browser intervention warnings
+  if (event.cancelable) {
+    event.preventDefault();
+  }
+
+  const outcome = inputController.routeKey(event.target.dataset.key, 'virtual-keyboard');
+  if (outcome !== INPUT_OUTCOMES.BLOCKED) {
     // Don't focus guess input if chat is open and chat input might be focused
     const chatOpen = isOverlayOpen(OVERLAYS.CHAT);
     const activeChatInput = document.activeElement && document.activeElement.id === 'chatInput';
@@ -33,29 +26,8 @@ export function handleVirtualKey(event, opts, updateBoardFromTyping) {
       guessInput.focus();
     }
   }
-}
 
-function sanitizeGuess(value) {
-  return String(value || '').replace(/[^a-zA-Z]/g, '').toLowerCase().slice(0, 5);
-}
-
-function getCurrentGuessValue({ getCurrentGuess, guessInput }) {
-  if (typeof getCurrentGuess === 'function') {
-    return sanitizeGuess(getCurrentGuess());
-  }
-
-  return sanitizeGuess(guessInput?.value);
-}
-
-function setCurrentGuessValue({ setCurrentGuess, guessInput }, value) {
-  const nextGuess = sanitizeGuess(value);
-  if (typeof setCurrentGuess === 'function') {
-    setCurrentGuess(nextGuess);
-  } else if (guessInput) {
-    guessInput.value = nextGuess.toUpperCase();
-  }
-
-  return nextGuess;
+  return outcome;
 }
 
 /**
@@ -65,39 +37,26 @@ function setCurrentGuessValue({ setCurrentGuess, guessInput }, value) {
  * @param {HTMLElement} cfg.keyboardEl
  * @param {HTMLInputElement} cfg.guessInput
  * @param {HTMLElement} cfg.submitButton
- * @param {Function} cfg.submitGuessHandler
- * @param {Function} cfg.updateBoardFromTyping
- * @param {Function} cfg.isAnimating
- * @param {Function} cfg.getCurrentGuess
- * @param {Function} cfg.setCurrentGuess
+ * @param {import('./inputController.js').InputController} cfg.inputController
  */
 export function setupTypingListeners({
   keyboardEl,
   guessInput,
   submitButton,
-  submitGuessHandler,
-  updateBoardFromTyping,
-  isAnimating,
-  getCurrentGuess,
-  setCurrentGuess
+  inputController
 }) {
-  const guessState = { guessInput, submitGuessHandler, isAnimating, getCurrentGuess, setCurrentGuess };
+  const guessState = { guessInput, inputController };
 
-  keyboardEl.addEventListener('click', (e) => handleVirtualKey(e, guessState, updateBoardFromTyping));
-  keyboardEl.addEventListener('touchstart', (e) => handleVirtualKey(e, guessState, updateBoardFromTyping));
-  submitButton.addEventListener('click', submitGuessHandler);
+  keyboardEl.addEventListener('click', (e) => handleVirtualKey(e, guessState));
+  keyboardEl.addEventListener('touchstart', (e) => handleVirtualKey(e, guessState));
+  submitButton.addEventListener('click', () => inputController.submit('submit-button'));
   guessInput.addEventListener('input', function () {
-    setCurrentGuessValue(guessState, this.value);
-    updateBoardFromTyping();
+    inputController.replace(this.value, 'guess-field');
   });
   guessInput.addEventListener('keyup', function (event) {
-    if (event.key === 'Enter') submitGuessHandler();
+    if (event.key === 'Enter') inputController.submit('guess-field');
   });
   document.addEventListener('keydown', function (event) {
-    if (isAnimating()) {
-      event.preventDefault();
-      return;
-    }
     const active = document.activeElement;
     if (guessInput.disabled || active === guessInput) return;
     if (active && active !== document.body &&
@@ -105,18 +64,9 @@ export function setupTypingListeners({
       return;
     }
     const key = event.key.toLowerCase();
-    const currentValue = getCurrentGuessValue(guessState);
-    if (key === 'enter') {
+    const outcome = inputController.routeKey(key, 'physical-keyboard');
+    if (outcome !== INPUT_OUTCOMES.IGNORED) {
       event.preventDefault();
-      submitGuessHandler();
-    } else if (key === 'backspace') {
-      event.preventDefault();
-      setCurrentGuessValue(guessState, currentValue.slice(0, -1));
-      updateBoardFromTyping();
-    } else if (currentValue.length < 5 && /^[a-z]$/.test(key)) {
-      event.preventDefault();
-      setCurrentGuessValue(guessState, currentValue + key);
-      updateBoardFromTyping();
     }
     const keyElement = keyboardEl.querySelector(`.key[data-key="${key}"]`);
     if (keyElement) {

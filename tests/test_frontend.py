@@ -33,6 +33,7 @@ EXPECTED_MODULES = [
     'board.js',
     'emoji.js',
     'history.js',
+    'inputController.js',
     'keyboard.js',
     'hintState.js',
     'stateManager.js',
@@ -1282,6 +1283,7 @@ global.document = {
   getElementById() { return null; }
 };
 
+const { InputController } = await import('./frontend/static/js/inputController.js');
 const { setupTypingListeners } = await import('./frontend/static/js/keyboard.js');
 
 function keyElement(key) {
@@ -1309,18 +1311,21 @@ const submitButton = { addEventListener(){} };
 let currentGuess = '';
 let renderCount = 0;
 let prevented = false;
-setupTypingListeners({
-  keyboardEl,
-  guessInput,
-  submitButton,
-  submitGuessHandler(){},
-  updateBoardFromTyping() { renderCount += 1; },
-  isAnimating: () => false,
+let submitCount = 0;
+const inputController = new InputController({
   getCurrentGuess: () => currentGuess,
   setCurrentGuess(value) {
     currentGuess = value;
     guessInput.value = value.toUpperCase();
-  }
+  },
+  submitGuess() { submitCount += 1; },
+  onGuessChanged() { renderCount += 1; }
+});
+setupTypingListeners({
+  keyboardEl,
+  guessInput,
+  submitButton,
+  inputController
 });
 
 keyboardEl.listeners.click({
@@ -1339,7 +1344,7 @@ documentListeners.keydown({
   target: global.document.body
 });
 
-console.log(JSON.stringify({ currentGuess, input: guessInput.value, renderCount, prevented, focused }));
+console.log(JSON.stringify({ currentGuess, input: guessInput.value, renderCount, prevented, focused, submitCount }));
 """
     result = subprocess.run(
         ['node', '--input-type=module', '-e', script],
@@ -1351,7 +1356,71 @@ console.log(JSON.stringify({ currentGuess, input: guessInput.value, renderCount,
         'input': 'CRAN',
         'renderCount': 3,
         'prevented': True,
-        'focused': True
+        'focused': True,
+        'submitCount': 0
+    }
+
+
+def test_input_controller_routes_all_input_operations_with_explicit_outcomes():
+    script = """
+import { InputController, INPUT_OUTCOMES, sanitizeGuess } from './frontend/static/js/inputController.js';
+
+let currentGuess = '';
+let submitCount = 0;
+let changeCount = 0;
+let setCount = 0;
+let blocked = false;
+const controller = new InputController({
+  getCurrentGuess: () => currentGuess,
+  setCurrentGuess(value) {
+    currentGuess = value;
+    setCount += 1;
+  },
+  submitGuess() { submitCount += 1; },
+  onGuessChanged() { changeCount += 1; },
+  isBlocked() { return blocked; }
+});
+
+const outcomes = [];
+outcomes.push(controller.routeKey('C', 'virtual-keyboard'));
+outcomes.push(controller.replace('cr4a_ne!', 'guess-field'));
+outcomes.push(controller.routeKey('Backspace', 'physical-keyboard'));
+outcomes.push(controller.replace('cran!', 'guess-field'));
+outcomes.push(controller.routeKey('Enter', 'physical-keyboard'));
+outcomes.push(controller.routeKey('?', 'physical-keyboard'));
+blocked = true;
+outcomes.push(controller.append('z', 'virtual-keyboard'));
+
+console.log(JSON.stringify({
+  outcomes,
+  expected: INPUT_OUTCOMES,
+  currentGuess,
+  submitCount,
+  changeCount,
+  setCount,
+  sanitized: sanitizeGuess('123-STONEwork')
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data == {
+        'outcomes': [
+            'accepted', 'accepted', 'accepted', 'ignored', 'submitted', 'ignored', 'blocked'
+        ],
+        'expected': {
+            'ACCEPTED': 'accepted',
+            'IGNORED': 'ignored',
+            'SUBMITTED': 'submitted',
+            'BLOCKED': 'blocked'
+        },
+        'currentGuess': 'cran',
+        'submitCount': 1,
+        'changeCount': 3,
+        'setCount': 4,
+        'sanitized': 'stone'
     }
 
 

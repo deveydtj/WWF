@@ -31,6 +31,7 @@ window.repositionResetButton = repositionResetButton;
 import { updateInputVisibility } from './uiNotifications.js';
 import { updateHintBadge } from './hintBadge.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
+import { InputController } from './inputController.js';
 
 class AppInitializer {
   constructor() {
@@ -41,6 +42,7 @@ class AppInitializer {
     this.eventListenersManager = null;
     this.mobileMenuManager = null;
     this.layoutManager = null;
+    this.inputController = null;
     
     // App state
     this.myEmoji = null;
@@ -316,15 +318,19 @@ class AppInitializer {
     const submitButton = this.domManager.get('submitButton');
     
     if (keyboard && guessInput && submitButton) {
+      this.inputController = new InputController({
+        getCurrentGuess: () => this.gameStateManager.getCurrentGuess(),
+        setCurrentGuess: (value) => this.gameStateManager.setCurrentGuess(value, { render: false }),
+        submitGuess: this._getSubmitGuessHandler(),
+        onGuessChanged: () => this._updateBoardFromTyping(),
+        isBlocked: () => guessInput.disabled
+      });
+
       setupTypingListeners({
         keyboardEl: keyboard,
         guessInput,
         submitButton,
-        submitGuessHandler: this._getSubmitGuessHandler(),
-        updateBoardFromTyping: () => this._updateBoardFromTyping(),
-        isAnimating: () => false,
-        getCurrentGuess: () => this.gameStateManager.getCurrentGuess(),
-        setCurrentGuess: (value) => this.gameStateManager.setCurrentGuess(value, { render: false })
+        inputController: this.inputController
       });
     }
   }

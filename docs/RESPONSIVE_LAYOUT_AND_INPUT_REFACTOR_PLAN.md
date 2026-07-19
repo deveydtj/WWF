@@ -599,7 +599,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
 
 ## Tasks
 
-- [ ] **2.1 Create `InputController`.**
+- [x] **2.1 Create `InputController`.**
   - Move sanitation, append, delete, submit, and input-routing logic out of `keyboard.js`.
   - Keep one mutation path for all input sources.
   - Return explicit outcomes such as `accepted`, `ignored`, `submitted`, or `blocked`.
