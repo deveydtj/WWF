@@ -663,7 +663,7 @@ Eliminate duplicate resize listeners, delayed recalculations, and competing view
   - Track app and gameplay container dimensions with `ResizeObserver`.
   - Track pointer, hover, orientation, and aspect ratio.
 
-- [ ] **3.2 Use one scheduler.**
+- [x] **3.2 Use one scheduler.**
   - Coalesce resize, visual viewport, orientation, panel, and container changes.
   - Recalculate at most once per animation frame.
   - Prevent recursive ResizeObserver loops by comparing outputs before writing.

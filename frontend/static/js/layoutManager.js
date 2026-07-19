@@ -56,6 +56,18 @@ function getDocumentBody() {
   return typeof document !== 'undefined' ? document.body : null;
 }
 
+function setDatasetValue(target, key, value) {
+  const normalizedValue = String(value);
+  if (target?.dataset && target.dataset[key] !== normalizedValue) {
+    target.dataset[key] = normalizedValue;
+  }
+}
+
+function toggleClassIfChanged(target, className, enabled) {
+  if (!target?.classList || target.classList.contains(className) === enabled) return;
+  target.classList.toggle(className, enabled);
+}
+
 function parseSize(value, fallback) {
   const parsed = parseFloat(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -169,13 +181,13 @@ function applyLayoutProfileToDocument(profile) {
   const body = getDocumentBody();
   if (!body) return;
 
-  body.dataset.density = profile.density;
-  body.dataset.interaction = profile.interaction;
-  body.dataset.gameFlow = profile.gameFlow;
-  body.dataset.panelCapacity = String(profile.panelCapacity);
-  body.dataset.showGuessField = String(profile.showGuessField);
-  body.dataset.showOnscreenKeyboard = String(profile.showOnscreenKeyboard);
-  body.dataset.compactHeader = String(profile.compactHeader);
+  setDatasetValue(body, 'density', profile.density);
+  setDatasetValue(body, 'interaction', profile.interaction);
+  setDatasetValue(body, 'gameFlow', profile.gameFlow);
+  setDatasetValue(body, 'panelCapacity', profile.panelCapacity);
+  setDatasetValue(body, 'showGuessField', profile.showGuessField);
+  setDatasetValue(body, 'showOnscreenKeyboard', profile.showOnscreenKeyboard);
+  setDatasetValue(body, 'compactHeader', profile.compactHeader);
 }
 
 /**
@@ -231,15 +243,15 @@ export function applyLayoutStateToDocument(state) {
   if (!body) return;
 
   const normalized = normalizeLayoutState(state);
-  body.dataset.layout = normalized.mode;
-  body.dataset.mode = normalized.mode;
-  body.dataset.historyPopup = normalized.historyPopup ? 'true' : 'false';
+  setDatasetValue(body, 'layout', normalized.mode);
+  setDatasetValue(body, 'mode', normalized.mode);
+  setDatasetValue(body, 'historyPopup', normalized.historyPopup);
 
   if (body.classList && typeof body.classList.toggle === 'function') {
-    body.classList.toggle('phone-layout', normalized.mode === LAYOUT_MODES.PHONE);
-    body.classList.toggle('tablet-layout', normalized.mode === LAYOUT_MODES.TABLET);
-    body.classList.toggle('desktop-layout', normalized.mode === LAYOUT_MODES.DESKTOP);
-    body.classList.toggle('mobile-layout', isSmallLayout(normalized.mode));
+    toggleClassIfChanged(body, 'phone-layout', normalized.mode === LAYOUT_MODES.PHONE);
+    toggleClassIfChanged(body, 'tablet-layout', normalized.mode === LAYOUT_MODES.TABLET);
+    toggleClassIfChanged(body, 'desktop-layout', normalized.mode === LAYOUT_MODES.DESKTOP);
+    toggleClassIfChanged(body, 'mobile-layout', isSmallLayout(normalized.mode));
   }
 }
 
@@ -362,7 +374,7 @@ export class LayoutManager {
       window.matchMedia(`(min-width: ${this.breakpoints.TABLET_MAX + 1}px)`)
     ];
 
-    this.handleLegacyMediaChange = () => this.refresh();
+    this.handleLegacyMediaChange = () => this.viewportService.scheduleUpdate('legacy-media');
     this.mediaQueries.forEach((query) => {
       query.addEventListener('change', this.handleLegacyMediaChange);
     });

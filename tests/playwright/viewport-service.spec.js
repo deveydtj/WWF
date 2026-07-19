@@ -104,4 +104,80 @@ test.describe('ViewportService', () => {
     expect(snapshots.at(-1).layoutViewport).toEqual({ width: 500, height: 800 });
     expect(snapshots.at(-1).aspectRatio).toBe(0.625);
   });
+
+  test('coalesces viewport, orientation, panel, and container invalidations per frame', async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const { ViewportService } = await import('/static/js/layout/viewportService.js');
+      const service = new ViewportService();
+      service.start();
+
+      let measurementCount = 0;
+      const originalMeasure = service.measure.bind(service);
+      service.measure = () => {
+        measurementCount += 1;
+        return originalMeasure();
+      };
+
+      const updates = [];
+      service.subscribe((snapshot, previous, update) => {
+        updates.push(update);
+      }, { emitCurrent: false });
+
+      service.scheduleUpdate('resize');
+      service.scheduleUpdate('visual-viewport');
+      service.scheduleUpdate('orientation');
+      service.scheduleUpdate('container');
+      document.dispatchEvent(new CustomEvent('overlaychange'));
+      document.dispatchEvent(new CustomEvent('overlaychange'));
+
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      service.destroy();
+
+      return { measurementCount, updates };
+    });
+
+    expect(result.measurementCount).toBe(1);
+    expect(result.updates).toHaveLength(1);
+    expect(result.updates[0].snapshotChanged).toBe(false);
+    expect(result.updates[0].reasons).toEqual(expect.arrayContaining([
+      'resize',
+      'visual-viewport',
+      'orientation',
+      'container',
+      'panel',
+    ]));
+  });
+
+  test('does not publish recursive container updates when measurements are unchanged', async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const app = document.createElement('div');
+      const gameplay = document.createElement('div');
+      app.style.cssText = 'position:fixed;width:400px;height:300px';
+      gameplay.style.cssText = 'width:250px;height:180px';
+      app.appendChild(gameplay);
+      document.body.appendChild(app);
+
+      const { ViewportService } = await import('/static/js/layout/viewportService.js');
+      const service = new ViewportService({ appContainer: app, gameplayContainer: gameplay });
+      let publishCount = 0;
+      service.subscribe((snapshot, previous) => {
+        if (!previous) return;
+        publishCount += 1;
+        service.scheduleUpdate('container');
+      });
+
+      gameplay.style.width = '275px';
+      await new Promise((resolve) => requestAnimationFrame(
+        () => requestAnimationFrame(() => requestAnimationFrame(resolve))
+      ));
+
+      const finalSnapshot = service.getSnapshot();
+      service.destroy();
+      app.remove();
+      return { publishCount, finalSnapshot };
+    });
+
+    expect(result.publishCount).toBe(1);
+    expect(result.finalSnapshot.gameplayContainer.width).toBe(275);
+  });
 });

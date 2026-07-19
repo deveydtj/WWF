@@ -22,6 +22,8 @@ const SAFE_AREA_PROPERTIES = Object.freeze({
   left: '--safe-area-inset-left'
 });
 
+const FORCED_UPDATE_REASONS = new Set(['panel']);
+
 function round(value, precision = 2) {
   const number = Number.isFinite(value) ? value : 0;
   const factor = 10 ** precision;
@@ -81,9 +83,17 @@ export class ViewportService {
     this.resizeObserver = null;
     this.safeAreaProbe = null;
     this.animationFrame = null;
+    this.pendingReasons = new Set();
     this.started = false;
 
-    this.handleSourceChange = () => this.scheduleUpdate();
+    this.sourceHandlers = Object.freeze({
+      resize: () => this.scheduleUpdate('resize'),
+      orientation: () => this.scheduleUpdate('orientation'),
+      visualViewport: () => this.scheduleUpdate('visual-viewport'),
+      container: () => this.scheduleUpdate('container'),
+      capability: () => this.scheduleUpdate('capability'),
+      panel: () => this.scheduleUpdate('panel')
+    });
   }
 
   /** Start observing and synchronously capture the initial snapshot. */
@@ -108,7 +118,7 @@ export class ViewportService {
   /**
    * Subscribe to meaningful snapshot changes.
    *
-   * @param {(snapshot: object, previousSnapshot: object|null) => void} callback
+   * @param {(snapshot: object, previousSnapshot: object|null, update: object) => void} callback
    * @param {{emitCurrent?: boolean}} options
    * @returns {() => void} unsubscribe callback
    */
@@ -121,7 +131,10 @@ export class ViewportService {
     this.subscribers.add(callback);
 
     if (options.emitCurrent !== false && this.snapshot) {
-      callback(this.snapshot, null);
+      callback(this.snapshot, null, Object.freeze({
+        reasons: Object.freeze(['initial']),
+        snapshotChanged: true
+      }));
     }
 
     return () => this.subscribers.delete(callback);
@@ -133,15 +146,26 @@ export class ViewportService {
     return this.snapshot;
   }
 
-  /** Queue one measurement for the next animation frame. */
-  scheduleUpdate() {
-    if (!this.started || this.animationFrame !== null) return;
+  /**
+   * Queue one layout update for the next animation frame.
+   *
+   * All invalidation sources share this queue. Reasons are retained for
+   * diagnostics and allow panel changes to run the layout decision pipeline
+   * even when their first render does not change a measured container size.
+   */
+  scheduleUpdate(reason = 'manual') {
+    if (!this.started) return;
+
+    this.pendingReasons.add(reason);
+    if (this.animationFrame !== null) return;
 
     const requestFrame = this.window.requestAnimationFrame
       || ((callback) => this.window.setTimeout(callback, 16));
     this.animationFrame = requestFrame.call(this.window, () => {
       this.animationFrame = null;
-      this.publishIfChanged();
+      const reasons = Object.freeze([...this.pendingReasons]);
+      this.pendingReasons.clear();
+      this.publishIfChanged(reasons);
     });
   }
 
@@ -149,16 +173,17 @@ export class ViewportService {
   destroy() {
     if (!this.started) return;
 
-    this.window.removeEventListener('resize', this.handleSourceChange);
-    this.window.removeEventListener('orientationchange', this.handleSourceChange);
-    this.window.visualViewport?.removeEventListener('resize', this.handleSourceChange);
-    this.window.visualViewport?.removeEventListener('scroll', this.handleSourceChange);
+    this.window.removeEventListener('resize', this.sourceHandlers.resize);
+    this.window.removeEventListener('orientationchange', this.sourceHandlers.orientation);
+    this.window.visualViewport?.removeEventListener('resize', this.sourceHandlers.visualViewport);
+    this.window.visualViewport?.removeEventListener('scroll', this.sourceHandlers.visualViewport);
+    this.document.removeEventListener('overlaychange', this.sourceHandlers.panel);
 
     this.mediaQueries.forEach((mediaQuery) => {
       if (typeof mediaQuery.removeEventListener === 'function') {
-        mediaQuery.removeEventListener('change', this.handleSourceChange);
+        mediaQuery.removeEventListener('change', this.sourceHandlers.capability);
       } else if (typeof mediaQuery.removeListener === 'function') {
-        mediaQuery.removeListener(this.handleSourceChange);
+        mediaQuery.removeListener(this.sourceHandlers.capability);
       }
     });
     this.mediaQueries.clear();
@@ -171,6 +196,7 @@ export class ViewportService {
       cancelFrame.call(this.window, this.animationFrame);
       this.animationFrame = null;
     }
+    this.pendingReasons.clear();
 
     this.safeAreaProbe?.remove();
     this.safeAreaProbe = null;
@@ -185,22 +211,23 @@ export class ViewportService {
       const mediaQuery = this.window.matchMedia(query);
       this.mediaQueries.set(name, mediaQuery);
       if (typeof mediaQuery.addEventListener === 'function') {
-        mediaQuery.addEventListener('change', this.handleSourceChange);
+        mediaQuery.addEventListener('change', this.sourceHandlers.capability);
       } else if (typeof mediaQuery.addListener === 'function') {
-        mediaQuery.addListener(this.handleSourceChange);
+        mediaQuery.addListener(this.sourceHandlers.capability);
       }
     });
   }
 
   setupObservers() {
-    this.window.addEventListener('resize', this.handleSourceChange, { passive: true });
-    this.window.addEventListener('orientationchange', this.handleSourceChange, { passive: true });
-    this.window.visualViewport?.addEventListener('resize', this.handleSourceChange, { passive: true });
-    this.window.visualViewport?.addEventListener('scroll', this.handleSourceChange, { passive: true });
+    this.window.addEventListener('resize', this.sourceHandlers.resize, { passive: true });
+    this.window.addEventListener('orientationchange', this.sourceHandlers.orientation, { passive: true });
+    this.window.visualViewport?.addEventListener('resize', this.sourceHandlers.visualViewport, { passive: true });
+    this.window.visualViewport?.addEventListener('scroll', this.sourceHandlers.visualViewport, { passive: true });
+    this.document.addEventListener('overlaychange', this.sourceHandlers.panel);
 
     if (typeof this.window.ResizeObserver !== 'function') return;
 
-    this.resizeObserver = new this.window.ResizeObserver(this.handleSourceChange);
+    this.resizeObserver = new this.window.ResizeObserver(this.sourceHandlers.container);
     if (this.appContainer) this.resizeObserver.observe(this.appContainer);
     if (this.gameplayContainer && this.gameplayContainer !== this.appContainer) {
       this.resizeObserver.observe(this.gameplayContainer);
@@ -281,13 +308,17 @@ export class ViewportService {
     });
   }
 
-  publishIfChanged() {
+  publishIfChanged(reasons = Object.freeze(['manual'])) {
     const previousSnapshot = this.snapshot;
     const nextSnapshot = this.measure();
-    if (snapshotsEqual(previousSnapshot, nextSnapshot)) return;
+    const snapshotChanged = !snapshotsEqual(previousSnapshot, nextSnapshot);
+    const forceUpdate = reasons.some((reason) => FORCED_UPDATE_REASONS.has(reason));
+    if (!snapshotChanged && !forceUpdate) return;
 
-    this.snapshot = nextSnapshot;
-    this.subscribers.forEach((callback) => callback(nextSnapshot, previousSnapshot));
+    if (snapshotChanged) this.snapshot = nextSnapshot;
+
+    const update = Object.freeze({ reasons, snapshotChanged });
+    this.subscribers.forEach((callback) => callback(this.snapshot, previousSnapshot, update));
   }
 }
 
