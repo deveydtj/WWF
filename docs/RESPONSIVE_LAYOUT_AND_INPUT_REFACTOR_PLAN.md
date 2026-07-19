@@ -572,7 +572,7 @@ Define one authoritative layout state that represents actual UX behavior.
   - No DOM writes in the decision functions.
   - Add unit tests for boundary conditions.
 
-- [ ] **1.4 Preserve compatibility temporarily.**
+- [x] **1.4 Preserve compatibility temporarily.**
   - Map the new profile back to existing `phone-layout`, `tablet-layout`, and `desktop-layout` classes only while migration is underway.
   - Mark compatibility APIs deprecated.
   - Do not add new call sites to `isMobileView()` or `historyPopup`.

@@ -1,9 +1,9 @@
 /**
- * Shared responsive layout contract.
+ * Legacy responsive layout contract.
  *
- * Phase 1 of the layout refactor establishes these names as the public
- * vocabulary for viewport-level layout decisions. Later phases can consolidate
- * overlay and sizing state around this contract.
+ * @deprecated New code must consume the capability profile from
+ * layout/layoutProfile.js. These labels remain only while the existing
+ * stylesheets and callers are migrated.
  */
 
 export const LAYOUT_MODES = Object.freeze({

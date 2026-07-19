@@ -719,6 +719,85 @@ console.log(JSON.stringify({
     assert data['inputsUnchanged'] is True
 
 
+def test_layout_profile_compatibility_maps_density_to_legacy_classes():
+    script = """
+import {
+  applyLegacyLayoutClasses,
+  getLegacyLayoutModeForProfile
+} from './frontend/static/js/layout/layoutProfileCompatibility.js';
+
+function createTarget() {
+  const classes = new Set([
+    'phone-layout', 'tablet-layout', 'desktop-layout', 'mobile-layout'
+  ]);
+  return {
+    classes,
+    classList: {
+      toggle(name, enabled) {
+        if (enabled) classes.add(name);
+        else classes.delete(name);
+      }
+    }
+  };
+}
+
+const results = ['compact', 'comfortable', 'spacious'].map((density) => {
+  const profile = { density };
+  const target = createTarget();
+  const mode = applyLegacyLayoutClasses(profile, target);
+  return {
+    mappedMode: getLegacyLayoutModeForProfile(profile),
+    mode,
+    classes: [...target.classes].sort()
+  };
+});
+
+console.log(JSON.stringify(results));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == [
+        {
+            'mappedMode': 'phone',
+            'mode': 'phone',
+            'classes': ['mobile-layout', 'phone-layout'],
+        },
+        {
+            'mappedMode': 'tablet',
+            'mode': 'tablet',
+            'classes': ['mobile-layout', 'tablet-layout'],
+        },
+        {
+            'mappedMode': 'desktop',
+            'mode': 'desktop',
+            'classes': ['desktop-layout'],
+        },
+    ]
+
+
+def test_layout_profile_compatibility_rejects_unknown_density():
+    script = """
+import {
+  getLegacyLayoutModeForProfile
+} from './frontend/static/js/layout/layoutProfileCompatibility.js';
+
+try {
+  getLegacyLayoutModeForProfile({ density: 'wide' });
+} catch (error) {
+  console.log(error.message);
+}
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip() == (
+        'Cannot map layout profile density to a legacy mode: wide'
+    )
+
+
 def test_layout_manager_applies_phase_one_body_state():
     script = """
 global.window = {

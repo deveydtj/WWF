@@ -31,6 +31,9 @@ export function isTabletView() {
 
 /**
  * Compatibility alias for older call sites.
+ *
+ * @deprecated Consume the current layout profile's interaction and density
+ * fields instead. Do not add new call sites.
  */
 export function isMobileView() {
   return isPhoneView();
