@@ -92,6 +92,24 @@ function elementSize(element, fallback) {
   });
 }
 
+function elementContentSize(element, fallback, windowObject) {
+  const rect = element?.getBoundingClientRect?.();
+  if (!rect || typeof windowObject?.getComputedStyle !== 'function') {
+    return elementSize(element, fallback);
+  }
+
+  const styles = windowObject.getComputedStyle(element);
+  const horizontalInsets = ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth']
+    .reduce((total, property) => total + (parseFloat(styles[property]) || 0), 0);
+  const verticalInsets = ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth']
+    .reduce((total, property) => total + (parseFloat(styles[property]) || 0), 0);
+
+  return Object.freeze({
+    width: positiveDimension(rect.width - horizontalInsets, fallback.width),
+    height: positiveDimension(rect.height - verticalInsets, fallback.height)
+  });
+}
+
 function pointerCapability(matches) {
   const coarse = matches.pointerCoarse || matches.anyPointerCoarse;
   const fine = matches.pointerFine || matches.anyPointerFine;
@@ -400,7 +418,15 @@ export class ViewportService {
       layoutViewport,
       visualViewport,
       appContainer: elementSize(this.appContainer, layoutViewport),
-      gameplayContainer: elementSize(this.gameplayContainer, layoutViewport),
+      // The center panel's content box is the true gameplay budget. Its grid
+      // track has already accounted for visible rails and the app shell, and
+      // subtracting its own padding/borders prevents that space being offered
+      // to the board a second time.
+      gameplayContainer: elementContentSize(
+        this.gameplayContainer,
+        layoutViewport,
+        this.window
+      ),
       safeArea: this.getSafeArea(),
       orientation: ratio > 1 ? 'landscape' : 'portrait',
       aspectRatio: round(ratio, 4),

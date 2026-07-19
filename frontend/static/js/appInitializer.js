@@ -445,7 +445,7 @@ class AppInitializer {
     // application layout effects run in this same scheduled update cycle.
     this.unsubscribeViewportUpdates?.();
     this.unsubscribeViewportUpdates = this.layoutManager.subscribeToViewport(
-      () => this._handleViewportUpdate()
+      (snapshot) => this._handleViewportUpdate(snapshot)
     );
 
     document.addEventListener('layoutprofilechange', (e) => {
@@ -457,14 +457,14 @@ class AppInitializer {
    * Apply all viewport-dependent UI effects from the shared scheduler.
    * @private
    */
-  _handleViewportUpdate() {
+  _handleViewportUpdate(viewportSnapshot) {
     const layoutState = this.layoutManager.getCurrentLayoutState();
 
     refreshOverlayStateForLayout(layoutState);
     this._updateGameTitle();
     repositionResetButton();
     updatePanelVisibility();
-    recalculateScaling();
+    recalculateScaling(viewportSnapshot);
     alignStampsWithBoardRows();
   }
 

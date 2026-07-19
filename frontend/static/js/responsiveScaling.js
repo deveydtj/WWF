@@ -24,7 +24,7 @@ function clamp(n, a, b) {
  * initialization before elements are rendered, it will use fallback values
  * for header height (60px) which may result in less accurate initial sizing.
  */
-function tuneSizing() {
+function tuneSizing(viewportSnapshot = null) {
   const root = document.documentElement;
   const titleBar = document.querySelector("#titleBar");
 
@@ -32,9 +32,16 @@ function tuneSizing() {
   const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
-  // Padding approximations from CSS variables (fallback to numbers if not computed)
+  // ViewportService measures the content box of #centerPanel after the shell
+  // has assigned app padding and any rail columns. Board width must use that
+  // center-region budget rather than the full viewport.
+  const measuredGameplayWidth = viewportSnapshot?.gameplayContainer?.width;
+  const gameplayWidth = Number.isFinite(measuredGameplayWidth) && measuredGameplayWidth > 0
+    ? measuredGameplayWidth
+    : document.querySelector('#centerPanel')?.clientWidth || vw;
+
+  // Vertical padding approximation from CSS variables (fallback if not computed)
   const styles = getComputedStyle(root);
-  const padX = parseFloat(styles.getPropertyValue("--pad-x")) || 16;
   const padY = parseFloat(styles.getPropertyValue("--pad-y")) || 14;
 
   // Calculate responsive gaps
@@ -45,7 +52,7 @@ function tuneSizing() {
   root.style.setProperty("--kb-gap", kbGap + "px");
 
   // Width-driven tile size (guaranteed to fit 5 tiles + 4 gaps)
-  const usableW = vw - (padX * 2) - 2; // small safety margin
+  const usableW = gameplayWidth - 2; // small safety margin
   const tileByWidth = Math.floor((usableW - 4 * gap) / 5);
 
   // Height-driven tile size: ensure board + keyboard + header fits in viewport
@@ -159,8 +166,8 @@ export function initializeResponsiveScaling() {
 /**
  * Force a recalculation of sizing (useful for dynamic content changes)
  */
-export function recalculateScaling() {
-  tuneSizing();
+export function recalculateScaling(viewportSnapshot = null) {
+  tuneSizing(viewportSnapshot);
 }
 
 /**

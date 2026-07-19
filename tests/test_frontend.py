@@ -701,6 +701,50 @@ console.log(JSON.stringify({
     assert data['hasDomGlobals'] is False
 
 
+def test_responsive_scaling_uses_gameplay_container_instead_of_viewport_width():
+    script = """
+import { recalculateScaling } from './frontend/static/js/responsiveScaling.js';
+
+const properties = {};
+const root = {
+  style: {
+    setProperty(name, value) {
+      properties[name] = value;
+    }
+  },
+  clientWidth: 1440,
+  clientHeight: 900
+};
+const titleBar = { getBoundingClientRect: () => ({ height: 60 }) };
+global.document = {
+  documentElement: root,
+  querySelector(selector) {
+    if (selector === '#titleBar') return titleBar;
+    return null;
+  }
+};
+global.window = { innerWidth: 1440, innerHeight: 900 };
+global.getComputedStyle = () => ({
+  getPropertyValue(property) {
+    return property === '--pad-y' ? '14px' : '16px';
+  }
+});
+
+const snapshot = {
+  gameplayContainer: { width: 300, height: 700 }
+};
+recalculateScaling(snapshot);
+console.log(JSON.stringify(properties));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    properties = json.loads(result.stdout.strip())
+    assert properties['--tile-size'] == '50px'
+    assert properties['--board-width'] == '294px'
+
+
 def test_layout_profile_decisions_distinguish_capabilities_at_equal_size():
     script = """
 import { decideLayoutProfile } from './frontend/static/js/layout/layoutProfileDecisions.js';
@@ -1060,11 +1104,17 @@ global.window = {
   innerWidth: 800,
   matchMedia() { return { addEventListener(){} }; }
 };
-const classState = {};
+const classState = {
+  'phone-layout': false,
+  'tablet-layout': false,
+  'desktop-layout': false,
+  'mobile-layout': false
+};
 global.document = {
   body: {
     dataset: {},
     classList: {
+      contains(name) { return classState[name] === true; },
       toggle(name, enabled) { classState[name] = enabled; }
     }
   },

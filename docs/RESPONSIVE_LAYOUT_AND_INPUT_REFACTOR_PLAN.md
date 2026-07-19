@@ -705,7 +705,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
   - Unit-test the calculations without the DOM.
   - Include width-constrained, height-constrained, and panel-constrained cases.
 
-- [ ] **4.2 Calculate from the gameplay container.**
+- [x] **4.2 Calculate from the gameplay container.**
   - Measure the center region after rail capacity and app padding are applied.
   - Do not use full viewport width as the board width budget.
 

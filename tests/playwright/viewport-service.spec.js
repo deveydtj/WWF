@@ -274,6 +274,33 @@ test.describe('ViewportService', () => {
     expect(result.finalSnapshot.gameplayContainer).toEqual({ width: 275, height: 180 });
   });
 
+  test('measures the gameplay content box after center padding and borders', async ({ page }) => {
+    const snapshot = await page.evaluate(async () => {
+      const app = document.createElement('div');
+      const gameplay = document.createElement('div');
+      app.style.cssText = 'position:fixed;width:900px;height:600px';
+      gameplay.style.cssText = [
+        'box-sizing:border-box',
+        'width:500px',
+        'height:400px',
+        'padding:10px 24px',
+        'border:2px solid transparent',
+      ].join(';');
+      app.appendChild(gameplay);
+      document.body.appendChild(app);
+
+      const { ViewportService } = await import('/static/js/layout/viewportService.js');
+      const service = new ViewportService({ appContainer: app, gameplayContainer: gameplay });
+      const current = service.start();
+      service.destroy();
+      app.remove();
+      return current;
+    });
+
+    expect(snapshot.appContainer).toEqual({ width: 900, height: 600 });
+    expect(snapshot.gameplayContainer).toEqual({ width: 448, height: 376 });
+  });
+
   test('publishes updated orientation after a viewport resize', async ({ page }) => {
     await page.setViewportSize({ width: 900, height: 600 });
     await page.evaluate(async () => {
