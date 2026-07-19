@@ -709,7 +709,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
   - Measure the center region after rail capacity and app padding are applied.
   - Do not use full viewport width as the board width budget.
 
-- [ ] **4.3 Calculate the vertical budget correctly.**
+- [x] **4.3 Calculate the vertical budget correctly.**
   - Reserve header, status, action row, keyboard, gaps, and safe area.
   - If status text is transient, reserve a stable minimum rather than allowing the board to jump.
   - Use visual viewport height when chat/native keyboard is open.

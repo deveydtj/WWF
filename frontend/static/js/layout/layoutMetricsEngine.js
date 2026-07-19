@@ -11,7 +11,9 @@ export const DEFAULT_LAYOUT_METRIC_CONSTRAINTS = Object.freeze({
   boardColumns: 5,
   boardRows: 6,
   tileGap: 8,
-  preferredTileMaximum: 66
+  preferredTileMaximum: 66,
+  stableStatusBlockSize: 24,
+  verticalGapCount: 4
 });
 
 function assertObject(value, name) {
@@ -83,6 +85,17 @@ function normalizeVisualViewport(viewport) {
   });
 }
 
+function normalizeLayoutViewport(viewport, visualViewport) {
+  if (!viewport) {
+    return Object.freeze({
+      width: visualViewport.width,
+      height: visualViewport.height
+    });
+  }
+
+  return normalizeSize(viewport, 'measurements.layoutViewport');
+}
+
 function normalizeSafeArea(safeArea = {}) {
   assertObject(safeArea, 'measurements.safeArea');
   return Object.freeze({
@@ -108,19 +121,147 @@ function normalizeConstraints(overrides = {}) {
     'preferredTileMaximum',
     'constraints'
   );
+  readNonNegativeNumber(
+    constraints,
+    'stableStatusBlockSize',
+    'constraints'
+  );
+  readNonNegativeNumber(
+    constraints,
+    'verticalGapCount',
+    'constraints'
+  );
+
+  if (!Number.isInteger(constraints.verticalGapCount)) {
+    throw new TypeError('constraints.verticalGapCount must be a non-negative integer');
+  }
 
   return Object.freeze(constraints);
 }
 
 /**
+ * Calculate the board's block-axis budget after every other visible gameplay
+ * region has been reserved. The visual viewport only replaces the layout
+ * viewport as the outer bound when chat or a native keyboard is constraining
+ * it; the measured gameplay container remains the normal layout budget.
+ */
+export function calculateVerticalBudget(measurements, constraintOverrides = {}) {
+  assertObject(measurements, 'measurements');
+  const constraints = normalizeConstraints(constraintOverrides);
+  const layoutViewportBlockSize = readPositiveNumber(
+    measurements,
+    'layoutViewportBlockSize',
+    'measurements'
+  );
+  const visualViewportBlockSize = readPositiveNumber(
+    measurements,
+    'visualViewportBlockSize',
+    'measurements'
+  );
+  const gameplayBlockSize = readPositiveNumber(
+    measurements,
+    'gameplayBlockSize',
+    'measurements'
+  );
+  const safeAreaTop = readNonNegativeNumber(
+    measurements,
+    'safeAreaTop',
+    'measurements'
+  );
+  const safeAreaBottom = readNonNegativeNumber(
+    measurements,
+    'safeAreaBottom',
+    'measurements'
+  );
+  const headerBlockSize = readNonNegativeNumber(
+    measurements,
+    'headerBlockSize',
+    'measurements'
+  );
+  const statusBlockSize = readNonNegativeNumber(
+    measurements,
+    'statusBlockSize',
+    'measurements'
+  );
+  const statusMinimumBlockSize = readNonNegativeNumber(
+    measurements,
+    'statusMinimumBlockSize',
+    'measurements',
+    constraints.stableStatusBlockSize
+  );
+  const actionRowBlockSize = readNonNegativeNumber(
+    measurements,
+    'actionRowBlockSize',
+    'measurements'
+  );
+  const keyboardBlockSize = readNonNegativeNumber(
+    measurements,
+    'keyboardBlockSize',
+    'measurements'
+  );
+  const verticalGap = readNonNegativeNumber(
+    measurements,
+    'verticalGap',
+    'measurements'
+  );
+  const additionalReservedBlockSize = readNonNegativeNumber(
+    measurements,
+    'additionalReservedBlockSize',
+    'measurements'
+  );
+  const isVisuallyConstrained = Boolean(
+    measurements.chatOpen || measurements.nativeKeyboardLikelyOpen
+  );
+  const viewportBlockSize = isVisuallyConstrained
+    ? Math.min(layoutViewportBlockSize, visualViewportBlockSize)
+    : layoutViewportBlockSize;
+  const availableStackBlockSize = Math.min(gameplayBlockSize, viewportBlockSize);
+  const reservedStatusBlockSize = Math.max(
+    statusBlockSize,
+    statusMinimumBlockSize
+  );
+  const verticalGapsBlockSize = verticalGap * constraints.verticalGapCount;
+  const safeAreaBlockSize = safeAreaTop + safeAreaBottom;
+  const reservedBlockSize = headerBlockSize
+    + reservedStatusBlockSize
+    + actionRowBlockSize
+    + keyboardBlockSize
+    + verticalGapsBlockSize
+    + safeAreaBlockSize
+    + additionalReservedBlockSize;
+
+  return freezeRecord({
+    viewportSource: isVisuallyConstrained ? 'visual-viewport' : 'layout-viewport',
+    viewportBlockSize,
+    gameplayBlockSize,
+    availableStackBlockSize,
+    availableBoardBlockSize: Math.max(0, availableStackBlockSize - reservedBlockSize),
+    reservedBlockSize,
+    reservations: {
+      headerBlockSize,
+      statusBlockSize: reservedStatusBlockSize,
+      actionRowBlockSize,
+      keyboardBlockSize,
+      verticalGapsBlockSize,
+      safeAreaBlockSize,
+      additionalReservedBlockSize
+    }
+  });
+}
+
+/**
  * Normalize measurements captured by ViewportService or a test fixture.
- * `boardBudget` is the already-reserved board region; when omitted, the
- * measured gameplay container is the budget.
+ * `boardBudget` is an optional upper bound for the board region; the vertical
+ * reservation calculation further reduces its block size below.
  */
 export function normalizeLayoutMeasurements(measurements) {
   assertObject(measurements, 'measurements');
 
   const visualViewport = normalizeVisualViewport(measurements.visualViewport);
+  const layoutViewport = normalizeLayoutViewport(
+    measurements.layoutViewport,
+    visualViewport
+  );
   const appContainer = normalizeSize(
     measurements.appContainer,
     'measurements.appContainer'
@@ -142,6 +283,7 @@ export function normalizeLayoutMeasurements(measurements) {
   }
 
   return freezeRecord({
+    layoutViewport,
     visualViewport,
     appContainer,
     gameplayContainer,
@@ -154,7 +296,7 @@ export function normalizeLayoutMeasurements(measurements) {
       height: Math.min(
         requestedBoardBudget.height,
         gameplayContainer.height,
-        safeVisualHeight
+        layoutViewport.height
       )
     },
     headerBlockSize: readNonNegativeNumber(
@@ -227,15 +369,70 @@ export function calculateBoardMetrics(boardBudget, constraintOverrides = {}) {
 export function calculateLayoutMetrics(measurements, constraintOverrides = {}) {
   const normalized = normalizeLayoutMeasurements(measurements);
   const constraints = normalizeConstraints(constraintOverrides);
-  const board = calculateBoardMetrics(normalized.boardBudget, constraints);
+  const verticalBudget = calculateVerticalBudget({
+    layoutViewportBlockSize: normalized.layoutViewport.height,
+    visualViewportBlockSize: normalized.visualViewport.height,
+    gameplayBlockSize: normalized.boardBudget.height,
+    headerBlockSize: normalized.headerBlockSize,
+    statusBlockSize: readNonNegativeNumber(
+      measurements,
+      'statusBlockSize',
+      'measurements'
+    ),
+    statusMinimumBlockSize: readNonNegativeNumber(
+      measurements,
+      'statusMinimumBlockSize',
+      'measurements',
+      constraints.stableStatusBlockSize
+    ),
+    actionRowBlockSize: readNonNegativeNumber(
+      measurements,
+      'actionRowBlockSize',
+      'measurements'
+    ),
+    keyboardBlockSize: readNonNegativeNumber(
+      measurements,
+      'keyboardBlockSize',
+      'measurements'
+    ),
+    verticalGap: readNonNegativeNumber(
+      measurements,
+      'verticalGap',
+      'measurements'
+    ),
+    additionalReservedBlockSize: readNonNegativeNumber(
+      measurements,
+      'additionalReservedBlockSize',
+      'measurements'
+    ),
+    safeAreaTop: normalized.safeArea.top,
+    safeAreaBottom: normalized.safeArea.bottom,
+    chatOpen: measurements.chatOpen,
+    nativeKeyboardLikelyOpen: measurements.nativeKeyboardLikelyOpen
+  }, constraints);
+
+  if (verticalBudget.availableBoardBlockSize <= 0) {
+    throw new RangeError('Vertical reservations leave no room for the board');
+  }
+
+  const boardBudget = Object.freeze({
+    width: normalized.boardBudget.width,
+    height: Math.min(
+      normalized.boardBudget.height,
+      verticalBudget.availableBoardBlockSize
+    )
+  });
+  const board = calculateBoardMetrics(boardBudget, constraints);
 
   return freezeRecord({
+    layoutViewport: normalized.layoutViewport,
     visualViewport: normalized.visualViewport,
     appContainer: normalized.appContainer,
     gameplayContainer: normalized.gameplayContainer,
-    boardBudget: normalized.boardBudget,
+    boardBudget,
     headerBlockSize: normalized.headerBlockSize,
     safeArea: normalized.safeArea,
+    verticalBudget,
     board
   });
 }
@@ -257,6 +454,8 @@ export function createLayoutMetricTokens(metrics) {
   assertObject(metrics.safeArea, 'metrics.safeArea');
 
   return Object.freeze({
+    '--layout-viewport-width': pixels(metrics.layoutViewport?.width || metrics.visualViewport.width),
+    '--layout-viewport-height': pixels(metrics.layoutViewport?.height || metrics.visualViewport.height),
     '--visual-viewport-width': pixels(metrics.visualViewport.width),
     '--visual-viewport-height': pixels(metrics.visualViewport.height),
     '--visual-viewport-offset-top': pixels(metrics.visualViewport.offsetTop),
@@ -268,6 +467,9 @@ export function createLayoutMetricTokens(metrics) {
     '--header-block-size': pixels(metrics.headerBlockSize),
     '--board-inline-size': pixels(metrics.board.inlineSize),
     '--board-block-size': pixels(metrics.board.blockSize),
+    '--available-board-block-size': pixels(
+      metrics.verticalBudget?.availableBoardBlockSize || metrics.board.availableBlockSize
+    ),
     '--tile-size': pixels(metrics.board.tileSize),
     '--tile-gap': pixels(metrics.board.tileGap),
     '--safe-bottom-space': pixels(metrics.safeArea.bottom)

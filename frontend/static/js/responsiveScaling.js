@@ -9,11 +9,24 @@
  * - Mobile-first approach with progressive enhancement
  */
 
+import { calculateVerticalBudget } from './layout/layoutMetricsEngine.js';
+
 /**
  * Clamp a number between a minimum and maximum value
  */
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
+}
+
+function measuredBlockSize(element) {
+  const height = element?.getBoundingClientRect?.().height;
+  return Number.isFinite(height) && height > 0 ? height : 0;
+}
+
+function computedPixels(element, property) {
+  if (!element || typeof getComputedStyle !== 'function') return 0;
+  const styles = getComputedStyle(element);
+  return parseFloat(styles?.[property] || styles?.getPropertyValue?.(property)) || 0;
 }
 
 /**
@@ -27,10 +40,22 @@ function clamp(n, a, b) {
 function tuneSizing(viewportSnapshot = null) {
   const root = document.documentElement;
   const titleBar = document.querySelector("#titleBar");
+  const gameColumn = document.querySelector("#gameColumn");
+  const inputArea = document.querySelector("#inputArea");
+  const message = document.querySelector("#message");
+  const keyboard = document.querySelector("#keyboard");
 
   // Viewport dimensions
   const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  const measuredLayoutHeight = viewportSnapshot?.layoutViewport?.height;
+  const layoutHeight = Number.isFinite(measuredLayoutHeight) && measuredLayoutHeight > 0
+    ? measuredLayoutHeight
+    : vh;
+  const measuredVisualHeight = viewportSnapshot?.visualViewport?.height;
+  const visualHeight = Number.isFinite(measuredVisualHeight) && measuredVisualHeight > 0
+    ? measuredVisualHeight
+    : layoutHeight;
 
   // ViewportService measures the content box of #centerPanel after the shell
   // has assigned app padding and any rail columns. Board width must use that
@@ -39,6 +64,10 @@ function tuneSizing(viewportSnapshot = null) {
   const gameplayWidth = Number.isFinite(measuredGameplayWidth) && measuredGameplayWidth > 0
     ? measuredGameplayWidth
     : document.querySelector('#centerPanel')?.clientWidth || vw;
+  const measuredGameplayHeight = viewportSnapshot?.gameplayContainer?.height;
+  const gameplayHeight = Number.isFinite(measuredGameplayHeight) && measuredGameplayHeight > 0
+    ? measuredGameplayHeight
+    : layoutHeight;
 
   // Vertical padding approximation from CSS variables (fallback if not computed)
   const styles = getComputedStyle(root);
@@ -58,8 +87,20 @@ function tuneSizing(viewportSnapshot = null) {
   // Height-driven tile size: ensure board + keyboard + header fits in viewport
   // Note: Keyboard uses flex layout with 3 rows. This calculation assumes a standard
   // 3-row QWERTY layout. If keyboard layout changes, this may need adjustment.
-  const headerH = titleBar ? titleBar.getBoundingClientRect().height : 60;
-  const breathing = clamp(vh * 0.03, 10, 24);
+  const headerH = measuredBlockSize(titleBar) || 60;
+  const statusH = measuredBlockSize(message);
+  const stableStatusH = Math.max(computedPixels(message, 'minHeight'), 20);
+  const actionRowH = measuredBlockSize(inputArea);
+  const gameColumnGap = computedPixels(gameColumn, 'rowGap')
+    || computedPixels(gameColumn, 'gap')
+    || parseFloat(styles.getPropertyValue('--component-gap'))
+    || gap;
+  const keyboardPadding = computedPixels(keyboard, 'paddingTop')
+    + computedPixels(keyboard, 'paddingBottom');
+  const safeArea = viewportSnapshot?.safeArea || {};
+  const safeAreaTop = Number.isFinite(safeArea.top) ? safeArea.top : 0;
+  const safeAreaBottom = Number.isFinite(safeArea.bottom) ? safeArea.bottom : 0;
+  const chatOpen = Boolean(document.body?.classList?.contains('chat-open'));
 
   // Start with width-constrained tile size
   let tile = clamp(tileByWidth, 34, 66);
@@ -70,9 +111,30 @@ function tuneSizing(viewportSnapshot = null) {
   function fits(t) {
     const keyH = clamp(Math.round(t * 0.80), 34, 56);
     const boardH = 6 * t + 5 * gap;
-    const kbH = 3 * keyH + 2 * kbGap;
-    const total = (padY * 2) + headerH + breathing + boardH + kbH;
-    return { ok: total <= vh, keyH, total };
+    const kbH = 3 * keyH + 2 * kbGap + keyboardPadding;
+    const verticalBudget = calculateVerticalBudget({
+      layoutViewportBlockSize: layoutHeight,
+      visualViewportBlockSize: visualHeight,
+      gameplayBlockSize: gameplayHeight,
+      headerBlockSize: headerH,
+      statusBlockSize: statusH,
+      statusMinimumBlockSize: stableStatusH,
+      actionRowBlockSize: actionRowH,
+      keyboardBlockSize: kbH,
+      verticalGap: gameColumnGap,
+      safeAreaTop,
+      safeAreaBottom,
+      additionalReservedBlockSize: padY * 2,
+      chatOpen,
+      nativeKeyboardLikelyOpen: viewportSnapshot?.nativeKeyboardLikelyOpen
+    });
+    const total = verticalBudget.reservedBlockSize + boardH;
+    return {
+      ok: boardH <= verticalBudget.availableBoardBlockSize,
+      keyH,
+      total,
+      verticalBudget
+    };
   }
 
   // Reduce tile until it fits (important for small phones)
@@ -88,6 +150,10 @@ function tuneSizing(viewportSnapshot = null) {
   const r = fits(tile);
   root.style.setProperty("--tile-size", tile + "px");
   root.style.setProperty("--key-h", r.keyH + "px");
+  root.style.setProperty(
+    "--available-board-block-size",
+    r.verticalBudget.availableBoardBlockSize + "px"
+  );
 
   // Calculate board width
   const boardWidth = tile * 5 + gap * 4;

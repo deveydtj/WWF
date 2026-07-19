@@ -686,19 +686,129 @@ console.log(JSON.stringify({
     )
     data = json.loads(result.stdout.strip())
     assert data['metrics']['gameplayContainer'] == {'width': 340, 'height': 650}
-    assert data['metrics']['boardBudget'] == {'width': 340, 'height': 650}
+    assert data['metrics']['boardBudget'] == {'width': 340, 'height': 546}
+    assert data['metrics']['verticalBudget']['viewportSource'] == 'layout-viewport'
+    assert data['metrics']['verticalBudget']['reservedBlockSize'] == 104
+    assert data['metrics']['verticalBudget']['reservations'] == {
+        'headerBlockSize': 60,
+        'statusBlockSize': 24,
+        'actionRowBlockSize': 0,
+        'keyboardBlockSize': 0,
+        'verticalGapsBlockSize': 0,
+        'safeAreaBlockSize': 20,
+        'additionalReservedBlockSize': 0,
+    }
     assert data['metrics']['board']['tileSize'] == 61
     assert data['metrics']['board']['inlineSize'] == 337
     assert data['metrics']['board']['limitingAxis'] == 'width'
     assert data['tokens']['--game-inline-size'] == '340px'
     assert data['tokens']['--board-inline-size'] == '337px'
     assert data['tokens']['--tile-size'] == '61px'
+    assert data['tokens']['--available-board-block-size'] == '546px'
     assert data['tokens']['--safe-bottom-space'] == '20px'
     assert data['inputsUnchanged'] is True
     assert data['metricsFrozen'] is True
     assert data['boardFrozen'] is True
     assert data['tokensFrozen'] is True
     assert data['hasDomGlobals'] is False
+
+
+def test_layout_metrics_engine_reserves_the_complete_vertical_stack():
+    script = """
+import { calculateVerticalBudget } from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+const base = {
+  layoutViewportBlockSize: 800,
+  visualViewportBlockSize: 500,
+  gameplayBlockSize: 700,
+  headerBlockSize: 60,
+  statusBlockSize: 0,
+  statusMinimumBlockSize: 24,
+  actionRowBlockSize: 48,
+  keyboardBlockSize: 150,
+  verticalGap: 12,
+  safeAreaTop: 10,
+  safeAreaBottom: 20
+};
+
+console.log(JSON.stringify({
+  normal: calculateVerticalBudget(base),
+  transientStatus: calculateVerticalBudget({ ...base, statusBlockSize: 12 }),
+  nativeKeyboard: calculateVerticalBudget({
+    ...base,
+    nativeKeyboardLikelyOpen: true
+  }),
+  chat: calculateVerticalBudget({ ...base, chatOpen: true })
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+
+    assert data['normal'] == {
+        'viewportSource': 'layout-viewport',
+        'viewportBlockSize': 800,
+        'gameplayBlockSize': 700,
+        'availableStackBlockSize': 700,
+        'availableBoardBlockSize': 340,
+        'reservedBlockSize': 360,
+        'reservations': {
+            'headerBlockSize': 60,
+            'statusBlockSize': 24,
+            'actionRowBlockSize': 48,
+            'keyboardBlockSize': 150,
+            'verticalGapsBlockSize': 48,
+            'safeAreaBlockSize': 30,
+            'additionalReservedBlockSize': 0,
+        },
+    }
+    assert data['transientStatus'] == data['normal']
+    assert data['nativeKeyboard']['viewportSource'] == 'visual-viewport'
+    assert data['nativeKeyboard']['viewportBlockSize'] == 500
+    assert data['nativeKeyboard']['availableBoardBlockSize'] == 140
+    assert data['chat'] == data['nativeKeyboard']
+
+
+def test_layout_metrics_engine_clamps_board_to_native_keyboard_visual_viewport():
+    script = """
+import { calculateLayoutMetrics } from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+const common = {
+  layoutViewport: { width: 390, height: 800 },
+  visualViewport: { width: 390, height: 420, offsetTop: 0, offsetLeft: 0 },
+  appContainer: { width: 390, height: 800 },
+  gameplayContainer: { width: 390, height: 700 },
+  headerBlockSize: 60,
+  statusBlockSize: 0,
+  statusMinimumBlockSize: 24,
+  actionRowBlockSize: 44,
+  keyboardBlockSize: 130,
+  verticalGap: 10,
+  safeArea: { top: 0, right: 0, bottom: 20, left: 0 }
+};
+
+console.log(JSON.stringify({
+  normal: calculateLayoutMetrics(common),
+  nativeKeyboard: calculateLayoutMetrics({
+    ...common,
+    nativeKeyboardLikelyOpen: true
+  })
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+
+    assert data['normal']['boardBudget']['height'] == 382
+    assert data['normal']['board']['tileSize'] == 57
+    assert data['nativeKeyboard']['verticalBudget']['viewportSource'] == 'visual-viewport'
+    assert data['nativeKeyboard']['boardBudget']['height'] == 102
+    assert data['nativeKeyboard']['board']['limitingAxis'] == 'height'
+    assert data['nativeKeyboard']['board']['tileSize'] == 10
 
 
 def test_responsive_scaling_uses_gameplay_container_instead_of_viewport_width():
