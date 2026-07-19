@@ -1,15 +1,14 @@
 import { updateBoard } from './board.js';
-import { OVERLAYS, isOverlayOpen } from './overlayState.js';
 import { INPUT_OUTCOMES } from './inputController.js';
 
 /**
  * Handle clicks or touches on the on-screen keyboard.
  *
  * @param {Event} event
- * @param {{guessInput:HTMLInputElement, inputController:import('./inputController.js').InputController}} opts
+ * @param {{inputController:import('./inputController.js').InputController}} opts
  * @returns {string}
  */
-export function handleVirtualKey(event, { guessInput, inputController }) {
+export function handleVirtualKey(event, { inputController }) {
   if (!event.target.classList.contains('key')) return INPUT_OUTCOMES.IGNORED;
 
   // Only prevent default if the event is cancelable to avoid browser intervention warnings
@@ -18,13 +17,8 @@ export function handleVirtualKey(event, { guessInput, inputController }) {
   }
 
   const outcome = inputController.routeKey(event.target.dataset.key, 'virtual-keyboard');
-  if (outcome !== INPUT_OUTCOMES.BLOCKED) {
-    // Don't focus guess input if chat is open and chat input might be focused
-    const chatOpen = isOverlayOpen(OVERLAYS.CHAT);
-    const activeChatInput = document.activeElement && document.activeElement.id === 'chatInput';
-    if (!chatOpen || !activeChatInput) {
-      guessInput.focus();
-    }
+  if (typeof event.target.focus === 'function') {
+    event.target.focus({ preventScroll: true });
   }
 
   return outcome;
@@ -45,7 +39,7 @@ export function setupTypingListeners({
   submitButton,
   inputController
 }) {
-  const guessState = { guessInput, inputController };
+  const guessState = { inputController };
 
   keyboardEl.addEventListener('click', (e) => handleVirtualKey(e, guessState));
   keyboardEl.addEventListener('touchstart', (e) => handleVirtualKey(e, guessState));

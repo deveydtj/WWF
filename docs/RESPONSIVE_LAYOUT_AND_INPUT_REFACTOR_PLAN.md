@@ -604,7 +604,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
   - Keep one mutation path for all input sources.
   - Return explicit outcomes such as `accepted`, `ignored`, `submitted`, or `blocked`.
 
-- [ ] **2.2 Remove virtual-key focus side effects.**
+- [x] **2.2 Remove virtual-key focus side effects.**
   - Delete `guessInput.focus()` from virtual-key handling.
   - After a virtual key, leave focus on the activated button or restore focus to a stable gameplay container.
   - Confirm that no native keyboard appears.

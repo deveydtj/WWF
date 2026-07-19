@@ -37,8 +37,6 @@ test.describe('Phase 0.5 expected responsive failures', () => {
     page,
     deterministicLobby,
   }) => {
-    test.fail(true, 'Baseline: virtual keys focus #guessInput and can summon the native keyboard.');
-
     await page.setViewportSize(PHONE_VIEWPORT);
     await deterministicLobby.openActive();
 

@@ -1289,7 +1289,8 @@ const { setupTypingListeners } = await import('./frontend/static/js/keyboard.js'
 function keyElement(key) {
   return {
     dataset: { key },
-    classList: { contains(name) { return name === 'key'; } }
+    classList: { contains(name) { return name === 'key'; } },
+    focus() { virtualKeyFocused = true; }
   };
 }
 
@@ -1298,13 +1299,14 @@ const keyboardEl = {
   addEventListener(type, handler) { this.listeners[type] = handler; },
   querySelector() { return null; }
 };
-let focused = false;
+let guessInputFocused = false;
+let virtualKeyFocused = false;
 const guessInput = {
   value: 'ZZZZZ',
   disabled: false,
   listeners: {},
   addEventListener(type, handler) { this.listeners[type] = handler; },
-  focus() { focused = true; }
+  focus() { guessInputFocused = true; }
 };
 const submitButton = { addEventListener(){} };
 
@@ -1344,7 +1346,15 @@ documentListeners.keydown({
   target: global.document.body
 });
 
-console.log(JSON.stringify({ currentGuess, input: guessInput.value, renderCount, prevented, focused, submitCount }));
+console.log(JSON.stringify({
+  currentGuess,
+  input: guessInput.value,
+  renderCount,
+  prevented,
+  guessInputFocused,
+  virtualKeyFocused,
+  submitCount
+}));
 """
     result = subprocess.run(
         ['node', '--input-type=module', '-e', script],
@@ -1356,7 +1366,8 @@ console.log(JSON.stringify({ currentGuess, input: guessInput.value, renderCount,
         'input': 'CRAN',
         'renderCount': 3,
         'prevented': True,
-        'focused': True,
+        'guessInputFocused': False,
+        'virtualKeyFocused': True,
         'submitCount': 0
     }
 
