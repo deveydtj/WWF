@@ -28,7 +28,6 @@ import { initializeResponsiveScaling, recalculateScaling } from './responsiveSca
 
 // Expose repositionResetButton to global scope for debugging and manual calls
 window.repositionResetButton = repositionResetButton;
-import { updateInputVisibility } from './uiNotifications.js';
 import { updateHintBadge } from './hintBadge.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { InputController } from './inputController.js';
@@ -454,7 +453,6 @@ class AppInitializer {
         // Layout manager handles the layout detection automatically
         // No need to call applyLayoutMode()
         updatePanelVisibility();
-        updateInputVisibility();
         
         this._handleScalingOnResize();
         setupMobileLeaderboard();
@@ -548,7 +546,6 @@ class AppInitializer {
       
       // Layout is automatically detected by LayoutManager
       updatePanelVisibility(); // Update panel visibility
-      updateInputVisibility();
       
       this._handleScalingOnResize();
       setupMobileLeaderboard();
@@ -586,8 +583,6 @@ class AppInitializer {
     console.log('🔧 Calling repositionResetButton from _initializePanelsAndLayout');
     repositionResetButton();
     renderEmojiStamps([]);
-    
-    updateInputVisibility();
     
     // Show panels if screen is large enough and they have content
     updatePanelVisibility();

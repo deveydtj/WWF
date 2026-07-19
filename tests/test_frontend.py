@@ -264,6 +264,17 @@ def test_hold_to_reset_elements_exist():
     assert '<span id="holdResetText"' in text
     assert '<span id="holdResetProgress"' in text
 
+
+def test_input_visibility_is_profile_owned_without_legacy_reset_toggling():
+    initializer = (SRC_DIR / 'appInitializer.js').read_text(encoding='utf-8')
+    notifications = (SRC_DIR / 'uiNotifications.js').read_text(encoding='utf-8')
+
+    assert 'updateInputVisibility' not in initializer
+    assert 'updateInputVisibility' not in notifications
+    assert "getElementById('resetButton')" not in notifications
+    assert "guessInput.style.display" not in notifications
+    assert "holdReset.style.display" not in notifications
+
 def test_lobby_header_elements_exist():
     text = GAME.read_text(encoding='utf-8')
     assert '<div id="lobbyHeader"' in text

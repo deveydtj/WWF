@@ -7,24 +7,6 @@ import { playClick } from './audioManager.js';
 import { isMobileView } from './utils.js';
 import { getMyEmoji } from './emoji.js';
 
-function updateInputVisibility() {
-  const guessInput = document.getElementById('guessInput');
-  const resetButton = document.getElementById('resetButton');
-  
-  if (!guessInput || !resetButton) return;
-  
-  // Hide input and reset button when keyboard is showing to save space
-  const keyboardVisible = document.body.classList.contains('keyboard-showing');
-  
-  if (keyboardVisible) {
-    guessInput.style.display = 'none';
-    resetButton.style.display = 'none';
-  } else {
-    guessInput.style.display = '';
-    resetButton.style.display = '';
-  }
-}
-
 function showPointsDelta(delta) {
   if (delta === 0) return;
   
@@ -250,7 +232,6 @@ function hideNetworkError() {
 }
 
 export {
-  updateInputVisibility,
   showPointsDelta,
   showHintTooltip,
   hideHintTooltip,

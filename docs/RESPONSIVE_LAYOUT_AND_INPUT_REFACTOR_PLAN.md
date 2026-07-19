@@ -619,7 +619,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
   - On touch-first layouts, apply `hidden`, `aria-hidden`, and tab-order behavior through the profile.
   - Do not use `inputmode="none"` as the sole protection because browser support is inconsistent.
 
-- [ ] **2.5 Repair or remove `updateInputVisibility()`.**
+- [x] **2.5 Repair or remove `updateInputVisibility()`.**
   - Remove the invalid `#resetButton` dependency.
   - Prefer declarative profile rendering over direct inline `display` writes.
   - Ensure `#holdReset` is not accidentally hidden by legacy code.
