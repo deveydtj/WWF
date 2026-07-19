@@ -17,6 +17,7 @@ import { refreshOverlayStateForLayout } from './overlayState.js';
 import { initHintManager, updateHintState } from './hintManager.js';
 import { updateGlobalPlayerId } from './main.js';
 import { LayoutManager } from './layoutManager.js';
+import { installLayoutDiagnostics } from './layoutDiagnostics.js';
 import { 
   applyDarkModePreference, 
   repositionResetButton,
@@ -69,6 +70,7 @@ class AppInitializer {
     
     // Initialize layout manager (new deterministic layout system)
     this.layoutManager = new LayoutManager();
+    installLayoutDiagnostics(() => this.layoutManager.getCurrentLayoutState());
     console.log('[AppInitializer] Layout manager initialized:', this.layoutManager.getCurrentLayout());
     
     // Extract lobby code from URL
@@ -439,7 +441,6 @@ class AppInitializer {
         }
 
         this._updateGameTitle(); // Update title for phone/tablet/desktop
-        console.log('🔧 Calling repositionResetButton from resize handler');
         repositionResetButton();
         
         // Layout manager handles the layout detection automatically

@@ -118,7 +118,6 @@ function tuneSizing() {
   root.style.setProperty("--modal-max-height", modalMaxHeight + "px");
   root.style.setProperty("--modal-padding", modalPadding + "px");
 
-  console.log(`📐 Scaling applied: tile=${tile}px, keyH=${r.keyH}px, boardW=${boardWidth}px, scale=${scaleFactor.toFixed(2)}, modalW=${Math.min(modalMaxWidth, Math.round(vw * 0.90))}px`);
 }
 
 /**

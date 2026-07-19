@@ -249,6 +249,7 @@ const test = base.extend({
 
     await installLobbyRoutes(page, statesByCode);
     await page.addInitScript(() => {
+      window.__WORD_SQUAD_TEST_DIAGNOSTICS__ = true;
       localStorage.setItem('myEmoji', '🐶');
       localStorage.setItem('playerId', 'fixture-player');
       localStorage.setItem('soundEnabled', 'false');

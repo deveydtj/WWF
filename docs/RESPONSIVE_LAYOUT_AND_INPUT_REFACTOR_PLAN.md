@@ -516,7 +516,7 @@ Capture the current behavior and create reliable test fixtures before changing l
   - Seed history, definition, chat messages, and multiple players.
   - Seed both active-game and completed-game states.
 
-- [ ] **0.3 Add layout diagnostics for tests only.**
+- [x] **0.3 Add layout diagnostics for tests only.**
   - Expose the current layout profile and metrics behind a test/debug namespace.
   - Do not log every resize in production.
   - Include profile, panel capacity, board bounds, keyboard bounds, and visual viewport values.
