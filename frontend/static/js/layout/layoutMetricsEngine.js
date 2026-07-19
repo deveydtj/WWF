@@ -13,7 +13,19 @@ export const DEFAULT_LAYOUT_METRIC_CONSTRAINTS = Object.freeze({
   tileGap: 8,
   preferredTileMaximum: 66,
   stableStatusBlockSize: 24,
-  verticalGapCount: 4
+  verticalGapCount: 4,
+  modalBoardInlineRatio: 1.1,
+  modalInlineMinimum: 280,
+  modalInlineMaximum: 560,
+  modalBlockMinimum: 300,
+  modalBlockMaximum: 700,
+  modalViewportInlineRatio: 0.9,
+  modalViewportBlockRatio: 0.85,
+  modalPaddingTileRatio: 0.4,
+  modalPaddingMinimum: 16,
+  modalPaddingMaximum: 28,
+  modalCloseControlSize: 44,
+  modalCloseControlGap: 12
 });
 
 function assertObject(value, name) {
@@ -49,6 +61,10 @@ function readPositiveInteger(source, field, sourceName) {
 function round(value, precision = 4) {
   const factor = 10 ** precision;
   return Math.round(value * factor) / factor;
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
 }
 
 function freezeRecord(record) {
@@ -132,8 +148,37 @@ function normalizeConstraints(overrides = {}) {
     'constraints'
   );
 
+  [
+    'modalBoardInlineRatio',
+    'modalInlineMinimum',
+    'modalInlineMaximum',
+    'modalBlockMinimum',
+    'modalBlockMaximum',
+    'modalViewportInlineRatio',
+    'modalViewportBlockRatio',
+    'modalPaddingTileRatio',
+    'modalPaddingMinimum',
+    'modalPaddingMaximum',
+    'modalCloseControlSize',
+    'modalCloseControlGap'
+  ].forEach((field) => readPositiveNumber(constraints, field, 'constraints'));
+
   if (!Number.isInteger(constraints.verticalGapCount)) {
     throw new TypeError('constraints.verticalGapCount must be a non-negative integer');
+  }
+
+  if (constraints.modalInlineMinimum > constraints.modalInlineMaximum) {
+    throw new RangeError('constraints modal inline minimum cannot exceed its maximum');
+  }
+  if (constraints.modalBlockMinimum > constraints.modalBlockMaximum) {
+    throw new RangeError('constraints modal block minimum cannot exceed its maximum');
+  }
+  if (constraints.modalPaddingMinimum > constraints.modalPaddingMaximum) {
+    throw new RangeError('constraints modal padding minimum cannot exceed its maximum');
+  }
+  if (constraints.modalViewportInlineRatio > 1
+    || constraints.modalViewportBlockRatio > 1) {
+    throw new RangeError('constraints modal viewport ratios cannot exceed 1');
   }
 
   return Object.freeze(constraints);
@@ -363,6 +408,91 @@ export function calculateBoardMetrics(boardBudget, constraintOverrides = {}) {
 }
 
 /**
+ * Calculate the shared bounds for modal shells from the visual viewport and
+ * the rendered board. Minimum preferred sizes are deliberately subordinate to
+ * the visual viewport so a short or narrow screen can never push a dialog or
+ * its close control outside the visible area.
+ */
+export function calculateModalMetrics(
+  { visualViewport, safeArea = {}, board },
+  constraintOverrides = {}
+) {
+  const viewport = normalizeVisualViewport(visualViewport);
+  const normalizedSafeArea = normalizeSafeArea(safeArea);
+  assertObject(board, 'modalMeasurements.board');
+  const boardInlineSize = readPositiveNumber(
+    board,
+    'inlineSize',
+    'modalMeasurements.board'
+  );
+  const tileSize = readPositiveNumber(
+    board,
+    'tileSize',
+    'modalMeasurements.board'
+  );
+  const constraints = normalizeConstraints(constraintOverrides);
+  const safeInlineSize = viewport.width
+    - normalizedSafeArea.left
+    - normalizedSafeArea.right;
+  const safeBlockSize = viewport.height
+    - normalizedSafeArea.top
+    - normalizedSafeArea.bottom;
+
+  if (safeInlineSize <= 0 || safeBlockSize <= 0) {
+    throw new RangeError('Safe areas must leave room for modal content');
+  }
+
+  const preferredInlineSize = clamp(
+    Math.round(boardInlineSize * constraints.modalBoardInlineRatio),
+    constraints.modalInlineMinimum,
+    constraints.modalInlineMaximum
+  );
+  const preferredBlockSize = clamp(
+    Math.round(safeBlockSize * constraints.modalViewportBlockRatio),
+    constraints.modalBlockMinimum,
+    constraints.modalBlockMaximum
+  );
+  const maxInlineSize = Math.max(1, Math.min(
+    preferredInlineSize,
+    Math.floor(safeInlineSize * constraints.modalViewportInlineRatio)
+  ));
+  const maxBlockSize = Math.max(1, Math.min(
+    preferredBlockSize,
+    Math.floor(safeBlockSize * constraints.modalViewportBlockRatio)
+  ));
+  const padding = Math.min(
+    maxInlineSize / 2,
+    maxBlockSize / 2,
+    clamp(
+      Math.round(tileSize * constraints.modalPaddingTileRatio),
+      constraints.modalPaddingMinimum,
+      constraints.modalPaddingMaximum
+    )
+  );
+  const closeControlReserve = Math.min(
+    maxInlineSize,
+    constraints.modalCloseControlSize + constraints.modalCloseControlGap
+  );
+
+  return freezeRecord({
+    maxInlineSize: round(maxInlineSize),
+    maxBlockSize: round(maxBlockSize),
+    contentMaxBlockSize: round(Math.max(0, maxBlockSize - (padding * 2))),
+    padding: round(padding),
+    closeControlSize: constraints.modalCloseControlSize,
+    closeControlReserve: round(closeControlReserve),
+    visualViewportCenter: {
+      inline: round(viewport.offsetLeft + (viewport.width / 2)),
+      block: round(viewport.offsetTop + (viewport.height / 2))
+    },
+    safeViewport: {
+      inlineSize: round(safeInlineSize),
+      blockSize: round(safeBlockSize)
+    }
+  });
+}
+
+/**
  * Turn normalized browser measurements into immutable numeric layout metrics.
  * No CSS strings or DOM state are involved at this stage.
  */
@@ -423,6 +553,11 @@ export function calculateLayoutMetrics(measurements, constraintOverrides = {}) {
     )
   });
   const board = calculateBoardMetrics(boardBudget, constraints);
+  const modal = calculateModalMetrics({
+    visualViewport: normalized.visualViewport,
+    safeArea: normalized.safeArea,
+    board
+  }, constraints);
 
   return freezeRecord({
     layoutViewport: normalized.layoutViewport,
@@ -433,12 +568,30 @@ export function calculateLayoutMetrics(measurements, constraintOverrides = {}) {
     headerBlockSize: normalized.headerBlockSize,
     safeArea: normalized.safeArea,
     verticalBudget,
-    board
+    board,
+    modal
   });
 }
 
 function pixels(value) {
   return `${round(value)}px`;
+}
+
+/** Serialize modal metrics into the one shared set of CSS sizing tokens. */
+export function createModalMetricTokens(modalMetrics) {
+  assertObject(modalMetrics, 'modalMetrics');
+  assertObject(modalMetrics.visualViewportCenter, 'modalMetrics.visualViewportCenter');
+
+  return Object.freeze({
+    '--modal-max-inline-size': pixels(modalMetrics.maxInlineSize),
+    '--modal-max-block-size': pixels(modalMetrics.maxBlockSize),
+    '--modal-content-max-block-size': pixels(modalMetrics.contentMaxBlockSize),
+    '--modal-padding': pixels(modalMetrics.padding),
+    '--modal-close-control-size': pixels(modalMetrics.closeControlSize),
+    '--modal-close-control-reserve': pixels(modalMetrics.closeControlReserve),
+    '--modal-viewport-center-inline': pixels(modalMetrics.visualViewportCenter.inline),
+    '--modal-viewport-center-block': pixels(modalMetrics.visualViewportCenter.block)
+  });
 }
 
 /**
@@ -451,6 +604,7 @@ export function createLayoutMetricTokens(metrics) {
   assertObject(metrics.appContainer, 'metrics.appContainer');
   assertObject(metrics.gameplayContainer, 'metrics.gameplayContainer');
   assertObject(metrics.board, 'metrics.board');
+  assertObject(metrics.modal, 'metrics.modal');
   assertObject(metrics.safeArea, 'metrics.safeArea');
 
   return Object.freeze({
@@ -472,6 +626,7 @@ export function createLayoutMetricTokens(metrics) {
     ),
     '--tile-size': pixels(metrics.board.tileSize),
     '--tile-gap': pixels(metrics.board.tileGap),
-    '--safe-bottom-space': pixels(metrics.safeArea.bottom)
+    '--safe-bottom-space': pixels(metrics.safeArea.bottom),
+    ...createModalMetricTokens(metrics.modal)
   });
 }

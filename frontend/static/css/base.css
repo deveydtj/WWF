@@ -100,15 +100,16 @@
   --visual-viewport-safe-height: calc(var(--visual-viewport-height) - var(--viewport-safe-area-top) - var(--viewport-safe-area-bottom));
   --keyboard-safe-height: calc(var(--visual-viewport-safe-height) - env(keyboard-inset-height, 0px));
   
-  /* Modal / popup sizing — CSS baseline fallback values.
-   * These tokens are overridden at runtime by responsiveScaling.js so that
-   * card modals remain proportional to the board across all viewports.
-   * --modal-max-width  : maximum width; JS clamps between 280px–560px then 90vw
-   * --modal-max-height : maximum height; JS clamps between 300px–700px
-   * --modal-padding    : inner padding for modal content areas */
-  --modal-max-width: min(90vw, 512px);
-  --modal-max-height: min(90vh, 700px);
+  /* LayoutMetricsEngine replaces these modal fallbacks with visual-viewport
+   * and board-proportional pixel values during the first layout pass. */
+  --modal-max-inline-size: min(90vw, 512px);
+  --modal-max-block-size: min(85vh, 700px);
+  --modal-content-max-block-size: calc(var(--modal-max-block-size) - 40px);
   --modal-padding: 20px;
+  --modal-close-control-size: 44px;
+  --modal-close-control-reserve: 56px;
+  --modal-viewport-center-inline: 50vw;
+  --modal-viewport-center-block: 50vh;
 
   /* Touch and accessibility */
   --min-touch-target: 44px;

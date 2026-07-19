@@ -339,7 +339,10 @@
 
   #panelBackdrop {
     position: fixed;
-    inset: 0;
+    top: var(--visual-viewport-offset-top);
+    left: var(--visual-viewport-offset-left);
+    width: var(--visual-viewport-width);
+    height: var(--visual-viewport-height);
     background: rgba(0, 0, 0, 0.33);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -370,15 +373,15 @@
   #definitionBox,
   #chatBox {
     position: fixed;
-    top: 50%;
-    left: 50%;
+    top: var(--modal-viewport-center-block);
+    left: var(--modal-viewport-center-inline);
     transform: translate(-50%, -50%) scale(0.95);
-    width: calc(100% - 40px);
-    max-width: 480px;
-    max-height: min(80dvh, 600px);
+    width: var(--modal-max-inline-size);
+    max-width: var(--modal-max-inline-size);
+    max-height: var(--modal-max-block-size);
     background: var(--bg-color);
     border-radius: 20px;
-    padding: var(--pad-x);
+    padding: var(--modal-padding);
     box-shadow:
       0 8px 32px var(--shadow-color-dark),
       0 0 0 3px var(--shadow-color-light);
@@ -407,15 +410,23 @@
   #historyBox {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
 
   /* Definition Panel */
   #definitionBox {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
+
+  #historyList,
+  #definitionText {
+    min-height: 0;
+    max-height: var(--modal-content-max-block-size);
+    padding-inline-end: var(--modal-close-control-reserve);
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -462,8 +473,8 @@
     position: absolute;
     top: 12px;
     right: 12px;
-    width: 44px;
-    height: 44px;
+    width: var(--modal-close-control-size);
+    height: var(--modal-close-control-size);
     font-size: 20px;
     z-index: calc(var(--z-panel-overlay) + 1);
   }
@@ -476,24 +487,22 @@
   
   #playerSidebar {
     position: fixed;
-    top: 50%;
-    left: 50%;
+    top: var(--modal-viewport-center-block);
+    left: var(--modal-viewport-center-inline);
     transform: translate(-50%, -50%) scale(0.95);
-    width: calc(100% - 40px);
-    max-width: 480px;
-    max-height: min(80dvh, 600px);
+    width: var(--modal-max-inline-size);
+    max-width: var(--modal-max-inline-size);
+    max-height: var(--modal-max-block-size);
     background: var(--bg-color);
     border-radius: 20px;
-    padding: var(--pad-x);
-    padding-top: calc(var(--pad-x) + 8px);
+    padding: var(--modal-padding);
     box-shadow:
       0 8px 32px var(--shadow-color-dark),
       0 0 0 3px var(--shadow-color-light);
     z-index: var(--z-panel-overlay);
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
     visibility: hidden;
     opacity: 0;
     transition: transform 0.25s ease-out, opacity 0.25s ease-out, visibility 0s 0.25s;
@@ -513,10 +522,19 @@
     position: absolute;
     top: clamp(8px, 1.5vw, 12px); /* Smooth transition */
     right: clamp(8px, 1.5vw, 12px); /* Smooth transition */
-    width: 44px;
-    height: 44px;
+    width: var(--modal-close-control-size);
+    height: var(--modal-close-control-size);
     font-size: clamp(18px, 4vw, 20px); /* Smooth transition */
     z-index: calc(var(--z-panel-overlay) + 1);
+  }
+
+  #playerList {
+    min-height: 0;
+    max-height: var(--modal-content-max-block-size);
+    padding-inline-end: var(--modal-close-control-reserve);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   
   /* ─────────────────────────────────
@@ -526,13 +544,13 @@
   /* Options Menu */
   #optionsMenu {
     position: fixed;
-    top: 50%;
-    left: 50%;
+    top: var(--modal-viewport-center-block);
+    left: var(--modal-viewport-center-inline);
     transform: translate(-50%, -50%);
-    width: calc(100% - 32px);
-    max-width: 320px;
-    max-height: calc(var(--visual-viewport-safe-height) - 100px);
-    overflow-y: auto;
+    width: var(--modal-max-inline-size);
+    max-width: var(--modal-max-inline-size);
+    max-height: var(--modal-max-block-size);
+    overflow: hidden;
     z-index: var(--z-options-menu);
     padding: var(--pad-x); /* Use token */
     display: flex;
@@ -562,16 +580,18 @@
   /* Mobile Menu Popup */
   #mobileMenuPopup {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: var(--visual-viewport-offset-top);
+    left: var(--visual-viewport-offset-left);
+    width: var(--visual-viewport-width);
+    height: var(--visual-viewport-height);
     background: rgba(0, 0, 0, 0.5);
     z-index: var(--z-mobile-menu);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    padding-top: 60px;
+    padding: var(--viewport-safe-area-top) var(--viewport-safe-area-right)
+      var(--viewport-safe-area-bottom) var(--viewport-safe-area-left);
+    box-sizing: border-box;
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -587,13 +607,15 @@
   
   #mobileMenuBox {
     background: var(--bg-color);
-    width: calc(100% - 32px);
-    max-width: 360px;
-    max-height: calc(var(--visual-viewport-safe-height) - 120px);
-    overflow-y: auto;
+    width: min(100%, var(--modal-max-inline-size));
+    max-width: var(--modal-max-inline-size);
+    max-height: var(--modal-max-block-size);
+    overflow: hidden;
     border-radius: 16px;
     padding: 16px;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
   
   #mobileMenuClose {
@@ -610,6 +632,11 @@
     flex-direction: column;
     gap: 8px;
     margin-top: 40px;
+    min-height: 0;
+    max-height: var(--modal-content-max-block-size);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   
   .mobile-menu-item {
@@ -712,10 +739,7 @@
     padding-bottom: calc(180px + env(keyboard-inset-height, 0px));
   }
   
-  /* Scrollable containers - card modals use min(80dvh, 600px) from their base
-   * definition; this rule previously capped full-screen panels to the real
-   * viewport height. For card modals, dvh already tracks the dynamic viewport
-   * so no additional override is needed here. */
+  /* Modal shells remain fixed; their dedicated content regions own scrolling. */
   
   /* ─────────────────────────────────
      Toast Notifications - Avoid Keyboard

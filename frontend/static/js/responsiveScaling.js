@@ -9,7 +9,11 @@
  * - Mobile-first approach with progressive enhancement
  */
 
-import { calculateVerticalBudget } from './layout/layoutMetricsEngine.js';
+import {
+  calculateModalMetrics,
+  calculateVerticalBudget,
+  createModalMetricTokens
+} from './layout/layoutMetricsEngine.js';
 
 /**
  * Clamp a number between a minimum and maximum value
@@ -180,17 +184,31 @@ function tuneSizing(viewportSnapshot = null) {
   root.style.setProperty("--current-scale-factor", scaleFactor);
   root.style.setProperty("--current-tile-size", tile + "px");
 
-  // Modal / popup sizing tokens — owned by this scaling engine so that card
-  // modals stay proportional to the board and always fit the viewport.
-  // --modal-max-width  : 110% of board width, capped at 560px and 90vw (smallest wins)
-  // --modal-max-height : 85% of viewport height, clamped between 300px and 700px
-  // --modal-padding    : scales gently with tile size
-  const modalMaxWidth = clamp(Math.round(boardWidth * 1.10), 280, 560);
-  const modalMaxHeight = clamp(Math.round(vh * 0.85), 300, 700);
-  const modalPadding = clamp(Math.round(tile * 0.40), 16, 28);
-  root.style.setProperty("--modal-max-width", Math.min(modalMaxWidth, Math.round(vw * 0.90)) + "px");
-  root.style.setProperty("--modal-max-height", modalMaxHeight + "px");
-  root.style.setProperty("--modal-padding", modalPadding + "px");
+  // Modal metrics share the pure engine with the board. In particular, they
+  // use the visual viewport (including its pan offset) so native keyboards and
+  // browser chrome cannot leave a close control outside the visible bounds.
+  const measuredVisualWidth = viewportSnapshot?.visualViewport?.width;
+  const visualWidth = Number.isFinite(measuredVisualWidth) && measuredVisualWidth > 0
+    ? measuredVisualWidth
+    : vw;
+  const modalMetrics = calculateModalMetrics({
+    visualViewport: {
+      width: visualWidth,
+      height: visualHeight,
+      offsetTop: viewportSnapshot?.visualViewport?.offsetTop || 0,
+      offsetLeft: viewportSnapshot?.visualViewport?.offsetLeft || 0
+    },
+    safeArea: {
+      top: safeAreaTop,
+      right: Number.isFinite(safeArea.right) ? safeArea.right : 0,
+      bottom: safeAreaBottom,
+      left: Number.isFinite(safeArea.left) ? safeArea.left : 0
+    },
+    board: { inlineSize: boardWidth, tileSize: tile }
+  });
+  Object.entries(createModalMetricTokens(modalMetrics)).forEach(([property, value]) => {
+    root.style.setProperty(property, value);
+  });
 
 }
 

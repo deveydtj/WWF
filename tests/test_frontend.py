@@ -196,10 +196,11 @@ def test_side_panels_centered_and_limited_in_tablet_mode():
     # mobile-layout.css positions panels as centered overlays using translate(-50%, -50%)
     assert 'position: fixed;' in css
     assert 'transform: translate(-50%, -50%)' in css
-    # Panels have a bounded max-width to stay comfortable in the viewport
-    assert 'max-width: 480px' in css
-    # Panels have a bounded max-height using dynamic viewport units
-    assert 'max-height: min(80dvh' in css
+    # Panels consume the shared metrics-engine bounds.
+    assert 'max-width: var(--modal-max-inline-size)' in css
+    assert 'max-height: var(--modal-max-block-size)' in css
+    assert 'top: var(--modal-viewport-center-block)' in css
+    assert 'left: var(--modal-viewport-center-inline)' in css
 
 
 def test_popups_fill_viewport():
@@ -225,8 +226,8 @@ def test_side_panels_fixed_to_bottom_in_phone_mode():
     css = read_css()
     patterns = [
         r"@media \(max-width: 900px\)[\s\S]*?#historyBox,?\s*\n\s*#definitionBox,?\s*\n\s*#chatBox\s*\{[^}]*position: fixed;",
-        r"@media \(max-width: 900px\)[\s\S]*?top: 50%",
-        r"@media \(max-width: 900px\)[\s\S]*?left: 50%",
+        r"@media \(max-width: 900px\)[\s\S]*?top: var\(--modal-viewport-center-block\)",
+        r"@media \(max-width: 900px\)[\s\S]*?left: var\(--modal-viewport-center-inline\)",
     ]
     for pattern in patterns:
         assert re.search(pattern, css, flags=re.DOTALL), f"Pattern not found: {pattern}"
@@ -811,6 +812,64 @@ console.log(JSON.stringify({
     assert data['nativeKeyboard']['board']['tileSize'] == 10
 
 
+def test_layout_metrics_engine_consolidates_modal_metrics_without_dom():
+    script = """
+import {
+  calculateModalMetrics,
+  createModalMetricTokens
+} from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+const metrics = calculateModalMetrics({
+  visualViewport: {
+    width: 320,
+    height: 180,
+    offsetTop: 12,
+    offsetLeft: 4
+  },
+  safeArea: { top: 0, right: 0, bottom: 0, left: 0 },
+  board: { inlineSize: 294, tileSize: 50 }
+});
+
+console.log(JSON.stringify({
+  metrics,
+  tokens: createModalMetricTokens(metrics),
+  metricsFrozen: Object.isFrozen(metrics),
+  centerFrozen: Object.isFrozen(metrics.visualViewportCenter),
+  hasDomGlobals: typeof document !== 'undefined' || typeof window !== 'undefined'
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+
+    assert data['metrics'] == {
+        'maxInlineSize': 288,
+        'maxBlockSize': 153,
+        'contentMaxBlockSize': 113,
+        'padding': 20,
+        'closeControlSize': 44,
+        'closeControlReserve': 56,
+        'visualViewportCenter': {'inline': 164, 'block': 102},
+        'safeViewport': {'inlineSize': 320, 'blockSize': 180},
+    }
+    assert data['tokens'] == {
+        '--modal-max-inline-size': '288px',
+        '--modal-max-block-size': '153px',
+        '--modal-content-max-block-size': '113px',
+        '--modal-padding': '20px',
+        '--modal-close-control-size': '44px',
+        '--modal-close-control-reserve': '56px',
+        '--modal-viewport-center-inline': '164px',
+        '--modal-viewport-center-block': '102px',
+    }
+    assert data['metrics']['maxBlockSize'] < 180
+    assert data['metricsFrozen'] is True
+    assert data['centerFrozen'] is True
+    assert data['hasDomGlobals'] is False
+
+
 def test_responsive_scaling_uses_gameplay_container_instead_of_viewport_width():
     script = """
 import { recalculateScaling } from './frontend/static/js/responsiveScaling.js';
@@ -856,6 +915,9 @@ console.log(JSON.stringify(properties));
     assert properties['--keyboard-key-height'] == '40px'
     assert properties['--keyboard-row-gap'] == '9px'
     assert properties['--keyboard-inline-gap'] == '9px'
+    assert properties['--modal-max-inline-size'] == '323px'
+    assert properties['--modal-max-block-size'] == '700px'
+    assert properties['--modal-padding'] == '20px'
 
 
 def test_keyboard_sizing_uses_layout_tokens_without_container_scaling():

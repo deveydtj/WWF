@@ -107,14 +107,25 @@
   box-shadow: 2px 2px 8px var(--shadow-color-dark),
               -2px -2px 8px var(--shadow-color-light);
   z-index: var(--z-options-menu);
-  max-width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: var(--modal-max-inline-size);
+  max-height: var(--modal-max-block-size);
+  overflow: hidden;
 }
 
 /* Ensure close button is properly positioned and visible */
 #optionsMenu .close-btn {
   z-index: calc(var(--z-options-menu) + 1);
+}
+
+#optionsMenuItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  max-height: var(--modal-content-max-block-size);
+  padding-inline-end: var(--modal-close-control-reserve);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 #optionsMenu button:not(.close-btn) {

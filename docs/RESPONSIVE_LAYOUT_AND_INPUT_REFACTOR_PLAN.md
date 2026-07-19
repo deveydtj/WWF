@@ -719,7 +719,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
   - Size keys with layout tokens.
   - Keep the rendered box and hit box identical.
 
-- [ ] **4.5 Consolidate modal metrics.**
+- [x] **4.5 Consolidate modal metrics.**
   - Set modal maximum inline/block sizes from visual viewport and board proportions.
   - Apply internal scrolling to content regions.
   - Keep close controls inside the visible bounds.

@@ -41,8 +41,8 @@
   z-index: var(--z-modal-content);
   pointer-events: auto;
   box-sizing: border-box;
-  max-width: var(--modal-max-width, min(90vw, 512px));
-  max-height: var(--modal-max-height, min(90vh, 700px));
+  max-width: var(--modal-max-inline-size);
+  max-height: var(--modal-max-block-size);
   overflow-y: auto;
 }
 
@@ -86,8 +86,8 @@
   padding: var(--modal-padding, 20px);
   text-align: center;
   box-sizing: border-box;
-  max-width: var(--modal-max-width, min(90vw, 512px));
-  max-height: var(--modal-max-height, min(90vh, 700px));
+  max-width: var(--modal-max-inline-size);
+  max-height: var(--modal-max-block-size);
   overflow-y: auto;
 }
 
@@ -122,8 +122,8 @@
   border-radius: 12px;
   padding: var(--modal-padding, 20px);
   box-sizing: border-box;
-  max-width: var(--modal-max-width, min(90vw, 512px));
-  max-height: var(--modal-max-height, min(90vh, 700px));
+  max-width: var(--modal-max-inline-size);
+  max-height: var(--modal-max-block-size);
   overflow-y: auto;
   text-align: left;
 }
@@ -159,7 +159,7 @@
   padding: var(--modal-padding, 20px);
   text-align: center;
   box-sizing: border-box;
-  max-width: var(--modal-max-width, min(90vw, 512px));
+  max-width: var(--modal-max-inline-size);
 }
 
 #shareActions {
@@ -180,4 +180,71 @@
   box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
               inset -3px -3px 6px var(--inset-shadow-light);
   color: var(--text-color);
+}
+
+/* Shared visual-viewport bounds. The overlay itself follows the visible
+   viewport while each shell uses the metrics engine's board-proportional
+   inline size and visual-viewport block size. */
+#emojiModal,
+#closeCallPopup,
+#infoPopup,
+#shareModal {
+  top: var(--visual-viewport-offset-top);
+  left: var(--visual-viewport-offset-left);
+  right: auto;
+  bottom: auto;
+  width: var(--visual-viewport-width);
+  height: var(--visual-viewport-height);
+  padding: var(--viewport-safe-area-top) var(--viewport-safe-area-right)
+    var(--viewport-safe-area-bottom) var(--viewport-safe-area-left);
+  box-sizing: border-box;
+}
+
+#emojiModalBox,
+#closeCallBox,
+#infoBox,
+#shareBox {
+  width: min(100%, var(--modal-max-inline-size));
+  max-width: var(--modal-max-inline-size);
+  max-height: var(--modal-max-block-size);
+  padding: var(--modal-padding);
+  box-sizing: border-box;
+}
+
+/* Keep fixed shell controls in view; only potentially long content scrolls. */
+#emojiModalBox,
+#infoBox {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#emojiChoices,
+#infoContent {
+  min-height: 0;
+  max-height: var(--modal-content-max-block-size);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#infoContent {
+  padding-inline-end: var(--modal-close-control-reserve);
+}
+
+#infoClose {
+  top: var(--modal-padding);
+  right: var(--modal-padding);
+  width: var(--modal-close-control-size);
+  height: var(--modal-close-control-size);
+}
+
+#closeCallBox,
+#shareBox {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#shareActions {
+  flex-wrap: wrap;
 }
