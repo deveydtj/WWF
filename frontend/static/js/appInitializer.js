@@ -10,7 +10,11 @@ import { loadHintState } from './hintState.js';
 import { GAME_NAME } from './config.js';
 import { StateManager, STATES } from './stateManager.js';
 import { initAudio, stopAllSounds, isSoundEnabled } from './audioManager.js';
-import { setupMobileLeaderboard, setupLeaderboardScrolling, renderEmojiStamps } from './leaderboardManager.js';
+import {
+  alignStampsWithBoardRows,
+  setupMobileLeaderboard,
+  renderEmojiStamps
+} from './leaderboardManager.js';
 import { initResetManager } from './resetManager.js';
 import { updatePanelVisibility } from './panelManager.js';
 import { refreshOverlayStateForLayout } from './overlayState.js';
@@ -43,6 +47,7 @@ class AppInitializer {
     this.mobileMenuManager = null;
     this.layoutManager = null;
     this.inputController = null;
+    this.unsubscribeViewportUpdates = null;
     
     // App state
     this.myEmoji = null;
@@ -437,63 +442,32 @@ class AppInitializer {
    * @private
    */
   _setupWindowEvents() {
-    // Debounced resize handler to prevent thrashing
-    let resizeTimeout;
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        const layoutState = this.layoutManager ? this.layoutManager.refresh() : null;
-        if (layoutState) {
-          refreshOverlayStateForLayout(layoutState);
-        }
-
-        this._updateGameTitle(); // Update title for phone/tablet/desktop
-        repositionResetButton();
-        
-        // Layout manager handles the layout detection automatically
-        // No need to call applyLayoutMode()
-        updatePanelVisibility();
-        
-        this._handleScalingOnResize();
-        setupMobileLeaderboard();
-        
-        const latestState = this.gameStateManager.getLatestState();
-        if (latestState) {
-          renderEmojiStamps(latestState.guesses);
-        }
-      }, 150); // Debounce for 150ms
-    };
-    
-    window.addEventListener('resize', handleResize);
-
-    // Viewport handlers
-    updateVH();
-    window.addEventListener('resize', updateVH);
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', () => {
-        updateVH();
-        // Apply board scaling when keyboard appears/disappears using new system
-        setTimeout(() => recalculateScaling(), 50);
-      });
-    }
-
-    // Orientation change handlers
-    this._setupOrientationChangeHandlers();
-    
-    // Listen for layout changes from LayoutManager
-    document.addEventListener('layoutchange', (e) => {
-      console.log('[AppInitializer] Layout changed:', e.detail);
-      // Re-apply scaling when layout changes using new system
-      setTimeout(() => recalculateScaling(), 100);
-      refreshOverlayStateForLayout(e.detail.layoutState);
-      updatePanelVisibility();
-      setupMobileLeaderboard();
-    });
+    // LayoutManager subscribes first, so its state/profile are current before
+    // application layout effects run in this same scheduled update cycle.
+    this.unsubscribeViewportUpdates?.();
+    this.unsubscribeViewportUpdates = this.layoutManager.subscribeToViewport(
+      () => this._handleViewportUpdate()
+    );
 
     document.addEventListener('layoutprofilechange', (e) => {
       this._applyGuessFieldPresentation(e.detail.profile);
     });
+  }
+
+  /**
+   * Apply all viewport-dependent UI effects from the shared scheduler.
+   * @private
+   */
+  _handleViewportUpdate() {
+    const layoutState = this.layoutManager.getCurrentLayoutState();
+
+    refreshOverlayStateForLayout(layoutState);
+    this._updateGameTitle();
+    updateVH();
+    repositionResetButton();
+    updatePanelVisibility();
+    recalculateScaling();
+    alignStampsWithBoardRows();
   }
 
   /**
@@ -529,53 +503,6 @@ class AppInitializer {
   }
 
   /**
-   * Setup orientation change handlers
-   * @private
-   */
-  _setupOrientationChangeHandlers() {
-    let orientationTimeout;
-
-    const handleOrientationChange = () => {
-      const layoutState = this.layoutManager ? this.layoutManager.refresh() : null;
-      if (layoutState) {
-        refreshOverlayStateForLayout(layoutState);
-      }
-
-      this._updateGameTitle(); // Update title for phone/tablet/desktop
-      updateVH();
-      
-      // Layout is automatically detected by LayoutManager
-      updatePanelVisibility(); // Update panel visibility
-      
-      this._handleScalingOnResize();
-      setupMobileLeaderboard();
-      
-      const latestState = this.gameStateManager.getLatestState();
-      if (latestState) {
-        renderEmojiStamps(latestState.guesses);
-      }
-    };
-
-    // Delayed orientation change handling for iOS compatibility
-    // Use only the debounced version to prevent double execution
-    window.addEventListener('orientationchange', () => {
-      clearTimeout(orientationTimeout);
-      orientationTimeout = setTimeout(() => {
-        handleOrientationChange();
-      }, 300);
-    });
-  }
-
-  /**
-   * Handle scaling on resize/orientation change
-   * @private
-   */
-  _handleScalingOnResize() {
-    // Use the new responsive scaling system's recalculate function
-    recalculateScaling();
-  }
-
-  /**
    * Initialize panels and layout
    * @private
    */
@@ -583,6 +510,7 @@ class AppInitializer {
     console.log('🔧 Calling repositionResetButton from _initializePanelsAndLayout');
     repositionResetButton();
     renderEmojiStamps([]);
+    setupMobileLeaderboard();
     
     // Show panels if screen is large enough and they have content
     updatePanelVisibility();

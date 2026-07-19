@@ -11,7 +11,6 @@ import { closeOptionsMenu, showInfo, toggleDarkMode } from './optionsManager.js'
 import { toggleSound } from './audioManager.js';
 import { toggleHintSelection } from './hintManager.js';
 import { sendChatMessage } from './api.js';
-import { alignStampsWithBoardRows } from './leaderboardManager.js';
 import { LAYOUT_MODES } from './layoutModes.js';
 import { getCurrentLayoutState } from './layoutManager.js';
 import {
@@ -622,19 +621,6 @@ class EventListenersManager {
    * @private
    */
   _setupWindowEventListeners() {
-    // Enhanced resize handling to prevent animation conflicts
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      // Clear any pending timeouts to prevent animation conflicts during resize
-      clearTimeout(resizeTimeout);
-      
-      // Debounce resize events
-      resizeTimeout = setTimeout(() => {
-        // Re-align stamps with board rows after resize
-        alignStampsWithBoardRows();
-      }, 150);
-    });
-
     window.addEventListener('beforeunload', () => {
       if (this.networkManager) {
         this.networkManager.cleanup();

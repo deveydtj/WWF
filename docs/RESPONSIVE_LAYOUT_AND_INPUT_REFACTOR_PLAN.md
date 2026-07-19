@@ -668,7 +668,7 @@ Eliminate duplicate resize listeners, delayed recalculations, and competing view
   - Recalculate at most once per animation frame.
   - Prevent recursive ResizeObserver loops by comparing outputs before writing.
 
-- [ ] **3.3 Remove duplicate listeners.**
+- [x] **3.3 Remove duplicate listeners.**
   - Remove independent resize debounces from `responsiveScaling.js` and `appInitializer.js` after migration.
   - Remove delayed 50ms, 100ms, 150ms, and 300ms layout recalculations where the new scheduler replaces them.
   - Retain a targeted post-orientation stabilization only if tests prove a browser needs it.

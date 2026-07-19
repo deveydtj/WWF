@@ -181,3 +181,53 @@ test.describe('ViewportService', () => {
     expect(result.finalSnapshot.gameplayContainer.width).toBe(275);
   });
 });
+
+test.describe('viewport listener ownership', () => {
+  test('application layout modules rely on the shared viewport listeners', async ({
+    page,
+    deterministicLobby,
+  }) => {
+    await page.addInitScript(() => {
+      const nativeAddEventListener = EventTarget.prototype.addEventListener;
+      window.__viewportListenerRegistrations = [];
+
+      EventTarget.prototype.addEventListener = function trackedAddEventListener(
+        type,
+        listener,
+        options
+      ) {
+        if (['resize', 'orientationchange'].includes(type)) {
+          const stack = new Error().stack || '';
+          window.__viewportListenerRegistrations.push({
+            type,
+            target: this === window
+              ? 'window'
+              : (this === window.visualViewport ? 'visualViewport' : 'other'),
+            registrationSite: stack.split('\n')[2] || '',
+          });
+        }
+
+        return nativeAddEventListener.call(this, type, listener, options);
+      };
+    });
+
+    await deterministicLobby.openActive();
+
+    const registrations = await page.evaluate(() => window.__viewportListenerRegistrations);
+    const duplicateOwners = registrations.filter(({ registrationSite }) => [
+      'appInitializer.js',
+      'eventListenersManager.js',
+      'responsiveScaling.js',
+    ].some((fileName) => registrationSite.includes(fileName)));
+    const serviceRegistrations = registrations.filter(({ registrationSite }) => (
+      registrationSite.includes('viewportService.js')
+    ));
+
+    expect(duplicateOwners).toEqual([]);
+    expect(serviceRegistrations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'resize', target: 'window' }),
+      expect.objectContaining({ type: 'orientationchange', target: 'window' }),
+      expect.objectContaining({ type: 'resize', target: 'visualViewport' }),
+    ]));
+  });
+});

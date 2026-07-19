@@ -5,7 +5,7 @@
  * Key features:
  * - Dynamic viewport height calculation (dvh support)
  * - Tile and keyboard sizing that fits all content in viewport
- * - Efficient resize handling with debouncing
+ * - Sizing updates driven by the shared ViewportService scheduler
  * - Mobile-first approach with progressive enhancement
  */
 
@@ -124,7 +124,8 @@ function tuneSizing() {
  * Initialize responsive scaling system
  * 
  * Note: This function should only be called once during app initialization.
- * Multiple calls will result in duplicate event listeners.
+ * Viewport changes are owned by ViewportService; this module only calculates
+ * sizing when the application layout pipeline asks it to.
  */
 let isScalingInitialized = false;
 
@@ -151,19 +152,6 @@ export function initializeResponsiveScaling() {
     root.style.setProperty("--pad-y", "14px");
   }
 
-  // Add event listeners for resize and orientation change with debouncing
-  let resizeTimeout;
-  const debouncedResize = () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(tuneSizing, 150);
-  };
-  
-  window.addEventListener("resize", debouncedResize);
-  window.addEventListener("orientationchange", tuneSizing);
-
-  // Run initial sizing once on next frame after DOM layout
-  requestAnimationFrame(tuneSizing);
-  
   isScalingInitialized = true;
   console.log('✅ Responsive scaling initialized');
 }

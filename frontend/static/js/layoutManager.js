@@ -489,6 +489,16 @@ export class LayoutManager {
   getViewportSnapshot() {
     return this.viewportService.getSnapshot();
   }
+
+  /**
+   * Subscribe to the shared viewport update pipeline.
+   *
+   * Consumers use this instead of installing window, visualViewport, or
+   * orientation listeners of their own.
+   */
+  subscribeToViewport(callback, options = {}) {
+    return this.viewportService.subscribe(callback, options);
+  }
   
   /**
    * Get the legacy compact/desktop breakpoint value.
