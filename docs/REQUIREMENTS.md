@@ -12,12 +12,19 @@ overview and should be kept up to date as features evolve.
 - **Hard Mode:** Subsequent guesses must reuse green letters in the same
   positions and include all previously revealed green/yellow letters.
 - **Guess Input:**
-  - Desktop: text field limited to five alphabetic characters plus a submit
-    button.
-  - Phone: physical word input is hidden completely. The active board row is the
-    visible current guess, and word entry uses only the in-game on-screen
-    keyboard.
-  - Chat remains allowed to use the device keyboard on all screen sizes.
+  - `currentGuess` is the source of truth for the active guess and is rendered
+    directly on the active board row in every layout.
+  - The in-game keyboard remains available in every layout. It is required on
+    touch-first profiles and available by default on keyboard-first profiles.
+  - Physical keyboard input is accepted during active gameplay when focus is
+    not owned by a modal, input, textarea, or editable element.
+  - A visible text field may mirror `currentGuess` on keyboard-first profiles,
+    but game state must not depend on that field.
+  - On touch-first profiles, the word-entry text field is hidden and removed
+    from the tab order, and the in-game keyboard must not summon the native
+    device keyboard.
+  - Chat uses its own text field and may invoke the native device keyboard in
+    every layout.
   - Keyboard keys reflect feedback from prior guesses.
 - **Multiplayer:** Each player selects a unique emoji avatar. Selection is stored
   with `localStorage` and posted to the server. The emoji picker disables
@@ -26,21 +33,23 @@ overview and should be kept up to date as features evolve.
   current player's entry is scrolled into view. Inactive players (idle for more
   than five minutes) appear dimmed.
 - **History Panel:** Lists all guesses from all players with emoji, tile results,
-  and point changes. On phone and tablet it opens as a centered card modal; on
-  desktop it is a side rail.
+  and point changes. Its presentation is a centered card modal or a persistent
+  rail according to the measured panel capacity.
 - **Word Definition:** After the game ends, the definition of the correct word
   is displayed in a panel or centered card modal depending on layout.
 - **Reset:** If the game is over, a reset button instantly starts a new game. If
   the game is ongoing, the button must be held for two seconds before posting to
-  `/reset`. On phone layouts the reset control lives in the top header.
+  `/reset`. Compact-header profiles place the reset control in the top header.
 - **Close Call Notification:** When two players submit the winning word within two seconds of each other, display the difference in milliseconds between their submissions.
 - **Daily Double Bonus:** One random tile (not on the final row) contains a bonus. When a player turns it green, they may privately reveal one tile on the next row. Only that player sees the letter.
 - The client must display a persistent hint indicator whenever the player has an unused Daily Double bonus.
 
 ## 2. UI/UX
 
-- Responsive design for desktop, tablet, and phone. Desktop uses side rails;
-  phone and tablet use centered card modals for secondary panels.
+- Responsive design is driven by measured container space, visual viewport,
+  orientation, input capabilities, and user preference. Phone, tablet, laptop,
+  and desktop categories describe expected examples; they do not determine the
+  layout by themselves.
 - The top header includes the lobby code, leaderboard, reset control on phone,
   and primary actions. The title bar sits above the board content.
 - Soft "Neumorphic" visual style using inset and outset shadows.
@@ -63,87 +72,115 @@ overview and should be kept up to date as features evolve.
 
 ### 2.1. Layout System Architecture
 
-WordSquad uses a responsive layout system that adapts to phone, tablet, and
-desktop viewports while keeping the board as the primary visual focus.
+WordSquad uses a capability- and space-aware responsive layout system that keeps
+the board as the primary visual focus. Layout decisions must consider:
 
-**Layout Modes:**
-- **Phone Mode** (≤600px): Portrait-first single-column layout
-  - Gameplay is optimized only for portrait phone use
-  - The board is centered and acts as the visible current-guess surface
-  - The word input field is hidden completely
-  - The in-game keyboard is fixed within the phone gameplay layout
-  - History, definition, chat, players, options, share, and info use centered
-    card modals
-  - Reset is placed in the top header
+- Available app and gameplay-container width and height
+- Visual viewport size and offsets, including browser chrome and the native
+  keyboard
+- Pointer and hover capabilities
+- Orientation and aspect ratio
+- The space required by open panels
+- The user's persisted preference for the desktop in-game keyboard
 
-- **Tablet Mode** (601px-900px): Board-first single-column layout
-  - The board remains centered with generous touch spacing
-  - Secondary panels open as centered card modals
-  - Chat may still invoke the device keyboard when focused
-  - Panel sizing must remain comfortable within the viewport without relying on
-    slide-up sheets
+Viewport width or a phone, tablet, laptop, or desktop label must not determine
+the complete layout. The authoritative layout state separately defines density,
+interaction style, game flow, panel capacity and presentation, guess-field
+visibility, in-game-keyboard visibility, and header density.
 
-- **Desktop Mode** (>900px): Large-screen layout with persistent rails
-  - Full CSS Grid layout with dedicated rail areas for panel content
-  - Grid template areas: history | stamp | center | definition/chat
-  - History appears on the left rail
-  - Definition and chat occupy the right rail
-  - Automatic spacing and positioning are handled by CSS layout tokens
-  - Optimal panel width is maintained without crowding the board
+**Expected Product Profiles:**
+
+- **Compact phone:** Board-first vertical flow, compact header, hidden word-entry
+  field, required in-game keyboard, and modal secondary panels.
+- **Large or landscape phone:** Required in-game keyboard with a measured split
+  or compact vertical flow. Landscape gameplay must remain available and must
+  not be blocked by a rotate-device overlay.
+- **Tablet:** Touch-first or hybrid interaction with a required in-game keyboard.
+  Secondary panels default to modals; one rail is allowed only when measured
+  width and height preserve gameplay minimums.
+- **Constrained laptop or desktop window:** Keyboard-first or hybrid interaction,
+  an available in-game keyboard, and zero or one rail according to measured fit.
+- **Large desktop:** Keyboard-first interaction, an available in-game keyboard,
+  and up to two persistent rails when measured fit preserves the playable center.
+
+Two environments with the same viewport dimensions may receive different
+interaction profiles because their pointer and hover capabilities differ.
 
 **Panel System:**
-- **History Panel** (`#historyBox`): Shows guess history; left rail on desktop,
-  centered card modal on phone and tablet
-- **Definition Panel** (`#definitionBox`): Shows word definitions; right rail on
-  desktop, centered card modal on phone and tablet
-- **Chat Panel** (`#chatBox`): Real-time chat; right rail on desktop, centered
-  card modal on phone and tablet
+
+- **History Panel** (`#historyBox`): Shows guess history; preferred left rail
+  when rail capacity is available, otherwise a centered card modal
+- **Definition Panel** (`#definitionBox`): Shows word definitions; preferred
+  right rail when rail capacity is available, otherwise a centered card modal
+- **Chat Panel** (`#chatBox`): Real-time chat; preferred right rail when rail
+  capacity is available, otherwise a centered card modal
 - **Player Panel** (`#playerSidebar` or successor): Shows the full player roster;
-  popup/modal on smaller layouts and desktop panel or modal as needed
-- All panels support smooth transitions, accessible focus management, and proper
-  z-index hierarchy
-- Phone and tablet must not use sliding bottom sheets for these panels
+  preferred right rail when capacity is available, otherwise a centered card
+  modal
+- Panel capacity is `0`, `1`, or `2` and is determined from measured inline and
+  block space after preserving minimum gameplay and rail sizes.
+- Open state is independent of presentation and survives a resize or orientation
+  change when practical.
+- Only modal presentation uses a backdrop, focus trap, background inertness, and
+  `aria-modal="true"`. Rails use region/complementary semantics and do not trap
+  focus.
+- Compact and touch-first profiles must not use sliding bottom sheets for these
+  panels.
 
 **Technical Requirements:**
 - CSS-first layout rendering with minimal JavaScript state orchestration
-- Layout state must distinguish between phone, tablet, and desktop behavior
-- Grid template columns and rail areas are defined in responsive media queries
-- Popup and modal positioning must remain fully visible on smaller screens
-- Consistent behavior across layout mode changes during window resizing
+- JavaScript calculates only capability/profile state and metrics CSS cannot
+  reliably infer.
+- Panel-capacity decisions use measured width and height rather than a viewport
+  breakpoint alone.
+- Board sizing uses the measured gameplay container after rails and gutters are
+  assigned, not the full viewport width.
+- Popup and modal positioning uses visual-viewport bounds and safe areas and
+  remains fully visible with internal scrolling when necessary.
+- Resize and orientation changes preserve game state, current guess, and open
+  panel state while presentation adapts.
 
-### 2.2. Phone and Tablet Interaction Model
+### 2.2. Input and Orientation Model
 
-- Phone gameplay is portrait-only. The application may use best-effort browser
-  orientation locking where supported, but the layout is only required to be
-  production-ready in portrait phone orientation.
-- The active guess is rendered directly on the current board row on phone.
-- The physical word input field is hidden completely on phone layouts.
-- The in-game on-screen keyboard is the only input mechanism for word guesses on
-  phone layouts.
-- Chat is the only gameplay-adjacent feature that may still invoke the device
-  keyboard on phone and tablet.
-- Reset must be available in the top header on phone.
-- Phone and tablet secondary surfaces use centered card modals with blurred
-  backdrops rather than sliding bottom sheets.
-- The player experience on smaller layouts must show the full roster, not only
-  the current player summary.
+- The active guess is rendered directly on the current board row in every
+  layout.
+- Touch-first and hybrid profiles hide the word-entry field, remove it from the
+  tab order, and route word guesses through the shared state without invoking
+  the native keyboard.
+- The in-game keyboard is required and always reachable during active gameplay
+  on phones and tablets. It remains available and enabled on laptops and
+  desktops, where physical keyboard entry also works outside editable fields.
+- Chat uses its own input and may invoke the native device keyboard. While chat
+  is active on a touch device, gameplay controls must remain clear of the visual
+  viewport and closing chat must not summon the native keyboard again.
+- Compact-header profiles keep reset available in the top header.
+- Compact secondary surfaces use centered card modals with blurred backdrops
+  rather than sliding bottom sheets. A tablet or constrained desktop may use a
+  rail only when the measured fit passes.
+- Compact player presentation shows the full roster, not only the current-player
+  summary.
+- Both portrait and landscape gameplay are production requirements. Compact
+  portrait uses a vertical board-first flow. Compact landscape uses a measured
+  board/keyboard split when both regions meet their minimums, otherwise a compact
+  vertical flow with controlled internal scrolling.
+- Orientation changes preserve the current guess, active panel, and game state.
 
 ### 2.3. Layout and Scaling Refactor Phases
 
 1. Define the final UX contract in the requirements and align naming around
-   phone, tablet, and desktop layouts.
+   capability, density, flow, and panel-capacity profiles.
 2. Replace mixed layout state with one authoritative layout state and one
    authoritative overlay state model.
 3. Replace word-entry dependence on the physical input field with a shared
    `currentGuess` state rendered onto the board row.
 4. Consolidate board, keyboard, spacing, and popup sizing into one responsive
    scaling system that owns the layout CSS variables.
-5. Convert phone and tablet secondary panels to centered card modals while
-   preserving desktop side rails.
+5. Present secondary panels as centered card modals or rails according to
+   measured panel capacity.
 6. Move phone reset behavior into the top header and render the player surface
    as a full-roster experience.
-7. Add portrait-only phone handling and validate the refactor with expanded
-   cross-device responsive testing.
+7. Add compact landscape handling and validate the refactor with expanded
+   cross-capability responsive testing.
 
 ### 2.4. Uniform Button Layout System
 
@@ -153,8 +190,8 @@ WordSquad implements a uniform button layout system ensuring visual consistency 
 - **Button Size Consistency:** Guess and Reset buttons use identical dimensions via CSS custom properties
 - **Width Alignment:** Desktop input/control rows align visually with board width,
   while phone controls follow the same sizing tokens where applicable
-- **Responsive Scaling:** Uniform sizing maintained across phone, tablet, and
-  desktop breakpoints
+- **Responsive Scaling:** Uniform sizing maintained across compact, comfortable,
+  and spacious density profiles
 - **Accessibility Compliance:** Touch targets meet 44px minimum requirements on
   phone and tablet devices
 
@@ -164,10 +201,11 @@ WordSquad implements a uniform button layout system ensuring visual consistency 
 --uniform-button-height: calc(var(--tile-size) * 0.8);
 ```
 
-**Validated Breakpoints:**
-- Phone (≤600px): Touch-optimized portrait scaling
-- Tablet (601-900px): Consistent board-first layout with centered card modals
-- Desktop (901px+): Stable alignment within the side-rail layout
+**Expected Profile Examples:**
+- Compact touch: Touch-optimized vertical or split-landscape scaling
+- Comfortable touch/hybrid: Board-first layout with modal panels and an optional
+  measured rail
+- Spacious keyboard-first: Stable alignment with up to two measured side rails
 
 All acceptance criteria have been validated through comprehensive cross-breakpoint testing.
 
@@ -177,7 +215,7 @@ WordSquad implements systematic CSS conflict resolution and smooth window resize
 
 **CSS Rule Organization:**
 - **Consolidated Breakpoints:** Phone, tablet, and desktop rules are consolidated
-  into authoritative layout definitions
+  into authoritative profile and layout definitions
 - **Clear File Separation:** Structural layout, component styling, and responsive
   adaptations are separated cleanly
 - **No Rule Conflicts:** Eliminated overlapping selectors targeting same elements at same breakpoints
@@ -185,8 +223,8 @@ WordSquad implements systematic CSS conflict resolution and smooth window resize
 
 **Window Resize Behavior:**
 - **Smooth Transitions:** 0.3s CSS transitions for layout mode changes (`flex-direction`, `gap`, `width`, `opacity`)
-- **Dynamic Breakpoint Crossing:** Validated smooth transitions across all
-  breakpoints (phone ↔ tablet ↔ desktop)
+- **Dynamic Profile Changes:** Validated smooth transitions as available space,
+  orientation, panel capacity, or interaction capabilities change
 - **Layout Mode Switching:** Proper CSS class management during window resize without visual glitches
 - **Performance Optimized:** No layout thrashing or console warnings during resize operations
 
@@ -214,10 +252,15 @@ For complete technical specifications, see `docs/requirements/responsive-design-
 WordSquad implements comprehensive cross-device layout validation ensuring consistent user experience across all devices and browsers.
 
 **Device Testing Coverage:**
-- **Phone Devices (≤600px):** iPhone SE, iPhone 12, Galaxy S20, and other
-  portrait phone form factors
-- **Tablet Devices (601px-900px):** iPad Mini, iPad Air, and various tablet sizes
-- **Desktop Devices (>900px):** Small desktop (1024px) through ultra-wide displays (2560px+)
+- **Compact phones:** iPhone SE, iPhone 12, Galaxy S20, and comparable portrait
+  and landscape form factors
+- **Tablets:** iPad Mini, iPad Air, and comparable portrait and landscape sizes,
+  with coarse-pointer capability emulation
+- **Laptops and desktops:** Constrained 1024px windows through ultra-wide
+  displays, with fine-pointer and hover capability emulation
+- Viewport dimensions and input capabilities are independent test dimensions;
+  the same dimensions must be exercised with both coarse- and fine-pointer
+  scenarios where applicable.
 
 **Browser Compatibility Validation:**
 - **CSS Grid Support:** Verified across Chrome 57+, Firefox 52+, Safari 10.1+, Edge 16+
@@ -257,14 +300,15 @@ For complete cross-device validation specifications, see `docs/requirements/cros
 - Game state drives all board rendering based on server responses.
 - Emoji, dark mode preference, and user session information live in
   `localStorage`.
-- Phone layouts hide the physical word input field completely and use only the
-  in-game keyboard for guesses; desktop supports both physical keyboard entry
-  and the in-game keyboard.
-- Chat input may still use the device keyboard on phone and tablet layouts.
-- Portrait phone orientation is the only required gameplay orientation; any
-  browser orientation lock is best-effort rather than guaranteed.
-- On phone and tablet, the viewport `--vh` custom property is updated on resize
-  to account for browser chrome.
+- Touch-first profiles hide the word-entry text field and use the in-game
+  keyboard for guesses; keyboard-first profiles support physical keyboard entry
+  and retain the in-game keyboard.
+- Chat input may use the native device keyboard in every layout.
+- Portrait and landscape gameplay are both required; the application must not
+  depend on browser orientation locking or block gameplay behind a rotate-device
+  overlay.
+- Visual viewport dimensions and offsets are updated on resize, scroll, and
+  orientation changes to account for browser chrome and the native keyboard.
 - Blurred popup backdrop must be implemented with vanilla CSS only (e.g., `backdrop-filter`).
 
 ## 5. Extensibility
@@ -286,14 +330,15 @@ WordSquad implements an advanced board scaling system to ensure optimal display 
   (1920×1080+)
 - **Container-Aware Scaling:** Board size calculations must account for available container space, UI element heights, and margins
 - **Responsive Tile Sizing:** Tile sizes scale dynamically from 20px minimum to 65px maximum based on viewport constraints
-- **Viewport Fitting Verification:** The primary gameplay stack on phone
-  (header, board, current-guess row, and game keyboard) must fit within the
-  portrait viewport without gameplay-breaking overlap
-- **Layout Mode Compatibility:** Scaling must work correctly across Phone
-  (≤600px), Tablet (601-900px), and Desktop (>900px) layout modes
-- **Modal Compatibility:** Centered card modals on phone and tablet must size
-  safely within the viewport without clipping behind browser chrome or the game
-  keyboard
+- **Viewport Fitting Verification:** The primary gameplay regions (header,
+  board, current-guess row, and game keyboard) must fit within the visual
+  viewport in portrait and landscape without gameplay-breaking overlap.
+- **Profile Compatibility:** Scaling must work correctly across compact,
+  comfortable, and spacious densities and touch-first, hybrid, and
+  keyboard-first interactions.
+- **Panel Compatibility:** Centered card modals must size safely within the
+  visual viewport without clipping behind browser chrome or the native
+  keyboard; rails must be assigned only when gameplay minimums still fit.
 
 ### 6.2 Technical Implementation
 
@@ -311,9 +356,9 @@ WordSquad implements an advanced board scaling system to ensure optimal display 
 - Handles edge cases gracefully with fallback logic
 
 **CSS Layout Fixes:**
-- Correct `#boardArea` positioning for phone, tablet, and desktop layouts
-- Proper max-width constraints that work within both centered-modal and
-  side-rail systems
+- Correct `#boardArea` positioning for vertical and split-landscape game flows
+- Proper maximum-width constraints that work within both centered-modal and
+  measured side-rail presentations
 - Elimination of conflicting CSS and JavaScript sizing paths
 
 ### 6.3 Performance and Compatibility
@@ -321,8 +366,9 @@ WordSquad implements an advanced board scaling system to ensure optimal display 
 - **Single Source of Truth:** Board and keyboard sizing must not be managed by
   multiple competing runtime systems
 - **Minimal Performance Impact:** Calculations are cached and only recalculate on viewport changes
-- **Cross-Device Validation:** Comprehensive testing covers phone portrait,
-  tablet, and desktop breakpoints
+- **Cross-Capability Validation:** Comprehensive testing covers portrait and
+  landscape orientation, coarse and fine pointers, hover capability, constrained
+  heights, and zero-, one-, and two-rail capacity
 - **No Console Warnings:** Clean console output with informative logging for debugging
 
 ### 6.4 Quality Assurance
@@ -340,9 +386,9 @@ All requirements have been validated through comprehensive testing including rea
 
 - Optional side panel for real-time text chat during a game.
 - Users can toggle the chat panel to show or hide it at any time.
-- On phone and tablet, chat opens in a centered card modal. On desktop it uses
-  the right rail.
-- Chat may invoke the device keyboard on phone and tablet.
+- Chat opens in a centered card modal when no rail fits and uses a right rail
+  when the measured panel capacity and panel policy allow it.
+- Chat may invoke the native device keyboard in every layout.
 - The panel scales smoothly with all screen sizes, maintaining usability on
   smaller layouts and desktop.
 - Uses each player's selected emoji as their chat avatar.
@@ -368,9 +414,10 @@ All requirements have been validated through comprehensive testing including rea
 - Unit tests cover lobby creation, join/expire logic, emoji selection, and per-lobby SSE isolation.
 - Integration tests run multiple lobbies in parallel to verify guesses and chat never leak between them.
 - End-to-end tests with Playwright create a lobby, share the link, join from a second browser, play to completion, and confirm the lobby auto-expires.
-- Responsive and layout tests validate phone portrait behavior, centered card
-  modal behavior on smaller layouts, desktop side rails, and full-roster player
-  rendering.
+- Responsive and layout tests validate compact portrait and landscape behavior,
+  capability differences at identical viewport sizes, centered card modal
+  behavior, measured zero-/one-/two-rail capacity, visual-viewport changes, and
+  full-roster player rendering.
 
 ## 10. CI/CD and Repository Practices
 

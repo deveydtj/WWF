@@ -550,7 +550,7 @@ Define one authoritative layout state that represents actual UX behavior.
 
 ## Tasks
 
-- [ ] **1.1 Update `docs/REQUIREMENTS.md`.**
+- [x] **1.1 Update `docs/REQUIREMENTS.md`.**
   - Replace fixed “phone/tablet/desktop determines everything” language.
   - Retain product categories as expected behavior examples.
   - Make panel capacity, input presentation, and orientation behavior authoritative.
