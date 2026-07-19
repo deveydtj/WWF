@@ -630,7 +630,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
   - Let physical keyboards work on every profile when the event is received.
   - Animate the corresponding in-game key for letters, Enter, and Backspace.
 
-- [ ] **2.7 Add input behavior tests.**
+- [x] **2.7 Add input behavior tests.**
   - Virtual keys create one character per activation.
   - Virtual Backspace removes one character.
   - Virtual Enter submits once.
