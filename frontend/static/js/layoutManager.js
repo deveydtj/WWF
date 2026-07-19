@@ -30,6 +30,7 @@ import {
 } from './layoutModes.js';
 import { decideLayoutProfile } from './layout/layoutProfileDecisions.js';
 import { loadLayoutPreferences } from './layout/layoutPreferences.js';
+import { ViewportService } from './layout/viewportService.js';
 
 const PROFILE_PANEL_MINIMUMS = Object.freeze({
   inlineSize: 240,
@@ -131,7 +132,16 @@ function getPositiveDimension(...values) {
  * Legacy layout classes remain independent until the responsive shell is
  * replaced in Phase 5.
  */
-export function calculateLayoutProfile() {
+export function calculateLayoutProfile(viewportSnapshot = null) {
+  if (viewportSnapshot) {
+    return decideLayoutProfile(
+      viewportSnapshot,
+      PROFILE_PANEL_MINIMUMS,
+      PROFILE_GAMEPLAY_MINIMUMS,
+      loadLayoutPreferences()
+    );
+  }
+
   const browserWindow = typeof window !== 'undefined' ? window : null;
   const layoutWidth = getPositiveDimension(browserWindow?.innerWidth, 1200);
   const layoutHeight = getPositiveDimension(browserWindow?.innerHeight, 768);
@@ -299,17 +309,24 @@ export class LayoutManager {
   /**
    * Initialize the layout manager
    */
-  constructor() {
+  constructor(options = {}) {
     this.breakpoints = LAYOUT_BREAKPOINTS;
+    this.ownsViewportService = !options.viewportService;
+    this.viewportService = options.viewportService || new ViewportService();
+    this.viewportService.start();
     
     // Current layout state
     this.currentState = refreshLayoutState();
     this.currentLayout = this.currentState.mode;
-    this.currentProfile = calculateLayoutProfile();
+    this.currentProfile = calculateLayoutProfile(this.viewportService.getSnapshot());
     applyLayoutProfileToDocument(this.currentProfile);
     
     // Set up media query listeners
     this.setupListeners();
+    this.unsubscribeViewport = this.viewportService.subscribe(
+      (snapshot) => this.refresh(snapshot),
+      { emitCurrent: false }
+    );
 
     console.log('[LayoutManager] Initialized with layout:', this.currentLayout);
   }
@@ -342,18 +359,12 @@ export class LayoutManager {
     this.mediaQueries = [
       window.matchMedia(`(max-width: ${this.breakpoints.PHONE_MAX}px)`),
       window.matchMedia(`(min-width: ${this.breakpoints.PHONE_MAX + 1}px) and (max-width: ${this.breakpoints.TABLET_MAX}px)`),
-      window.matchMedia(`(min-width: ${this.breakpoints.TABLET_MAX + 1}px)`),
-      window.matchMedia('(pointer: coarse)'),
-      window.matchMedia('(pointer: fine)'),
-      window.matchMedia('(any-pointer: coarse)'),
-      window.matchMedia('(any-pointer: fine)'),
-      window.matchMedia('(hover: hover)')
+      window.matchMedia(`(min-width: ${this.breakpoints.TABLET_MAX + 1}px)`)
     ];
 
+    this.handleLegacyMediaChange = () => this.refresh();
     this.mediaQueries.forEach((query) => {
-      query.addEventListener('change', () => {
-        this.refresh();
-      });
+      query.addEventListener('change', this.handleLegacyMediaChange);
     });
   }
   
@@ -461,6 +472,11 @@ export class LayoutManager {
   getCurrentLayoutProfile() {
     return this.currentProfile;
   }
+
+  /** Get the latest normalized viewport and container measurements. */
+  getViewportSnapshot() {
+    return this.viewportService.getSnapshot();
+  }
   
   /**
    * Get the legacy compact/desktop breakpoint value.
@@ -484,9 +500,9 @@ export class LayoutManager {
    * Force a layout check and update if needed
    * Useful after window resize or orientation change
    */
-  refresh() {
+  refresh(viewportSnapshot = this.viewportService?.getSnapshot()) {
     const newState = this.detectLayoutState();
-    const newProfile = calculateLayoutProfile();
+    const newProfile = calculateLayoutProfile(viewportSnapshot);
     const previousProfile = this.currentProfile;
 
     if (!layoutStatesEqual(newState, this.currentState)) {
@@ -508,6 +524,15 @@ export class LayoutManager {
     }
 
     return { ...this.currentState };
+  }
+
+  /** Release observers when an embedding context tears down the manager. */
+  destroy() {
+    this.unsubscribeViewport?.();
+    this.mediaQueries?.forEach((query) => {
+      query.removeEventListener('change', this.handleLegacyMediaChange);
+    });
+    if (this.ownsViewportService) this.viewportService.destroy();
   }
 }
 

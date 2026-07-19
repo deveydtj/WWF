@@ -81,6 +81,10 @@
   /* Modern viewport support with dvh */
   --viewport-height: 100vh;
   --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
   
   /* Modal / popup sizing — CSS baseline fallback values.
    * These tokens are overridden at runtime by responsiveScaling.js so that

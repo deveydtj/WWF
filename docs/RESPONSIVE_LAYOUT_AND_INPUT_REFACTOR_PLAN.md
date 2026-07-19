@@ -657,7 +657,7 @@ Eliminate duplicate resize listeners, delayed recalculations, and competing view
 
 ## Tasks
 
-- [ ] **3.1 Implement `ViewportService`.**
+- [x] **3.1 Implement `ViewportService`.**
   - Track layout viewport and visual viewport.
   - Track visual viewport offsets.
   - Track app and gameplay container dimensions with `ResizeObserver`.
