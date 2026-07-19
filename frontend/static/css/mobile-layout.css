@@ -54,7 +54,7 @@
   #appContainer {
     display: flex;
     flex-direction: column;
-    height: 100dvh; /* Dynamic viewport height for mobile */
+    height: var(--visual-viewport-height);
     width: 100vw;
     max-width: 100%; /* Fill available space on mobile */
     overflow: hidden;
@@ -67,7 +67,7 @@
   
   #lobbyHeader {
     position: fixed;
-    top: 0;
+    top: var(--visual-viewport-offset-top);
     left: 0;
     right: 0;
     height: 60px;
@@ -75,7 +75,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 16px; /* Match desktop fixed value to avoid breakpoint jump */
-    padding-top: max(0px, env(safe-area-inset-top));
+    padding-top: var(--viewport-safe-area-top);
     background: var(--bg-color);
     z-index: var(--z-ui-component);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -127,7 +127,7 @@
     flex-direction: column;
     align-items: center;
     gap: clamp(12px, 2.22vw, 20px); /* Reaches 20px at 900px to match desktop */
-    padding: calc(72px + env(safe-area-inset-top)) clamp(12px, 1.78vw, 16px) 180px; /* Reaches 16px at 900px, top padding for fixed header + safe area, bottom for keyboard */
+    padding: calc(72px + var(--viewport-safe-area-top)) clamp(12px, 1.78vw, 16px) 180px; /* Reaches 16px at 900px, top padding for fixed header + safe area, bottom for keyboard */
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -301,7 +301,7 @@
     right: 0;
     background: var(--bg-color);
     padding: var(--kb-gap); /* Use existing token */
-    padding-bottom: max(var(--kb-gap), env(safe-area-inset-bottom)); /* Use token */
+    padding-bottom: max(var(--kb-gap), var(--viewport-safe-area-bottom)); /* Use token */
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
     z-index: var(--z-keyboard);
     display: flex;
@@ -438,7 +438,7 @@
   #chatForm {
     display: flex;
     gap: var(--kb-gap); /* Use existing token */
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--viewport-safe-area-bottom);
   }
   
   #chatInput {
@@ -531,7 +531,7 @@
     transform: translate(-50%, -50%);
     width: calc(100% - 32px);
     max-width: 320px;
-    max-height: calc(100dvh - 100px);
+    max-height: calc(var(--visual-viewport-safe-height) - 100px);
     overflow-y: auto;
     z-index: var(--z-options-menu);
     padding: var(--pad-x); /* Use token */
@@ -589,7 +589,7 @@
     background: var(--bg-color);
     width: calc(100% - 32px);
     max-width: 360px;
-    max-height: calc(100dvh - 120px);
+    max-height: calc(var(--visual-viewport-safe-height) - 120px);
     overflow-y: auto;
     border-radius: 16px;
     padding: 16px;
@@ -723,7 +723,7 @@
   
   /* Mobile: Place toast near top, respecting safe area and avoiding keyboard overlap */
   #messagePopup {
-    top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 1.5);
+    top: calc(var(--visual-viewport-offset-top) + var(--viewport-safe-area-top) + var(--tile-size) * 1.5);
     /* Position from top ensures visibility above system UI and keyboard */
   }
 }
@@ -807,7 +807,7 @@
   
   /* Reduce padding on very small screens */
   #mainGrid {
-    padding: calc(68px + env(safe-area-inset-top)) var(--small-spacing) calc(170px + env(keyboard-inset-height, 0px));
+    padding: calc(68px + var(--viewport-safe-area-top)) var(--small-spacing) calc(170px + env(keyboard-inset-height, 0px));
   }
   
   #boardArea {
@@ -822,7 +822,7 @@
   #lobbyHeader {
     height: 56px;
     padding: 0 clamp(8px, 2.133vw, 16px); /* Smooth transition avoiding abrupt jump at 375px */
-    padding-top: max(0px, env(safe-area-inset-top));
+    padding-top: var(--viewport-safe-area-top);
   }
   
   #lobbyCode {

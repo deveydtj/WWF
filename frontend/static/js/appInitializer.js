@@ -25,7 +25,6 @@ import { installLayoutDiagnostics } from './layoutDiagnostics.js';
 import { 
   applyDarkModePreference, 
   repositionResetButton,
-  updateVH,
   enableClickOffDismiss
 } from './utils.js';
 import { initializeResponsiveScaling, recalculateScaling } from './responsiveScaling.js';
@@ -463,7 +462,6 @@ class AppInitializer {
 
     refreshOverlayStateForLayout(layoutState);
     this._updateGameTitle();
-    updateVH();
     repositionResetButton();
     updatePanelVisibility();
     recalculateScaling();

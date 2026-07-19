@@ -35,6 +35,86 @@ test.describe('ViewportService', () => {
     expect(typeof snapshot.anyHover).toBe('boolean');
   });
 
+  test('publishes visual viewport and safe-area CSS variables', async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const originalVisualViewport = window.visualViewport;
+      const fakeVisualViewport = new EventTarget();
+      Object.assign(fakeVisualViewport, {
+        width: 390,
+        height: 700,
+        offsetTop: 0,
+        offsetLeft: 0,
+      });
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: fakeVisualViewport,
+      });
+
+      const rootStyle = document.documentElement.style;
+      rootStyle.setProperty('--safe-area-inset-top', '8px');
+      rootStyle.setProperty('--safe-area-inset-right', '2px');
+      rootStyle.setProperty('--safe-area-inset-bottom', '26px');
+      rootStyle.setProperty('--safe-area-inset-left', '2px');
+
+      const { ViewportService } = await import('/static/js/layout/viewportService.js');
+      const service = new ViewportService();
+      service.start();
+
+      fakeVisualViewport.height = 420;
+      fakeVisualViewport.offsetTop = 180;
+      fakeVisualViewport.offsetLeft = 4;
+      fakeVisualViewport.dispatchEvent(new Event('resize'));
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      const properties = [
+        '--layout-viewport-width',
+        '--layout-viewport-height',
+        '--visual-viewport-width',
+        '--visual-viewport-height',
+        '--visual-viewport-offset-top',
+        '--visual-viewport-offset-left',
+        '--viewport-safe-area-top',
+        '--viewport-safe-area-right',
+        '--viewport-safe-area-bottom',
+        '--viewport-safe-area-left',
+        '--visual-viewport-safe-width',
+        '--visual-viewport-safe-height',
+      ];
+      const variables = Object.fromEntries(properties.map((property) => (
+        [property, rootStyle.getPropertyValue(property)]
+      )));
+      const snapshot = service.getSnapshot();
+
+      service.destroy();
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: originalVisualViewport,
+      });
+
+      return { snapshot, variables };
+    });
+
+    expect(result.snapshot.visualViewport).toEqual({
+      width: 390,
+      height: 420,
+      offsetTop: 180,
+      offsetLeft: 4,
+    });
+    expect(result.snapshot.safeArea).toEqual({ top: 8, right: 2, bottom: 26, left: 2 });
+    expect(result.variables).toMatchObject({
+      '--visual-viewport-width': '390px',
+      '--visual-viewport-height': '420px',
+      '--visual-viewport-offset-top': '180px',
+      '--visual-viewport-offset-left': '4px',
+      '--viewport-safe-area-top': '8px',
+      '--viewport-safe-area-right': '2px',
+      '--viewport-safe-area-bottom': '26px',
+      '--viewport-safe-area-left': '2px',
+      '--visual-viewport-safe-width': '386px',
+      '--visual-viewport-safe-height': '386px',
+    });
+  });
+
   test('publishes only changed snapshots and observes both containers', async ({ page }) => {
     const result = await page.evaluate(async () => {
       const app = document.createElement('div');

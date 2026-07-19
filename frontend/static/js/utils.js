@@ -173,27 +173,6 @@ export function setGameInputDisabled(disabled) {
  */
 
 /**
- * Update the CSS `--vh` custom property to handle phone and tablet browser chrome.
- */
-export function updateVH() {
-  const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const vh = height * 0.01;
-  const root = document.documentElement;
-
-  root.style.setProperty('--vh', `${vh}px`);
-  root.style.setProperty('--viewport-height', `${height}px`);
-
-  const board = document.getElementById('board');
-  if (board) {
-    const rows = Math.max(1, Math.floor(board.children.length / 5));
-    fitBoardToContainer(rows);
-  } else {
-    fitBoardToContainer();
-  }
-}
-
-
-/**
  * Set the layout mode (phone/tablet/desktop) based on viewport width.
  * Also determines if history panel should be in popup mode when rail space is constrained.
  */

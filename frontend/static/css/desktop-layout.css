@@ -60,7 +60,7 @@
     --desktop-panel-width: 240px;
     --desktop-stamp-width: 60px;
     --desktop-header-height: 60px;
-    --desktop-panel-max-height: calc(100vh - 160px);
+    --desktop-panel-max-height: calc(var(--visual-viewport-safe-height) - 160px);
     
     /* Board sizing is owned by responsiveScaling.js at runtime.
      * --tile-size, --tile-gap, and --board-width are set dynamically
@@ -80,7 +80,7 @@
   #appContainer {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: var(--visual-viewport-height);
     width: 100vw;
     max-width: var(--desktop-max-width);
     margin: 0 auto; /* Center container on ultra-wide displays */
@@ -95,7 +95,7 @@
   
   #lobbyHeader {
     position: fixed;
-    top: 0;
+    top: var(--visual-viewport-offset-top);
     left: 0;
     right: 0;
     height: var(--desktop-header-height);
@@ -153,7 +153,7 @@
     grid-template-rows: 1fr;
     gap: var(--desktop-grid-gap);
     padding: calc(var(--desktop-header-height) + var(--desktop-grid-gap)) var(--desktop-grid-gap) var(--desktop-grid-gap);
-    height: 100vh;
+    height: var(--visual-viewport-height);
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;

@@ -78,13 +78,24 @@
    */
   --button-font-scale: 0.4; /* 40% of tile-size for icon buttons */
   
-  /* Modern viewport support with dvh */
-  --viewport-height: 100vh;
-  --keyboard-safe-height: calc(var(--viewport-height) - env(keyboard-inset-height, 0px));
+  /* ViewportService replaces these fallbacks with normalized pixel values. */
+  --layout-viewport-width: 100vw;
+  --layout-viewport-height: 100vh;
+  --visual-viewport-width: 100vw;
+  --visual-viewport-height: 100vh;
+  --visual-viewport-offset-top: 0px;
+  --visual-viewport-offset-left: 0px;
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --viewport-safe-area-top: var(--safe-area-inset-top);
+  --viewport-safe-area-right: var(--safe-area-inset-right);
+  --viewport-safe-area-bottom: var(--safe-area-inset-bottom);
+  --viewport-safe-area-left: var(--safe-area-inset-left);
+  --visual-viewport-safe-width: calc(var(--visual-viewport-width) - var(--viewport-safe-area-left) - var(--viewport-safe-area-right));
+  --visual-viewport-safe-height: calc(var(--visual-viewport-height) - var(--viewport-safe-area-top) - var(--viewport-safe-area-bottom));
+  --keyboard-safe-height: calc(var(--visual-viewport-safe-height) - env(keyboard-inset-height, 0px));
   
   /* Modal / popup sizing — CSS baseline fallback values.
    * These tokens are overridden at runtime by responsiveScaling.js so that
@@ -99,13 +110,6 @@
   /* Touch and accessibility */
   --min-touch-target: 44px;
   --accessibility-scale: 1;
-}
-
-/* Use dynamic viewport height when supported */
-@supports (height: 100dvh) {
-  :root {
-    --viewport-height: 100dvh;
-  }
 }
 
 body.dark-mode {
@@ -142,7 +146,7 @@ body {
   text-align: center;
   background-color: var(--bg-color);
   color: var(--text-color);
-  height: var(--viewport-height);
+  height: var(--visual-viewport-height);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -154,16 +158,16 @@ body {
 #appContainer {
   box-sizing: border-box;
   padding: 
-    calc(var(--pad-y) + env(safe-area-inset-top))
-    calc(var(--pad-x) + env(safe-area-inset-right))
-    calc(var(--pad-y) + env(safe-area-inset-bottom))
-    calc(var(--pad-x) + env(safe-area-inset-left));
+    calc(var(--pad-y) + var(--viewport-safe-area-top))
+    calc(var(--pad-x) + var(--viewport-safe-area-right))
+    calc(var(--pad-y) + var(--viewport-safe-area-bottom))
+    calc(var(--pad-x) + var(--viewport-safe-area-left));
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: var(--viewport-height); /* Modern viewport with dvh support */
+  min-height: var(--visual-viewport-height);
   min-width: min(320px, 100%); /* Prevent collapse without forcing horizontal scroll on very narrow viewports */
   margin: 0 auto;
   
@@ -261,7 +265,7 @@ h1 {
 #messagePopup {
   display: none;
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + var(--tile-size) * 2);
+  top: calc(var(--visual-viewport-offset-top) + var(--viewport-safe-area-top) + var(--tile-size) * 2);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-color);

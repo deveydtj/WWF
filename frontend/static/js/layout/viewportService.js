@@ -22,6 +22,21 @@ const SAFE_AREA_PROPERTIES = Object.freeze({
   left: '--safe-area-inset-left'
 });
 
+const VIEWPORT_CSS_PROPERTIES = Object.freeze({
+  layoutWidth: '--layout-viewport-width',
+  layoutHeight: '--layout-viewport-height',
+  visualWidth: '--visual-viewport-width',
+  visualHeight: '--visual-viewport-height',
+  visualOffsetTop: '--visual-viewport-offset-top',
+  visualOffsetLeft: '--visual-viewport-offset-left',
+  safeTop: '--viewport-safe-area-top',
+  safeRight: '--viewport-safe-area-right',
+  safeBottom: '--viewport-safe-area-bottom',
+  safeLeft: '--viewport-safe-area-left',
+  safeWidth: '--visual-viewport-safe-width',
+  safeHeight: '--visual-viewport-safe-height'
+});
+
 const FORCED_UPDATE_REASONS = new Set(['panel']);
 
 function round(value, precision = 2) {
@@ -43,6 +58,10 @@ function freezeSnapshot(snapshot) {
 
 function snapshotsEqual(left, right) {
   return Boolean(left && right && JSON.stringify(left) === JSON.stringify(right));
+}
+
+function pixels(value) {
+  return `${round(Math.max(0, value))}px`;
 }
 
 function resolveElement(documentObject, reference, fallbackSelector) {
@@ -80,6 +99,7 @@ export class ViewportService {
     this.subscribers = new Set();
     this.mediaQueries = new Map();
     this.snapshot = null;
+    this.cssVariables = new Map();
     this.resizeObserver = null;
     this.safeAreaProbe = null;
     this.animationFrame = null;
@@ -112,6 +132,7 @@ export class ViewportService {
     this.setupMediaQueries();
     this.setupObservers();
     this.snapshot = this.measure();
+    this.publishCSSVariables(this.snapshot);
     return this.snapshot;
   }
 
@@ -279,6 +300,40 @@ export class ViewportService {
     ));
   }
 
+  /** Publish the normalized viewport state consumed by CSS layout. */
+  publishCSSVariables(snapshot) {
+    const rootStyle = this.document.documentElement?.style;
+    if (!rootStyle || !snapshot) return;
+
+    const { layoutViewport, visualViewport, safeArea } = snapshot;
+    const values = {
+      [VIEWPORT_CSS_PROPERTIES.layoutWidth]: pixels(layoutViewport.width),
+      [VIEWPORT_CSS_PROPERTIES.layoutHeight]: pixels(layoutViewport.height),
+      [VIEWPORT_CSS_PROPERTIES.visualWidth]: pixels(visualViewport.width),
+      [VIEWPORT_CSS_PROPERTIES.visualHeight]: pixels(visualViewport.height),
+      [VIEWPORT_CSS_PROPERTIES.visualOffsetTop]: pixels(visualViewport.offsetTop),
+      [VIEWPORT_CSS_PROPERTIES.visualOffsetLeft]: pixels(visualViewport.offsetLeft),
+      [VIEWPORT_CSS_PROPERTIES.safeTop]: pixels(safeArea.top),
+      [VIEWPORT_CSS_PROPERTIES.safeRight]: pixels(safeArea.right),
+      [VIEWPORT_CSS_PROPERTIES.safeBottom]: pixels(safeArea.bottom),
+      [VIEWPORT_CSS_PROPERTIES.safeLeft]: pixels(safeArea.left),
+      [VIEWPORT_CSS_PROPERTIES.safeWidth]: pixels(
+        visualViewport.width - safeArea.left - safeArea.right
+      ),
+      [VIEWPORT_CSS_PROPERTIES.safeHeight]: pixels(
+        visualViewport.height - safeArea.top - safeArea.bottom
+      )
+    };
+
+    Object.entries(values).forEach(([property, value]) => {
+      if (this.cssVariables.get(property) === value
+        && rootStyle.getPropertyValue(property) === value) return;
+
+      rootStyle.setProperty(property, value);
+      this.cssVariables.set(property, value);
+    });
+  }
+
   measure() {
     const layoutViewport = Object.freeze({
       width: positiveDimension(this.window.innerWidth, this.document.documentElement?.clientWidth),
@@ -315,7 +370,10 @@ export class ViewportService {
     const forceUpdate = reasons.some((reason) => FORCED_UPDATE_REASONS.has(reason));
     if (!snapshotChanged && !forceUpdate) return;
 
-    if (snapshotChanged) this.snapshot = nextSnapshot;
+    if (snapshotChanged) {
+      this.snapshot = nextSnapshot;
+      this.publishCSSVariables(this.snapshot);
+    }
 
     const update = Object.freeze({ reasons, snapshotChanged });
     this.subscribers.forEach((callback) => callback(this.snapshot, previousSnapshot, update));

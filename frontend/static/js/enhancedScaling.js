@@ -513,7 +513,7 @@ export class EnhancedScalingSystem {
       
       // Apply emergency CSS fixes
       keyboard.style.position = 'fixed';
-      keyboard.style.bottom = `max(0px, env(safe-area-inset-bottom, 0px))`;
+      keyboard.style.bottom = 'max(0px, var(--viewport-safe-area-bottom))';
       keyboard.style.zIndex = '1000';
       
       // Only center horizontally if keyboard positioning is severely broken

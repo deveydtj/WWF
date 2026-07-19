@@ -1,4 +1,9 @@
-import { updateVH } from './static/js/utils.js';
+import { ViewportService } from './static/js/layout/viewportService.js';
+
+const viewportService = new ViewportService({
+  appContainer: '#landingView',
+  gameplayContainer: '#heroCard',
+});
 
 // List of available emojis for the landing page (same as game)
 const allEmojis = [
@@ -341,12 +346,7 @@ export function init() {
   initEmojiPicker();
   showSavedEmoji();
   fetchNetworkLobbies();
-  updateVH();
-  window.addEventListener('resize', updateVH);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateVH);
-  }
-  window.addEventListener('orientationchange', updateVH);
+  viewportService.start();
   document.getElementById('createBtn').addEventListener('click', createLobby);
   document.getElementById('quickBtn').addEventListener('click', quickPlay);
 

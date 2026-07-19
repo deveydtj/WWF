@@ -673,7 +673,7 @@ Eliminate duplicate resize listeners, delayed recalculations, and competing view
   - Remove delayed 50ms, 100ms, 150ms, and 300ms layout recalculations where the new scheduler replaces them.
   - Retain a targeted post-orientation stabilization only if tests prove a browser needs it.
 
-- [ ] **3.4 Normalize visual viewport CSS variables.**
+- [x] **3.4 Normalize visual viewport CSS variables.**
   - Replace mixed `--vh`, `--viewport-height`, `100vh`, and `100dvh` ownership with one service.
   - Publish visual height and offset values.
   - Include safe-area insets in CSS calculations.
