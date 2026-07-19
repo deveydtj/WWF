@@ -624,7 +624,7 @@ Remove dependence on the guess field and prevent the native keyboard from appear
   - Prefer declarative profile rendering over direct inline `display` writes.
   - Ensure `#holdReset` is not accidentally hidden by legacy code.
 
-- [ ] **2.6 Refine document key handling.**
+- [x] **2.6 Refine document key handling.**
   - Ignore gameplay keys when chat, another input, textarea, contenteditable area, or modal control owns focus.
   - Let Escape remain available to the modal manager.
   - Let physical keyboards work on every profile when the event is received.

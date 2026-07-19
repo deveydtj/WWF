@@ -1,6 +1,96 @@
 import { updateBoard } from './board.js';
 import { INPUT_OUTCOMES } from './inputController.js';
 
+const EDITABLE_TAG_NAMES = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
+const MODAL_SELECTOR = '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]';
+const keyAnimationTimers = new WeakMap();
+
+/**
+ * Convert a physical keyboard value into the canonical value used by the
+ * in-game keyboard. Non-gameplay keys deliberately return null.
+ *
+ * @param {unknown} key
+ * @returns {string|null}
+ */
+export function normalizePhysicalKey(key) {
+  if (key === 'Enter' || key === 'Backspace') return key;
+  if (typeof key === 'string' && /^[a-z]$/i.test(key)) return key.toLowerCase();
+  return null;
+}
+
+/**
+ * Whether an element owns text entry that must remain separate from gameplay.
+ * `isContentEditable` accounts for descendants of a contenteditable host.
+ *
+ * @param {Element|null|undefined} element
+ * @returns {boolean}
+ */
+export function isEditableElement(element) {
+  const tagName = String(element?.tagName || '').toUpperCase();
+  return EDITABLE_TAG_NAMES.has(tagName) || Boolean(element?.isContentEditable);
+}
+
+/**
+ * Modal controls retain their keyboard events. This also ensures Escape can
+ * reach the modal manager without affecting the active guess.
+ *
+ * @param {Element|null|undefined} element
+ * @returns {boolean}
+ */
+export function isWithinModal(element) {
+  return Boolean(element?.closest?.(MODAL_SELECTOR));
+}
+
+/**
+ * Decide whether a document keydown belongs to gameplay.
+ *
+ * @param {KeyboardEvent} event
+ * @param {HTMLInputElement} guessInput
+ * @returns {boolean}
+ */
+export function shouldRoutePhysicalKey(event, guessInput) {
+  if (
+    event.defaultPrevented ||
+    event.isComposing ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.key === 'Escape' ||
+    !normalizePhysicalKey(event.key) ||
+    guessInput.disabled
+  ) {
+    return false;
+  }
+
+  const eventTarget = event.target?.tagName ? event.target : null;
+  const activeElement = eventTarget || document.activeElement;
+
+  return activeElement !== guessInput &&
+    !isEditableElement(activeElement) &&
+    !isWithinModal(activeElement);
+}
+
+/**
+ * Mirror a physical key press on the corresponding in-game key.
+ *
+ * @param {HTMLElement} keyboardEl
+ * @param {string} key
+ */
+export function animatePhysicalKey(keyboardEl, key) {
+  const keyElement = keyboardEl.querySelector(`.key[data-key="${key}"]`);
+  if (!keyElement) return;
+
+  const previousTimer = keyAnimationTimers.get(keyElement);
+  if (previousTimer) clearTimeout(previousTimer);
+
+  keyElement.classList.add('active-key-press');
+  const timer = setTimeout(() => {
+    keyElement.classList.remove('active-key-press');
+    keyAnimationTimers.delete(keyElement);
+  }, 150);
+  keyAnimationTimers.set(keyElement, timer);
+}
+
 /**
  * Handle an activation click on the on-screen keyboard.
  *
@@ -58,22 +148,12 @@ export function setupTypingListeners({
     if (event.key === 'Enter') inputController.submit('guess-field');
   });
   document.addEventListener('keydown', function (event) {
-    const active = document.activeElement;
-    if (guessInput.disabled || active === guessInput) return;
-    if (active && active !== document.body &&
-        (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
-      return;
-    }
-    const key = event.key.toLowerCase();
-    const outcome = inputController.routeKey(key, 'physical-keyboard');
-    if (outcome !== INPUT_OUTCOMES.IGNORED) {
-      event.preventDefault();
-    }
-    const keyElement = keyboardEl.querySelector(`.key[data-key="${key}"]`);
-    if (keyElement) {
-      keyElement.classList.add('active-key-press');
-      setTimeout(() => keyElement.classList.remove('active-key-press'), 150);
-    }
+    if (!shouldRoutePhysicalKey(event, guessInput)) return;
+
+    const key = normalizePhysicalKey(event.key);
+    inputController.routeKey(key, 'physical-keyboard');
+    event.preventDefault();
+    animatePhysicalKey(keyboardEl, key);
   });
 }
 

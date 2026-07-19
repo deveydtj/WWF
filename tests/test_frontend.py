@@ -1388,6 +1388,120 @@ console.log(JSON.stringify({
     }
 
 
+def test_document_key_routing_respects_focus_and_modal_ownership():
+    script = """
+import {
+  animatePhysicalKey,
+  normalizePhysicalKey,
+  shouldRoutePhysicalKey
+} from './frontend/static/js/keyboard.js';
+
+function element(tagName, { contentEditable = false, modal = false } = {}) {
+  return {
+    tagName,
+    isContentEditable: contentEditable,
+    closest(selector) {
+      return modal && selector.includes('[aria-modal="true"]') ? {} : null;
+    }
+  };
+}
+
+const body = element('BODY');
+const guessInput = element('INPUT');
+guessInput.disabled = false;
+const animationSelectors = [];
+const keyboard = {
+  querySelector(selector) {
+    animationSelectors.push(selector);
+    return null;
+  }
+};
+animatePhysicalKey(keyboard, 'q');
+animatePhysicalKey(keyboard, 'Enter');
+animatePhysicalKey(keyboard, 'Backspace');
+
+function event(key, target = body, overrides = {}) {
+  return {
+    key,
+    target,
+    defaultPrevented: false,
+    isComposing: false,
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    ...overrides
+  };
+}
+
+const results = {
+  animationSelectors,
+  normalized: [
+    normalizePhysicalKey('Q'),
+    normalizePhysicalKey('Enter'),
+    normalizePhysicalKey('Backspace'),
+    normalizePhysicalKey('Escape')
+  ],
+  bodyLetter: shouldRoutePhysicalKey(event('Q'), guessInput),
+  bodyEnter: shouldRoutePhysicalKey(event('Enter'), guessInput),
+  guessField: shouldRoutePhysicalKey(event('q', guessInput), guessInput),
+  otherInput: shouldRoutePhysicalKey(event('q', element('INPUT')), guessInput),
+  textarea: shouldRoutePhysicalKey(event('q', element('TEXTAREA')), guessInput),
+  select: shouldRoutePhysicalKey(event('q', element('SELECT')), guessInput),
+  contentEditable: shouldRoutePhysicalKey(
+    event('q', element('DIV', { contentEditable: true })),
+    guessInput
+  ),
+  modalButton: shouldRoutePhysicalKey(
+    event('q', element('BUTTON', { modal: true })),
+    guessInput
+  ),
+  escape: shouldRoutePhysicalKey(event('Escape'), guessInput),
+  handledEvent: shouldRoutePhysicalKey(
+    event('q', body, { defaultPrevented: true }),
+    guessInput
+  ),
+  modifierShortcut: shouldRoutePhysicalKey(
+    event('q', body, { ctrlKey: true }),
+    guessInput
+  ),
+  composing: shouldRoutePhysicalKey(
+    event('q', body, { isComposing: true }),
+    guessInput
+  )
+};
+
+guessInput.disabled = true;
+results.disabledGame = shouldRoutePhysicalKey(event('q'), guessInput);
+
+console.log(JSON.stringify(results));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'animationSelectors': [
+            '.key[data-key="q"]',
+            '.key[data-key="Enter"]',
+            '.key[data-key="Backspace"]',
+        ],
+        'normalized': ['q', 'Enter', 'Backspace', None],
+        'bodyLetter': True,
+        'bodyEnter': True,
+        'guessField': False,
+        'otherInput': False,
+        'textarea': False,
+        'select': False,
+        'contentEditable': False,
+        'modalButton': False,
+        'escape': False,
+        'handledEvent': False,
+        'modifierShortcut': False,
+        'composing': False,
+        'disabledGame': False,
+    }
+
+
 def test_guess_field_presentation_follows_capability_profile_without_disabling_input():
     script = """
 const attributes = new Map();
