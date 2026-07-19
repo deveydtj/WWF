@@ -678,7 +678,7 @@ Eliminate duplicate resize listeners, delayed recalculations, and competing view
   - Publish visual height and offset values.
   - Include safe-area insets in CSS calculations.
 
-- [ ] **3.5 Detect native keyboard state conservatively.**
+- [x] **3.5 Detect native keyboard state conservatively.**
   - Treat a meaningful visual viewport height reduction while an editable element is focused as `nativeKeyboardLikelyOpen`.
   - Do not infer keyboard state from height alone.
   - Use this state only for layout adaptation, not for game logic.

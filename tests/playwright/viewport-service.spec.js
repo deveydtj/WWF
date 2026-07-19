@@ -33,6 +33,120 @@ test.describe('ViewportService', () => {
     expect(['coarse', 'fine', 'mixed']).toContain(snapshot.pointer);
     expect(typeof snapshot.hover).toBe('boolean');
     expect(typeof snapshot.anyHover).toBe('boolean');
+    expect(snapshot.nativeKeyboardLikelyOpen).toBe(false);
+  });
+
+  test('detects native keyboard state only for meaningful height loss with editable focus', async ({
+    page,
+  }) => {
+    const result = await page.evaluate(async () => {
+      const originalVisualViewport = window.visualViewport;
+      const fakeVisualViewport = new EventTarget();
+      Object.assign(fakeVisualViewport, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        offsetTop: 0,
+        offsetLeft: 0,
+      });
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: fakeVisualViewport,
+      });
+
+      const waitForUpdate = () => new Promise((resolve) => (
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      ));
+      const input = document.createElement('input');
+      const button = document.createElement('button');
+      document.body.append(input, button);
+
+      const { ViewportService } = await import('/static/js/layout/viewportService.js');
+      const service = new ViewportService();
+      service.start();
+      const states = { initial: service.getSnapshot().nativeKeyboardLikelyOpen };
+
+      input.focus();
+      fakeVisualViewport.height = window.innerHeight - 80;
+      fakeVisualViewport.dispatchEvent(new Event('resize'));
+      await waitForUpdate();
+      states.smallReduction = service.getSnapshot().nativeKeyboardLikelyOpen;
+
+      fakeVisualViewport.height = Math.round(window.innerHeight * 0.6);
+      fakeVisualViewport.dispatchEvent(new Event('resize'));
+      await waitForUpdate();
+      states.editableWithReduction = service.getSnapshot().nativeKeyboardLikelyOpen;
+
+      button.focus();
+      await waitForUpdate();
+      states.nonEditableWithReduction = service.getSnapshot().nativeKeyboardLikelyOpen;
+
+      service.destroy();
+      input.remove();
+      button.remove();
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: originalVisualViewport,
+      });
+
+      return states;
+    });
+
+    expect(result).toEqual({
+      initial: false,
+      smallReduction: false,
+      editableWithReduction: true,
+      nonEditableWithReduction: false,
+    });
+  });
+
+  test('does not treat readonly or non-text inputs as native keyboard owners', async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const originalVisualViewport = window.visualViewport;
+      const fakeVisualViewport = new EventTarget();
+      Object.assign(fakeVisualViewport, {
+        width: window.innerWidth,
+        height: Math.round(window.innerHeight * 0.5),
+        offsetTop: 0,
+        offsetLeft: 0,
+      });
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: fakeVisualViewport,
+      });
+
+      const waitForUpdate = () => new Promise((resolve) => (
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      ));
+      const readonlyInput = document.createElement('input');
+      readonlyInput.readOnly = true;
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      document.body.append(readonlyInput, checkbox);
+
+      const { ViewportService } = await import('/static/js/layout/viewportService.js');
+      const service = new ViewportService();
+      service.start();
+
+      readonlyInput.focus();
+      await waitForUpdate();
+      const readonlyState = service.getSnapshot().nativeKeyboardLikelyOpen;
+
+      checkbox.focus();
+      await waitForUpdate();
+      const checkboxState = service.getSnapshot().nativeKeyboardLikelyOpen;
+
+      service.destroy();
+      readonlyInput.remove();
+      checkbox.remove();
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: originalVisualViewport,
+      });
+
+      return { readonlyState, checkboxState };
+    });
+
+    expect(result).toEqual({ readonlyState: false, checkboxState: false });
   });
 
   test('publishes visual viewport and safe-area CSS variables', async ({ page }) => {

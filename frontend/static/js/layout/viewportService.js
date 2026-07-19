@@ -38,6 +38,20 @@ const VIEWPORT_CSS_PROPERTIES = Object.freeze({
 });
 
 const FORCED_UPDATE_REASONS = new Set(['panel']);
+const NATIVE_KEYBOARD_MIN_HEIGHT_REDUCTION = 120;
+const NATIVE_KEYBOARD_MIN_HEIGHT_REDUCTION_RATIO = 0.2;
+const NON_TEXT_INPUT_TYPES = new Set([
+  'button',
+  'checkbox',
+  'color',
+  'file',
+  'hidden',
+  'image',
+  'radio',
+  'range',
+  'reset',
+  'submit'
+]);
 
 function round(value, precision = 2) {
   const number = Number.isFinite(value) ? value : 0;
@@ -87,6 +101,34 @@ function pointerCapability(matches) {
   return 'fine';
 }
 
+function isTextEditableElement(element) {
+  if (!element || element.disabled || element.readOnly) return false;
+  if (element.isContentEditable) return true;
+
+  const tagName = String(element.tagName || '').toUpperCase();
+  if (tagName === 'TEXTAREA') return true;
+  if (tagName !== 'INPUT') return false;
+
+  const inputType = String(element.type || 'text').toLowerCase();
+  return !NON_TEXT_INPUT_TYPES.has(inputType);
+}
+
+/**
+ * Native keyboards reduce the visual viewport without changing the layout
+ * viewport. Requiring an editable focus owner prevents browser chrome and
+ * ordinary resizes from being interpreted as keyboard state.
+ */
+function nativeKeyboardLikelyOpen(documentObject, layoutViewport, visualViewport) {
+  if (!isTextEditableElement(documentObject?.activeElement)) return false;
+
+  const heightReduction = layoutViewport.height - visualViewport.height;
+  const meaningfulReduction = Math.max(
+    NATIVE_KEYBOARD_MIN_HEIGHT_REDUCTION,
+    layoutViewport.height * NATIVE_KEYBOARD_MIN_HEIGHT_REDUCTION_RATIO
+  );
+  return heightReduction >= meaningfulReduction;
+}
+
 /**
  * Observe browser viewport state and publish normalized snapshots.
  */
@@ -112,6 +154,7 @@ export class ViewportService {
       visualViewport: () => this.scheduleUpdate('visual-viewport'),
       container: () => this.scheduleUpdate('container'),
       capability: () => this.scheduleUpdate('capability'),
+      focus: () => this.scheduleUpdate('focus'),
       panel: () => this.scheduleUpdate('panel')
     });
   }
@@ -194,11 +237,13 @@ export class ViewportService {
   destroy() {
     if (!this.started) return;
 
-    this.window.removeEventListener('resize', this.sourceHandlers.resize);
-    this.window.removeEventListener('orientationchange', this.sourceHandlers.orientation);
+    this.window.removeEventListener?.('resize', this.sourceHandlers.resize);
+    this.window.removeEventListener?.('orientationchange', this.sourceHandlers.orientation);
     this.window.visualViewport?.removeEventListener('resize', this.sourceHandlers.visualViewport);
     this.window.visualViewport?.removeEventListener('scroll', this.sourceHandlers.visualViewport);
-    this.document.removeEventListener('overlaychange', this.sourceHandlers.panel);
+    this.document.removeEventListener?.('focusin', this.sourceHandlers.focus);
+    this.document.removeEventListener?.('focusout', this.sourceHandlers.focus);
+    this.document.removeEventListener?.('overlaychange', this.sourceHandlers.panel);
 
     this.mediaQueries.forEach((mediaQuery) => {
       if (typeof mediaQuery.removeEventListener === 'function') {
@@ -240,11 +285,13 @@ export class ViewportService {
   }
 
   setupObservers() {
-    this.window.addEventListener('resize', this.sourceHandlers.resize, { passive: true });
-    this.window.addEventListener('orientationchange', this.sourceHandlers.orientation, { passive: true });
+    this.window.addEventListener?.('resize', this.sourceHandlers.resize, { passive: true });
+    this.window.addEventListener?.('orientationchange', this.sourceHandlers.orientation, { passive: true });
     this.window.visualViewport?.addEventListener('resize', this.sourceHandlers.visualViewport, { passive: true });
     this.window.visualViewport?.addEventListener('scroll', this.sourceHandlers.visualViewport, { passive: true });
-    this.document.addEventListener('overlaychange', this.sourceHandlers.panel);
+    this.document.addEventListener?.('focusin', this.sourceHandlers.focus);
+    this.document.addEventListener?.('focusout', this.sourceHandlers.focus);
+    this.document.addEventListener?.('overlaychange', this.sourceHandlers.panel);
 
     if (typeof this.window.ResizeObserver !== 'function') return;
 
@@ -359,7 +406,12 @@ export class ViewportService {
       aspectRatio: round(ratio, 4),
       pointer: pointerCapability(matches),
       hover: matches.hover,
-      anyHover: matches.anyHover
+      anyHover: matches.anyHover,
+      nativeKeyboardLikelyOpen: nativeKeyboardLikelyOpen(
+        this.document,
+        layoutViewport,
+        visualViewport
+      )
     });
   }
 
