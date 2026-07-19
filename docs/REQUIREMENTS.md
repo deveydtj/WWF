@@ -298,8 +298,10 @@ For complete cross-device validation specifications, see `docs/requirements/cros
 - Implementation must be vanilla HTML, CSS, and JavaScript only.
 - Styles use CSS custom properties and are embedded in `index.html`.
 - Game state drives all board rendering based on server responses.
-- Emoji, dark mode preference, and user session information live in
-  `localStorage`.
+- Emoji, dark mode preference, the desktop in-game-keyboard preference, and
+  user session information live in `localStorage`. The desktop keyboard
+  preference defaults to visible; touch-first and hybrid gameplay profiles
+  ignore a request to hide this required input surface.
 - Touch-first profiles hide the word-entry text field and use the in-game
   keyboard for guesses; keyboard-first profiles support physical keyboard entry
   and retain the in-game keyboard.

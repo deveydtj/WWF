@@ -719,6 +719,145 @@ console.log(JSON.stringify({
     assert data['inputsUnchanged'] is True
 
 
+def test_layout_preferences_default_persist_and_recover_safely():
+    script = """
+import {
+  DEFAULT_LAYOUT_PREFERENCES,
+  LAYOUT_PREFERENCE_STORAGE_KEYS,
+  loadLayoutPreferences,
+  persistLayoutPreference
+} from './frontend/static/js/layout/layoutPreferences.js';
+
+const values = new Map();
+const storage = {
+  getItem(key) { return values.has(key) ? values.get(key) : null; },
+  setItem(key, value) { values.set(key, value); }
+};
+const preference = 'showOnscreenKeyboardOnDesktop';
+const defaults = loadLayoutPreferences(storage);
+persistLayoutPreference(preference, false, storage);
+const persisted = loadLayoutPreferences(storage);
+values.set(
+  LAYOUT_PREFERENCE_STORAGE_KEYS.SHOW_ONSCREEN_KEYBOARD_ON_DESKTOP,
+  'invalid'
+);
+const recovered = loadLayoutPreferences(storage);
+
+console.log(JSON.stringify({
+  defaultDefinition: DEFAULT_LAYOUT_PREFERENCES,
+  defaults,
+  defaultsFrozen: Object.isFrozen(defaults),
+  persisted,
+  recovered
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'defaultDefinition': {'showOnscreenKeyboardOnDesktop': True},
+        'defaults': {'showOnscreenKeyboardOnDesktop': True},
+        'defaultsFrozen': True,
+        'persisted': {'showOnscreenKeyboardOnDesktop': False},
+        'recovered': {'showOnscreenKeyboardOnDesktop': True},
+    }
+
+
+def test_layout_preferences_validate_writes_and_tolerate_blocked_storage():
+    script = """
+import {
+  loadLayoutPreferences,
+  persistLayoutPreference
+} from './frontend/static/js/layout/layoutPreferences.js';
+
+const blockedStorage = {
+  getItem() { throw new Error('blocked'); },
+  setItem() { throw new Error('blocked'); }
+};
+const errors = [];
+for (const [preference, value] of [
+  ['showOnscreenKeyboardOnDesktop', 'false'],
+  ['unknownPreference', true]
+]) {
+  try {
+    persistLayoutPreference(preference, value, blockedStorage);
+  } catch (error) {
+    errors.push(error.message);
+  }
+}
+
+console.log(JSON.stringify({
+  blockedRead: loadLayoutPreferences(blockedStorage),
+  blockedWriteValue: persistLayoutPreference(
+    'showOnscreenKeyboardOnDesktop', false, blockedStorage
+  ),
+  errors
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'blockedRead': {'showOnscreenKeyboardOnDesktop': True},
+        'blockedWriteValue': False,
+        'errors': [
+            'Layout preference showOnscreenKeyboardOnDesktop must be a boolean',
+            'Unknown layout preference: unknownPreference',
+        ],
+    }
+
+
+def test_hidden_desktop_keyboard_preference_cannot_hide_required_touch_keyboard():
+    script = """
+import { decideLayoutProfile } from './frontend/static/js/layout/layoutProfileDecisions.js';
+import { loadLayoutPreferences } from './frontend/static/js/layout/layoutPreferences.js';
+
+const storage = {
+  getItem(key) {
+    return key === 'showOnscreenKeyboardOnDesktop' ? 'false' : null;
+  }
+};
+const preferences = loadLayoutPreferences(storage);
+const panelMinimums = { inlineSize: 240, gap: 16, outerGutters: 32 };
+const gameplayMinimums = {
+  inlineSize: 480,
+  blockSize: 600,
+  splitLandscapeInlineSize: 640,
+  splitLandscapeBlockSize: 320
+};
+const snapshot = (pointer, hover) => ({
+  appContainer: { width: 1024, height: 768 },
+  visualViewport: { width: 1024, height: 768 },
+  orientation: 'landscape',
+  pointer,
+  hover
+});
+
+console.log(JSON.stringify({
+  touch: decideLayoutProfile(
+    snapshot('coarse', false), panelMinimums, gameplayMinimums, preferences
+  ).showOnscreenKeyboard,
+  hybrid: decideLayoutProfile(
+    snapshot('mixed', true), panelMinimums, gameplayMinimums, preferences
+  ).showOnscreenKeyboard,
+  desktop: decideLayoutProfile(
+    snapshot('fine', true), panelMinimums, gameplayMinimums, preferences
+  ).showOnscreenKeyboard
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip()) == {
+        'touch': True,
+        'hybrid': True,
+        'desktop': False,
+    }
+
+
 def test_layout_profile_compatibility_maps_density_to_legacy_classes():
     script = """
 import {

@@ -6,6 +6,7 @@ import {
   PANEL_PRESENTATIONS,
   createLayoutProfile
 } from './layoutProfile.js';
+import { DEFAULT_LAYOUT_PREFERENCES } from './layoutPreferences.js';
 
 const ORIENTATIONS = new Set(['portrait', 'landscape']);
 const POINTER_CAPABILITIES = new Set(['coarse', 'fine', 'mixed']);
@@ -273,7 +274,7 @@ export function decideLayoutProfile(
   const showDesktopKeyboard = getPreference(
     preferenceState,
     'showOnscreenKeyboardOnDesktop',
-    true
+    DEFAULT_LAYOUT_PREFERENCES.showOnscreenKeyboardOnDesktop
   );
 
   return createLayoutProfile({

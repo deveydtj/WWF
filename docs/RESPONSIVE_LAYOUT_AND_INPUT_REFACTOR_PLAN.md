@@ -577,7 +577,7 @@ Define one authoritative layout state that represents actual UX behavior.
   - Mark compatibility APIs deprecated.
   - Do not add new call sites to `isMobileView()` or `historyPopup`.
 
-- [ ] **1.5 Define user preferences.**
+- [x] **1.5 Define user preferences.**
   - Add a persisted `showOnscreenKeyboardOnDesktop` preference.
   - Default to `true` for initial parity.
   - Do not allow the keyboard to be hidden on touch-first phone/tablet profiles during active gameplay.
