@@ -10,7 +10,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--kb-gap);
+  gap: var(--keyboard-row-gap);
   padding-bottom: var(--viewport-safe-area-bottom);
   touch-action: manipulation;
   flex: 0 0 auto; /* Don't shrink */
@@ -21,13 +21,13 @@
 .keyboard-row {
   display: flex;
   justify-content: center;
-  gap: var(--kb-gap);
+  gap: var(--keyboard-inline-gap);
   align-items: stretch;
 }
 
 .key {
   /* Use responsive key sizing tokens that follow JS-computed values */
-  height: var(--key-size);
+  height: var(--keyboard-key-height);
   /* Use flex to distribute space naturally across keys in each row.
      This allows proper handling of varying key counts per row. */
   flex: 1 1 auto;

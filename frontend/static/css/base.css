@@ -28,12 +28,15 @@
   --pad-x: 16px;
   --pad-y: 14px;
   --gap: 10px;
-  --kb-gap: 8px;
+  --keyboard-row-gap: 8px;
+  --keyboard-inline-gap: 8px;
+  --kb-gap: var(--keyboard-inline-gap);
   --radius: 10px;
   
   --tile-size: 56px;
   --tile-gap: var(--gap);
-  --key-h: 44px;
+  --keyboard-key-height: 44px;
+  --key-h: var(--keyboard-key-height);
   --board-width: calc(var(--tile-size) * 5 + var(--tile-gap) * 4);
   
   --tile-font: 28px;
@@ -42,8 +45,8 @@
   
   /* Enhanced keyboard sizing tokens - derived from JS-driven sizing for viewport-fit consistency
    * These tokens follow the JS-computed values in responsiveScaling.js to ensure accurate viewport calculations
-   * The JS updates --key-h and --key-font; these tokens reference those for consistency */
-  --key-size: var(--key-h); /* Key height follows JS-computed sizing */
+   * The JS updates --keyboard-key-height and --key-font; these tokens reference those for consistency */
+  --key-size: var(--keyboard-key-height); /* Key height follows JS-computed sizing */
   --key-size-wide: calc(var(--key-size) * 1.5); /* Wide keys (Enter, Backspace) */
   --key-font-size: var(--key-font); /* Key font follows JS-computed sizing */
   --key-font-size-wide: calc(var(--key-font-size) * 0.9); /* Slightly smaller for wide keys */

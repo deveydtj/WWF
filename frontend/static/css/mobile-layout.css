@@ -306,13 +306,13 @@
     z-index: var(--z-keyboard);
     display: flex;
     flex-direction: column;
-    gap: var(--kb-gap); /* Match desktop to avoid breakpoint jump */
+    gap: var(--keyboard-row-gap);
   }
   
   .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: var(--kb-gap); /* Use token for consistency */
+    gap: var(--keyboard-inline-gap);
   }
   
   /* Key sizing handled by base tokens that follow JS calculations */
@@ -320,7 +320,7 @@
     flex: 1;
     min-width: 0; /* Allow keys to shrink on very narrow screens; height maintains touch target */
     max-width: var(--key-size);
-    height: var(--key-size);
+    height: var(--keyboard-key-height);
     font-size: var(--key-font-size);
     font-weight: bold;
     padding: 0;
@@ -797,7 +797,7 @@
   }
   
   .key {
-    height: 44px;
+    height: var(--keyboard-key-height);
     font-size: 12px;
   }
   

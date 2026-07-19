@@ -363,14 +363,14 @@
     max-width: var(--board-width);
     display: flex;
     flex-direction: column;
-    gap: var(--kb-gap); /* Use token */
+    gap: var(--keyboard-row-gap);
     padding: var(--kb-gap) 0; /* Match mobile to avoid breakpoint jump */
   }
   
   .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: var(--kb-gap); /* Use token for consistency */
+    gap: var(--keyboard-inline-gap);
   }
   
   /* Key sizing handled by base tokens with responsive clamp() */
@@ -378,7 +378,7 @@
     flex: 1;
     min-width: 0;
     max-width: var(--key-size);
-    height: var(--key-size);
+    height: var(--keyboard-key-height);
     font-size: var(--key-font-size);
     font-weight: bold;
     padding: 0;
@@ -595,11 +595,11 @@
   }
   
   #keyboard {
-    gap: 10px;
+    gap: var(--keyboard-row-gap);
   }
   
   .keyboard-row {
-    gap: 8px;
+    gap: var(--keyboard-inline-gap);
   }
   
   /* Keys now use tokens from :root - no need to override here */

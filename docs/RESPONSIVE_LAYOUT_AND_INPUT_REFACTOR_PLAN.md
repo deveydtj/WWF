@@ -714,7 +714,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
   - If status text is transient, reserve a stable minimum rather than allowing the board to jump.
   - Use visual viewport height when chat/native keyboard is open.
 
-- [ ] **4.4 Replace keyboard transform scaling.**
+- [x] **4.4 Replace keyboard transform scaling.**
   - Delete `applyMobileKeyboardAdjustments()` and any full-keyboard `transform: scale()` corrections.
   - Size keys with layout tokens.
   - Keep the rendered box and hit box identical.

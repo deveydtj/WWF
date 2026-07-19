@@ -853,6 +853,33 @@ console.log(JSON.stringify(properties));
     properties = json.loads(result.stdout.strip())
     assert properties['--tile-size'] == '50px'
     assert properties['--board-width'] == '294px'
+    assert properties['--keyboard-key-height'] == '40px'
+    assert properties['--keyboard-row-gap'] == '9px'
+    assert properties['--keyboard-inline-gap'] == '9px'
+
+
+def test_keyboard_sizing_uses_layout_tokens_without_container_scaling():
+    responsive_scaling = (SRC_DIR / 'responsiveScaling.js').read_text(encoding='utf-8')
+    legacy_sizing = '\n'.join(
+        (SRC_DIR / filename).read_text(encoding='utf-8')
+        for filename in ['utils.js', 'boardContainer.js']
+    )
+    base_css = (CSS_DIR / 'base.css').read_text(encoding='utf-8')
+    keyboard_css = (CSS_DIR / 'components' / 'keyboard.css').read_text(encoding='utf-8')
+
+    assert 'applyMobileKeyboardAdjustments' not in legacy_sizing
+    assert 'compactKeyboardForSmallViewports' not in legacy_sizing
+    assert not re.search(
+        r"keyboard\.style\.transform\s*=\s*[`'\"]scale\(",
+        legacy_sizing,
+    )
+    assert '"--keyboard-key-height"' in responsive_scaling
+    assert '"--keyboard-row-gap"' in responsive_scaling
+    assert '"--keyboard-inline-gap"' in responsive_scaling
+    assert '--key-h: var(--keyboard-key-height)' in base_css
+    assert 'height: var(--keyboard-key-height)' in keyboard_css
+    assert 'gap: var(--keyboard-row-gap)' in keyboard_css
+    assert 'gap: var(--keyboard-inline-gap)' in keyboard_css
 
 
 def test_layout_profile_decisions_distinguish_capabilities_at_equal_size():

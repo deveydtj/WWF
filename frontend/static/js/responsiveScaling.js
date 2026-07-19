@@ -78,7 +78,8 @@ function tuneSizing(viewportSnapshot = null) {
   const kbGap = clamp(Math.round(Math.min(vw, vh) * 0.010), 6, 10);
   root.style.setProperty("--gap", gap + "px");
   root.style.setProperty("--tile-gap", gap + "px");
-  root.style.setProperty("--kb-gap", kbGap + "px");
+  root.style.setProperty("--keyboard-row-gap", kbGap + "px");
+  root.style.setProperty("--keyboard-inline-gap", kbGap + "px");
 
   // Width-driven tile size (guaranteed to fit 5 tiles + 4 gaps)
   const usableW = gameplayWidth - 2; // small safety margin
@@ -149,7 +150,7 @@ function tuneSizing(viewportSnapshot = null) {
 
   const r = fits(tile);
   root.style.setProperty("--tile-size", tile + "px");
-  root.style.setProperty("--key-h", r.keyH + "px");
+  root.style.setProperty("--keyboard-key-height", r.keyH + "px");
   root.style.setProperty(
     "--available-board-block-size",
     r.verticalBudget.availableBoardBlockSize + "px"
@@ -267,7 +268,10 @@ function verifyElementsFitInViewport() {
   // Get current scaling values
   const styles = getComputedStyle(root);
   const tileSize = parseFloat(styles.getPropertyValue("--tile-size")) || 0;
-  const keyHeight = parseFloat(styles.getPropertyValue("--key-h")) || 0;
+  const keyHeight = parseFloat(
+    styles.getPropertyValue("--keyboard-key-height")
+      || styles.getPropertyValue("--key-h")
+  ) || 0;
   const boardWidth = parseFloat(styles.getPropertyValue("--board-width")) || 0;
   
   // Check if elements are visible (for Cypress compatibility)
@@ -361,7 +365,10 @@ function calculateOptimalTileSize(containerInfo) {
   
   return {
     tileSize: parseFloat(styles.getPropertyValue("--tile-size")) || 0,
-    keyHeight: parseFloat(styles.getPropertyValue("--key-h")) || 0,
+    keyHeight: parseFloat(
+      styles.getPropertyValue("--keyboard-key-height")
+        || styles.getPropertyValue("--key-h")
+    ) || 0,
     boardWidth: parseFloat(styles.getPropertyValue("--board-width")) || 0
   };
 }
