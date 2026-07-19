@@ -117,6 +117,24 @@ Based on test results, the following behaviors are documented:
 
 5. **Breakpoint Transitions**: The board visibility may change at the 768px breakpoint. This is part of the responsive design strategy.
 
+## Phase 0 Baseline Expected Failures
+
+`responsive-baseline-failures.spec.js` records the known failures that must remain visible while the responsive refactor is in progress. Each test uses Playwright's expected-failure marker and asserts the final UX contract. A test that unexpectedly passes must have its marker removed and remain as a normal regression test.
+
+| Baseline failure | Current evidence | Existing permissive allowance |
+|---|---|---|
+| A virtual-key activation focuses `#guessInput` | Focus is a reliable headless-browser proxy for the native keyboard opening on a touch device. | The legacy suite does not assert focus or native-keyboard suppression. |
+| The phone guess field remains available | The field is visible, lacks `aria-hidden="true"`, and remains in sequential keyboard navigation. | The legacy suite treats the input row as a required visible surface. |
+| Tablet rail selection ignores available height | At 844px wide, both 844x1100 and 844x390 report one-panel capacity. | The legacy breakpoint tests log layout changes without asserting a measured rail fit. |
+| The cross-device helper does not apply its viewport dimensions | Every named device records the one live browser viewport in `verification.viewport`. | Device names and requested dimensions are reported without verifying that they were applied. |
+| Compact keyboard overflow and board overlap | The 320x568 baseline has a keyboard wider than the viewport and an intersecting board/keyboard region. | Horizontal keyboard overflow below 20px and board/keyboard overlap below 25% of either element are accepted. |
+
+Run these baselines with:
+
+```bash
+npx playwright test tests/playwright/responsive-baseline-failures.spec.js --project=chromium
+```
+
 ## Test Configuration
 
 The test configuration is defined in `playwright.config.js` and includes:

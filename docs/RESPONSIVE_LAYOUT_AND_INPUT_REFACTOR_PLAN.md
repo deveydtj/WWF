@@ -526,7 +526,7 @@ Capture the current behavior and create reliable test fixtures before changing l
   - Catch unmatched braces, invalid declarations, duplicate property ownership, and malformed media blocks.
   - Audit the end of `desktop-layout.css` and all responsive files.
 
-- [ ] **0.5 Add baseline failures as skipped or expected-failure tests.**
+- [x] **0.5 Add baseline failures as skipped or expected-failure tests.**
   - Native keyboard opens after virtual-key tap.
   - Phone guess field remains available when it should be hidden.
   - Tablet rail selection is width-label based.
