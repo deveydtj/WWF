@@ -11,14 +11,16 @@
     "real-time"
   ],
   "devDependencies": {
-    "vite": "^7.0.4",
-    "@playwright/test": "^1.55.1"
+    "@playwright/test": "^1.55.1",
+    "stylelint": "^16.26.1",
+    "vite": "^7.0.4"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "postbuild": "rm -rf ../backend/static/* && cp -r dist/* ../backend/static/",
-    "cypress": "cypress run --headless"
+    "cypress": "cypress run --headless",
+    "lint:css": "stylelint \"static/css/**/*.css\""
   },
   "browserslist": [
     "> 1%",

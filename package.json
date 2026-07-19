@@ -33,6 +33,7 @@
     "dev": "python backend/server.py",
     "test": "python -m pytest -v",
     "build": "cd frontend && npm run build",
+    "lint:css": "npm --workspace frontend run lint:css",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "setup": "./scripts/setup.sh"

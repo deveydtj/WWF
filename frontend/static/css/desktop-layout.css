@@ -636,9 +636,8 @@
   }
   
   /* Keys now use tokens from :root - no need to override here */
-}
-  
-/* Wider panels for better readability */
+
+  /* Wider panels for better readability */
   #historyBox,
   #definitionBox,
   #chatBox {

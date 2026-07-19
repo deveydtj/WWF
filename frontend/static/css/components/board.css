@@ -71,7 +71,6 @@
   outline: none;
   /* Black stroke outline for light mode */
   -webkit-text-stroke: 1px black;
-  text-stroke: 1px black;
   pointer-events: none;
 }
 
@@ -80,7 +79,6 @@
   .emoji-stamp {
     /* White stroke outline for dark mode */
     -webkit-text-stroke: 1px white;
-    text-stroke: 1px white;
   }
 }
 

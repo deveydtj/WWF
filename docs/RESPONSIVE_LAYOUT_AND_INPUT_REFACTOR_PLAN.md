@@ -521,7 +521,7 @@ Capture the current behavior and create reliable test fixtures before changing l
   - Do not log every resize in production.
   - Include profile, panel capacity, board bounds, keyboard bounds, and visual viewport values.
 
-- [ ] **0.4 Add a CSS syntax and style check.**
+- [x] **0.4 Add a CSS syntax and style check.**
   - Add Stylelint or an equivalent parser check.
   - Catch unmatched braces, invalid declarations, duplicate property ownership, and malformed media blocks.
   - Audit the end of `desktop-layout.css` and all responsive files.
