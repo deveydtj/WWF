@@ -2,9 +2,10 @@
  * Current-state responsive audit capture for Phase 0.1.
  *
  * This is intentionally an observation harness, not a regression suite. It
- * uses the current uninitialized game page because the deterministic lobby
- * fixture belongs to Phase 0.2. Run it only when refreshing the checked-in
- * audit artifacts:
+ * preserves the original uninitialized Phase 0.1 surface so its checked-in
+ * baseline remains comparable. New initialized game tests should import the
+ * deterministic lobby fixture in `fixtures/deterministic-lobby.js`. Run this
+ * audit only when refreshing the checked-in artifacts:
  *
  *   python3 -m http.server 4173 --directory frontend
  *   GENERATE_RESPONSIVE_AUDIT=1 AUDIT_BASE_URL=http://127.0.0.1:4173 \

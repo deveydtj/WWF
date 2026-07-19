@@ -510,7 +510,7 @@ Capture the current behavior and create reliable test fixtures before changing l
   - Record whether board, keyboard, header, input row, and panels fit.
   - Record whether tapping an in-game key opens the native keyboard.
 
-- [ ] **0.2 Add a deterministic local lobby fixture.**
+- [x] **0.2 Add a deterministic local lobby fixture.**
   - Create a test helper that opens a real lobby route or stubs the state APIs consistently.
   - Ensure the board always renders six rows.
   - Seed history, definition, chat messages, and multiple players.
