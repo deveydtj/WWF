@@ -438,6 +438,103 @@ console.log(JSON.stringify({
     assert data['aliases'] == ['phone', 'tablet', 'desktop', 'phone']
 
 
+def test_layout_profile_vocabulary_creates_an_immutable_complete_profile():
+    script = """
+import {
+  GAME_FLOWS,
+  LAYOUT_DENSITIES,
+  LAYOUT_INTERACTIONS,
+  PANEL_CAPACITIES,
+  PANEL_PRESENTATIONS,
+  createLayoutProfile
+} from './frontend/static/js/layout/layoutProfile.js';
+
+const profile = createLayoutProfile({
+  density: LAYOUT_DENSITIES.COMFORTABLE,
+  interaction: LAYOUT_INTERACTIONS.HYBRID,
+  gameFlow: GAME_FLOWS.SPLIT_LANDSCAPE,
+  panelCapacity: PANEL_CAPACITIES.ONE,
+  panelPresentation: {
+    history: PANEL_PRESENTATIONS.LEFT_RAIL,
+    definition: PANEL_PRESENTATIONS.MODAL,
+    chat: PANEL_PRESENTATIONS.RIGHT_RAIL,
+    players: PANEL_PRESENTATIONS.HIDDEN
+  },
+  showGuessField: false,
+  showOnscreenKeyboard: true,
+  compactHeader: true
+});
+
+console.log(JSON.stringify({
+  profile,
+  frozen: Object.isFrozen(profile),
+  panelsFrozen: Object.isFrozen(profile.panelPresentation)
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+    assert data == {
+        'profile': {
+            'density': 'comfortable',
+            'interaction': 'hybrid',
+            'gameFlow': 'split-landscape',
+            'panelCapacity': 1,
+            'panelPresentation': {
+                'history': 'left-rail',
+                'definition': 'modal',
+                'chat': 'right-rail',
+                'players': 'hidden'
+            },
+            'showGuessField': False,
+            'showOnscreenKeyboard': True,
+            'compactHeader': True
+        },
+        'frozen': True,
+        'panelsFrozen': True
+    }
+
+
+def test_layout_profile_vocabulary_rejects_incomplete_or_unknown_values():
+    script = """
+import { createLayoutProfile } from './frontend/static/js/layout/layoutProfile.js';
+
+const invalidProfiles = [
+  {},
+  {
+    density: 'tiny',
+    interaction: 'touch-first',
+    gameFlow: 'vertical',
+    panelCapacity: 0,
+    panelPresentation: {
+      history: 'modal', definition: 'modal', chat: 'modal', players: 'modal'
+    },
+    showGuessField: false,
+    showOnscreenKeyboard: true,
+    compactHeader: true
+  }
+];
+
+console.log(JSON.stringify(invalidProfiles.map((profile) => {
+  try {
+    createLayoutProfile(profile);
+    return null;
+  } catch (error) {
+    return error.message;
+  }
+})));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    messages = json.loads(result.stdout.strip())
+    assert messages[0] == 'Layout profile is missing density'
+    assert messages[1] == 'Unknown layout profile density: tiny'
+
+
 def test_layout_manager_applies_phase_one_body_state():
     script = """
 global.window = {

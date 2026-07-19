@@ -556,7 +556,7 @@ Define one authoritative layout state that represents actual UX behavior.
   - Make panel capacity, input presentation, and orientation behavior authoritative.
   - Remove the portrait-only phone requirement.
 
-- [ ] **1.2 Introduce the new profile vocabulary.**
+- [x] **1.2 Introduce the new profile vocabulary.**
   - `density`
   - `interaction`
   - `gameFlow`
