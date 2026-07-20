@@ -3,7 +3,7 @@
    ───────────────────────────────────────────── */
 
 /* Option toggles and menu */
-/* Base button styles - positioning handled by mobile-layout.css and desktop-layout.css */
+/* Base button styles - positioning is owned by the responsive shell. */
 #optionsToggle {
   font-size: calc(var(--tile-size) * var(--button-font-scale)); /* Scale with tile size using token */
   background: var(--bg-color);
@@ -529,26 +529,4 @@ body.players-open #playerSidebar {
 
 #chatInput { 
   flex: 1; 
-}
-
-/* Panel state visibility controls for large screens */
-@media (min-width: 901px) {
-  #historyClose,
-  #definitionClose {
-    display: none;
-  }
-  
-  #optionsToggle {
-    display: block;
-  }
-  
-  #chatNotify {
-    display: block;
-  }
-  
-  #boardArea {
-    position: relative;
-  }
-  
-  /* Panel positioning and visibility handled in layout.css - this file only handles content styling */
 }

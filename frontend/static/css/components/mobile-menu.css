@@ -155,11 +155,3 @@
   min-width: 18px;
   text-align: center;
 }
-
-/* Mobile-only visibility - hide on desktop */
-@media (min-width: 601px) {
-  .mobile-only-menu,
-  .mobile-only-button {
-    display: none !important;
-  }
-}

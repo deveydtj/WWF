@@ -754,7 +754,7 @@ Use a stable DOM and CSS layout system that can smoothly support compact, adapti
 
 ## Tasks
 
-- [ ] **5.1 Replace the hard mobile/desktop stylesheet split.**
+- [x] **5.1 Replace the hard mobile/desktop stylesheet split.**
   - Create `frontend/static/css/responsive-layout.css` or a similarly authoritative file.
   - Load it for all viewports.
   - Use profile data attributes and container queries where appropriate.

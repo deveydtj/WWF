@@ -1,0 +1,72 @@
+/**
+ * responsive-layout.css
+ *
+ * Authoritative entry point for responsive shell styles. This file is loaded
+ * at every viewport; the legacy layout modules remain imported temporarily so
+ * Phase 5 can migrate their rules without returning to conditional <link>
+ * elements.
+ *
+ * New responsive rules belong here and should consume the capability profile
+ * published on <body>, or the named app container, instead of inferring a
+ * device type from viewport width.
+ */
+
+@import url("./mobile-layout.css");
+@import url("./desktop-layout.css");
+
+/* Profile-owned shell tokens. LayoutMetricsEngine remains the only runtime
+ * owner of board, keyboard, rail, and modal dimensions. */
+body[data-density="compact"] {
+  --shell-inline-gutter: 12px;
+  --shell-control-gap: 6px;
+}
+
+body[data-density="comfortable"] {
+  --shell-inline-gutter: 16px;
+  --shell-control-gap: 8px;
+}
+
+body[data-density="spacious"] {
+  --shell-inline-gutter: 20px;
+  --shell-control-gap: 10px;
+}
+
+body[data-density] #lobbyHeader {
+  column-gap: var(--shell-control-gap);
+  padding-inline: max(var(--shell-inline-gutter), var(--viewport-safe-area-left))
+    max(var(--shell-inline-gutter), var(--viewport-safe-area-right));
+}
+
+body[data-interaction="touch-first"] #hostControls button,
+body[data-interaction="hybrid"] #hostControls button {
+  min-width: var(--min-touch-target);
+  min-height: var(--min-touch-target);
+}
+
+body[data-show-onscreen-keyboard="false"] #keyboard {
+  display: none;
+}
+
+body[data-panel-capacity="1"] #historyClose,
+body[data-panel-capacity="2"] #historyClose,
+body[data-panel-capacity="2"] #definitionClose {
+  display: none;
+}
+
+body:not([data-compact-header="true"]) .mobile-only-menu,
+body:not([data-compact-header="true"]) .mobile-only-button {
+  display: none !important;
+}
+
+/* The app is the responsive shell's query container. Container conditions are
+ * used for local fit adjustments; product interaction still comes from the
+ * capability profile rather than from these measurements. */
+@container app (inline-size <= 600px) {
+  body[data-compact-header="true"] #lobbyHeader {
+    column-gap: 4px;
+  }
+
+  body[data-compact-header="true"] #hostControls {
+    gap: 4px;
+  }
+}

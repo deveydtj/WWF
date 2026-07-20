@@ -21,6 +21,7 @@ _CSS_FILES = [
     CSS_DIR / 'components' / 'leaderboard.css',
     CSS_DIR / 'components' / 'modals.css',
     CSS_DIR / 'components' / 'mobile-menu.css',
+    CSS_DIR / 'responsive-layout.css',
     CSS_DIR / 'mobile-layout.css',
     CSS_DIR / 'desktop-layout.css',
 ]
@@ -119,8 +120,9 @@ def test_modules_exist_and_export():
 def test_index_html_uses_module_script():
     text = GAME.read_text(encoding='utf-8')
     assert '<link rel="stylesheet" href="static/css/theme.css"' in text
-    assert '<link rel="stylesheet" href="static/css/mobile-layout.css"' in text
-    assert '<link rel="stylesheet" href="static/css/desktop-layout.css"' in text
+    assert '<link rel="stylesheet" href="static/css/responsive-layout.css">' in text
+    assert '<link rel="stylesheet" href="static/css/mobile-layout.css"' not in text
+    assert '<link rel="stylesheet" href="static/css/desktop-layout.css"' not in text
     scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
     assert len(scripts) == 1, "index.html should contain exactly one script tag"
     script = scripts[0]
@@ -129,6 +131,26 @@ def test_index_html_uses_module_script():
     # ensure no inline script content
     inside = re.sub(r'<script[^>]*>|</script>', '', script, flags=re.DOTALL).strip()
     assert inside == ''
+
+
+def test_responsive_layout_is_the_authoritative_all_viewport_entry_point():
+    css = (CSS_DIR / 'responsive-layout.css').read_text(encoding='utf-8')
+    assert '@import url("./mobile-layout.css");' in css
+    assert '@import url("./desktop-layout.css");' in css
+    assert 'body[data-density="compact"]' in css
+    assert 'body[data-interaction="touch-first"]' in css
+    assert 'body[data-show-onscreen-keyboard="false"] #keyboard' in css
+    assert '@container app (inline-size <= 600px)' in css
+
+    component_css = ''.join(
+        path.read_text(encoding='utf-8')
+        for path in (CSS_DIR / 'components').glob('*.css')
+    )
+    viewport_breakpoint = re.compile(
+        r'@media\s*\([^)]*(?:min|max)-(?:width|height)\s*:',
+        flags=re.IGNORECASE,
+    )
+    assert not viewport_breakpoint.search(component_css)
 
 def test_main_js_imports_modules():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
@@ -250,9 +272,13 @@ def test_chat_notify_icon_present_and_styled():
 def test_options_and_chat_icons_visible():
     css = read_css()
     chat_rules = [m.group(0) for m in re.finditer(r'#chatNotify\s*{[^}]*}', css)]
-    assert chat_rules and any('display: block' in r for r in chat_rules)
+    assert chat_rules and any(
+        re.search(r'display:\s*(?:block|flex)', rule) for rule in chat_rules
+    )
     opt_rules = [m.group(0) for m in re.finditer(r'#optionsToggle\s*{[^}]*}', css)]
-    assert opt_rules and any('display: block' in r for r in opt_rules)
+    assert opt_rules and any(
+        re.search(r'display:\s*(?:block|flex)', rule) for rule in opt_rules
+    )
 
 def test_hide_chat_notify_keeps_icon_visible():
     text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')

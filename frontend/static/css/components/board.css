@@ -9,18 +9,9 @@
   align-items: flex-start;
   margin: 0 auto;
   width: 100%;
+  max-width: 100%;
   position: relative;
   flex: 0 0 auto; /* Only take space needed, don't expand */
-}
-
-/* Large screen board area - properly constrain within the game column */
-@media (min-width: 1200px) {
-  #boardArea {
-    /* Don't constrain width - let it use the full game column space */
-    width: 100%;
-    max-width: 100%; /* Use full width of parent container (gameColumn) */
-    margin: 0 auto;
-  }
 }
 
 /* Game board grid */
@@ -45,13 +36,6 @@
   z-index: var(--z-panel-interactive);
   /* Internal padding for spacing from board */
   padding-right: 10px;
-}
-
-/* Show stamps on everything except mobile */
-@media (min-width: 601px) {
-  #stampContainer {
-    display: block;
-  }
 }
 
 /* Emoji stamps styling - Updated for precise row alignment */
@@ -79,22 +63,6 @@
   .emoji-stamp {
     /* White stroke outline for dark mode */
     -webkit-text-stroke: 1px white;
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 600px) {  
-  #stampContainer {
-    display: none !important; /* Hide stamps completely on mobile */
-  }
-}
-
-/* Tablet mode - hide stamp area since panels become overlays */
-@media (min-width: 601px) and (max-width: 900px) {
-  /* Grid structure is handled in layout.css */
-  
-  #stampContainer {
-    display: none; /* Hide stamps in tablet mode */
   }
 }
 
