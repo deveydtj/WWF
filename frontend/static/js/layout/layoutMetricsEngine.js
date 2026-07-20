@@ -28,6 +28,19 @@ export const DEFAULT_LAYOUT_METRIC_CONSTRAINTS = Object.freeze({
   modalCloseControlGap: 12
 });
 
+export const DEFAULT_LAYOUT_INVARIANT_MINIMUMS = Object.freeze({
+  '--tile-size': 30,
+  '--tile-gap': 0,
+  '--board-width': 1,
+  '--keyboard-key-height': 34,
+  '--keyboard-row-gap': 0,
+  '--keyboard-inline-gap': 0,
+  '--available-board-block-size': 1
+});
+
+const DEFAULT_LAYOUT_INVARIANT_TOLERANCE = 0.5;
+let lastReportedInvariantSignature = null;
+
 function assertObject(value, name) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new TypeError(`${name} must be an object`);
@@ -74,6 +87,172 @@ function freezeRecord(record) {
     }
   });
   return Object.freeze(record);
+}
+
+function readInvariantNumber(value) {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'string' || value.trim() === '') return Number.NaN;
+  return Number.parseFloat(value);
+}
+
+function addInvariantViolation(violations, code, message, details = {}) {
+  violations.push(freezeRecord({ code, message, ...details }));
+}
+
+/**
+ * Validate calculated and rendered sizing without reading the DOM. Callers may
+ * supply rendered board/keyboard dimensions after CSS has been applied, while
+ * unit tests can pass synthetic values. The function never logs or throws.
+ */
+export function validateLayoutMetricInvariants(
+  { board, keyboard, tokens },
+  {
+    minimums = DEFAULT_LAYOUT_INVARIANT_MINIMUMS,
+    tolerance = DEFAULT_LAYOUT_INVARIANT_TOLERANCE
+  } = {}
+) {
+  assertObject(board, 'invariants.board');
+  assertObject(keyboard, 'invariants.keyboard');
+  assertObject(tokens, 'invariants.tokens');
+  assertObject(minimums, 'invariants.minimums');
+
+  if (!Number.isFinite(tolerance) || tolerance < 0) {
+    throw new TypeError('invariants.tolerance must be a non-negative number');
+  }
+
+  const violations = [];
+  const columns = readInvariantNumber(board.columns);
+  const rows = readInvariantNumber(board.rows);
+  const tileSize = readInvariantNumber(board.tileSize);
+  const tileGap = readInvariantNumber(board.tileGap);
+  const boardInlineSize = readInvariantNumber(board.inlineSize);
+  const boardBlockSize = readInvariantNumber(board.blockSize);
+  const expectedInlineSize = (columns * tileSize) + ((columns - 1) * tileGap);
+  const expectedBlockSize = (rows * tileSize) + ((rows - 1) * tileGap);
+
+  if (![columns, rows, tileSize, tileGap, boardInlineSize, boardBlockSize]
+    .every(Number.isFinite)) {
+    addInvariantViolation(
+      violations,
+      'board-non-finite',
+      'Board metrics must all be finite numbers.'
+    );
+  } else {
+    if (Math.abs(boardInlineSize - expectedInlineSize) > tolerance) {
+      addInvariantViolation(
+        violations,
+        'board-inline-formula',
+        'Board width must equal its tiles plus inline gaps.',
+        { actual: boardInlineSize, expected: expectedInlineSize }
+      );
+    }
+    if (Math.abs(boardBlockSize - expectedBlockSize) > tolerance) {
+      addInvariantViolation(
+        violations,
+        'board-block-formula',
+        'Board height must equal its tiles plus block gaps.',
+        { actual: boardBlockSize, expected: expectedBlockSize }
+      );
+    }
+  }
+
+  const keyboardInlineSize = readInvariantNumber(keyboard.inlineSize);
+  const keyboardBlockSize = readInvariantNumber(keyboard.blockSize);
+  const keyboardAvailableInlineSize = readInvariantNumber(keyboard.availableInlineSize);
+  const keyboardAvailableBlockSize = readInvariantNumber(keyboard.availableBlockSize);
+  if (![
+    keyboardInlineSize,
+    keyboardBlockSize,
+    keyboardAvailableInlineSize,
+    keyboardAvailableBlockSize
+  ].every(Number.isFinite)) {
+    addInvariantViolation(
+      violations,
+      'keyboard-non-finite',
+      'Keyboard metrics must all be finite numbers.'
+    );
+  } else {
+    if (keyboardInlineSize - keyboardAvailableInlineSize > tolerance) {
+      addInvariantViolation(
+        violations,
+        'keyboard-inline-overflow',
+        'Keyboard must fit its allocated inline region.',
+        { actual: keyboardInlineSize, available: keyboardAvailableInlineSize }
+      );
+    }
+    if (keyboardBlockSize - keyboardAvailableBlockSize > tolerance) {
+      addInvariantViolation(
+        violations,
+        'keyboard-block-overflow',
+        'Keyboard must fit its allocated block region.',
+        { actual: keyboardBlockSize, available: keyboardAvailableBlockSize }
+      );
+    }
+  }
+
+  Object.entries(tokens).forEach(([token, rawValue]) => {
+    const value = readInvariantNumber(rawValue);
+    if (!Number.isFinite(value)) {
+      addInvariantViolation(
+        violations,
+        'token-non-finite',
+        `${token} must resolve to a finite number.`,
+        { token, value: rawValue }
+      );
+      return;
+    }
+    if (value < 0) {
+      addInvariantViolation(
+        violations,
+        'token-negative',
+        `${token} cannot be negative.`,
+        { token, value }
+      );
+      return;
+    }
+
+    if (Object.hasOwn(minimums, token)) {
+      const minimum = readInvariantNumber(minimums[token]);
+      if (!Number.isFinite(minimum) || minimum < 0) {
+        throw new TypeError(`invariants.minimums[${token}] must be non-negative`);
+      }
+      if (value < minimum) {
+        addInvariantViolation(
+          violations,
+          'token-below-minimum',
+          `${token} is below its approved minimum.`,
+          { token, value, minimum }
+        );
+      }
+    }
+  });
+
+  return freezeRecord({
+    valid: violations.length === 0,
+    violations
+  });
+}
+
+/**
+ * Report development invariant failures once per distinct result. Production
+ * callers leave `enabled` false, so this path performs no validation or I/O.
+ */
+export function reportLayoutMetricInvariants(
+  invariantInput,
+  { enabled = false, logger = globalThis.console, ...validationOptions } = {}
+) {
+  if (!enabled) return true;
+
+  const result = validateLayoutMetricInvariants(invariantInput, validationOptions);
+  const signature = result.valid
+    ? null
+    : JSON.stringify(result.violations);
+
+  if (signature && signature !== lastReportedInvariantSignature) {
+    logger?.warn?.('[LayoutMetricsEngine] Layout invariant violation', result.violations);
+  }
+  lastReportedInvariantSignature = signature;
+  return result.valid;
 }
 
 function normalizeSize(size, name) {

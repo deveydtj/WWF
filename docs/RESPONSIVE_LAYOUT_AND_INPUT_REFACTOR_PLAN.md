@@ -730,7 +730,7 @@ Create a single owner for board, keyboard, spacing, rail, and popup dimensions.
   - Move test-only helpers into test modules.
   - Remove window globals such as deprecated scaling APIs unless a debug build explicitly enables them.
 
-- [ ] **4.7 Add invariant checks in development.**
+- [x] **4.7 Add invariant checks in development.**
   - Board width equals five tiles plus four gaps.
   - Board height equals six tiles plus five gaps.
   - Keyboard fits its allocated region.

@@ -870,6 +870,144 @@ console.log(JSON.stringify({
     assert data['hasDomGlobals'] is False
 
 
+def test_layout_metrics_engine_validates_board_keyboard_and_token_invariants():
+    script = """
+import {
+  validateLayoutMetricInvariants
+} from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+const validInput = {
+  board: {
+    columns: 5,
+    rows: 6,
+    tileSize: 52,
+    tileGap: 10,
+    inlineSize: 300,
+    blockSize: 362
+  },
+  keyboard: {
+    inlineSize: 320,
+    blockSize: 140,
+    availableInlineSize: 320,
+    availableBlockSize: 140
+  },
+  tokens: {
+    '--tile-size': '52px',
+    '--tile-gap': '10px',
+    '--board-width': '300px',
+    '--keyboard-key-height': '44px',
+    '--keyboard-row-gap': '8px',
+    '--keyboard-inline-gap': '8px',
+    '--available-board-block-size': '362px'
+  }
+};
+const valid = validateLayoutMetricInvariants(validInput);
+const invalid = validateLayoutMetricInvariants({
+  ...validInput,
+  board: { ...validInput.board, inlineSize: 302, blockSize: 360 },
+  keyboard: { ...validInput.keyboard, inlineSize: 321, blockSize: 141 },
+  tokens: {
+    ...validInput.tokens,
+    '--tile-size': 'NaNpx',
+    '--tile-gap': '-1px',
+    '--keyboard-key-height': '20px'
+  }
+});
+
+console.log(JSON.stringify({
+  valid,
+  invalid,
+  validFrozen: Object.isFrozen(valid),
+  violationsFrozen: Object.isFrozen(invalid.violations),
+  violationFrozen: Object.isFrozen(invalid.violations[0])
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+
+    assert data['valid'] == {'valid': True, 'violations': []}
+    assert data['invalid']['valid'] is False
+    assert [violation['code'] for violation in data['invalid']['violations']] == [
+        'board-inline-formula',
+        'board-block-formula',
+        'keyboard-inline-overflow',
+        'keyboard-block-overflow',
+        'token-non-finite',
+        'token-negative',
+        'token-below-minimum',
+    ]
+    assert data['validFrozen'] is True
+    assert data['violationsFrozen'] is True
+    assert data['violationFrozen'] is True
+
+
+def test_layout_metric_invariant_reporting_is_disabled_by_default_and_deduplicated():
+    script = """
+import {
+  reportLayoutMetricInvariants
+} from './frontend/static/js/layout/layoutMetricsEngine.js';
+
+const invalidInput = {
+  board: {
+    columns: 5,
+    rows: 6,
+    tileSize: 50,
+    tileGap: 8,
+    inlineSize: 999,
+    blockSize: 340
+  },
+  keyboard: {
+    inlineSize: 320,
+    blockSize: 140,
+    availableInlineSize: 320,
+    availableBlockSize: 140
+  },
+  tokens: {
+    '--tile-size': '50px',
+    '--tile-gap': '8px',
+    '--board-width': '282px',
+    '--keyboard-key-height': '40px',
+    '--keyboard-row-gap': '8px',
+    '--keyboard-inline-gap': '8px',
+    '--available-board-block-size': '340px'
+  }
+};
+const messages = [];
+const logger = { warn: (...args) => messages.push(args) };
+const disabledResult = reportLayoutMetricInvariants(invalidInput, { logger });
+const firstEnabledResult = reportLayoutMetricInvariants(
+  invalidInput,
+  { enabled: true, logger }
+);
+const secondEnabledResult = reportLayoutMetricInvariants(
+  invalidInput,
+  { enabled: true, logger }
+);
+
+console.log(JSON.stringify({
+  disabledResult,
+  firstEnabledResult,
+  secondEnabledResult,
+  reportCount: messages.length
+}));
+"""
+    result = subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
+    data = json.loads(result.stdout.strip())
+
+    assert data == {
+        'disabledResult': True,
+        'firstEnabledResult': False,
+        'secondEnabledResult': False,
+        'reportCount': 1,
+    }
+
+
 def test_responsive_scaling_uses_gameplay_container_instead_of_viewport_width():
     script = """
 import { recalculateScaling } from './frontend/static/js/responsiveScaling.js';

@@ -12,8 +12,13 @@
 import {
   calculateModalMetrics,
   calculateVerticalBudget,
-  createModalMetricTokens
+  createModalMetricTokens,
+  reportLayoutMetricInvariants
 } from './layout/layoutMetricsEngine.js';
+
+const DEVELOPMENT_INVARIANTS_ENABLED =
+  typeof __WORD_SQUAD_DEVELOPMENT__ !== 'undefined'
+  && __WORD_SQUAD_DEVELOPMENT__;
 
 /**
  * Clamp a number between a minimum and maximum value
@@ -48,6 +53,7 @@ function tuneSizing(viewportSnapshot = null) {
   const inputArea = document.querySelector("#inputArea");
   const message = document.querySelector("#message");
   const keyboard = document.querySelector("#keyboard");
+  const board = document.querySelector("#board");
 
   // Viewport dimensions
   const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -209,6 +215,36 @@ function tuneSizing(viewportSnapshot = null) {
   Object.entries(createModalMetricTokens(modalMetrics)).forEach(([property, value]) => {
     root.style.setProperty(property, value);
   });
+
+  if (DEVELOPMENT_INVARIANTS_ENABLED && board && keyboard) {
+    const boardRect = board.getBoundingClientRect();
+    const keyboardRect = keyboard.getBoundingClientRect();
+    reportLayoutMetricInvariants({
+      board: {
+        columns: 5,
+        rows: 6,
+        tileSize: tile,
+        tileGap: gap,
+        inlineSize: boardRect.width,
+        blockSize: boardRect.height
+      },
+      keyboard: {
+        inlineSize: keyboardRect.width,
+        blockSize: keyboardRect.height,
+        availableInlineSize: gameplayWidth,
+        availableBlockSize: r.verticalBudget.reservations.keyboardBlockSize
+      },
+      tokens: {
+        '--tile-size': tile,
+        '--tile-gap': gap,
+        '--board-width': boardWidth,
+        '--keyboard-key-height': r.keyH,
+        '--keyboard-row-gap': kbGap,
+        '--keyboard-inline-gap': kbGap,
+        '--available-board-block-size': r.verticalBudget.availableBoardBlockSize
+      }
+    }, { enabled: true });
+  }
 
 }
 
