@@ -148,29 +148,13 @@
      ───────────────────────────────── */
   
   #mainGrid {
-    display: grid;
-    grid-template-columns: var(--desktop-panel-width) 1fr var(--desktop-panel-width);
-    grid-template-rows: 1fr;
-    gap: var(--desktop-grid-gap);
+    display: flex;
+    position: relative;
     padding: calc(var(--desktop-header-height) + var(--desktop-grid-gap)) var(--desktop-grid-gap) var(--desktop-grid-gap);
     height: var(--visual-viewport-height);
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
-    grid-template-areas: "left center right";
-  }
-  
-  /* Adjust grid when panels are hidden */
-  body:not(.history-open) #mainGrid {
-    grid-template-columns: 0 1fr var(--desktop-panel-width);
-  }
-  
-  body:not(.definition-open):not(.chat-open) #mainGrid {
-    grid-template-columns: var(--desktop-panel-width) 1fr 0;
-  }
-  
-  body:not(.history-open):not(.definition-open):not(.chat-open) #mainGrid {
-    grid-template-columns: 0 1fr 0;
   }
   
   /* ─────────────────────────────────
@@ -178,7 +162,9 @@
      ───────────────────────────────── */
   
   #historyBox {
-    grid-area: left;
+    position: absolute;
+    left: var(--desktop-grid-gap);
+    top: calc(var(--desktop-header-height) + var(--desktop-grid-gap));
     width: var(--desktop-panel-width);
     max-height: var(--desktop-panel-max-height);
     background: var(--bg-color);
@@ -194,7 +180,6 @@
     z-index: var(--z-panel-base);
     display: flex;
     flex-direction: column;
-    position: relative;
   }
   
   body:not(.history-open) #historyBox {
@@ -222,7 +207,6 @@
      ───────────────────────────────── */
   
   #centerPanel {
-    grid-area: center;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -230,7 +214,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 0 var(--desktop-content-padding);
-    max-width: 100%;
+    width: 100%;
     position: relative;
   }
   
@@ -407,7 +391,9 @@
   
   #definitionBox,
   #chatBox {
-    grid-area: right;
+    position: absolute;
+    right: var(--desktop-grid-gap);
+    top: calc(var(--desktop-header-height) + var(--desktop-grid-gap));
     width: var(--desktop-panel-width);
     max-height: var(--desktop-panel-max-height);
     background: var(--bg-color);
@@ -423,7 +409,6 @@
     z-index: var(--z-panel-base);
     display: flex;
     flex-direction: column;
-    position: relative;
   }
   
   /* Definition panel */
