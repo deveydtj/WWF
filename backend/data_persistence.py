@@ -98,6 +98,27 @@ def save_data(s: GameState, lobby_code: str = None):
             logger.warning("Lobby save failed: %s", e)
 
 
+def delete_data(lobby_code: str):
+    """Delete a removed lobby so a later request cannot restore its players."""
+    if lobby_code == DEFAULT_LOBBY:
+        return
+    if redis_client:
+        try:
+            redis_client.delete(f"wwf:{lobby_code}")
+        except Exception as e:  # pragma: no cover - redis failures
+            logger.warning("Redis delete failed: %s", e)
+    if LOBBIES_FILE.exists():
+        try:
+            with open(LOBBIES_FILE) as f:
+                all_data = json.load(f)
+            if lobby_code in all_data:
+                all_data.pop(lobby_code)
+                with open(LOBBIES_FILE, "w") as f:
+                    json.dump(all_data, f)
+        except Exception as e:  # pragma: no cover - persistence errors
+            logger.warning("Lobby delete failed: %s", e)
+
+
 def load_data(s: GameState, lobby_code: str = None, reset_state_func=None):
     """Load game state from Redis or file system."""
     if lobby_code is None:
@@ -157,6 +178,7 @@ def load_data(s: GameState, lobby_code: str = None, reset_state_func=None):
         s.host_token = data.get("host_token")
         s.phase = data.get("phase", "waiting")
         s.last_activity = data.get("last_activity", time.time())
+        return True
     except Exception:
         if reset_state_func:
             reset_state_func(s)

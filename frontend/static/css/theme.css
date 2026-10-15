@@ -22,6 +22,19 @@
   --error-color: #ba1c1c;
 }
 
+/* Explicit popup colors participate in the existing palette interpolation. */
+body {
+  --popup-surface: #e8ecf1;
+  --popup-border: #3d4a5a29;
+  --popup-backdrop: #17202e66;
+  --popup-shadow-color: #17202e33;
+  --popup-sheen: #ffffffa6;
+  --popup-accent: #126b37;
+  --popup-on-accent: #ffffff;
+  --popup-accent-soft: #cedadc;
+  --popup-warning: #78620c;
+}
+
 body.dark-mode {
   --bg-color: #2c303a;
   --text-color: #d1d1d1;
@@ -44,9 +57,46 @@ body.dark-mode {
   --absent-shadow-light: #464648;
   --border-color: #4a4a4f;
   --error-color: #ff7b7b;
+  --popup-backdrop: #080c14a6;
+  --popup-surface: #2f343e;
+  --popup-border: #d1d1d129;
+  --popup-shadow-color: #00000066;
+  --popup-sheen: #393e4ba6;
+  --popup-accent-soft: #354042;
+  --popup-accent: #8edd8d;
+  --popup-on-accent: #142b1b;
+  --popup-warning: #ead889;
 }
 
 /* Body styling removed - handled in base.css to avoid duplication */
+
+/* Older browsers still fade ordinary surfaces when typed palettes are unavailable. */
+body.theme-changing:not(.theme-interpolating),
+body.theme-changing:not(.theme-interpolating) *,
+body.theme-changing:not(.theme-interpolating) *::before,
+body.theme-changing:not(.theme-interpolating) *::after {
+  transition: background-color 300ms ease-in-out, color 300ms ease-in-out,
+    border-color 300ms ease-in-out, box-shadow 300ms ease-in-out,
+    fill 300ms ease-in-out, stroke 300ms ease-in-out,
+    transform 100ms ease, opacity 200ms ease, filter 120ms ease !important;
+}
+
+/* Palette interpolation already animates these surfaces; avoid a second fade. */
+body.theme-interpolating,
+body.theme-interpolating *,
+body.theme-interpolating *::before,
+body.theme-interpolating *::after {
+  transition-property: transform, opacity, filter !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.theme-changing,
+  body.theme-changing *,
+  body.theme-changing *::before,
+  body.theme-changing *::after {
+    transition: none !important;
+  }
+}
 
 /* Message color states - theme-specific styling */
 #message.positive { color: var(--correct-bg); }
@@ -79,10 +129,12 @@ button {
   transition: box-shadow 0.2s, transform 0.1s;
 }
 
-button:hover {
-  box-shadow: 4px 4px 8px var(--shadow-color-dark),
-              -4px -4px 8px var(--shadow-color-light);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  button:hover {
+    box-shadow: 4px 4px 8px var(--shadow-color-dark),
+                -4px -4px 8px var(--shadow-color-light);
+    transform: translateY(-1px);
+  }
 }
 
 button:active {

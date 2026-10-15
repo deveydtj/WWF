@@ -11,6 +11,22 @@ WordSquad in production. It creates:
 
 ## Usage
 
+Publication is blocked by `privacy-publication.tf` until `privacy_operator`
+contains the verified legal name, mailing address, phone, privacy email and
+HTTPS website URL, and `privacy_notice_reviewed` is true. The live tfvars keep
+these details empty and the review flag false until the owner supplies them.
+Set the flag only after the accurate public notice is complete and reviewed.
+The same gate applies to direct Terraform plans/applies and `ci-plan.sh`;
+it does not check or award COPPA certification. See
+[the readiness review](../../docs/COPPA_READINESS.md) for remaining work.
+
+The API also requires `session_secret_arn`, pointing to a random signing key
+of at least 32 characters in Secrets Manager or SSM. Give the execution role
+permission to read/decrypt it. ECS injects it as `SECRET_KEY` and sets
+`FLASK_ENV=production`; the key value must not be placed in tfvars. CloudFront
+forwards `wordsquad_age_session` and routes age/game endpoints to the ALB over
+HTTPS without caching. The static frontend remains on S3.
+
 1. Install [Terraform](https://www.terraform.io/downloads.html) 1.4 or newer.
 2. Set the required variables in `terraform.tfvars` or via the CLI:
 

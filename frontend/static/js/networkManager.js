@@ -58,7 +58,18 @@ class NetworkManager {
       }
     } catch (err) {
       console.error('fetchState error:', err);
+      if (err?.data?.code === 'age_check_required') {
+        this.cleanup();
+        window.location.href = '/age-check?next=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
       
+      if (window.PRIVATE_ROOM && [403, 404].includes(err?.status)) {
+        this.cleanup();
+        sessionStorage.removeItem('privateRoom');
+        window.location.replace('/');
+        return;
+      }
       if (err && err.status === 404) {
         showMessage('This lobby has expired or was closed.', this.messageHandlers);
         setTimeout(() => { window.location.href = '/'; }, 3000);

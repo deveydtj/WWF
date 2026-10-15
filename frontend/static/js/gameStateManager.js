@@ -81,7 +81,8 @@ class GameStateManager {
    */
   applyState(state) {
     const prevGuessCount = this.latestState ? this.latestState.guesses.length : 0;
-    const prevChatCount = this.latestState && this.latestState.chat_messages ? this.latestState.chat_messages.length : 0;
+    // Initial chat history belongs in the panel; previews announce only new messages.
+    const prevChatCount = this.latestState?.chat_messages?.length ?? state.chat_messages?.length ?? 0;
     
     // Update state tracking
     this.latestState = state;
@@ -423,6 +424,8 @@ class GameStateManager {
     if (!board || !keyboard) return;
     
     this.maxRows = state.max_rows || 6;
+    // Server snapshots are authoritative, including reloads and new rounds.
+    this.gameState.set(state.is_over ? STATES.GAME_OVER : STATES.PLAYING);
     this._syncGuessInput();
     const animateRow = state.guesses && state.guesses.length > prevGuessCount ? 
                       state.guesses.length - 1 : -1;
@@ -448,14 +451,6 @@ class GameStateManager {
     const constraints = updateHardModeConstraints(state.guesses);
     this.requiredLetters = constraints.requiredLetters;
     this.greenPositions = constraints.greenPositions;
-    
-    // Update game over state
-    const prevGameOver = this.gameState.is(STATES.GAME_OVER);
-    if (state.is_over) {
-      this.gameState.transition(STATES.GAME_OVER);
-    } else if (this.gameState.is(STATES.GAME_OVER)) {
-      this.gameState.transition(STATES.PLAYING);
-    }
     
     setGameInputDisabled(this.gameState.is(STATES.GAME_OVER));
     updateResetButton();

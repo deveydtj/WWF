@@ -4,6 +4,31 @@ This guide outlines the steps to deploy the WordSquad infrastructure and API usi
 
 ## Prerequisites
 
+**Publication is currently blocked.** The owner has deferred the legal operator
+name, mailing address, phone number, privacy email, and live HTTPS website URL.
+Fill in `privacy_operator` in `infra/live/variables.tfvars`, complete an accurate
+public privacy notice, and set `privacy_notice_reviewed = true` only after that
+notice is reviewed. Terraform preconditions enforce this for the AWS plan/apply
+path, including `infra/terraform/ci-plan.sh`. Missing details or a false review
+flag cause a hard failure. Run a fresh plan after these prerequisites are ready.
+This gate does not establish COPPA certification; the additional unresolved
+requirements are recorded in [COPPA_READINESS.md](COPPA_READINESS.md).
+
+The 13+ age screen uses a signed browser-session cookie. Before deployment,
+store a random `SECRET_KEY` of at least 32 characters in AWS Secrets Manager
+or SSM, and supply its ARN as `session_secret_arn` in the live tfvars. The ECS
+execution role must be able to read that secret and decrypt it if required.
+Terraform supplies the secret to the container without putting its value in
+the task configuration, and sets `FLASK_ENV=production` for HTTPS-only cookies.
+An empty ARN blocks API deployment; a missing or short key prevents startup.
+Local development uses a temporary random key if none is supplied.
+
+CloudFront routes age checks and game/API paths to the ALB over HTTPS, forwards
+the age-session cookie, and disables caching for those paths. Keep these
+settings when updating the CDN; otherwise eligibility may fail or responses
+may be shared incorrectly. Verify the screen on the deployed HTTPS domain
+before publication, including direct lobby links, chat and session expiry.
+
 - [Terraform](https://www.terraform.io/downloads.html) 1.4 or newer
 - AWS account with permissions to create S3, DynamoDB, ECS and related resources
 - Docker installed locally if building images manually
@@ -131,3 +156,7 @@ This guide outlines the steps to deploy the WordSquad infrastructure and API usi
 - **ECR Issues**: Ensure ECR repository exists and is accessible
 
 Refer to `infra/terraform/README.md` for details on the Terraform modules.
+
+### Private rooms and streamer mode
+
+See [PRIVATE_ROOMS.md](PRIVATE_ROOMS.md) for the access model, required shared Redis and operator secrets, limits, proxy configuration, and launch verification. Production private rooms fail closed without Redis and an HTTPS `PUBLIC_ORIGIN`. Terraform accepts secret ARNs via `private_rooms_redis_secret_arn` and `operator_secret_arn`; provision secrets and IAM access before enabling them. Maintenance clients now need a dedicated bearer token. The ALB ingress restriction and trusted proxy-hop setting must be deployed together.

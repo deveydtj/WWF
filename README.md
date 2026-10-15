@@ -18,6 +18,8 @@ python backend/server.py
 # visit http://localhost:5001
 ```
 
+On macOS, double-click **Start WordSquad.command** in the repo root to start the server and automatically open the landing page in your default browser. It uses `.venv` when available. Keep the Terminal window open; press **Control-C** to stop the server.
+
 Prefer containers? `docker compose up --build` works from the repo root.
 
 ## Highlights
@@ -25,6 +27,7 @@ Prefer containers? `docker compose up --build` works from the repo root.
 - Realtime multiplayer with SSE updates, emoji leaderboards, chat, and history.
 - Hard mode, Daily Double bonuses, hint badges, and “close call” notifications.
 - Responsive layout for phones, tablets, and desktops with on-screen + physical keyboard support.
+- Optional keyboard and action haptics on compatible touch browsers, controlled separately from sound. iPhone Safari does not support custom vibration, so its Haptics control stays hidden.
 - Word definitions shown after each round so everyone can learn the solution.
 
 ## Where things live
@@ -37,6 +40,18 @@ Prefer containers? `docker compose up --build` works from the repo root.
 - `docs/` — architecture, requirements, and deployment guides
 
 ## Local development essentials
+
+- **Age eligibility:** Multiplayer and chat require a neutral age check before
+  registration. Ages 13+ can participate. Only the result and check time are
+  held in a signed, HttpOnly browser-session cookie; the age is not retained.
+  An under-13 result blocks participation and resubmission for that session.
+  Allowed sessions require a new check after 12 hours. Public home/how-to
+  content remains available. This screen is self-reported eligibility, not
+  parental consent or COPPA certification. See [COPPA_READINESS.md](docs/COPPA_READINESS.md).
+- **Production sessions:** Set `FLASK_ENV=production` and a random `SECRET_KEY`
+  of at least 32 characters. AWS uses `session_secret_arn` to inject the key
+  from Secrets Manager/SSM. Publication still requires the deferred operator
+  details and reviewed privacy notice.
 
 - **Default run:** `python backend/server.py` serves everything on port **5001**. The server finds assets relative to `server.py`.
 - **Config knobs:**

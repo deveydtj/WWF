@@ -3,11 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    // Paint the browser canvas before external stylesheets can block parsing.
+    let dark = false;
+    try { dark = localStorage.getItem('darkMode') === 'true'; } catch { /* Default to light. */ }
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    document.documentElement.style.backgroundColor = dark ? '#2c303a' : '#e0e5ec';
+  </script>
   <title>WordSquad Game (Hard Mode, Shared)</title>
+  <style>
+    /* Keep startup measurable without painting an empty board and loose controls. */
+    #appContainer[data-starting], #appContainer[data-starting] * {
+      visibility: hidden !important;
+    }
+  </style>
   
   <!-- Phase 1: New Layout System - File Structure -->
   <!-- Shared foundation -->
   <link rel="stylesheet" href="static/css/theme.css">
+  <link rel="stylesheet" href="static/css/components/age-check.css">
   <link rel="stylesheet" href="static/css/z-index.css">
   <link rel="stylesheet" href="static/css/shared-base.css">
   
@@ -20,60 +35,54 @@
   <link rel="stylesheet" href="static/css/components/panels.css">
   <link rel="stylesheet" href="static/css/components/buttons.css">
   <link rel="stylesheet" href="static/css/components/leaderboard.css">
-  <link rel="stylesheet" href="static/css/components/modals.css">
-  <link rel="stylesheet" href="static/css/components/mobile-menu.css">
   
   <!-- Authoritative responsive shell, loaded for every layout profile -->
   <link rel="stylesheet" href="static/css/responsive-layout.css">
   
   <!-- Animations (shared) -->
   <link rel="stylesheet" href="static/css/animations.css">
+  <link rel="stylesheet" href="static/css/components/modals.css">
   
 </head>
 
 <body>
-  <!-- Phase 7: Portrait-only phone overlay - shown when phone is in landscape mode -->
-  <div id="landscapeOverlay" role="alertdialog" aria-modal="true" aria-label="Rotate device">
-    <div id="landscapeOverlayContent">
-      <div id="landscapeOverlayIcon">📱</div>
-      <p id="landscapeOverlayText">Please rotate your device to portrait mode to play.</p>
-    </div>
-  </div>
-
-  <div id="appContainer">
+  <script>
+    document.body.classList.toggle('dark-mode', document.documentElement.style.colorScheme === 'dark');
+  </script>
+  <div id="appContainer" data-starting inert>
     <!-- Shared backdrop for panel card modals on phone and tablet -->
     <div id="panelBackdrop" aria-hidden="true"></div>
-    <div id="waitingOverlay" aria-live="polite">
-      <div class="waiting-content" role="status">
-        <p>Setting up your game. This should only take a moment.</p>
-        <button id="waitingDismiss" type="button">Continue</button>
-      </div>
-    </div>
     <!-- Emoji Picker Modal -->
-    <div id="emojiModal" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading">
-      <div id="emojiModalBox">
-        <div id="emojiModalHeading">
-          Pick your emoji for this game:
+    <div id="emojiModal" class="popup-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading">
+      <div id="emojiModalBox" data-popup="picker">
+        <div class="popup-header">
+          <h2 id="emojiModalHeading">Pick your emoji</h2>
         </div>
+        <p class="popup-description">Your squad will recognize you by this emoji.</p>
         <div id="emojiChoices"></div>
-        <div id="emojiModalError"></div>
+        <div id="emojiModalError" role="alert"></div>
       </div>
     </div>
 
     <!-- Close Call Popup -->
-    <div id="closeCallPopup" role="alertdialog" aria-modal="true" aria-labelledby="closeCallText">
-      <div id="closeCallBox">
-        <div id="closeCallText"></div>
-        <button id="closeCallOk">OK</button>
+    <div id="closeCallPopup" class="popup-backdrop" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="closeCallText">
+      <div id="closeCallBox" data-popup="notice">
+        <p class="popup-eyebrow">Round result</p>
+        <h2>Close call</h2>
+        <p id="closeCallText"></p>
+        <button id="closeCallOk" class="popup-primary" type="button">Got it</button>
       </div>
     </div>
 
     <!-- Info Popup -->
-    <div id="infoPopup" role="dialog" aria-modal="true" aria-label="Game information">
-      <div id="infoBox">
-        <button id="infoClose" class="close-btn">✖</button>
+    <div id="infoPopup" class="popup-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Game information">
+      <div id="infoBox" data-popup="help">
+        <div class="popup-header">
+          <h2>How to Play</h2>
+          <button id="infoClose" class="close-btn" aria-label="Close information">×</button>
+        </div>
         <div id="infoContent">
-          <h3>How to Play</h3>
+          <h3>The basics</h3>
           <p>Guess the hidden five-letter word in six tries. Letters turn <strong>green</strong> when in the correct spot and <strong>yellow</strong> when present in the word but in the wrong position.</p>
           <h3>Scoring</h3>
           <p>Each letter is worth its Scrabble tile value. Green letters award the full value, while yellow letters grant half until confirmed green.</p>
@@ -86,75 +95,38 @@
     </div>
 
     <!-- Share Link Modal -->
-    <div id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareHeading">
-      <div id="shareBox">
-        <h3 id="shareHeading">Invite Link</h3>
-        <input id="shareLink" type="text" readonly>
+    <div id="shareModal" class="popup-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="shareHeading">
+      <div id="shareBox" data-popup="task">
+        <div class="popup-header"><h2 id="shareHeading">Invite your squad</h2></div>
+        <p class="popup-description">Share this link so friends can join your lobby.</p>
+        <input id="shareLink" type="text" aria-label="Lobby invite link" readonly>
         <div id="shareActions">
-          <button id="shareCopy" type="button">Copy</button>
+          <button id="shareCopy" class="popup-primary" type="button">Copy link</button>
           <button id="shareClose" type="button">Close</button>
         </div>
       </div>
     </div>
 
     <!-- Options Menu -->
-    <div id="optionsMenu" role="dialog" aria-modal="true" aria-label="Options menu">
-      <button id="optionsClose" class="close-btn">✖</button>
+    <div id="optionsMenu" data-popup="utility" role="dialog" aria-modal="true" aria-labelledby="optionsHeading">
+      <div class="popup-header">
+        <h2 id="optionsHeading">Options</h2>
+        <button id="optionsClose" class="close-btn" aria-label="Close options">×</button>
+      </div>
       <div id="optionsMenuItems">
+        <p class="popup-section-label">Game tools</p>
         <button id="menuHistory">📜 History</button>
         <button id="menuDefinition">📖 Definition</button>
         <button id="menuChat">💬 Chat</button>
+        <p class="popup-section-label">Preferences</p>
         <button id="menuDarkMode">🌙 Dark Mode</button>
         <button id="menuSound">🔈 Sound Off</button>
+        <button id="menuHaptics" type="button" hidden>📳 Haptics On</button>
+        <p class="popup-section-label">Help</p>
         <button id="menuInfo">ℹ️ Info</button>
       </div>
     </div>
 
-    <!-- Mobile Menu Popup (mobile-only) -->
-    <div id="mobileMenuPopup" class="mobile-only-menu" role="dialog" aria-modal="true" aria-label="Mobile menu">
-      <div id="mobileMenuBox">
-        <button id="mobileMenuClose" class="close-btn" aria-label="Close menu">✖</button>
-        <div id="mobileMenuItems">
-          <button id="mobileMenuLeaveLobby" class="mobile-menu-item">
-            <span class="menu-icon">🚪</span>
-            <span class="menu-text">Leave Lobby</span>
-          </button>
-          <button id="mobileMenuShareLobby" class="mobile-menu-item">
-            <span class="menu-icon">🔗</span>
-            <span class="menu-text">Share Lobby</span>
-          </button>
-          <button id="mobileMenuPlayers" class="mobile-menu-item">
-            <span class="menu-icon">👥</span>
-            <span class="menu-text">Players</span>
-            <span id="mobileMenuPlayerCount" class="menu-badge"></span>
-          </button>
-          <button id="mobileMenuHistory" class="mobile-menu-item">
-            <span class="menu-icon">📜</span>
-            <span class="menu-text">History</span>
-          </button>
-          <button id="mobileMenuDefinition" class="mobile-menu-item">
-            <span class="menu-icon">📖</span>
-            <span class="menu-text">Definition</span>
-          </button>
-          <button id="mobileMenuChat" class="mobile-menu-item">
-            <span class="menu-icon">💬</span>
-            <span class="menu-text">Chat</span>
-          </button>
-          <button id="mobileMenuDarkMode" class="mobile-menu-item">
-            <span class="menu-icon">🌙</span>
-            <span class="menu-text">Dark Mode</span>
-          </button>
-          <button id="mobileMenuSound" class="mobile-menu-item">
-            <span class="menu-icon">🔈</span>
-            <span class="menu-text">Sound</span>
-          </button>
-          <button id="mobileMenuInfo" class="mobile-menu-item">
-            <span class="menu-icon">ℹ️</span>
-            <span class="menu-text">Info</span>
-          </button>
-        </div>
-      </div>
-    </div>
 
     <div id="lobbyHeader">
       <span id="lobbyCode" aria-label="Lobby code"></span>
@@ -169,14 +141,14 @@
     <!-- Grid-based main layout -->
     <div id="mainGrid">
       <!-- Game History Panel -->
-      <div id="historyBox" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
-        <button id="historyClose" class="close-btn">✖</button>
-        <h3 id="historyHeading">History</h3>
+      <div id="historyBox" data-popup="utility" role="dialog" aria-modal="true" aria-labelledby="historyHeading">
+        <div class="popup-header">
+          <h3 id="historyHeading">History</h3>
+          <button id="historyClose" class="close-btn" type="button" aria-label="Close history">×</button>
+        </div>
         <ul id="historyList"></ul>
+        <p class="panel-empty-state">No guesses yet. Make a guess to start the history.</p>
       </div>
-
-      <!-- Stamp Container (positioned between history and center) -->
-      <div id="stampContainer"></div>
 
       <!-- Center Panel (Game content) -->
       <div id="centerPanel">
@@ -193,12 +165,14 @@
 
           <!-- Board -->
           <div id="boardArea">
+            <div id="stampContainer"></div>
             <div id="board" role="grid" aria-label="Guess grid"></div>
             <div id="hintTooltip" class="hint-tooltip" role="status"></div>
-            <button id="optionsToggle" title="More Options">⚙️</button>
+            <button id="optionsToggle" title="More Options" aria-label="Options" aria-haspopup="dialog" aria-controls="optionsMenu">⚙️</button>
             <button id="chatNotify" title="Open Chat">💬</button>
-            <button id="mobileMenuToggle" class="mobile-only-button" title="Menu">☰</button>
-            <div id="chatMessagePopup"></div>
+            <div id="chatMessagePopup" role="status" aria-live="polite" aria-atomic="true">
+              <span class="popup-emoji"></span><span class="popup-text"></span>
+            </div>
           </div>
 
           <!-- Guess Input -->
@@ -262,32 +236,40 @@
       </div> <!-- end centerPanel -->
 
       <!-- Definition Panel -->
-      <div id="definitionBox" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
-        <button id="definitionClose" class="close-btn">✖</button>
-        <h3 id="definitionHeading" class="visually-hidden">Definition</h3>
+      <div id="definitionBox" data-popup="utility" role="dialog" aria-modal="true" aria-labelledby="definitionHeading">
+        <div class="popup-header">
+          <h3 id="definitionHeading">Definition</h3>
+          <button id="definitionClose" class="close-btn" type="button" aria-label="Close definition">×</button>
+        </div>
         <div id="definitionText"></div>
+        <p class="panel-empty-state">Finish a word to see its definition.</p>
       </div>
 
       <!-- Chat Panel -->
-      <div id="chatBox" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
-        <button id="chatClose" class="close-btn" type="button">✖</button>
-        <h3 id="chatHeading" class="visually-hidden">Chat</h3>
+      <div id="chatBox" data-popup="utility" role="dialog" aria-modal="true" aria-labelledby="chatHeading">
+        <div class="popup-header">
+          <h3 id="chatHeading">Chat</h3>
+          <button id="chatClose" class="close-btn" type="button" aria-label="Close chat">×</button>
+        </div>
         <div id="chatMessages"></div>
+        <p class="panel-empty-state">No messages yet. Say hello!</p>
         <form id="chatForm">
-          <input id="chatInput" type="text" maxlength="140" autocomplete="off" />
+          <input id="chatInput" aria-label="Chat message" placeholder="Say hello to your squad…" type="text" maxlength="140" autocomplete="off" />
           <button id="chatSend" type="submit">Send</button>
         </form>
       </div>
     </div> <!-- end mainGrid -->
 
     <!-- Player Sidebar (outside grid) -->
-    <div id="playerSidebar" role="dialog" aria-modal="true" aria-labelledby="playerSidebarHeading">
-      <button id="playerClose" class="close-btn" type="button">✖</button>
-      <h3 id="playerSidebarHeading" class="player-sidebar-heading">Players</h3>
+    <div id="playerSidebar" data-popup="utility" role="dialog" aria-modal="true" aria-labelledby="playerSidebarHeading">
+      <div class="popup-header">
+        <h3 id="playerSidebarHeading">Players</h3>
+        <button id="playerClose" class="close-btn" type="button" aria-label="Close players">×</button>
+      </div>
       <ul id="playerList"></ul>
     </div>
   </div>
 
-  <script type="module" src="static/js/main.js"></script>
+  <script type="module" src="static/js/gameBootstrap.js"></script>
 </body>
 </html>

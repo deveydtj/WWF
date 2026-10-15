@@ -42,7 +42,7 @@ def validate_production_config():
         
         # Validate secret key strength (basic check)
         if secret_key and len(secret_key) < 32:
-            warnings.append("SECRET_KEY should be at least 32 characters long")
+            errors.append("SECRET_KEY must be at least 32 characters long for signed eligibility sessions")
         
         # Check Redis configuration if URL is provided
         redis_url = os.environ.get("REDIS_URL")

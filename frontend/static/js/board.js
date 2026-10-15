@@ -38,10 +38,12 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
   
   // Store previous state to detect new letters
   const previousTexts = Array.from(tiles).map(tile => tile.textContent);
+  const previousGhosts = Array.from(tiles).map(tile => tile.classList.contains('ghost'));
   
   for (let i = 0; i < rows * 5; i++) {
     tiles[i].textContent = '';
-    tiles[i].className = 'tile';
+    // State refreshes must not cancel a letter animation already in progress.
+    tiles[i].className = tiles[i].classList.contains('letter-in') ? 'tile letter-in' : 'tile';
   }
   guesses.forEach((g, row) => {
     for (let i = 0; i < 5; i++) {
@@ -83,11 +85,12 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
         tile.classList.add('ghost');
       } else if (i < activeGuess.length) {
         const newLetter = activeGuess[i].toUpperCase();
-        if (previousTexts[tileIndex] !== newLetter) {
+        if (previousTexts[tileIndex] !== newLetter || previousGhosts[tileIndex]) {
           animateLetterIn(tile, newLetter);
         } else {
           tile.textContent = newLetter;
         }
+        if (greenPositions[i] === activeGuess[i]) tile.classList.add('correct');
       } else if (greenPositions[i]) {
         if (previousTexts[tileIndex] !== greenPositions[i].toUpperCase()) {
           animateLetterIn(tile, greenPositions[i]);

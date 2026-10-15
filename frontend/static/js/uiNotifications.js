@@ -3,83 +3,37 @@
  * Handles points delta, tooltips, confetti, and various notification popups.
  */
 
-import { playClick } from './audioManager.js';
-import { isMobileView } from './utils.js';
 import { getMyEmoji } from './emoji.js';
+
+let pointsExitTimer;
+let pointsHideTimer;
+let chatHideTimer;
 
 function showPointsDelta(delta) {
   if (delta === 0) return;
-  
   const popup = document.getElementById('pointsPopup');
-  if (!popup) return;
-  
-  // Check if we're in mobile view
-  const isMobile = isMobileView();
-  
-  let anchorElement, anchorRect;
-  
-  if (isMobile) {
-    // On mobile, use the current player's leaderboard entry as anchor
-    const myEmoji = getMyEmoji();
-    if (myEmoji) {
-      const leaderboardDiv = document.getElementById('leaderboard');
-      const myEntry = leaderboardDiv?.querySelector(`[data-emoji="${myEmoji}"]`);
-      if (myEntry) {
-        anchorElement = myEntry;
-        anchorRect = myEntry.getBoundingClientRect();
-      }
-    }
-    
-    // Fallback to reset button if leaderboard entry not found
-    if (!anchorElement) {
-      anchorElement = document.getElementById('holdReset') || document.getElementById('resetWrapper');
-      anchorRect = anchorElement?.getBoundingClientRect();
-    }
-  } else {
-    // Non-mobile: use same positioning as mobile (leaderboard entry as anchor)
-    const myEmoji = getMyEmoji();
-    if (myEmoji) {
-      const leaderboardDiv = document.getElementById('leaderboard');
-      const myEntry = leaderboardDiv?.querySelector(`[data-emoji="${myEmoji}"]`);
-      if (myEntry) {
-        anchorElement = myEntry;
-        anchorRect = myEntry.getBoundingClientRect();
-      }
-    }
-    
-    // Fallback to reset button if leaderboard entry not found
-    if (!anchorElement) {
-      anchorElement = document.getElementById('holdReset') || document.getElementById('resetWrapper');
-      anchorRect = anchorElement?.getBoundingClientRect();
-    }
-  }
-  
-  if (!anchorElement || !anchorRect) return;
-  
-  // Position popup - use same positioning logic for all viewports
-  popup.style.top = `${anchorRect.top + anchorRect.height / 2 - 10}px`;
-  popup.style.left = `${anchorRect.left + anchorRect.width / 2}px`;
-  popup.style.transform = 'translateX(-50%) scale(0.8)';
-  // Set z-index appropriately for all viewports
-  popup.style.zIndex = isMobile ? 'var(--z-points-popup-mobile)' : '150';
-  
-  const sign = delta > 0 ? '+' : '';
-  popup.textContent = `${sign}${delta}`;
+  const myEmoji = getMyEmoji();
+  const entry = myEmoji && document.getElementById('leaderboard')
+    ?.querySelector(`[data-emoji="${myEmoji}"]`);
+  const anchor = entry || document.getElementById('holdReset');
+  if (!popup || !anchor) return;
+
+  clearTimeout(pointsExitTimer);
+  clearTimeout(pointsHideTimer);
+  const rect = anchor.getBoundingClientRect();
+  popup.style.top = `${rect.top + rect.height / 2 - 10}px`;
+  popup.style.left = `${rect.left + rect.width / 2}px`;
+  popup.style.zIndex = 'var(--z-popup-message)';
+  popup.textContent = `${delta > 0 ? '+' : ''}${delta}`;
   popup.className = delta > 0 ? 'points-positive' : 'points-negative';
   popup.style.display = 'block';
-  
-  // Reset any existing animation
-  popup.style.animation = '';
-  
-  // Animate the popup - use same animation style for all viewports
-  popup.style.animation = 'scoreSlideFromLeaderboard 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
-  
-  setTimeout(() => {
-    // Animate the popup sliding back with same animation style for all viewports
-    popup.style.animation = 'scoreSlideToLeaderboard 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
-    setTimeout(() => {
-      popup.style.display = 'none';
-    }, 400);
+  popup.style.animation = 'none';
+  void popup.offsetWidth;
+  popup.style.animation = 'scoreSlideFromLeaderboard 180ms ease-out forwards';
+
+  pointsExitTimer = setTimeout(() => {
+    popup.style.animation = 'scoreSlideToLeaderboard 180ms ease-in forwards';
+    pointsHideTimer = setTimeout(() => { popup.style.display = 'none'; }, 180);
   }, 1500);
 }
 
@@ -178,35 +132,21 @@ function showChatNotify() {
 }
 
 function showChatMessagePopup(message) {
-  if (!message || !message.emoji || !message.text || !message.timestamp) return;
-  
+  if (!message?.emoji || !message.text) return;
   const popup = document.getElementById('chatMessagePopup');
   if (!popup) return;
-  
-  // Format timestamp
-  const date = new Date(message.timestamp * 1000);
-  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  // Update popup content
-  const emojiEl = popup.querySelector('.popup-emoji');
-  const textEl = popup.querySelector('.popup-text');
-  const timeEl = popup.querySelector('.popup-time');
-  
-  if (emojiEl) emojiEl.textContent = message.emoji;
-  if (textEl) textEl.textContent = message.text;
-  if (timeEl) timeEl.textContent = timeStr;
-  
-  // Show popup with animation
-  popup.style.display = 'block';
+
+  clearTimeout(chatHideTimer);
+  popup.querySelector('.popup-emoji').textContent = message.emoji;
+  popup.querySelector('.popup-text').textContent = message.text;
+  popup.style.display = 'flex';
+  popup.classList.remove('show');
+  void popup.offsetWidth;
   popup.classList.add('show');
-  
-  // Auto-hide after delay
-  setTimeout(() => {
+  chatHideTimer = setTimeout(() => {
     popup.classList.remove('show');
-    setTimeout(() => {
-      popup.style.display = 'none';
-    }, 300);
-  }, 3000);
+    popup.style.display = 'none';
+  }, 4000);
 }
 
 function hideChatNotify() {

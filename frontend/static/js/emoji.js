@@ -41,11 +41,11 @@ if (emojiModal) {
  * @returns {string|null} Saved emoji or null if none.
  */
 export function getMyEmoji() {
-  return localStorage.getItem('myEmoji') || null;
+  return window.PRIVATE_ROOM ? window.PRIVATE_ROOM.emoji : localStorage.getItem('myEmoji') || null;
 }
 
 export function getMyPlayerId() {
-  return localStorage.getItem('playerId') || null;
+  return window.PRIVATE_ROOM ? window.PRIVATE_ROOM.player_id : localStorage.getItem('playerId') || null;
 }
 
 /**
@@ -54,11 +54,13 @@ export function getMyPlayerId() {
  * @param {string} e - Emoji string.
  */
 export function setMyEmoji(e) {
-  localStorage.setItem('myEmoji', e);
+  if (window.PRIVATE_ROOM) window.PRIVATE_ROOM.emoji = e;
+  else localStorage.setItem('myEmoji', e);
 }
 
 export function setMyPlayerId(pid) {
-  if (pid) localStorage.setItem('playerId', pid);
+  if (window.PRIVATE_ROOM) window.PRIVATE_ROOM.player_id = pid;
+  else if (pid) localStorage.setItem('playerId', pid);
 }
 
 export const allEmojis = [

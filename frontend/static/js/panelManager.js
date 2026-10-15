@@ -17,8 +17,7 @@
  */
 
 import { focusFirstElement } from './utils.js';
-import { LAYOUT_MODES } from './layoutModes.js';
-import { getCurrentLayoutState } from './layoutManager.js';
+import { getCurrentLayoutProfile } from './layoutManager.js';
 import {
   OVERLAYS,
   getManualOverlayState,
@@ -47,45 +46,27 @@ function hasDefinitionContent() {
 
 // Show or hide panels based on content and viewport size
 function updatePanelVisibility() {
-  const { mode, historyPopup } = getCurrentLayoutState();
-  const manualPanelToggles = getManualOverlayState();
-  
-  if (mode === LAYOUT_MODES.DESKTOP && !historyPopup) {
-    // Desktop mode with grid-based panels - show panels if they have content OR if manually toggled
-    setOverlayOpen(OVERLAYS.HISTORY, hasHistoryContent() || manualPanelToggles.history, {
-      closeCompeting: false
-    });
-    
-    setOverlayOpen(OVERLAYS.DEFINITION, hasDefinitionContent() || manualPanelToggles.definition, {
-      closeCompeting: false
-    });
-  } else if ((mode === LAYOUT_MODES.DESKTOP && historyPopup) || (mode === LAYOUT_MODES.TABLET && !historyPopup)) {
-    // Desktop mode with history popup OR tablet mode with grid-based history
-    // History panel can be in grid (tablet with space) or popup (narrow desktop)
-    // In tablet mode with grid, history uses grid positioning like desktop mode
-    if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
-      // Tablet mode with grid layout - show history if it has content OR if manually toggled
-      setOverlayOpen(OVERLAYS.HISTORY, hasHistoryContent() || manualPanelToggles.history, {
-        closeCompeting: false
-      });
-      
-      // In tablet mode with grid, definition and chat are overlays - respect manual toggles
-      // Don't automatically re-open them just because there's content
-      setOverlayOpen(OVERLAYS.DEFINITION, manualPanelToggles.definition && hasDefinitionContent(), {
-        closeCompeting: false
-      });
-    } else {
-      // Desktop mode with history popup - only show history when manually toggled
-      if (!manualPanelToggles.history) {
-        setOverlayOpen(OVERLAYS.HISTORY, false, { closeCompeting: false });
-      }
-      
-      // Definition panel in desktop mode with history popup
-      setOverlayOpen(OVERLAYS.DEFINITION, hasDefinitionContent() || manualPanelToggles.definition, {
-        closeCompeting: false
-      });
-    }
-  }
+  const capacity = getCurrentLayoutProfile().panelCapacity;
+  const manual = getManualOverlayState();
+  setOverlayOpen(OVERLAYS.HISTORY, manual.history || (capacity >= 1 && hasHistoryContent()), {
+    closeCompeting: false, activate: false
+  });
+  setOverlayOpen(OVERLAYS.DEFINITION,
+    manual.definition || (capacity >= 2 && hasDefinitionContent() && !isOverlayOpen(OVERLAYS.CHAT)),
+    { closeCompeting: false, activate: false });
+
+  const panels = [
+    [historyBox, OVERLAYS.HISTORY, capacity >= 1],
+    [definitionBoxEl, OVERLAYS.DEFINITION, capacity >= 2],
+    [chatBox, OVERLAYS.CHAT, capacity >= 2]
+  ];
+  panels.forEach(([element, , rail]) => {
+    element?.setAttribute('role', rail ? 'complementary' : 'dialog');
+    element?.setAttribute('aria-modal', rail ? 'false' : 'true');
+  });
+  document.body.dataset.modalPanelOpen = String(
+    panels.some(([, key, rail]) => !rail && isOverlayOpen(key)) || isOverlayOpen(OVERLAYS.PLAYERS)
+  );
 }
 
 // Toggle one of the side panels while closing any others in tablet mode or history popup mode
@@ -122,11 +103,7 @@ function toggleDefinition() {
     focusFirstElement(definitionBoxEl);
   }
   
-  // Restore history panel if it should remain visible in tablet mode with grid layout
-  const { mode, historyPopup } = getCurrentLayoutState();
-  if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
-    updatePanelVisibility();
-  }
+  updatePanelVisibility();
 }
 
 // Get the manual panel toggles for external access

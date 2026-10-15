@@ -3,52 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    // Paint the browser canvas before external stylesheets can block parsing.
+    let dark = false;
+    try { dark = localStorage.getItem('darkMode') === 'true'; } catch { /* Default to light. */ }
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    document.documentElement.style.backgroundColor = dark ? '#2c303a' : '#e0e5ec';
+  </script>
   <title>WordSquad</title>
   <link rel="stylesheet" href="static/css/theme.css">
   <link rel="stylesheet" href="landing.css">
+  <link rel="stylesheet" href="static/css/components/modals.css">
+  <link rel="stylesheet" href="static/css/components/age-check.css">
 </head>
 <body>
-<div id="landingView">
+<div id="landingView" hidden>
+  <script>
+    // Select the initial view before content can paint, even while modules load.
+    document.getElementById('landingView').hidden = /^#lobby\/([A-Za-z0-9]{6})$/.test(window.location.hash);
+    document.body.classList.toggle('dark-mode', document.documentElement.style.colorScheme === 'dark');
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      document.getElementById('landingView').classList.add('tiles-preparing');
+    }
+  </script>
   <!-- Emoji Picker Modal -->
-  <div id="emojiModal" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading" style="display: none;">
-    <div id="emojiModalBox">
-      <div id="emojiModalHeading">
-        Pick your emoji:
+  <div id="emojiModal" class="popup-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="emojiModalHeading" style="display: none;">
+    <div id="emojiModalBox" data-popup="picker">
+      <div class="popup-header">
+        <h2 id="emojiModalHeading">Pick your emoji</h2>
+        <button id="emojiPickerClose" class="close-btn" type="button" aria-label="Close emoji picker">×</button>
       </div>
+      <p class="popup-description">Choose how your squad will see you.</p>
       <div id="emojiChoices"></div>
-      <div id="emojiModalError"></div>
+      <div id="emojiModalError" role="alert"></div>
     </div>
   </div>
 
   <header id="mainHeader">
     <h1 id="logo">WordSquad</h1>
-    <button id="emojiDisplay" aria-label="Select your emoji" title="Click to select your emoji">👤</button>
-    <button id="darkToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
-    <nav>
-      <a href="#howTo" id="helpLink">Help</a>
-      <a href="https://github.com/deveydtj/WWF" id="githubLink">GitHub</a>
+    <div class="header-controls">
+      <button id="emojiDisplay" type="button" aria-label="Select your emoji" title="Click to select your emoji">👤</button>
+      <button id="darkToggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+    </div>
+    <nav aria-label="Main navigation">
+      <button id="howToggle" class="play-secondary" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="howTo">How to Play <span aria-hidden="true">?</span></button>
+      <a href="https://github.com/deveydtj/WWF" id="githubLink">GitHub <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
   <main>
-    <section id="heroCard">
-      <button id="createBtn">Create Lobby</button>
-      <form id="joinForm">
-        <input id="joinCode" type="text" maxlength="6" autocomplete="off" aria-label="Lobby code" placeholder="ABC123">
-        <button id="joinBtn" type="submit">Join Lobby</button>
-        <p id="joinError" class="error-text visually-hidden" role="alert"></p>
-      </form>
-      <button id="quickBtn" type="button">Quick Play</button>
-      <button id="rejoinChip" type="button" hidden>Re-join</button>
+    <section id="heroCard" class="squad-card" aria-labelledby="playHeading">
+      <div class="play-copy">
+        <p class="card-eyebrow"><span aria-hidden="true">✦</span> Let's play</p>
+        <h2 id="playHeading">Better words.<br>Better together.</h2>
+        <p class="card-description">Five letters. Six guesses. One squad.<br>Pick your emoji and get the game going.</p>
+        <div class="play-tiles" aria-hidden="true"><span>S</span><span>Q</span><span>U</span><span>A</span><span>D</span></div>
+      </div>
+      <div class="play-actions">
+        <div class="create-group" data-mode="open">
+          <fieldset class="room-mode">
+            <legend class="visually-hidden">Lobby type</legend>
+            <label class="room-mode-option">
+              <input type="radio" name="roomMode" value="open" checked>
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="7.5" cy="7" r="2.6"/><path d="M2.8 15.5c.5-2.6 2.4-4 4.7-4s4.2 1.4 4.7 4"/><circle cx="13.6" cy="7.6" r="2.1"/><path d="M13.4 11.6c2 0 3.5 1.2 3.9 3.4"/></svg>
+              <span>Open</span>
+            </label>
+            <label class="room-mode-option">
+              <input id="privateRoom" type="radio" name="roomMode" value="private">
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.8a3 3 0 0 1 6 0V9"/></svg>
+              <span>Private</span>
+            </label>
+          </fieldset>
+          <button id="createBtn" class="glow-button" type="button" aria-describedby="roomModeHint">
+            <span id="createLabel">Create Lobby</span>
+            <span class="create-icon" aria-hidden="true"><span class="open-only">↗</span><svg class="private-only" viewBox="0 0 20 20" focusable="false"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.8a3 3 0 0 1 6 0V9"/></svg></span>
+          </button>
+          <p id="roomModeHint" class="room-mode-hint">
+            <span class="open-only">Share the code and anyone can jump in.</span>
+            <span class="private-only">Invite-only. You approve every player, so it's safe to stream.</span>
+          </p>
+        </div>
+        <form id="joinForm">
+          <label for="joinCode">Have a lobby code?</label>
+          <div class="join-controls">
+            <input id="joinCode" type="text" maxlength="6" autocomplete="off" spellcheck="false" aria-label="Lobby code" placeholder="ABC123" aria-describedby="joinError">
+            <button id="joinBtn" class="play-secondary" type="submit">Join Lobby</button>
+          </div>
+          <p id="joinError" class="error-text visually-hidden" role="alert"></p>
+        </form>
+        <button id="rejoinChip" class="play-secondary" type="button" hidden>Re-join</button>
+      </div>
     </section>
-    <section id="networkLobbies" hidden>
-      <h2>Network Lobbies</h2>
-      <p>Games from your network:</p>
+
+
+    <section id="networkLobbies" class="squad-card" aria-labelledby="networkHeading">
+      <div>
+        <p class="card-eyebrow"><span aria-hidden="true">✦</span> On your network</p>
+        <h2 id="networkHeading">Local Lobbies</h2>
+        <p class="card-description">Join a squad playing on your network.</p>
+      </div>
+      <button id="findNetworkLobbies" class="play-secondary" type="button">Find local lobbies</button>
+      <p id="networkLobbyStatus" class="card-description" role="status">Find a game on your network, or create a lobby for others to join.</p>
       <div id="networkLobbyList"></div>
     </section>
 
-    <section id="howTo">
-      <button id="howToggle" aria-expanded="false">How to Play</button>
-      <div id="howContent" hidden>
+    <section id="donationSection" class="squad-card" aria-labelledby="donationHeading">
+      <div class="donation-copy">
+        <p class="card-eyebrow"><span aria-hidden="true">✦</span> Powered by the squad</p>
+        <h2 id="donationHeading">Keep the good<br>games going.</h2>
+        <p class="card-description">A little support keeps the server running and the squad playing. Help give our next game a home.</p>
+      </div>
+      <div class="donation-meter">
+        <svg viewBox="0 0 260 260" aria-hidden="true" focusable="false">
+          <path class="donation-track" d="M 47 213 A 117.38 117.38 0 1 1 213 213" pathLength="100" />
+          <path class="donation-ring-glow" d="M 47 213 A 117.38 117.38 0 1 1 213 213" pathLength="100" />
+          <path class="donation-ring" d="M 47 213 A 117.38 117.38 0 1 1 213 213" pathLength="100" />
+        </svg>
+        <div class="donation-meter-label">
+          <span class="donation-meter-caption">Server fund</span>
+          <strong id="donationPercent">—</strong>
+          <span id="donationProgressLabel">Goal coming soon</span>
+        </div>
+        <div id="donationProgress" class="visually-hidden" role="progressbar" aria-label="Server funding goal" aria-valuemin="0" aria-valuemax="100" aria-valuetext="Funding goal has not been set" aria-describedby="donationStatus"></div>
+      </div>
+      <div class="donation-bottom">
+        <dl class="donation-totals">
+          <div><dt>Raised this month</dt><dd id="donationRaised">—</dd></div>
+          <div><dt>Monthly goal</dt><dd id="donationGoal">—</dd></div>
+        </dl>
+        <a id="donationLink" class="glow-button" hidden target="_blank" rel="noopener noreferrer">Support the squad <span aria-hidden="true">↗</span><span class="visually-hidden"> (opens in a new tab)</span></a>
+        <button id="donationPending" class="glow-button" type="button" disabled>Donations opening soon <span aria-hidden="true">♡</span></button>
+        <p id="donationStatus">Funding details are being set up. Check back soon.</p>
+      </div>
+    </section>
+
+
+
+    <dialog id="howTo" data-popup="help" aria-labelledby="howHeading">
+      <div class="how-dialog-header popup-header">
+        <div>
+          <p class="card-eyebrow"><span aria-hidden="true">✦</span> Play guide</p>
+          <h2 id="howHeading" tabindex="-1" autofocus>How to Play</h2>
+        </div>
+        <form method="dialog">
+          <button class="play-secondary" type="submit" aria-label="Close how to play">×</button>
+        </form>
+      </div>
+      <div id="howContent">
         <div class="how-section">
           <h3>Game Objective</h3>
           <p>Guess the hidden five-letter word in six tries or fewer. Work together with other players in real-time!</p>
@@ -90,10 +191,10 @@
           <p><strong>Multiplayer:</strong> Chat with other players, see their progress, and compete on the emoji leaderboard!</p>
         </div>
       </div>
-    </section>
+    </dialog>
   </main>
   <footer id="mainFooter">
-    <p>Not affiliated with Wordle. <a href="LICENSE">MIT License</a></p>
+    <p>Not affiliated with Wordle. <a href="https://opensource.org/license/mit">MIT License</a></p>
   </footer>
   <div id="ariaLive" aria-live="polite" class="visually-hidden"></div>
 </div>

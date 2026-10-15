@@ -23,8 +23,6 @@ class DOMManager {
     // Message and popup elements
     this.elements.messageEl = document.getElementById('message');
     this.elements.messagePopup = document.getElementById('messagePopup');
-    this.elements.waitingOverlay = document.getElementById('waitingOverlay');
-    this.elements.waitingDismiss = document.getElementById('waitingDismiss');
     
     // Panel elements
     this.elements.historyBox = document.getElementById('historyBox');
@@ -53,21 +51,6 @@ class DOMManager {
     this.elements.menuDarkMode = document.getElementById('menuDarkMode');
     this.elements.menuSound = document.getElementById('menuSound');
     this.elements.menuInfo = document.getElementById('menuInfo');
-    
-    // Mobile menu elements
-    this.elements.mobileMenuToggle = document.getElementById('mobileMenuToggle');
-    this.elements.mobileMenuPopup = document.getElementById('mobileMenuPopup');
-    this.elements.mobileMenuClose = document.getElementById('mobileMenuClose');
-    this.elements.mobileMenuLeaveLobby = document.getElementById('mobileMenuLeaveLobby');
-    this.elements.mobileMenuShareLobby = document.getElementById('mobileMenuShareLobby');
-    this.elements.mobileMenuPlayers = document.getElementById('mobileMenuPlayers');
-    this.elements.mobileMenuPlayerCount = document.getElementById('mobileMenuPlayerCount');
-    this.elements.mobileMenuHistory = document.getElementById('mobileMenuHistory');
-    this.elements.mobileMenuDefinition = document.getElementById('mobileMenuDefinition');
-    this.elements.mobileMenuChat = document.getElementById('mobileMenuChat');
-    this.elements.mobileMenuDarkMode = document.getElementById('mobileMenuDarkMode');
-    this.elements.mobileMenuSound = document.getElementById('mobileMenuSound');
-    this.elements.mobileMenuInfo = document.getElementById('mobileMenuInfo');
     
     // Reset button elements
     this.elements.holdReset = document.getElementById('holdReset');

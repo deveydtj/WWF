@@ -1,12 +1,19 @@
+function hintStorage() {
+  return globalThis.PRIVATE_ROOM ? sessionStorage : localStorage;
+}
+function hintKey(emoji) {
+  return 'hintState-' + (globalThis.PRIVATE_ROOM ? globalThis.PRIVATE_ROOM.room + '-' : '') + emoji;
+}
+
 export function saveHintState(emoji, row, hint) {
   if (!emoji) return;
   const data = { row, hint };
-  localStorage.setItem('hintState-' + emoji, JSON.stringify(data));
+  hintStorage().setItem(hintKey(emoji), JSON.stringify(data));
 }
 
 export function loadHintState(emoji) {
   if (!emoji) return { row: null, hint: null };
-  const raw = localStorage.getItem('hintState-' + emoji);
+  const raw = hintStorage().getItem(hintKey(emoji));
   if (!raw) return { row: null, hint: null };
   try {
     const data = JSON.parse(raw);

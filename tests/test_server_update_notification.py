@@ -11,10 +11,13 @@ from backend.server import app, LOBBIES, GameState, broadcast_server_update_noti
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
     """Create a test client for the Flask app."""
+    monkeypatch.setenv('OPERATOR_TOKEN', 'test-operator')
     app.config['TESTING'] = True
     with app.test_client() as client:
+        client.environ_base['HTTP_AUTHORIZATION'] = 'Bearer test-operator'
+        assert client.post('/age-check', json={'age': 20}).status_code == 200
         yield client
 
 

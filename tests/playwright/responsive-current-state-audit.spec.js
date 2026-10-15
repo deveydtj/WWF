@@ -77,8 +77,8 @@ async function prepareAuditSurface(page) {
     // These surfaces are side effects of loading without a lobby. The landscape
     // overlay is deliberately not suppressed because it is responsive behavior.
     const incidentalOverlays = [
-      '#waitingOverlay', '#shareModal', '#emojiModal', '#closeCallPopup',
-      '#infoPopup', '#optionsMenu', '#mobileMenuPopup', '#panelBackdrop',
+      '#shareModal', '#emojiModal', '#closeCallPopup',
+      '#infoPopup', '#optionsMenu', '#panelBackdrop',
       '#messagePopup',
     ];
     incidentalOverlays.forEach((selector) => {

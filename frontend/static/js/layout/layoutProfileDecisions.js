@@ -178,13 +178,9 @@ export function calculatePanelCapacity(
 
 export function decideGameFlow(
   viewportSnapshot,
-  panelCapacity,
-  panelMinimums,
-  gameplayMinimums
+  panelCapacity
 ) {
   const available = getAvailableSpace(viewportSnapshot);
-  const panel = getPanelMinimums(panelMinimums);
-  const gameplay = getGameplayMinimums(gameplayMinimums);
   const orientation = viewportSnapshot.orientation
     || (available.inlineSize > available.blockSize ? 'landscape' : 'portrait');
 
@@ -195,16 +191,7 @@ export function decideGameFlow(
     throw new TypeError(`Unknown panel capacity: ${String(panelCapacity)}`);
   }
 
-  const gameplayInlineSize = availableGameplayInlineSize(
-    available.inlineSize,
-    panelCapacity,
-    panel
-  );
-  const splitFits = orientation === 'landscape'
-    && gameplayInlineSize >= gameplay.splitLandscapeInlineSize
-    && available.blockSize >= gameplay.splitLandscapeBlockSize;
-
-  return splitFits ? GAME_FLOWS.SPLIT_LANDSCAPE : GAME_FLOWS.VERTICAL;
+  return GAME_FLOWS.VERTICAL;
 }
 
 export function decidePanelPresentation(panelCapacity) {
@@ -280,12 +267,7 @@ export function decideLayoutProfile(
   return createLayoutProfile({
     density,
     interaction,
-    gameFlow: decideGameFlow(
-      viewportSnapshot,
-      panelCapacity,
-      panelMinimums,
-      gameplayMinimums
-    ),
+    gameFlow: decideGameFlow(viewportSnapshot, panelCapacity),
     panelCapacity,
     panelPresentation: decidePanelPresentation(panelCapacity),
     showGuessField: interaction === LAYOUT_INTERACTIONS.KEYBOARD_FIRST,

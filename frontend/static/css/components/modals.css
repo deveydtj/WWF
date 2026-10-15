@@ -1,217 +1,63 @@
-/* ─────────────────────────────────────────────
-   Modals - All modal dialogs and popups
-   ───────────────────────────────────────────── */
+/* Popup categories and rationale: docs/POPUP_STYLES.md.
+   Decoration lives here; responsive-layout.css still owns panel placement. */
 
-/* Emoji Modal */
-#emojiModal {
-  background: rgba(0, 0, 0, 0.33);
-  backdrop-filter: blur(4px);
-  position: fixed;
-  z-index: var(--z-high-priority-modal);
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: auto;
-}
-
-#emojiModal.show {
-  opacity: 1;
-}
-
-#emojiModal.hide {
-  opacity: 0;
-}
-
-#emojiModalBox {
-  background: var(--bg-color);
-  box-shadow: 0 8px 32px var(--shadow-color-dark),
-              0 0 0 3px var(--shadow-color-light);
-  border-radius: 18px;
-  padding: var(--modal-padding, 20px);
-  text-align: center;
-  transform: translateY(-20px) scale(0.95);
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  position: relative;
-  z-index: var(--z-modal-content);
-  pointer-events: auto;
-  box-sizing: border-box;
-  max-width: var(--modal-max-inline-size);
-  max-height: var(--modal-max-block-size);
-  overflow-y: auto;
-}
-
-#emojiModal.show #emojiModalBox {
-  transform: translateY(0) scale(1);
-}
-
-/* Close Call Popup */
-#closeCallPopup {
-  background: rgba(0, 0, 0, 0.33);
-  backdrop-filter: blur(4px);
-  position: fixed;
-  z-index: var(--z-modal-backdrop);
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: none;
-}
-
-#closeCallPopup.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-#closeCallPopup.hide {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#closeCallBox {
-  background: var(--bg-color);
-  box-shadow: 0 8px 32px var(--shadow-color-dark),
-              0 0 0 3px var(--shadow-color-light);
-  border-radius: 12px;
-  padding: var(--modal-padding, 20px);
-  text-align: center;
-  box-sizing: border-box;
-  max-width: var(--modal-max-inline-size);
-  max-height: var(--modal-max-block-size);
-  overflow-y: auto;
-}
-
-#closeCallBox button {
-  margin-top: 12px;
-  font-size: 16px;
-}
-
-/* Info Popup */
-#infoPopup {
-  background: rgba(0, 0, 0, 0.33);
-  backdrop-filter: blur(4px);
-  position: fixed;
-  z-index: 101;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: auto;
-}
-
-#infoBox {
-  position: relative;
-  background: var(--bg-color);
-  box-shadow: 0 8px 32px var(--shadow-color-dark),
-              0 0 0 3px var(--shadow-color-light);
-  border-radius: 12px;
-  padding: var(--modal-padding, 20px);
-  box-sizing: border-box;
-  max-width: var(--modal-max-inline-size);
-  max-height: var(--modal-max-block-size);
-  overflow-y: auto;
-  text-align: left;
-}
-
-#infoPopup.show {
-  opacity: 1;
-}
-
-#infoPopup.hide {
-  opacity: 0;
-}
-
-/* Share Modal */
-#shareModal {
-  background: rgba(0, 0, 0, 0.33);
-  backdrop-filter: blur(4px);
-  position: fixed;
-  z-index: 101;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#shareBox {
-  background: var(--bg-color);
-  box-shadow: 0 8px 32px var(--shadow-color-dark),
-              0 0 0 3px var(--shadow-color-light);
-  border-radius: 12px;
-  padding: var(--modal-padding, 20px);
-  text-align: center;
-  box-sizing: border-box;
-  max-width: var(--modal-max-inline-size);
-}
-
-#shareActions {
-  margin-top: 12px;
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-#shareLink {
-  width: 100%;
-  margin-top: 8px;
-  border: none;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 10px;
-  background-color: var(--bg-color);
-  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
-              inset -3px -3px 6px var(--inset-shadow-light);
-  color: var(--text-color);
-}
-
-/* Shared visual-viewport bounds. The overlay itself follows the visible
-   viewport while each shell uses the metrics engine's board-proportional
-   inline size and visual-viewport block size. */
+/* Focused tasks: a dimmed backdrop and one readable, raised card. */
 #emojiModal,
 #closeCallPopup,
 #infoPopup,
 #shareModal {
-  top: var(--visual-viewport-offset-top);
-  left: var(--visual-viewport-offset-left);
-  right: auto;
-  bottom: auto;
-  width: var(--visual-viewport-width);
-  height: var(--visual-viewport-height);
-  padding: var(--viewport-safe-area-top) var(--viewport-safe-area-right)
-    var(--viewport-safe-area-bottom) var(--viewport-safe-area-left);
+  display: none;
+  position: fixed;
+  top: var(--visual-viewport-offset-top, 0px);
+  left: var(--visual-viewport-offset-left, 0px);
+  width: var(--visual-viewport-width, 100vw);
+  height: var(--visual-viewport-height, 100dvh);
+  padding: max(16px, var(--viewport-safe-area-top, 0px))
+    max(16px, var(--viewport-safe-area-right, 0px))
+    max(16px, var(--viewport-safe-area-bottom, 0px))
+    max(16px, var(--viewport-safe-area-left, 0px));
   box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  background: var(--popup-backdrop);
+  backdrop-filter: blur(5px);
+  z-index: var(--z-modal-backdrop, 60);
+}
+
+#emojiModal {
+  z-index: var(--z-high-priority-modal, 75);
+}
+
+#emojiModalBox,
+#closeCallBox,
+#infoBox,
+#shareBox,
+#howTo,
+#privateRoomDialog,
+#appContainer [data-popup="utility"] {
+  box-sizing: border-box;
+  background: linear-gradient(145deg, var(--popup-surface), var(--bg-color));
+  color: var(--text-color);
+  border: 1px solid var(--popup-border);
+  border-radius: 22px;
+  box-shadow: 0 18px 48px var(--popup-shadow-color),
+    inset 1px 1px 0 var(--popup-sheen);
+  line-height: 1.55;
+  text-align: left;
 }
 
 #emojiModalBox,
 #closeCallBox,
 #infoBox,
 #shareBox {
-  width: min(100%, var(--modal-max-inline-size));
-  max-width: var(--modal-max-inline-size);
-  max-height: var(--modal-max-block-size);
-  padding: var(--modal-padding);
-  box-sizing: border-box;
+  position: relative;
+  width: min(100%, var(--modal-max-inline-size, 480px));
+  max-height: var(--modal-max-block-size, calc(100dvh - 32px));
+  padding: var(--modal-padding, 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
-/* Keep fixed shell controls in view; only potentially long content scrolls. */
 #emojiModalBox,
 #infoBox {
   display: flex;
@@ -219,32 +65,498 @@
   overflow: hidden;
 }
 
-#emojiChoices,
+.popup-header,
+#howTo .how-dialog-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  margin-bottom: 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--popup-border);
+}
+
+.popup-header h2,
+.popup-header h3,
+#appContainer .popup-header h3,
+#emojiModalHeading,
+#shareHeading,
+#historyHeading,
+#playerSidebarHeading {
+  margin: 0;
+  min-height: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  text-align: left;
+  color: var(--text-color);
+}
+
+.popup-description {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--text-color-light);
+}
+
+/* Close controls stay in the header while the content beneath them scrolls. */
+.popup-header .close-btn,
+#appContainer .popup-header .close-btn,
+#appContainer .popup-header :is(#historyClose, #definitionClose, #chatClose, #playerClose, #optionsClose),
+#howTo .popup-header button {
+  position: static;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--popup-border);
+  border-radius: 12px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 24px;
+  box-shadow: none;
+  z-index: auto;
+}
+
+[data-popup] :is(button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--popup-accent);
+  outline-offset: 3px;
+}
+
+[data-popup] button:not(.emoji-choice, .close-btn) {
+  min-height: 44px;
+  font: inherit;
+}
+
+#shareCopy,
+#closeCallOk {
+  background: var(--popup-accent);
+  color: var(--popup-on-accent);
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--popup-accent) 20%, transparent);
+}
+
+/* Picker: large, equal targets make identity selection quick on touch screens. */
+#emojiChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  gap: 10px;
+  min-height: 0;
+  max-height: var(--modal-content-max-block-size, 60dvh);
+  padding: 4px;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#emojiChoices .emoji-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 52px;
+  margin: 0;
+  padding: 6px;
+  font-size: 28px;
+  line-height: 1;
+  background: var(--bg-color);
+  border: 1px solid var(--popup-border);
+  border-radius: 12px;
+  box-shadow: 2px 2px 5px var(--shadow-color-dark),
+    -2px -2px 5px var(--shadow-color-light);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+@media (hover: hover) {
+  #emojiChoices .emoji-choice:hover {
+    background: var(--popup-accent-soft);
+    border-color: var(--popup-accent);
+    transform: none;
+  }
+
+  .popup-header .close-btn:hover,
+  #appContainer .popup-header .close-btn:hover {
+    background: var(--popup-surface);
+    transform: none;
+  }
+}
+
+#emojiModalError {
+  flex-shrink: 0;
+  margin-top: 12px;
+  color: var(--error-color);
+  font-size: 0.9rem;
+}
+
+#emojiModalError:empty {
+  display: none;
+}
+
+/* Help: a fixed heading and relaxed type; scroll only the reading area. */
 #infoContent {
   min-height: 0;
-  max-height: var(--modal-content-max-block-size);
+  padding: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
-#infoContent {
-  padding-inline-end: var(--modal-close-control-reserve);
+#infoContent h3 {
+  margin: 20px 0 6px;
+  font-size: 1rem;
 }
 
-#infoClose {
-  top: var(--modal-padding);
-  right: var(--modal-padding);
-  width: var(--modal-close-control-size);
-  height: var(--modal-close-control-size);
+#infoContent h3:first-child {
+  margin-top: 0;
 }
 
-#closeCallBox,
-#shareBox {
+#infoContent p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-color-light);
+}
+
+#howTo {
+  width: min(calc(100% - 32px), 640px);
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 24px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+}
+
+#howTo::backdrop {
+  background: var(--popup-backdrop);
+  backdrop-filter: blur(5px);
+}
+
+/* Invite: a recessed, selectable field and one clear primary action. */
+#shareLink {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--popup-border);
+  border-radius: 12px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+    inset -2px -2px 5px var(--inset-shadow-light);
+  font-size: 16px;
 }
 
 #shareActions {
+  display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
 }
+
+/* Round notice: amber communicates timing/competition without implying error. */
+#closeCallBox {
+  max-width: min(100%, var(--modal-max-inline-size, 480px), 400px);
+  border-top: 4px solid var(--present-bg);
+  text-align: center;
+}
+
+.popup-eyebrow {
+  margin: 0 0 8px;
+  color: var(--popup-warning);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#closeCallBox h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+#closeCallText {
+  margin: 12px 0 20px;
+  overflow-wrap: anywhere;
+}
+
+/* Utilities: quieter cards, consistent headers, content-first rows. */
+body #appContainer :is(#historyBox, #definitionBox, #chatBox, #optionsMenu, #playerSidebar)[data-popup="utility"] {
+  /* Include the new 1px border without reducing the existing content width. */
+  padding: calc(var(--modal-padding) - 1px);
+  border-radius: 18px;
+  transition: none;
+}
+
+#appContainer :is(#historyBox, #definitionBox, #chatBox, #playerSidebar) {
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#appContainer #playerSidebar {
+  z-index: var(--z-panel-overlay);
+}
+
+#appContainer :is(#historyList, #definitionText, #chatMessages, #playerList) {
+  min-height: 0;
+  padding-inline-end: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+
+#appContainer #definitionText:empty + .panel-empty-state {
+  padding-inline-end: 0;
+}
+
+/* Rails keep a lighter shadow and never animate when the layout resizes. */
+body #appContainer :is(#historyBox, #definitionBox, #chatBox)[data-popup="utility"][aria-modal="false"] {
+  padding: 15px;
+  box-shadow: 3px 3px 8px var(--shadow-color-dark),
+    -3px -3px 8px var(--shadow-color-light);
+}
+
+#appContainer #optionsMenuItems {
+  gap: 4px;
+  padding: 0 4px 4px;
+}
+
+.popup-section-label {
+  margin: 12px 8px 4px;
+  color: var(--text-color-light);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.popup-section-label:first-child {
+  margin-top: 0;
+}
+
+#appContainer #optionsMenuItems button {
+  margin: 0;
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: none;
+  text-align: left;
+}
+
+#appContainer #optionsMenuItems button:hover {
+  background: var(--popup-accent-soft);
+  transform: none;
+}
+
+#appContainer #panelBackdrop {
+  background: var(--popup-backdrop);
+  backdrop-filter: blur(5px);
+}
+
+/* Nonblocking feedback: compact surfaces; color supports the written message. */
+#messagePopup,
+#chatMessagePopup,
+#hintTooltip,
+#pointsPopup {
+  box-sizing: border-box;
+  background: var(--popup-surface);
+  color: var(--text-color);
+  border: 1px solid var(--popup-border);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow-color-dark) 65%, transparent);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  padding: 10px 14px;
+  pointer-events: none;
+}
+
+#appContainer #messagePopup {
+  display: none;
+  position: fixed;
+  top: calc(var(--visual-viewport-offset-top, 0px) + var(--viewport-safe-area-top, 0px) + var(--tile-size) * 2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-popup-message);
+  width: max-content;
+  max-width: min(90vw, 400px);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+#chatMessagePopup {
+  display: none;
+  position: fixed;
+  top: calc(var(--visual-viewport-offset-top) + var(--viewport-safe-area-top) + 72px);
+  right: max(16px, var(--viewport-safe-area-right));
+  max-width: min(320px, calc(var(--visual-viewport-width) - 32px));
+  gap: 8px;
+  border-inline-start: 3px solid var(--popup-accent);
+  opacity: 0;
+}
+
+#chatMessagePopup.show {
+  animation: popup-toast-lifetime 4s ease both;
+}
+
+#chatMessagePopup .popup-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#hintTooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  border-color: var(--popup-warning);
+  z-index: var(--z-tooltip);
+}
+
+#hintTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--popup-surface);
+  transform: translateX(-50%);
+}
+
+#pointsPopup {
+  display: none;
+  position: fixed;
+  z-index: var(--z-popup-message);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+#pointsPopup.points-positive {
+  background: var(--popup-accent-soft);
+  color: var(--popup-accent);
+  border-color: var(--popup-accent);
+}
+
+#pointsPopup.points-negative {
+  background: color-mix(in srgb, var(--bg-color), var(--error-color) 8%);
+  color: var(--error-color);
+  border-color: var(--error-color);
+}
+
+#message.negative {
+  color: var(--error-color);
+}
+
+/* Small entrance cues establish the new surface without moving its controls. */
+.popup-backdrop.show > [data-popup],
+#howTo[open] {
+  animation: popup-card-enter 180ms ease-out;
+}
+
+#appContainer [data-popup="utility"][aria-modal="true"].visible {
+  animation: popup-reveal 160ms ease-out;
+}
+
+body:has(.popup-backdrop.show, #howTo[open]) {
+  overflow: hidden;
+}
+
+@keyframes popup-card-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes popup-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popup-toast-lifetime {
+  0%, 100% { opacity: 0; }
+  5%, 90% { opacity: 1; }
+}
+
+/* Keep timed feedback visible for its full lifetime, with no travel or scaling.
+   Animation events still fire so existing notification cleanup keeps working. */
+@media (prefers-reduced-motion: reduce) {
+  .popup-backdrop.show > [data-popup],
+  #howTo[open],
+  #appContainer [data-popup="utility"][aria-modal="true"].visible {
+    animation: none;
+  }
+
+  [data-popup] *,
+  #chatNotify,
+  .chat-entry {
+    transition: none !important;
+  }
+
+  #messagePopup,
+  #message,
+  #chatMessagePopup {
+    animation-name: popup-still !important;
+  }
+
+  #pointsPopup {
+    transform: translateX(-50%) translateY(50px) !important;
+    animation-name: popup-still !important;
+  }
+
+  #chatNotify.wiggle {
+    animation: none;
+  }
+}
+
+@keyframes popup-still {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
+#emojiChoices .emoji-choice.emoji-variant-available {
+  border: 1px dashed var(--popup-warning);
+  background: color-mix(in srgb, var(--bg-color), var(--present-bg) 12%);
+}
+
+#emojiChoices .emoji-choice.emoji-variant-available::after {
+  color: var(--popup-warning);
+}
+
+#privateRoomDialog {
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: 85dvh;
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  font: inherit;
+}
+
+#privateRoomDialog::backdrop { background: rgb(0 0 0 / 55%); }
+#privateRoomDialog button { margin: .25rem; padding: .65rem; font: inherit; }
+#privateRoomDialog li { margin-block: .5rem; }
+
+#copyLobbyLink[hidden],
+#holdReset[hidden] { display: none !important; }

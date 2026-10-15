@@ -118,13 +118,8 @@ function toggleSound() {
     localStorage.setItem('soundEnabled', soundEnabled);
   }
   
-  // Update UI
-  const soundToggle = document.getElementById('soundToggle');
-  if (soundToggle) {
-    soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
-    soundToggle.setAttribute('aria-label', soundEnabled ? 'Turn sound off' : 'Turn sound on');
-  }
-  
+  updateSoundLabel();
+
   // Ensure audio context is ready when enabling sound
   if (soundEnabled) {
     ensureAudioContext();
@@ -137,15 +132,19 @@ function isSoundEnabled() {
   return soundEnabled;
 }
 
+function updateSoundLabel() {
+  const menuSound = document.getElementById('menuSound');
+  if (menuSound) {
+    menuSound.textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+    menuSound.setAttribute('aria-pressed', String(soundEnabled));
+    menuSound.setAttribute('aria-label', soundEnabled ? 'Turn sound off' : 'Turn sound on');
+  }
+}
+
 // Initialize audio system
 function initAudio() {
-  // Set initial sound toggle state
-  const soundToggle = document.getElementById('soundToggle');
-  if (soundToggle) {
-    soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
-    soundToggle.setAttribute('aria-label', soundEnabled ? 'Turn sound off' : 'Turn sound on');
-  }
-  
+  updateSoundLabel();
+
   // Initialize audio context on first user interaction
   document.addEventListener('click', ensureAudioContext, { once: true });
   document.addEventListener('keydown', ensureAudioContext, { once: true });

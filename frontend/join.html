@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <script>
+    window.privateInvitation = location.hash.slice(1);
+    history.replaceState(null, '', '/join');
+  </script>
+  <title>Join a private WordSquad room</title>
+  <link rel="stylesheet" href="/static/css/components/age-check.css">
+  <style>
+    body { font: 1rem system-ui, sans-serif; max-width: 32rem; margin: 3rem auto; padding: 1rem; }
+    input, button { font: inherit; padding: .7rem; margin: .4rem 0; }
+    label, input { display: block; }
+  </style>
+</head>
+<body>
+  <h1>Join a private room</h1>
+  <p>The host must approve your request before you can see or join the game.</p>
+  <form id="privateJoinForm">
+    <label for="guestName">Name the host will recognize</label>
+    <input id="guestName" maxlength="40" autocomplete="off" required>
+    <button>Request entry</button>
+  </form>
+  <p id="joinStatus" role="status"></p>
+  <a href="/">Return home</a>
+  <script type="module" src="/static/js/privateJoin.js"></script>
+</body>
+</html>

@@ -150,20 +150,6 @@ test.describe('PR 0 - Baseline Viewport Snapshots', () => {
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
       
-      // Ensure the initial waiting overlay is not present in baseline captures
-      // main.js shows #waitingOverlay on load and auto-hides it after ~4s or on user dismissal.
-      // Try to dismiss it explicitly, then wait for it to become hidden. If the overlay never exists,
-      // skip the wait; but if it exists and remains visible past the timeout, fail the test.
-      const dismissBtn = await page.$('#waitingDismiss');
-      if (dismissBtn) {
-        await dismissBtn.click();
-        await page.waitForTimeout(100);
-      }
-      const waitingOverlay = await page.$('#waitingOverlay');
-      if (waitingOverlay) {
-        await page.waitForSelector('#waitingOverlay', { state: 'hidden', timeout: 15000 });
-      }
-      
       const baselineDir = ensureBaselineDir();
       
       // 1. Capture PNG screenshot
@@ -234,16 +220,6 @@ test.describe('PR 0 - Baseline Typography Hierarchy', () => {
       await page.setViewportSize(viewport);
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
-      
-      // Explicitly dismiss the waiting overlay before capturing typography.
-      // Using state: 'hidden' also safely handles the case where the overlay never appears.
-      const dismissBtn = await page.$('#waitingDismiss');
-      if (dismissBtn) {
-        await dismissBtn.click();
-        await page.waitForTimeout(100);
-      }
-      const waitingOverlay = page.locator('#waitingOverlay');
-      await waitingOverlay.waitFor({ state: 'hidden', timeout: 10000 });
       
       // Capture font sizes for all headings
       const headings = await page.evaluate(() => {
@@ -338,16 +314,6 @@ test.describe('PR 0 - Baseline Breakpoint Transitions', () => {
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
       
-      // Explicitly dismiss the waiting overlay before capturing metrics.
-      // Using state: 'hidden' also safely handles the case where the overlay never appears.
-      const dismissBtn = await page.$('#waitingDismiss');
-      if (dismissBtn) {
-        await dismissBtn.click();
-        await page.waitForTimeout(100);
-      }
-      const waitingOverlay = page.locator('#waitingOverlay');
-      await waitingOverlay.waitFor({ state: 'hidden', timeout: 10000 });
-      
       const elementsFrom = {};
       for (const [key, selector] of Object.entries(KEY_ELEMENTS)) {
         elementsFrom[key] = await captureElementData(page, selector);
@@ -427,19 +393,6 @@ test.describe('PR 0 - Baseline Validation', () => {
       // Navigate to game page
       await page.goto('game.html');
       await page.waitForLoadState('networkidle');
-      
-      // Wait for the initial waiting overlay (if present) to be dismissed.
-      // Explicitly dismiss it by clicking the button, then wait for it to become hidden.
-      // Note: state: 'hidden' resolves immediately if the element never appears
-      // or is already detached, so any timeout here indicates a real failure.
-      const dismissBtn = await page.$('#waitingDismiss');
-      if (dismissBtn) {
-        await dismissBtn.click();
-        // Give the overlay time to start its fade-out animation
-        await page.waitForTimeout(100);
-      }
-      const waitingOverlay = page.locator('#waitingOverlay');
-      await waitingOverlay.waitFor({ state: 'hidden', timeout: 10000 });
       
       const baselineDir = path.join(__dirname, 'baseline');
       

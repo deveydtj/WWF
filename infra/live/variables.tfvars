@@ -1,6 +1,22 @@
 # Terraform Variables Configuration
 # Copy this file and update all values before deployment
 
+# PUBLICATION BLOCKER: operator details deferred by the owner. Complete these
+# and publish/review the privacy notice before enabling the review flag.
+# Passing this gate does not establish COPPA compliance or certification.
+privacy_operator = {
+  legal_name      = ""
+  mailing_address = ""
+  phone           = ""
+  email           = ""
+  website_url     = ""
+}
+privacy_notice_reviewed = false
+
+# ARN only: store a random secret of at least 32 characters in Secrets Manager
+# or SSM. The ECS execution role needs permission to read/decrypt that secret.
+session_secret_arn = ""
+
 # AWS Configuration
 aws_region = "us-east-1"  # Your preferred AWS region
 

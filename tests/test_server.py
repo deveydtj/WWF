@@ -26,6 +26,7 @@ def load_server():
             self.remote_addr = "127.0.0.1"
             self.json = None
             self.endpoint = None
+            self.method = 'GET'
 
         def get_json(self, silent=False):
             return self.json
@@ -42,6 +43,7 @@ def load_server():
     class Flask:
         def __init__(self, name, **kwargs):
             self.name = name
+            self.config = {}
             self.static_folder = kwargs.get('static_folder')
             self.static_url_path = kwargs.get('static_url_path')
 
@@ -55,6 +57,9 @@ def load_server():
             """Mock implementation of Flask's after_request decorator."""
             return func
 
+        def before_request(self, func):
+            return func
+
         def run(self, *a, **kw):
             pass
 
@@ -65,6 +70,8 @@ def load_server():
     flask_stub.request = request
     flask_stub.jsonify = jsonify
     flask_stub.send_from_directory = send_from_directory
+    flask_stub.session = {}
+    flask_stub.redirect = lambda location: location
 
     cors_stub = types.ModuleType('flask_cors')
     cors_stub.CORS = lambda app: None
@@ -97,7 +104,9 @@ def load_server():
 
 
 @pytest.fixture
-def server_env(tmp_path):
+def server_env(tmp_path, monkeypatch):
+    monkeypatch.setenv('GAME_FILE', str(tmp_path / 'game_persist.json'))
+    monkeypatch.setenv('LOBBIES_FILE', str(tmp_path / 'lobbies.json'))
     server, request = load_server()
     server.LOBBIES_FILE = tmp_path / 'lobbies.json'
     # Disable budget mode for tests to allow online dictionary lookups to be tested
@@ -206,7 +215,7 @@ def test_get_client_ip_x_forwarded_for(server_env):
     server, request = server_env
     request.remote_addr = '10.1.1.1'
     request.headers['X-Forwarded-For'] = '1.2.3.4, 5.6.7.8'
-    assert server.get_client_ip() == '1.2.3.4'
+    assert server.get_client_ip() == '10.1.1.1'
 
 
 def test_set_emoji_registers_and_maps(server_env):
@@ -1111,8 +1120,7 @@ def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
         line = f.readline()
     entry = json.loads(line)
     assert entry['event'] == 'daily_double_used'
-    assert entry['emoji'] == '😀'
-    assert entry['ip'] == '1'
+    assert set(entry) == {"event", "timestamp"}
 
 
 def test_reconnect_with_active_daily_double(tmp_path, server_env, monkeypatch):
@@ -1392,8 +1400,7 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     with open(log_file) as f:
         entry = json.loads(f.readline())
     assert entry['event'] == 'lobby_created'
-    assert entry['lobby_id'] == code
-    assert entry['ip'] == '1'
+    assert set(entry) == {"event", "timestamp"}
 
     request.json = {'emoji': '😀', 'player_id': 'p1'}
     server.lobby_emoji(code)
@@ -1402,8 +1409,7 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
         entries = [json.loads(line) for line in f.readlines()]
     join = entries[1]
     assert join['event'] == 'lobby_joined'
-    assert join['lobby_id'] == code
-    assert join['emoji'] == '😀'
+    assert set(join) == {"event", "timestamp"}
 
     request.json = {'guess': server.LOBBIES[code].target_word, 'emoji': '😀', 'player_id': 'p1'}
     server.lobby_guess(code)
@@ -1416,8 +1422,7 @@ def test_lobby_analytics_create_join_finish(tmp_path, server_env, monkeypatch):
     finished = [e for e in entries if e['event'] == 'lobby_finished']
     assert len(finished) == 1
     final = finished[0]
-    assert final['lobby_id'] == code
-    assert final['ip'] == '1'
+    assert set(final) == {"event", "timestamp"}
 
 # Ensure only one lobby_finished entry is logged for default lobby resets
 def test_reset_game_logs_finished(tmp_path, server_env, monkeypatch):
@@ -1437,8 +1442,7 @@ def test_reset_game_logs_finished(tmp_path, server_env, monkeypatch):
     assert len(entries) == 1
     entry = entries[0]
     assert entry['event'] == 'lobby_finished'
-    assert entry['lobby_id'] == server.DEFAULT_LOBBY
-    assert entry['ip'] == '127.0.0.1'
+    assert set(entry) == {"event", "timestamp"}
 
 # Add new tests for lobby code generation and purge
 
@@ -1464,7 +1468,9 @@ def test_purge_lobbies_removes_idle_finished(server_env):
 
 
 def test_cleanup_endpoint_triggers_purge(monkeypatch, server_env):
-    server, _ = server_env
+    server, request = server_env
+    monkeypatch.setenv('OPERATOR_TOKEN', 'test-operator')
+    request.headers['Authorization'] = 'Bearer test-operator'
     called = {}
 
     def fake_force_purge():
@@ -1545,37 +1551,29 @@ def test_lobby_not_removed_if_still_has_players_after_kick(server_env):
     assert len(server.LOBBIES[code].leaderboard) == 1
     assert "🐸" in server.LOBBIES[code].leaderboard
 
-def test_get_lobby_creates_and_returns(server_env):
+def test_unknown_lobby_lookup_does_not_create(server_env):
     server, _ = server_env
-    code = 'ZXCV12'
-    assert code not in server.LOBBIES
-    lobby = server.get_lobby(code)
-    assert code in server.LOBBIES
-    assert server.LOBBIES[code] is lobby
-    # second call returns same object
-    again = server.get_lobby(code)
-    assert again is lobby
+    assert server.get_lobby('ZXCV12') is None
+    assert 'ZXCV12' not in server.LOBBIES
 
 
 def test_lobby_id_returns_correct_code(server_env):
     server, _ = server_env
-    code = 'ID1234'
-    lobby = server.get_lobby(code)
-    assert server._lobby_id(lobby) == code
+    code = server.lobby_create()['id']
+    assert server._lobby_id(server.get_lobby(code)) == code
 
 
-def test_with_lobby_switches_and_restores(server_env):
+def test_with_lobby_uses_request_context_and_restores(server_env):
     server, _ = server_env
-    code = 'ROOM11'
-    server.get_lobby(code)
+    code = server.lobby_create()['id']
     original = server.current_state
 
     def dummy():
-        return server._lobby_id(server.current_state)
+        assert server.current_state is original
+        return server._lobby_id(server._state())
 
-    result = server._with_lobby(code, dummy)
-    assert result == code
-    assert server.current_state is original
+    assert server._with_lobby(code, dummy) == code
+    assert server._state() is original
 
 
 def test_with_lobby_rejects_invalid_code(server_env):
@@ -1972,3 +1970,29 @@ def test_empty_offline_definitions_cache(tmp_path, server_env):
     from backend.game_logic import _get_cached_offline_definition
     definition = _get_cached_offline_definition('anything')
     assert definition is None
+
+
+def test_privacy_headers_prevent_credential_caching(server_env):
+    server, request = server_env
+    response = types.SimpleNamespace(headers={}, status_code=200)
+    request.endpoint = 'lobby_create'
+    request.method = 'POST'
+    request.path = '/lobby'
+    server.add_cache_control_headers(response)
+    assert response.headers['Cache-Control'] == 'no-store'
+    assert response.headers['Referrer-Policy'] == 'no-referrer'
+    assert response.headers['X-Content-Type-Options'] == 'nosniff'
+    request.endpoint = 'lobby_stream'
+    request.method = 'GET'
+    server.add_cache_control_headers(response)
+    assert response.headers['Cache-Control'] == 'no-store'
+
+
+def test_registration_logs_exclude_identifiers(server_env, caplog):
+    server, request = server_env
+    request.json = {'emoji': '😀', 'player_id': 'sensitive-player-id'}
+    request.remote_addr = '192.0.2.42'
+    with caplog.at_level('INFO'):
+        assert server.set_emoji()['status'] == 'ok'
+    assert 'sensitive-player-id' not in caplog.text
+    assert '192.0.2.42' not in caplog.text

@@ -56,7 +56,7 @@ resource "aws_s3_bucket_policy" "frontend" {
   bucket = aws_s3_bucket.frontend.id
   policy = data.aws_iam_policy_document.frontend.json
 
-  depends_on = [aws_s3_bucket_public_access_block.frontend]
+  depends_on = [aws_s3_bucket_public_access_block.frontend, terraform_data.privacy_publication_gate]
 }
 
 data "aws_iam_policy_document" "frontend" {
@@ -111,6 +111,7 @@ resource "aws_acm_certificate_validation" "cert" {
 
 # ------- CloudFront Distribution -------
 resource "aws_cloudfront_distribution" "cdn" {
+  depends_on          = [terraform_data.privacy_publication_gate]
   enabled             = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # Use only North America and Europe for cost optimization
@@ -128,6 +129,43 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.frontend.cloudfront_access_identity_path
+    }
+  }
+
+  # Gameplay and age checks must share the browser origin and session cookie.
+  origin {
+    domain_name = aws_lb.api.dns_name
+    origin_id   = "api"
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = ["/private/*", "/join", "/internal/*", "/age-*", "/lobby*", "/lobbies*", "/game", "/state", "/emoji", "/guess", "/hint", "/chat", "/reset", "/stream", "/health", "/admin/*"]
+    content {
+      path_pattern           = ordered_cache_behavior.value
+      target_origin_id       = "api"
+      viewer_protocol_policy = "https-only"
+      allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods         = ["GET", "HEAD"]
+      # Never cache eligibility, credentials, player state, or Set-Cookie.
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+      forwarded_values {
+        query_string = true
+        # Host must match the ALB certificate; Origin/protocol must reach Flask
+        # for its cross-origin checks. ALB supplies X-Forwarded-Proto.
+        headers = ["Host", "Origin", "Content-Type", "Sec-Fetch-Site", "X-WordSquad-Request", "Authorization"]
+        cookies {
+          forward           = "whitelist"
+          whitelisted_names = ["wordsquad_age_session", "wordsquad_room_session", "__Host-wordsquad_room_session"]
+        }
+      }
     }
   }
 
@@ -213,6 +251,12 @@ resource "aws_ecs_cluster" "wwf" {
 }
 
 resource "aws_ecs_task_definition" "api" {
+  lifecycle {
+    precondition {
+      condition     = length(trimspace(var.session_secret_arn)) > 0
+      error_message = "PUBLICATION BLOCKED: supply session_secret_arn for the signed age-session SECRET_KEY before deploying the API."
+    }
+  }
   family                   = "wwf-api"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -232,7 +276,18 @@ resource "aws_ecs_task_definition" "api" {
       portMappings = [
         { containerPort = 5001, protocol = "tcp" }
       ],
+      secrets = concat(
+        [{ name = "SECRET_KEY", valueFrom = var.session_secret_arn }],
+        var.private_rooms_redis_secret_arn != "" ? [{ name = "REDIS_URL", valueFrom = var.private_rooms_redis_secret_arn }] : [],
+        var.operator_secret_arn != "" ? [{ name = "OPERATOR_TOKEN", valueFrom = var.operator_secret_arn }] : []
+      ),
       environment = concat([
+        { name = "PUBLIC_ORIGIN", value = "https://${var.domain}" },
+        { name = "TRUSTED_PROXY_HOPS", value = "2" },
+        {
+          name  = "FLASK_ENV",
+          value = "production"
+        },
         {
           name  = "SINGLE_INSTANCE",
           value = var.single_instance ? "true" : "false"
@@ -288,7 +343,7 @@ resource "aws_ecs_service" "api" {
     container_port   = 5001
   }
 
-  depends_on = [aws_lb_listener.https]
+  depends_on = [aws_lb_listener.https, terraform_data.privacy_publication_gate]
 }
 
 # Add Auto Scaling for cost optimization (reduced max capacity for cost control)
@@ -413,14 +468,19 @@ resource "aws_lb_target_group" "api" {
 }
 
 # ------- Security Groups -------
+# The app trusts two forwarding hops only because direct ALB ingress is blocked.
+data "aws_ec2_managed_prefix_list" "cloudfront" {
+  name = "com.amazonaws.global.cloudfront.origin-facing"
+}
+
 resource "aws_security_group" "alb" {
   name   = "wwf-alb"
   vpc_id = var.vpc_id
   ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
   egress {
     from_port   = 0
@@ -544,7 +604,8 @@ resource "aws_lambda_function" "cleanup" {
   source_code_hash = data.archive_file.cleanup_lambda.output_base64sha256
   environment {
     variables = {
-      API_URL = "https://${aws_lb.api.dns_name}"
+      API_URL             = "https://${var.domain}"
+      OPERATOR_SECRET_ARN = var.operator_secret_arn
     }
   }
 }
@@ -612,9 +673,9 @@ resource "aws_budgets_budget" "wwf_monthly" {
   time_unit         = "MONTHLY"
   time_period_start = "2024-01-01_00:00"
 
-  cost_filters = {
-    TagKey   = ["Project"]
-    TagValue = ["WWF"]
+  cost_filter {
+    name   = "TagKeyValue"
+    values = ["Project$WWF"]
   }
 
   notification {
@@ -652,4 +713,17 @@ resource "aws_cloudwatch_metric_alarm" "high_cost" {
   dimensions = {
     Currency = "USD"
   }
+}
+
+resource "aws_iam_role_policy" "cleanup_operator_secret" {
+  count = var.operator_secret_arn != "" ? 1 : 0
+  role  = aws_iam_role.cleanup_lambda.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = var.operator_secret_arn
+    }]
+  })
 }

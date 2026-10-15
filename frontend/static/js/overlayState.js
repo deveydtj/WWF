@@ -6,16 +6,14 @@
  * overlays here rather than reading or writing body classes directly.
  */
 
-import { LAYOUT_MODES } from './layoutModes.js';
-import { getCurrentLayoutState } from './layoutManager.js';
+import { getCurrentLayoutProfile } from './layoutManager.js';
 
 export const OVERLAYS = Object.freeze({
   HISTORY: 'history',
   DEFINITION: 'definition',
   CHAT: 'chat',
   PLAYERS: 'players',
-  OPTIONS: 'options',
-  MOBILE_MENU: 'mobileMenu'
+  OPTIONS: 'options'
 });
 
 const OVERLAY_DEFINITIONS = Object.freeze({
@@ -42,10 +40,6 @@ const OVERLAY_DEFINITIONS = Object.freeze({
   [OVERLAYS.OPTIONS]: {
     elementId: 'optionsMenu',
     elementClasses: ['visible']
-  },
-  [OVERLAYS.MOBILE_MENU]: {
-    elementId: 'mobileMenuPopup',
-    elementClasses: ['visible', 'show']
   }
 });
 
@@ -100,18 +94,11 @@ function normalizeOverlayKey(keyOrClass) {
   return CLASS_TO_OVERLAY[keyOrClass] || null;
 }
 
-function overlayUsesExclusiveStack(key, layoutState = getCurrentLayoutState()) {
-  const mode = layoutState.mode;
-
-  if (key === OVERLAYS.HISTORY) {
-    return mode === LAYOUT_MODES.PHONE || layoutState.historyPopup;
-  }
-
-  if ([OVERLAYS.DEFINITION, OVERLAYS.CHAT, OVERLAYS.PLAYERS].includes(key)) {
-    return mode !== LAYOUT_MODES.DESKTOP || layoutState.historyPopup;
-  }
-
-  return key === OVERLAYS.OPTIONS || key === OVERLAYS.MOBILE_MENU;
+function overlayUsesExclusiveStack(key) {
+  const capacity = getCurrentLayoutProfile().panelCapacity;
+  if (key === OVERLAYS.HISTORY) return capacity < 1;
+  if ([OVERLAYS.DEFINITION, OVERLAYS.CHAT].includes(key)) return capacity < 2;
+  return true;
 }
 
 function applyOverlayRender(key) {
@@ -185,14 +172,14 @@ function ensureInitializedFromDom() {
   initializedFromDom = true;
 }
 
-function closeCompetingOverlays(openingKey, layoutState) {
-  if (!overlayUsesExclusiveStack(openingKey, layoutState)) return;
+function closeCompetingOverlays(openingKey) {
+  if (!overlayUsesExclusiveStack(openingKey)) return;
 
   Object.keys(OVERLAY_DEFINITIONS).forEach((key) => {
     if (
       key !== openingKey &&
       overlayState[key] &&
-      overlayUsesExclusiveStack(key, layoutState)
+      overlayUsesExclusiveStack(key)
     ) {
       setOverlayOpen(key, false, {
         closeCompeting: false,
@@ -229,14 +216,13 @@ export function setOverlayOpen(keyOrClass, open, options = {}) {
   const key = normalizeOverlayKey(keyOrClass);
   if (!key) return false;
 
-  const layoutState = options.layoutState || getCurrentLayoutState();
   if (open && options.closeCompeting !== false) {
-    closeCompetingOverlays(key, layoutState);
+    closeCompetingOverlays(key);
   }
 
   const previousOpen = Boolean(overlayState[key]);
   overlayState[key] = Boolean(open);
-  if (overlayState[key]) {
+  if (overlayState[key] && !previousOpen && options.activate !== false) {
     lastActivatedOverlay = key;
   }
 
@@ -278,10 +264,10 @@ export function getManualOverlayState(keyOrClass = null) {
   return key ? Boolean(manualOverlayState[key]) : false;
 }
 
-export function refreshOverlayStateForLayout(layoutState = getCurrentLayoutState()) {
+export function refreshOverlayStateForLayout() {
   ensureInitializedFromDom();
   const exclusiveOpen = getOpenOverlays()
-    .filter((key) => overlayUsesExclusiveStack(key, layoutState));
+    .filter(overlayUsesExclusiveStack);
 
   if (exclusiveOpen.length > 1) {
     const keyToKeep = exclusiveOpen.includes(lastActivatedOverlay)

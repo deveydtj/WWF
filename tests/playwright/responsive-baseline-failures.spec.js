@@ -1,11 +1,4 @@
-/**
- * Phase 0.5 responsive baseline failures.
- *
- * These tests express the target behavior and are intentionally marked as
- * expected failures while the corresponding refactor phases are pending. An
- * unexpected pass means the behavior was fixed and the marker should be
- * removed so the test becomes a normal regression check.
- */
+/** Responsive gameplay regression checks using an initialized lobby. */
 
 const {
   test,
@@ -32,7 +25,7 @@ function overlapArea(first, second) {
   return width * height;
 }
 
-test.describe('Phase 0.5 expected responsive failures', () => {
+test.describe('responsive gameplay regressions', () => {
   test.describe('touch-first phone input', () => {
     test.use({ hasTouch: true });
 
@@ -80,7 +73,7 @@ test.describe('Phase 0.5 expected responsive failures', () => {
       await expect(guessInput).not.toHaveAttribute('tabindex', '-1');
 
       await page.locator('.key[data-key="q"]').click();
-      await expect(guessInput).toHaveValue('Q');
+      await expect(guessInput).toHaveValue('SQ');
     });
   });
 
@@ -88,8 +81,6 @@ test.describe('Phase 0.5 expected responsive failures', () => {
     page,
     deterministicLobby,
   }) => {
-    test.fail(true, 'Baseline: tablet rail capacity is selected from width without a height fit check.');
-
     await page.setViewportSize({ width: 844, height: 1100 });
     await deterministicLobby.openActive();
     const tallCapacity = await page.evaluate(
@@ -132,8 +123,6 @@ test.describe('Phase 0.5 expected responsive failures', () => {
     page,
     deterministicLobby,
   }) => {
-    test.fail(true, 'Baseline: legacy tests allow keyboard overflow and up to 25% board/keyboard overlap.');
-
     await page.setViewportSize(PHONE_VIEWPORT);
     await deterministicLobby.openActive();
     await settleLayout(page);

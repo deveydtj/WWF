@@ -24,7 +24,9 @@ def _log_event(event: str, **fields) -> None:
     if not ANALYTICS_FILE:
         return
         
-    entry = {"event": event, "timestamp": time.time(), **fields}
+    # Analytics must not duplicate IPs, player IDs, lobby codes, or chat data.
+    # Ignore arbitrary caller fields so new events cannot reintroduce them.
+    entry = {"event": event, "timestamp": time.time()}
     try:
         with open(ANALYTICS_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")

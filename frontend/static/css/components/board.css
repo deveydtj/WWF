@@ -25,17 +25,15 @@
   max-width: 100%;
 }
 
-/* Board stamps - Updated for CSS Grid layout */
+/* Stamps occupy the board's reserved left gutter at every viewport size. */
 #stampContainer {
-  /* Use grid positioning - no manual margins needed */
-  position: relative;
-  width: var(--stamp-width);
-  height: calc(6 * (var(--tile-size) + var(--tile-gap)) - var(--tile-gap)); /* Match board height */
-  /* Container for absolutely positioned stamps */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--board-control-gutter) - 8px);
+  height: 100%;
   pointer-events: none;
   z-index: var(--z-panel-interactive);
-  /* Internal padding for spacing from board */
-  padding-right: 10px;
 }
 
 /* Emoji stamps styling - Updated for precise row alignment */
@@ -44,7 +42,7 @@
   left: 0;
   width: 100%;
   height: var(--tile-size); /* Match tile height */
-  font-size: calc(var(--tile-size) * 0.8); /* Slightly smaller than tiles */
+  font-size: min(44px, calc(var(--tile-size) * 0.8));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,34 +233,4 @@ body.hint-selecting .tile:not(.hint-target) {
   cursor: not-allowed;
   box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
               inset -3px -3px 6px var(--inset-shadow-light);
-}
-
-/* Hint tooltip */
-#hintTooltip {
-  display: none;
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 8px;
-  background: var(--bg-color);
-  color: var(--text-color);
-  padding: 6px 10px;
-  border-radius: 6px;
-  box-shadow: 3px 3px 6px var(--shadow-color-dark),
-              -3px -3px 6px var(--shadow-color-light);
-  white-space: nowrap;
-  pointer-events: none;
-  font-size: 0.9em;
-}
-
-#hintTooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid var(--bg-color);
-  transform: translateX(-50%);
 }

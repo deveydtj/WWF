@@ -5,4 +5,6 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 terraform init -reconfigure
+# The privacy-publication.tf preconditions intentionally block this plan while
+# operator details or the reviewed privacy notice are missing.
 terraform plan -input=false -lock=false -var-file=../live/variables.tfvars

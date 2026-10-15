@@ -29,7 +29,7 @@ export async function sendGuess(guess, emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/guess` : '/guess';
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ guess, emoji, player_id: playerId })
   });
   return r.json();
@@ -43,7 +43,7 @@ export async function resetGame(lobbyId, hostToken) {
   const body = hostToken ? { host_token: hostToken } : {};
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify(body)
   });
   return r.json();
@@ -59,7 +59,7 @@ export async function sendEmoji(emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/emoji` : '/emoji';
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId })
   });
   return r.json();
@@ -75,7 +75,7 @@ export async function sendHeartbeat(emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/state` : '/state';
   return fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId })
   });
 }
@@ -91,7 +91,7 @@ export async function sendChatMessage(text, emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/chat` : '/chat';
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ text, emoji, player_id: playerId })
   });
   return r.json();
@@ -108,7 +108,7 @@ export async function requestHint(col, emoji, playerId, lobbyId) {
   const url = lobbyId ? `/lobby/${lobbyId}/hint` : '/hint';
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ col, emoji, player_id: playerId })
   });
   return r.json();
@@ -118,10 +118,14 @@ export async function leaveLobbyRequest(lobbyId, emoji, playerId) {
   const url = `/lobby/${lobbyId}/leave`;
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId })
   });
-  return r.json();
+  const data = await r.json();
+  if (!r.ok || data.status !== 'ok') {
+    throw new Error(data.msg || 'Could not leave lobby');
+  }
+  return data;
 }
 
 /**
@@ -137,7 +141,7 @@ export async function kickPlayer(emoji, playerId, lobbyId, hostToken) {
   const url = `/lobby/${lobbyId}/kick`;
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId, host_token: hostToken })
   });
   return r.json();

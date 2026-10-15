@@ -9,6 +9,7 @@ from typing import Any
 @dataclass
 class GameState:
     """Represents the complete state of a game lobby."""
+    private: bool = False
     leaderboard: dict = field(default_factory=dict)
     ip_to_emoji: dict = field(default_factory=dict)
     player_map: dict = field(default_factory=dict)  # player_id -> emoji mapping

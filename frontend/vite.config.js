@@ -9,7 +9,9 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       input: {
         index: 'index.html',
-        game: 'game.html'
+        game: 'game.html',
+        ageCheck: 'age-check.html',
+        join: 'join.html'
       }
     }
   }

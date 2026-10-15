@@ -51,6 +51,7 @@ const DEFAULT_LAYOUT_STATE = Object.freeze({
 });
 
 let currentLayoutState = null;
+let currentLayoutProfile = null;
 
 function getDocumentBody() {
   return typeof document !== 'undefined' ? document.body : null;
@@ -178,6 +179,7 @@ export function calculateLayoutProfile(viewportSnapshot = null) {
 }
 
 function applyLayoutProfileToDocument(profile) {
+  currentLayoutProfile = profile;
   const body = getDocumentBody();
   if (!body) return;
 
@@ -311,6 +313,11 @@ export function refreshLayoutState(options = {}) {
 
 export function getCurrentLayoutMode() {
   return getCurrentLayoutState().mode;
+}
+
+/** Read the capability profile shared by panel rendering and input behavior. */
+export function getCurrentLayoutProfile() {
+  return currentLayoutProfile || calculateLayoutProfile();
 }
 
 /**

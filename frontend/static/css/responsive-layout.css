@@ -2,9 +2,8 @@
  * responsive-layout.css
  *
  * Authoritative entry point for responsive shell styles. This file is loaded
- * at every viewport; the legacy layout modules remain imported temporarily so
- * Phase 5 can migrate their rules without returning to conditional <link>
- * elements.
+ * at every viewport. Legacy modules still supply panel and popup decoration;
+ * the rules below own the gameplay shell and rail placement.
  *
  * New responsive rules belong here and should consume the capability profile
  * published on <body>, or the named app container, instead of inferring a
@@ -14,33 +13,10 @@
 @import url("./mobile-layout.css");
 @import url("./desktop-layout.css");
 
-/* Profile-owned shell tokens. LayoutMetricsEngine remains the only runtime
- * owner of board, keyboard, rail, and modal dimensions. */
-body[data-density="compact"] {
-  --shell-inline-gutter: 12px;
-  --shell-control-gap: 6px;
-}
-
-body[data-density="comfortable"] {
-  --shell-inline-gutter: 16px;
-  --shell-control-gap: 8px;
-}
-
-body[data-density="spacious"] {
-  --shell-inline-gutter: 20px;
-  --shell-control-gap: 10px;
-}
-
 body[data-density] #lobbyHeader {
   column-gap: var(--shell-control-gap);
   padding-inline: max(var(--shell-inline-gutter), var(--viewport-safe-area-left))
     max(var(--shell-inline-gutter), var(--viewport-safe-area-right));
-}
-
-body[data-interaction="touch-first"] #hostControls button,
-body[data-interaction="hybrid"] #hostControls button {
-  min-width: var(--min-touch-target);
-  min-height: var(--min-touch-target);
 }
 
 body[data-show-onscreen-keyboard="false"] #keyboard {
@@ -51,11 +27,6 @@ body[data-panel-capacity="1"] #historyClose,
 body[data-panel-capacity="2"] #historyClose,
 body[data-panel-capacity="2"] #definitionClose {
   display: none;
-}
-
-body:not([data-compact-header="true"]) .mobile-only-menu,
-body:not([data-compact-header="true"]) .mobile-only-button {
-  display: none !important;
 }
 
 /* The app is the responsive shell's query container. Container conditions are
@@ -69,4 +40,371 @@ body:not([data-compact-header="true"]) .mobile-only-button {
   body[data-compact-header="true"] #hostControls {
     gap: 4px;
   }
+}
+
+/* One gameplay shell at every width. Legacy imports still supply panel and
+ * popup decoration; they must not size or position the gameplay stack. */
+body[data-density] {
+  --component-gap: clamp(6px, 1vh, 10px);
+  --shell-inline-gutter: clamp(8px, 1.2vw, 20px);
+  --shell-control-gap: clamp(4px, 0.6vw, 8px);
+  --board-control-gutter: 52px;
+  --left-rail-size: 0px;
+  --right-rail-size: 0px;
+}
+
+body.history-open[data-panel-capacity="1"],
+body.history-open[data-panel-capacity="2"] {
+  --left-rail-size: 264px;
+}
+
+body.definition-open[data-panel-capacity="2"],
+body.chat-open[data-panel-capacity="2"] {
+  --right-rail-size: 240px;
+}
+
+#appContainer {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  max-width: 1600px;
+  height: var(--visual-viewport-height);
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+#appContainer #lobbyHeader {
+  grid-row: 1;
+  position: relative;
+  inset: auto;
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(60px + var(--viewport-safe-area-top));
+  min-width: 0;
+  margin: 0;
+  padding-top: var(--viewport-safe-area-top);
+}
+
+#appContainer #hostControls button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+}
+
+#appContainer #mainGrid {
+  grid-row: 2;
+  display: grid;
+  grid-template-areas: "left center right";
+  grid-template-columns: var(--left-rail-size) minmax(0, 1fr) var(--right-rail-size);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--shell-inline-gutter);
+  padding-bottom: max(var(--shell-inline-gutter), var(--viewport-safe-area-bottom));
+  overflow: hidden;
+}
+
+#appContainer #centerPanel {
+  grid-area: center;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  /* Reserve paint space inside the scroll container for outer control shadows. */
+  padding: 0 16px;
+  gap: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#appContainer #gameColumn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto auto;
+  align-content: start;
+  justify-items: center;
+  gap: var(--component-gap);
+  width: 100%;
+  max-width: 640px;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: none;
+}
+
+#appContainer #titleBar {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  height: 24px;
+  min-height: 24px;
+  margin: 0;
+  gap: 0;
+}
+
+#titleBar .mobile-title-row {
+  display: flex !important;
+  min-width: 0;
+}
+
+#appContainer #gameTitle {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 20px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#appContainer #boardArea {
+  box-sizing: border-box;
+  width: calc(var(--board-width) + 2 * var(--board-control-gutter));
+  max-width: 100%;
+  min-width: 0;
+  padding: 0 var(--board-control-gutter);
+}
+
+#appContainer #board {
+  grid-template-columns: repeat(5, var(--tile-size));
+  grid-auto-rows: var(--tile-size);
+  gap: var(--tile-gap);
+  width: var(--board-width);
+  max-width: none;
+  aspect-ratio: auto;
+}
+
+#board .tile {
+  box-sizing: border-box;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  min-width: 0;
+  min-height: 0;
+  font-size: var(--tile-font);
+}
+
+#appContainer #optionsToggle,
+#appContainer #chatNotify {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+  right: 0;
+}
+
+#appContainer #optionsToggle {
+  top: 0;
+}
+
+#appContainer #chatNotify {
+  bottom: 0;
+}
+
+#appContainer #inputArea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 380px;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  gap: 8px;
+}
+
+#inputArea #resetWrapper {
+  display: flex;
+}
+
+#appContainer #guessInput {
+  width: 0;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px;
+  font-size: 16px;
+}
+
+#appContainer #submitGuess,
+#appContainer #holdReset {
+  width: 80px;
+  min-width: 64px;
+  height: 44px;
+  font-size: 14px;
+}
+
+#appContainer #message {
+  height: 20px;
+  min-height: 20px;
+  max-width: 100%;
+  margin: 0;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+#appContainer #keyboard {
+  box-sizing: border-box;
+  position: relative;
+  inset: auto;
+  width: 100%;
+  max-width: 520px;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+}
+
+/* Move touch controls toward the keyboard without lengthening the stack. */
+body[data-interaction="touch-first"] #appContainer #inputArea {
+  margin-top: var(--component-gap);
+}
+
+body[data-interaction="touch-first"] #appContainer #keyboard {
+  margin-top: calc(-1 * var(--component-gap));
+}
+
+#keyboard .key {
+  flex: 1 1 0;
+  max-width: none;
+  padding: 0;
+  font-size: var(--key-font);
+}
+
+#keyboard .key.wide,
+#keyboard .key[data-key="Backspace"] {
+  flex: 1.5 1 0;
+  max-width: none;
+}
+
+#keyboard .key[data-key="Enter"] {
+  flex: 2 1 0;
+}
+
+/* A panel uses a rail only when the capability profile has room for it. */
+#appContainer #historyBox,
+#appContainer #definitionBox,
+#appContainer #chatBox {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto;
+  top: var(--modal-viewport-center-block);
+  left: var(--modal-viewport-center-inline);
+  transform: translate(-50%, -50%);
+  width: var(--modal-max-inline-size);
+  max-width: var(--modal-max-inline-size);
+  min-width: 0;
+  max-height: var(--modal-max-block-size);
+  padding: var(--modal-padding);
+  z-index: var(--z-panel-overlay);
+  display: none;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  overflow: auto;
+  transition: none;
+}
+
+body.history-open #appContainer #historyBox,
+body.definition-open:not(.chat-open) #appContainer #definitionBox,
+body.chat-open #appContainer #chatBox {
+  display: flex;
+}
+
+body[data-panel-capacity="1"] #appContainer #historyBox,
+body[data-panel-capacity="2"] #appContainer #historyBox,
+body[data-panel-capacity="2"] #appContainer #definitionBox,
+body[data-panel-capacity="2"] #appContainer #chatBox {
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  padding: 16px;
+  z-index: var(--z-panel-base);
+}
+
+#appContainer #historyBox {
+  grid-area: left;
+}
+
+#appContainer #definitionBox,
+#appContainer #chatBox {
+  grid-area: right;
+}
+
+/* History rows and title use the full content width. */
+#historyList {
+  padding-inline-end: 0;
+}
+
+#historyHeading {
+  min-height: var(--modal-close-control-size);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Keep the chat close control in flow even when the message list is empty. */
+#appContainer #chatClose {
+  position: static;
+  width: var(--modal-close-control-size);
+  height: var(--modal-close-control-size);
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+#appContainer #panelBackdrop {
+  position: fixed;
+  top: var(--visual-viewport-offset-top);
+  left: var(--visual-viewport-offset-left);
+  width: var(--visual-viewport-width);
+  height: var(--visual-viewport-height);
+  background: rgba(0, 0, 0, 0.33);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-panel-backdrop);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Follow rendered modal state immediately, including the options menu. */
+body:has(#appContainer [data-popup="utility"][aria-modal="true"].visible) #appContainer #panelBackdrop {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Options and Players share viewport bounds instead of legacy positioning. */
+#appContainer #optionsMenu,
+#appContainer #playerSidebar {
+  position: fixed;
+  top: var(--modal-viewport-center-block);
+  left: var(--modal-viewport-center-inline);
+  transform: translate(-50%, -50%);
+  width: min(var(--modal-max-inline-size), var(--visual-viewport-safe-width));
+  min-width: 0;
+  max-width: var(--visual-viewport-safe-width);
+  max-height: var(--modal-max-block-size);
+  box-sizing: border-box;
+}
+
+/* Only the menu items scroll, keeping the close control in view. */
+#appContainer #optionsMenu {
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#optionsMenuItems button {
+  flex-shrink: 0;
+}
+
+#appContainer #menuHaptics[hidden] {
+  display: none;
 }

@@ -24,7 +24,7 @@
   --z-board-overlay: 6;
   
   /* Level 2: UI Components (10-19) */
-  --z-keyboard: 10;
+  --z-keyboard: 16; /* Key previews must paint above Guess and Reset/New Game. */
   --z-leaderboard: 10;
   --z-points-popup-mobile: 9;
   --z-ui-component: 15;
@@ -61,7 +61,6 @@
   --z-critical-alert: 90;
   
   /* Level 7: Mobile/Touch Overlays (100+) */
-  --z-mobile-menu: 100;
   --z-virtual-keyboard: 200;
   --z-emergency-overlay: 999;
 }

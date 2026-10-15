@@ -74,6 +74,7 @@ class TestBrowserFixes(unittest.TestCase):
     
     def test_cache_control_headers_for_api_endpoints(self):
         """Test that API endpoints have no-cache headers."""
+        self.assertEqual(self.client.post('/age-check', json={'age': 20}).status_code, 200)
         response = self.client.get('/state')
         
         self.assertIn('Cache-Control', response.headers)

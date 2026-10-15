@@ -204,7 +204,7 @@
   }
   
   /* Tiles - Touch targets ≥44px */
-  .tile {
+  #board .tile {
     width: 100%;
     aspect-ratio: 1;
     min-width: 44px;
@@ -214,22 +214,6 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
-  }
-  
-  /* Board buttons - Mobile menu and options */
-  #mobileMenuToggle {
-    position: absolute;
-    top: var(--mobile-board-padding);
-    left: var(--mobile-board-padding);
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    padding: 0;
-    font-size: 24px;
-    z-index: var(--z-ui-component);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   /* Board controls - positioning only (sizing in components/panels.css) */
@@ -569,111 +553,12 @@
     transition: opacity 0.25s ease-in-out, visibility 0s 0s;
   }
   
-  #optionsMenu button {
+  #optionsMenu button:not(.close-btn) {
     width: 100%;
     height: 48px;
     font-size: 16px;
     text-align: left;
     padding: 0 16px;
-  }
-  
-  /* Mobile Menu Popup */
-  #mobileMenuPopup {
-    position: fixed;
-    top: var(--visual-viewport-offset-top);
-    left: var(--visual-viewport-offset-left);
-    width: var(--visual-viewport-width);
-    height: var(--visual-viewport-height);
-    background: rgba(0, 0, 0, 0.5);
-    z-index: var(--z-mobile-menu);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--viewport-safe-area-top) var(--viewport-safe-area-right)
-      var(--viewport-safe-area-bottom) var(--viewport-safe-area-left);
-    box-sizing: border-box;
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease-in-out, visibility 0s 0.3s;
-  }
-  
-  #mobileMenuPopup.visible {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
-    transition: opacity 0.3s ease-in-out, visibility 0s 0s;
-  }
-  
-  #mobileMenuBox {
-    background: var(--bg-color);
-    width: min(100%, var(--modal-max-inline-size));
-    max-width: var(--modal-max-inline-size);
-    max-height: var(--modal-max-block-size);
-    overflow: hidden;
-    border-radius: 16px;
-    padding: 16px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  #mobileMenuClose {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
-  }
-  
-  #mobileMenuItems {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 40px;
-    min-height: 0;
-    max-height: var(--modal-content-max-block-size);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .mobile-menu-item {
-    width: 100%;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 16px;
-    font-size: 16px;
-    text-align: left;
-  }
-  
-  .menu-icon {
-    font-size: 24px;
-    flex-shrink: 0;
-  }
-  
-  .menu-text {
-    flex: 1;
-  }
-  
-  .menu-badge {
-    background: var(--correct-bg);
-    color: white;
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  
-  /* ─────────────────────────────────
-     Hide Desktop-Only Elements
-     ───────────────────────────────── */
-  
-  #stampContainer {
-    display: none !important;
   }
   
   /* ─────────────────────────────────
@@ -710,8 +595,7 @@
   /* Modal action buttons - ensure 44px minimum tap target */
   #closeCallBox button:not(.close-btn),
   #infoBox button:not(.close-btn),
-  #shareBox button:not(.close-btn),
-  #waitingOverlay button:not(.close-btn) {
+  #shareBox button:not(.close-btn) {
     min-height: 44px;
     min-width: 80px; /* Wider for text buttons to be readable */
     padding: 12px 16px;
@@ -720,8 +604,7 @@
   /* Modal close buttons - 44x44 tap target without extra padding */
   #closeCallBox .close-btn,
   #infoBox .close-btn,
-  #shareBox .close-btn,
-  #waitingOverlay .close-btn {
+  #shareBox .close-btn {
     min-width: 44px;
     min-height: 44px;
     padding: 0;
@@ -813,7 +696,7 @@
     gap: clamp(3px, 1.5vw, 6px);
   }
   
-  .tile {
+  #board .tile {
     font-size: clamp(14px, 4vw, 18px);
     /* Maintain 44px minimum for accessibility */
     min-width: 44px;
@@ -859,98 +742,5 @@
     height: 44px;
     min-width: 44px;
     font-size: 16px;
-  }
-}
-
-/* ═══════════════════════════════════
-   Phase 7: Portrait-Only Phone Handling
-   Landscape overlay for phones in landscape mode
-   ═══════════════════════════════════ */
-
-/* Default: overlay is hidden */
-#landscapeOverlay {
-  display: none;
-}
-
-/* Show overlay only on phone-sized viewports in landscape orientation */
-@media (max-width: 600px) and (orientation: landscape) {
-  #landscapeOverlay {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: var(--bg-color, #e8e8e8);
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    padding: 20px;
-    text-align: center;
-  }
-
-  #landscapeOverlayContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    max-width: 360px;
-    padding: 32px 24px;
-    border-radius: 20px;
-    background: var(--bg-color, #e8e8e8);
-    box-shadow:
-      8px 8px 16px var(--shadow-color-dark, rgba(0, 0, 0, 0.15)),
-      -8px -8px 16px var(--shadow-color-light, rgba(255, 255, 255, 0.8));
-  }
-
-  #landscapeOverlayIcon {
-    font-size: 48px;
-    animation: rotate-hint 2s ease-in-out infinite;
-  }
-
-  #landscapeOverlayText {
-    font-size: 18px;
-    color: var(--text-color, #333);
-    font-weight: 500;
-    line-height: 1.4;
-    margin: 0;
-  }
-
-  /* Prevent scrolling the game page while overlay is shown */
-  body {
-    overflow: hidden;
-  }
-}
-
-@keyframes rotate-hint {
-  0%, 100% { transform: rotate(0deg); }
-  30%       { transform: rotate(-90deg); }
-  70%       { transform: rotate(-90deg); }
-}
-
-/* ═══════════════════════════════════
-   Phone Layout - Reset in Header
-   Phase 6: reset control lives in the top header on phone (≤600px)
-   ═══════════════════════════════════ */
-
-@media (max-width: 600px) {
-  /* Reset wrapper when placed inside the lobby header */
-  #lobbyHeader #resetWrapper {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-  }
-
-  /* Compact reset button sized for the header */
-  #lobbyHeader #holdReset {
-    width: auto;
-    min-width: 60px;
-    height: 36px;
-    font-size: 13px;
-    padding: 0 10px;
-    border-radius: 8px;
-  }
-
-  /* Keep reset out of the input area on phone (button is physically moved to header) */
-  #inputArea #resetWrapper {
-    display: none;
   }
 }

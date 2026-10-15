@@ -1,4 +1,5 @@
 import { getCurrentLayoutState, refreshLayoutState } from './layoutManager.js';
+import { applyDarkMode } from './themeManager.js';
 import { OVERLAYS, closeOverlay, openOverlay } from './overlayState.js';
 import {
   isPhoneLayout,
@@ -51,7 +52,7 @@ export function showMessage(msg, {messageEl, messagePopup}) {
   if (useMobileDisplay) {
     messagePopup.textContent = msg;
     messagePopup.style.display = 'block';
-    messagePopup.style.animation = 'fadeInOut 2s';
+    messagePopup.style.animation = 'popup-toast-lifetime 2s';
     messagePopup.addEventListener('animationend', () => {
       messagePopup.style.display = 'none';
       messagePopup.style.animation = '';
@@ -88,9 +89,9 @@ export function announce(text) {
  *
  * @param {HTMLElement} toggle - The dark mode toggle button.
  */
-export function applyDarkModePreference(toggle) {
+export function applyDarkModePreference(toggle, animate = false) {
   const prefersDark = localStorage.getItem('darkMode') === 'true';
-  document.body.classList.toggle('dark-mode', prefersDark);
+  applyDarkMode(prefersDark, { animate });
   toggle.textContent = prefersDark ? '☀️ Light Mode' : '🌙 Dark Mode';
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
 }
@@ -107,43 +108,12 @@ export function shakeInput(input) {
   }, { once: true });
 }
 
-/**
- * Move the reset button based on viewport width.
- * On phone layouts (≤600px) the reset control lives in the top header per Phase 6.
- * On tablet/desktop it lives in the input area below the board.
- */
+/** Keep the reset control in the action row across viewport changes. */
 export function repositionResetButton() {
   const resetWrapper = document.getElementById('resetWrapper');
   const inputArea = document.getElementById('inputArea');
-  const lobbyHeader = document.getElementById('lobbyHeader');
-  const appContainer = document.getElementById('appContainer');
-  
-  // Validate required elements exist
-  if (!resetWrapper || !appContainer || !inputArea) {
-    console.warn('repositionResetButton: Missing required elements', {
-      resetWrapper: !!resetWrapper,
-      appContainer: !!appContainer,
-      inputArea: !!inputArea
-    });
-    return;
-  }
-  
-  if (window.innerWidth <= 600) {
-    // Phone layout: reset lives in the top header
-    if (lobbyHeader && resetWrapper.parentElement !== lobbyHeader) {
-      if (resetWrapper.parentElement) {
-        resetWrapper.parentElement.removeChild(resetWrapper);
-      }
-      lobbyHeader.appendChild(resetWrapper);
-      console.log('✅ Moved reset button to lobbyHeader for phone layout');
-    }
-  } else if (resetWrapper.parentElement !== inputArea) {
-    // Tablet/Desktop: reset lives in the input area below the board
-    if (resetWrapper.parentElement) {
-      resetWrapper.parentElement.removeChild(resetWrapper);
-    }
+  if (resetWrapper && inputArea && resetWrapper.parentElement !== inputArea) {
     inputArea.appendChild(resetWrapper);
-    console.log('✅ Moved reset button to inputArea for tablet/desktop layout');
   }
 }
 
@@ -179,72 +149,6 @@ export function applyLayoutMode() {
   return refreshLayoutState();
 }
 
-/**
- * Place a popup near an anchor element while clamping to the viewport.
- * In mobile view, this defers to CSS media queries for centering.
- * 
- * @deprecated Use positionResponsive from popupPositioning.js for enhanced positioning
- * @param {HTMLElement} popup
- * @param {HTMLElement} anchor
- */
-export function positionPopup(popup, anchor) {
-  // Import enhanced positioning if available
-  if (typeof window !== 'undefined' && window.popupPositioning) {
-    return window.popupPositioning.positionResponsive(popup, anchor, 'menu');
-  }
-  
-  // Fallback to original logic
-  if (isMobileView()) {
-    popup.style.position = '';
-    popup.style.left = '';
-    popup.style.top = '';
-    popup.style.transform = '';
-    return;
-  }
-
-  const rect = anchor.getBoundingClientRect();
-  const menuWidth = popup.offsetWidth;
-  const menuHeight = popup.offsetHeight;
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const scrollX = window.scrollX || 0;
-  const scrollY = window.scrollY || 0;
-  const margin = 10;
-  
-  // Enhanced positioning logic with better boundary detection
-  let left, top;
-  
-  // Try positioning to the right first
-  if (rect.right + margin + menuWidth <= viewportWidth - margin) {
-    left = rect.right + margin + scrollX;
-  }
-  // Try positioning to the left
-  else if (rect.left - margin - menuWidth >= margin) {
-    left = rect.left - menuWidth - margin + scrollX;
-  }
-  // Center horizontally if neither side works
-  else {
-    left = Math.max(margin + scrollX, 
-                   Math.min((viewportWidth - menuWidth) / 2 + scrollX,
-                           viewportWidth - menuWidth - margin + scrollX));
-  }
-  
-  // Vertical positioning
-  top = rect.top + scrollY;
-  
-  // Ensure popup doesn't go below viewport
-  if (top + menuHeight > scrollY + viewportHeight - margin) {
-    top = scrollY + viewportHeight - menuHeight - margin;
-  }
-  
-  // Ensure popup doesn't go above viewport
-  top = Math.max(top, scrollY + margin);
-  
-  popup.style.position = 'absolute';
-  popup.style.left = `${left}px`;
-  popup.style.top = `${top}px`;
-}
-
 let lastFocused = null;
 let trapHandler = null;
 let trappedDialog = null;
@@ -252,6 +156,15 @@ let trappedDialog = null;
 const DIALOG_OVERLAY_BY_ID = Object.freeze({
   optionsMenu: OVERLAYS.OPTIONS
 });
+
+// Overlay changes (header actions or resizing) also release dialog ownership.
+if (typeof document !== 'undefined') {
+  document.addEventListener?.('overlaychange', ({ detail }) => {
+    if (detail?.open === false && trappedDialog && DIALOG_OVERLAY_BY_ID[trappedDialog.id] === detail.overlay) {
+      closeDialog(trappedDialog);
+    }
+  });
+}
 
 function getFocusable(container) {
   return Array.from(
@@ -283,6 +196,8 @@ function trapFocus(dialog) {
         first.focus();
       }
     } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
       closeDialog(dialog);
     }
   };
@@ -292,56 +207,41 @@ function trapFocus(dialog) {
 }
 
 /**
- * Open a dialog with smooth animation.
+ * Open one dialog at a time and focus its first control.
  *
  * @param {HTMLElement} dialog
+ * @param {HTMLElement} [trigger] Control to focus when the dialog closes.
  */
-export function openDialog(dialog) {
-  lastFocused = document.activeElement;
-  trappedDialog = dialog;
-  trapHandler = trapFocus(dialog);
+export function openDialog(dialog, trigger = document.activeElement) {
+  if (!dialog || trappedDialog === dialog) return;
+  if (trappedDialog) closeDialog(trappedDialog);
 
+  lastFocused = trigger;
+  trappedDialog = dialog;
   const overlayKey = DIALOG_OVERLAY_BY_ID[dialog.id];
-  if (overlayKey) {
-    openOverlay(overlayKey, { closeCompeting: false });
-  }
-  
-  // Show with animation
+  if (overlayKey) openOverlay(overlayKey);
+
+  // Reveal the dialog before focusing it; hidden controls cannot receive focus.
   dialog.style.display = 'flex';
   dialog.classList.remove('hide');
-  dialog.classList.add('visible');
-  dialog.classList.add('show');
+  dialog.classList.add('visible', 'show');
+  dialog.setAttribute('aria-hidden', 'false');
+  trapHandler = trapFocus(dialog);
 }
 
-/**
- * Close a dialog with smooth animation.
- *
- * @param {HTMLElement} dialog
- */
+/** Close the active dialog and return focus to the control that opened it. */
 export function closeDialog(dialog) {
-  const overlayKey = DIALOG_OVERLAY_BY_ID[dialog.id];
-  if (overlayKey) {
-    closeOverlay(overlayKey);
-  }
+  if (!dialog || trappedDialog !== dialog) return;
+  dialog.removeEventListener('keydown', trapHandler);
+  const restoreFocus = lastFocused;
+  trapHandler = lastFocused = trappedDialog = null;
 
-  dialog.classList.remove('show');
-  dialog.classList.remove('visible');
-  dialog.classList.add('hide');
-  
-  // Wait for animation to complete before hiding
-  setTimeout(() => {
-    dialog.style.display = 'none';
-    dialog.classList.remove('hide');
-  }, 300); // Match animation duration
-  
-  if (trapHandler) {
-    dialog.removeEventListener('keydown', trapHandler);
-    trapHandler = null;
-  }
-  if (lastFocused && typeof lastFocused.focus === 'function') {
-    lastFocused.focus();
-  }
-  trappedDialog = null;
+  const overlayKey = DIALOG_OVERLAY_BY_ID[dialog.id];
+  if (overlayKey) closeOverlay(overlayKey);
+  dialog.classList.remove('show', 'visible', 'hide');
+  dialog.style.display = 'none';
+  dialog.setAttribute('aria-hidden', 'true');
+  restoreFocus?.focus();
 }
 
 /**
@@ -372,23 +272,4 @@ export function focusFirstElement(container) {
     container.setAttribute('tabindex', '-1');
     container.focus();
   }
-}
-
-/**
- * Display a popup anchored to a button or element.
- *
- * @param {HTMLElement} popup
- * @param {HTMLElement} anchor
- */
-export function showPopup(popup, anchor) {
-  popup.style.display = 'block';
-  
-  // Use enhanced positioning if available
-  if (typeof window !== 'undefined' && window.popupPositioning) {
-    window.popupPositioning.positionResponsive(popup, anchor, 'menu');
-  } else {
-    positionPopup(popup, anchor);
-  }
-  
-  openDialog(popup);
 }

@@ -2,19 +2,22 @@
    Leaderboard - Player scoring and status display
    ───────────────────────────────────────────── */
 
-#leaderboard {
+#appContainer #leaderboard {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: safe center;
   align-items: center;
-  gap: calc(8px * var(--ui-scale));
-  padding: 0;
+  gap: 8px;
+  /* Keep shadows inside the scrollport, including at either end of the roster. */
+  padding: 10px 8px;
+  box-sizing: border-box;
+  min-width: 0;
   overflow-x: auto;
-  overflow-y: hidden; /* Prevent vertical scrolling and clipping */
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   flex: 1;
-  max-height: 70px; /* Increased to prevent emoji clipping */
+  max-height: 60px;
   /* Ensure leaderboard is properly positioned */
   position: relative;
   z-index: var(--z-leaderboard);
@@ -43,13 +46,16 @@
 .leaderboard-entry {
   display: flex;
   align-items: center;
-  background: var(--bg-color);
-  box-shadow: 2px 2px 8px var(--shadow-color-dark),
-              -2px -2px 8px var(--shadow-color-light);
-  border-radius: 10px;
-  padding: calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale));
-  font-size: calc(1.1em * var(--ui-scale));
-  min-width: calc(60px * var(--ui-scale));
+  gap: 8px;
+  height: 34px;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--bg-color), var(--shadow-color-light) 20%);
+  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-color-dark) 45%, transparent);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 14px;
+  line-height: 1;
   white-space: nowrap;
   flex-shrink: 0; /* Prevent entries from shrinking */
   transition: transform 0.3s ease, opacity 0.3s ease;
@@ -60,9 +66,9 @@
 }
 
 .leaderboard-entry.current-player {
-  border: 2px solid var(--correct-bg);
-  box-shadow: 0 0 0 2px var(--correct-shadow-light);
-  background: var(--correct-shadow-light);
+  border-color: var(--correct-bg);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--correct-shadow-light) 45%, transparent);
+  background: color-mix(in srgb, var(--bg-color), var(--correct-shadow-light) 14%);
 }
 
 .leaderboard-entry.inactive {
@@ -72,12 +78,12 @@
 }
 
 .player-emoji {
-  margin-right: calc(6px * var(--ui-scale));
-  font-size: calc(1.2em * var(--ui-scale));
+  font-size: 20px;
 }
 
 .player-score {
-  font-weight: bold;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
   color: var(--text-color);
 }
 

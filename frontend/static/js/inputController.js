@@ -32,6 +32,7 @@ export class InputController {
    * @param {() => string} options.getCurrentGuess
    * @param {(value: string) => void} options.setCurrentGuess
    * @param {() => unknown} options.submitGuess
+   * @param {() => Object} [options.getGreenPositions]
    * @param {(value: string) => void} [options.onGuessChanged]
    * @param {(source: string) => boolean} [options.isBlocked]
    * @param {number} [options.maxLength]
@@ -40,6 +41,7 @@ export class InputController {
     getCurrentGuess,
     setCurrentGuess,
     submitGuess,
+    getGreenPositions = () => ({}),
     onGuessChanged = () => {},
     isBlocked = () => false,
     maxLength = 5
@@ -54,6 +56,7 @@ export class InputController {
     this.getCurrentGuess = getCurrentGuess;
     this.setCurrentGuess = setCurrentGuess;
     this.submitGuess = submitGuess;
+    this.getGreenPositions = getGreenPositions;
     this.onGuessChanged = onGuessChanged;
     this.isBlocked = isBlocked;
     this.maxLength = maxLength;
@@ -66,7 +69,19 @@ export class InputController {
   replace(value, source = 'unknown') {
     if (this.isBlocked(source)) return INPUT_OUTCOMES.BLOCKED;
 
-    const nextGuess = sanitizeGuess(value, this.maxLength);
+    const currentGuess = this.getValue();
+    let nextGuess = sanitizeGuess(value, this.maxLength);
+    // Native text entry includes the already-filled prefix. Route incremental
+    // edits through the same operations as the physical and virtual keyboards.
+    if (nextGuess.length === currentGuess.length + 1 && nextGuess.startsWith(currentGuess)) {
+      return this.append(nextGuess.at(-1), source);
+    }
+    if (currentGuess && nextGuess === currentGuess.slice(0, -1)) {
+      return this.delete(source);
+    }
+    const greens = this.getGreenPositions();
+    nextGuess = Array.from(nextGuess, (letter, index) => greens[index] || letter).join('');
+    if (nextGuess) nextGuess = this._fillGreens(nextGuess, greens);
     if (nextGuess === this.getValue()) {
       // Re-apply the canonical value so a mirrored text field cannot retain
       // rejected characters when sanitation does not change the game state.
@@ -81,10 +96,11 @@ export class InputController {
     if (this.isBlocked(source)) return INPUT_OUTCOMES.BLOCKED;
     if (!LETTER_PATTERN.test(String(letter || ''))) return INPUT_OUTCOMES.IGNORED;
 
-    const currentGuess = this.getValue();
+    const greens = this.getGreenPositions();
+    const currentGuess = this._fillGreens(this.getValue(), greens);
     if (currentGuess.length >= this.maxLength) return INPUT_OUTCOMES.IGNORED;
 
-    return this._commit(currentGuess + letter);
+    return this._commit(this._fillGreens(currentGuess + letter.toLowerCase(), greens));
   }
 
   delete(source = 'unknown') {
@@ -93,7 +109,11 @@ export class InputController {
     const currentGuess = this.getValue();
     if (!currentGuess) return INPUT_OUTCOMES.IGNORED;
 
-    return this._commit(currentGuess.slice(0, -1));
+    const greens = this.getGreenPositions();
+    let end = currentGuess.length;
+    while (end > 0 && greens[end - 1]) end -= 1;
+    const nextGuess = currentGuess.slice(0, Math.max(0, end - 1));
+    return this._commit(Array.from(nextGuess).some((_, index) => !greens[index]) ? nextGuess : '');
   }
 
   submit(source = 'unknown') {
@@ -106,6 +126,13 @@ export class InputController {
     if (key === 'Enter' || key === 'enter') return this.submit(source);
     if (key === 'Backspace' || key === 'backspace') return this.delete(source);
     return this.append(key, source);
+  }
+
+  _fillGreens(value, greens) {
+    while (value.length < this.maxLength && greens[value.length]) {
+      value += greens[value.length];
+    }
+    return value;
   }
 
   _commit(value) {

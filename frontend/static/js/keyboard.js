@@ -1,5 +1,6 @@
 import { updateBoard } from './board.js';
 import { INPUT_OUTCOMES } from './inputController.js';
+import { hapticFeedback } from './haptics.js';
 
 const EDITABLE_TAG_NAMES = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
 const MODAL_SELECTOR = '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]';
@@ -94,15 +95,15 @@ export function animatePhysicalKey(keyboardEl, key) {
 /**
  * Handle an activation click on the on-screen keyboard.
  *
- * Native button click events provide one activation path for touch, mouse,
- * keyboard, and assistive technology. Delegation also allows nested key
- * content (such as the Backspace label or icon) to activate its button.
+ * Clicks preserve mouse, keyboard, and assistive technology activation. Touch
+ * gestures use this same path on release, after selecting the key by position.
+ * Delegation also allows nested key content to activate its button.
  *
  * @param {Event} event
- * @param {{inputController:import('./inputController.js').InputController}} opts
+ * @param {{inputController:import('./inputController.js').InputController, keyboardEl:HTMLElement}} opts
  * @returns {string}
  */
-export function handleVirtualKey(event, { inputController }) {
+export function handleVirtualKey(event, { inputController, keyboardEl }) {
   const target = event.target;
   const keyElement = target?.classList?.contains('key')
     ? target
@@ -115,6 +116,10 @@ export function handleVirtualKey(event, { inputController }) {
   }
 
   const outcome = inputController.routeKey(keyElement.dataset.key, 'virtual-keyboard');
+  if (outcome !== INPUT_OUTCOMES.BLOCKED) {
+    animatePhysicalKey(keyboardEl, keyElement.dataset.key);
+  }
+  if (outcome === INPUT_OUTCOMES.ACCEPTED) hapticFeedback();
   if (typeof keyElement.focus === 'function') {
     keyElement.focus({ preventScroll: true });
   }
@@ -137,7 +142,45 @@ export function setupTypingListeners({
   submitButton,
   inputController
 }) {
-  const guessState = { inputController };
+  const guessState = { inputController, keyboardEl };
+
+  const touchKeys = new Map();
+  const previewTouch = (touch) => {
+    const hit = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.key');
+    const key = hit && keyboardEl.contains(hit) && !hit.disabled ? hit : null;
+    const previousKey = touchKeys.get(touch.identifier);
+    touchKeys.set(touch.identifier, key);
+    if (previousKey && !Array.from(touchKeys.values()).includes(previousKey)) {
+      previousKey.classList.remove('touch-preview');
+    }
+    key?.classList.add('touch-preview');
+  };
+  keyboardEl.addEventListener('touchstart', (event) => {
+    // Own the gesture from its start: no scrolling or compatibility click.
+    if (event.cancelable) event.preventDefault();
+    Array.from(event.changedTouches).forEach(previewTouch);
+  }, { passive: false });
+  keyboardEl.addEventListener('touchmove', (event) => {
+    if (event.cancelable) event.preventDefault();
+    Array.from(event.changedTouches).forEach(previewTouch);
+  }, { passive: false });
+  const finishTouch = (event) => {
+    if (event.cancelable) event.preventDefault();
+    for (const touch of event.changedTouches) {
+      if (!touchKeys.has(touch.identifier)) continue;
+      if (event.type === 'touchend') previewTouch(touch);
+      const key = touchKeys.get(touch.identifier);
+      touchKeys.delete(touch.identifier);
+      if (key && !Array.from(touchKeys.values()).includes(key)) {
+        key.classList.remove('touch-preview');
+      }
+      if (event.type === 'touchend' && key) {
+        handleVirtualKey({ target: key, cancelable: false }, guessState);
+      }
+    }
+  };
+  keyboardEl.addEventListener('touchend', finishTouch, { passive: false });
+  keyboardEl.addEventListener('touchcancel', finishTouch, { passive: false });
 
   keyboardEl.addEventListener('click', (e) => handleVirtualKey(e, guessState));
   submitButton.addEventListener('click', () => inputController.submit('submit-button'));

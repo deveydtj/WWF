@@ -33,6 +33,13 @@ variable "api_image" {
   type        = string
 }
 
+variable "session_secret_arn" {
+  description = "Secrets Manager or SSM ARN holding a random SECRET_KEY of at least 32 characters for signed age sessions. Never put the secret value in Terraform variables."
+  type        = string
+  default     = ""
+  nullable    = false
+}
+
 variable "single_instance" {
   description = "Run the API in single instance mode"
   type        = bool
@@ -72,3 +79,15 @@ variable "budget_alert_email" {
   default     = ""
 }
 
+
+variable "private_rooms_redis_secret_arn" {
+  description = "Secrets Manager ARN containing a rediss:// URL for durable private-room Redis storage. Empty keeps private rooms unavailable in production."
+  type        = string
+  default     = ""
+}
+
+variable "operator_secret_arn" {
+  description = "Secrets Manager ARN containing the operator bearer token for maintenance. Grant the ECS execution role read access; Lambda receives a scoped policy here."
+  type        = string
+  default     = ""
+}

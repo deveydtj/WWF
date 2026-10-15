@@ -12,7 +12,8 @@
   flex-direction: column;
   gap: var(--keyboard-row-gap);
   padding-bottom: var(--viewport-safe-area-bottom);
-  touch-action: manipulation;
+  touch-action: none;
+  -webkit-touch-callout: none;
   flex: 0 0 auto; /* Don't shrink */
   position: relative;
   z-index: var(--z-keyboard);
@@ -51,6 +52,7 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 
 .key.wide { 
@@ -61,17 +63,76 @@
   letter-spacing: 0.02em;
 }
 
-.key:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
+@media (hover: hover) {
+  .key:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
 }
 
 .key:active,
+.key.touch-preview,
 .key.active-key-press {
   box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
               inset -2px -2px 5px var(--inset-shadow-light);
   transform: translateY(1px);
   filter: brightness(0.95);
+}
+
+/* The cap and curved neck share an edge and move together as one silhouette. */
+.key.touch-preview {
+  z-index: 1;
+  filter: brightness(0.95) drop-shadow(0 -2px 4px var(--shadow-color-dark));
+}
+
+.key.touch-preview::before,
+.key.touch-preview::after {
+  position: absolute;
+  left: -10px;
+  width: calc(100% + 20px);
+  background: inherit;
+  pointer-events: none;
+  animation: key-preview-rise 80ms ease-out;
+}
+
+.key.touch-preview::before {
+  content: attr(data-key);
+  bottom: calc(100% + 12px);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px 12px 0 0;
+  color: inherit;
+  font-size: 30px;
+}
+
+.key.touch-preview::after {
+  content: '';
+  bottom: calc(100% - 2px);
+  height: 14px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 0H100C100 40 83 55 83 100H17C17 55 0 40 0 0Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
+.key.touch-preview[data-key="Enter"]::before {
+  content: 'Guess';
+  font-size: 18px;
+}
+
+.key.touch-preview[data-key="Backspace"]::before {
+  content: '⌫';
+}
+
+@keyframes key-preview-rise {
+  from { transform: translateY(5px); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key.touch-preview::before,
+  .key.touch-preview::after {
+    animation: none;
+  }
 }
 
 .key:focus-visible {

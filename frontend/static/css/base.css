@@ -265,73 +265,6 @@ h1 {
   margin: 5px 0;
 }
 
-/* Toast notification popup - positioned to avoid keyboard overlap */
-#messagePopup {
-  display: none;
-  position: fixed;
-  top: calc(var(--visual-viewport-offset-top) + var(--viewport-safe-area-top) + var(--tile-size) * 2);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-color);
-  color: var(--text-color);
-  max-width: 80vw;
-  padding: calc(var(--tile-size) * 0.3);
-  border-radius: 10px;
-  box-shadow: 4px 4px 8px var(--shadow-color-dark),
-              -4px -4px 8px var(--shadow-color-light);
-  z-index: var(--z-popup-message);
-  pointer-events: none;
-  flex: 0 0 auto;
-  margin: 5px 0;
-}
-
-#pointsPopup {
-  display: none;
-  position: fixed;
-  /* Position will be set dynamically by JavaScript relative to reset button */
-  font-size: 24px;
-  font-weight: bold;
-  padding: 12px 20px;
-  border-radius: 12px;
-  z-index: 150;
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  /* Professional styling */
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-/* Mobile-specific styling to match leaderboard entry size */
-@media (max-width: 600px) {
-  #pointsPopup {
-    font-size: calc(1.1em * var(--ui-scale));
-    padding: calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale));
-    min-width: calc(60px * var(--ui-scale));
-    border-radius: 10px;
-    text-align: center;
-    white-space: nowrap;
-  }
-}
-
-
-
-.points-positive {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-  box-shadow: 
-    0 4px 12px rgba(40, 167, 69, 0.4),
-    0 2px 4px rgba(40, 167, 69, 0.2);
-}
-
-.points-negative {
-  background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
-  color: white;
-  box-shadow: 
-    0 4px 12px rgba(220, 53, 69, 0.4),
-    0 2px 4px rgba(220, 53, 69, 0.2);
-}
-
 #ariaLive {
   position: absolute;
   width: 1px;
@@ -350,28 +283,4 @@ h1 {
 
 #message.negative {
   color: #ba1c1c;
-}
-
-/* Waiting overlay - shown while the lobby is loading */
-#waitingOverlay {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-
-#waitingOverlay.active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-#waitingOverlay.fade-out {
-  animation: fadeOutOverlay 0.35s ease forwards;
-  pointer-events: none;
 }

@@ -166,6 +166,10 @@ async function installLobbyRoutes(page, statesByCode) {
   await page.route(`${FIXTURE_ORIGIN}/**`, async (route) => {
     const request = route.request();
     const url = new URL(request.url());
+    if (url.pathname === '/age-status') {
+      await fulfillJson(route, { eligibility: 'eligible' });
+      return;
+    }
     const lobbyPageMatch = url.pathname.match(/^\/lobby\/([A-Z0-9]{6})\/?$/);
     const lobbyAssetMatch = url.pathname.match(/^\/lobby\/static\/(.+)$/);
     const rootAssetMatch = url.pathname.match(/^\/static\/(.+)$/);
@@ -252,7 +256,9 @@ const test = base.extend({
       window.__WORD_SQUAD_TEST_DIAGNOSTICS__ = true;
       localStorage.setItem('myEmoji', '🐶');
       localStorage.setItem('playerId', 'fixture-player');
-      localStorage.setItem('soundEnabled', 'false');
+      if (localStorage.getItem('soundEnabled') === null) {
+        localStorage.setItem('soundEnabled', 'false');
+      }
     });
 
     const open = async (scenario = 'active') => {
@@ -270,11 +276,8 @@ const test = base.extend({
         // Keep the fixture focused on initialized gameplay. These transient
         // surfaces are independent of lobby state and otherwise obscure the UI.
         [
-          'waitingOverlay',
-          'shareModal',
           'emojiModal',
           'closeCallPopup',
-          'infoPopup',
           'messagePopup',
         ].forEach((id) => {
           const element = document.getElementById(id);
@@ -293,6 +296,7 @@ const test = base.extend({
       open,
       openActive: () => open('active'),
       openCompleted: () => open('completed'),
+      setState: (scenario, state) => statesByCode.set(LOBBY_CODES[scenario], clone(state)),
       codes: LOBBY_CODES,
       states: clone(FIXTURE_STATES),
     });

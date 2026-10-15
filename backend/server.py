@@ -1,25 +1,26 @@
 import collections
+import secrets
+from contextvars import ContextVar
+import ipaddress
 import json
 import logging
 import os
 import queue
 import random
 import re
-import string
 import threading
 import time
 import uuid
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Flask, request, jsonify, send_from_directory, session, redirect
 
 # Import our modules
 try:
     from .models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
     from .game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS, WORDS
-    from .data_persistence import init_persistence, save_data, load_data
+    from .data_persistence import init_persistence, save_data, load_data, delete_data
     from .analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from .config import validate_production_config, get_config_summary
     from . import game_logic as _game_logic
@@ -27,7 +28,7 @@ except ImportError:
     # Handle running as script instead of module
     from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
     from game_logic import init_game_assets, generate_lobby_code, pick_new_word, sanitize_definition, fetch_definition, start_definition_lookup, SCRABBLE_SCORES, MAX_ROWS, WORDS
-    from data_persistence import init_persistence, save_data, load_data
+    from data_persistence import init_persistence, save_data, load_data, delete_data
     from analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from config import validate_production_config, get_config_summary
     import game_logic as _game_logic
@@ -82,7 +83,7 @@ def configure_logging():
     """Configure logging for production vs development."""
     log_level = logging.INFO
     log_format = "%(asctime)s %(levelname)s:%(name)s:%(message)s"
-    
+
     # More detailed logging for production
     if os.environ.get("FLASK_ENV") == "production":
         log_format = "%(asctime)s %(levelname)s [%(name)s:%(filename)s:%(lineno)d] %(message)s"
@@ -90,7 +91,7 @@ def configure_logging():
         if hasattr(logging, 'structlog'):
             # Use structured logging if available
             pass
-    
+
     logging.basicConfig(
         level=log_level,
         format=log_format,
@@ -105,14 +106,97 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev_key_for_local_testing_only")
+app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
+app.config.update(
+    SESSION_COOKIE_NAME="wordsquad_age_session",
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.environ.get("FLASK_ENV") == "production",
+)
 
 # Validate secret key for production
 if not os.environ.get("SECRET_KEY") and os.environ.get("FLASK_ENV") == "production":
     logger.error("SECRET_KEY environment variable must be set for production")
     raise SystemExit(1)
 
-CORS(app)
+# Game APIs are same-origin; no cross-origin credential access.
+
+# Public information and assets are available without registering a player.
+# New application endpoints require eligibility unless explicitly public.
+PUBLIC_ENDPOINTS = {
+    "index", "spa_fallback_route", "health", "cleanup_lobbies",
+    "age_status", "submit_age", "age_page", "notify_server_update", "landing_css", "landing_js",
+    "js_files", "css_files", "asset_files", "lobby_js_files",
+    "lobby_css_files", "lobby_asset_files",
+}
+GAME_PAGE_ENDPOINTS = {"game_page", "lobby_page", "enhanced_scaling_test"}
+AGE_SESSION_TTL = 12 * 60 * 60
+
+
+def age_eligibility():
+    """Return only eligibility; never retain the submitted age or birthdate."""
+    eligible = session.get("age_eligible")
+    if eligible is False:
+        # Keep a denied result for the browser session, preventing easy retries.
+        return "blocked"
+    checked_at = session.get("age_checked_at", 0)
+    if eligible is True and 0 <= time.time() - checked_at < AGE_SESSION_TTL:
+        return "eligible"
+    return "unknown"
+
+
+@app.before_request
+def require_age_eligibility():
+    endpoint = request.endpoint
+    if endpoint is None or endpoint in PUBLIC_ENDPOINTS:
+        return None
+    # Flask's built-in static route can also serve a built game.html.
+    static_html = endpoint == "static" and request.path.endswith(".html")
+    if endpoint == "static" and not static_html:
+        return None
+    eligible = age_eligibility()
+    if eligible != "eligible":
+        if endpoint in GAME_PAGE_ENDPOINTS or static_html:
+            next_page = request.path if not static_html else "/game"
+            from urllib.parse import urlencode
+            return redirect("/age-check?" + urlencode({"next": next_page}))
+        return jsonify({"status": "error", "code": "age_check_required",
+                        "eligibility": eligible,
+                        "msg": "Please complete the age check before playing."}), 403
+    if request.method not in ("GET", "HEAD", "OPTIONS") and not same_origin_request():
+        return jsonify({"status": "error", "msg": "Use the game on this website."}), 403
+    return None
+
+
+def same_origin_request():
+    """Prevent another website from setting eligibility or using this session."""
+    origin = request.headers.get("Origin")
+    return (request.headers.get("Sec-Fetch-Site") != "cross-site" and
+            (not origin or origin == request.host_url.rstrip("/")))
+
+
+@app.route("/age-status")
+def age_status():
+    return jsonify({"eligibility": age_eligibility()})
+
+
+@app.route("/age-check", methods=["POST"])
+def submit_age():
+    if not same_origin_request():
+        return jsonify({"status": "error", "msg": "Use the age check on this website."}), 403
+    eligibility = age_eligibility()
+    if eligibility != "unknown":
+        return jsonify({"eligibility": eligibility}), (200 if eligibility == "eligible" else 403)
+    data = request.get_json(silent=True)
+    age = data.get("age") if isinstance(data, dict) else None
+    # Booleans, floats, strings, missing values, and implausible ages fail closed.
+    if type(age) is not int or not 0 <= age <= 120:
+        return jsonify({"status": "error", "msg": "Enter your age in whole years."}), 400
+    session["age_eligible"] = age >= 13
+    session["age_checked_at"] = time.time()
+    session.permanent = False
+    return jsonify({"eligibility": "eligible" if age >= 13 else "blocked"}), (200 if age >= 13 else 403)
+
 
 @app.after_request
 def add_cache_control_headers(response):
@@ -131,7 +215,7 @@ def add_cache_control_headers(response):
     elif endpoint in ['js_files', 'css_files', 'asset_files', 'lobby_js_files', 'lobby_css_files', 'lobby_asset_files']:
         # JS/CSS files - longer cache for performance
         response.headers['Cache-Control'] = 'public, max-age=86400, immutable'
-    elif endpoint in ['health', 'state', 'lobby_state', 'chat', 'lobby_chat']:
+    elif endpoint in ['health', 'state', 'lobby_state', 'chat', 'lobby_chat', 'lobby_list', 'lobby_network_list']:
         # API endpoints - no cache to ensure real-time data
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
@@ -139,7 +223,17 @@ def add_cache_control_headers(response):
     elif not response.headers.get('Cache-Control'):
         # Default for other endpoints - short cache if no cache-control already set
         response.headers['Cache-Control'] = 'public, max-age=60'
-    
+
+    # Registration responses contain credentials; streams and mutation errors
+    # can contain player data too. None belong in a shared/browser cache.
+    if (request.method != 'GET' or endpoint in GAME_PAGE_ENDPOINTS or
+            endpoint in ('stream', 'lobby_stream', 'age_page', 'age_status', 'submit_age') or
+            (endpoint == 'static' and path.endswith('.html')) or
+            response.status_code == 403):
+        response.headers['Cache-Control'] = 'no-store'
+    response.headers['Referrer-Policy'] = 'no-referrer'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+
     return response
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -176,7 +270,7 @@ if REDIS_URL and redis is not None:
         redis_client.ping()
         logger.info("Redis connection established with connection pooling")
     except Exception as e:  # pragma: no cover - runtime check
-        logger.warning("Redis connection failed: %s", e)
+        logger.warning("Redis connection failed; private rooms will be unavailable")
         redis_client = None
 
 # Lobby management constants
@@ -195,7 +289,7 @@ GUESS_RATE_WINDOW = 60  # seconds
 PURGE_COOLDOWN = 5.0  # Only purge at most once every 5 seconds
 _last_purge_time = 0.0
 
-# Initialize game assets 
+# Initialize game assets
 init_game_assets(WORDS_FILE, OFFLINE_DEFINITIONS_FILE)
 
 # Validate production configuration
@@ -208,6 +302,14 @@ except Exception as e:
         raise SystemExit(1)
     else:
         logger.warning("Continuing in development mode despite configuration issues")
+
+if os.environ.get("FLASK_ENV") == "production":
+    # Set proxy hops only behind the restricted CloudFront -> ALB chain.
+    # Direct/local deployments leave the forwarding header untrusted.
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app,
+                               x_for=int(os.environ.get("TRUSTED_PROXY_HOPS", "0")),
+                               x_proto=1, x_host=0)
 
 emoji_lock = threading.Lock()  # guard emoji selection operations
 
@@ -226,31 +328,39 @@ REMOVAL_COOLDOWN = 30.0  # seconds to prevent recreation after removal
 # Current active lobby used by legacy routes
 DEFAULT_LOBBY = "DEFAULT"
 current_state: GameState = LOBBIES.setdefault(DEFAULT_LOBBY, GameState())
+_lobby_context = ContextVar("lobby_state", default=None)
+private_rooms = None
+
+
+def _state():
+    return _lobby_context.get() or current_state
 
 # Initialize data persistence layer
 init_persistence(redis_client, GAME_FILE, LOBBIES_FILE, DEFAULT_LOBBY, LOBBIES)
 
-# Initialize analytics
-init_analytics(ANALYTICS_FILE)
+# Persistent analytics are disabled by default. Operational game state is
+# still stored separately; disabling analytics does not remove legacy logs.
+init_analytics(None)
 
 
 # Create backward compatible wrappers for persistence functions
 def save_data_legacy(s: GameState | None = None):
     """Backward compatible wrapper for save_data."""
     if s is None:
-        s = current_state
-    save_data(s, _lobby_id(s))
+        s = _state()
+    if not s.private:
+        save_data(s, _lobby_id(s))
 
 
 def load_data_legacy(s: GameState | None = None):
     """Backward compatible wrapper for load_data."""
     if s is None:
-        s = current_state
+        s = _state()
     load_data(s, _lobby_id(s), _reset_state)
 
 
 def get_lobby(code: str) -> GameState:
-    """Return the GameState for ``code``, creating it if needed."""
+    """Look up an existing lobby; reads never create rooms."""
     lobby = LOBBIES.get(code)
     if lobby is None:
         # Check if this lobby was recently removed due to being empty
@@ -260,35 +370,48 @@ def get_lobby(code: str) -> GameState:
             # be recreated
             return None
 
-        lobby = _reset_state(GameState())
+        lobby = GameState()
+        if not load_data(lobby, code):
+            return None
         LOBBIES[code] = lobby
-        load_data(lobby, _lobby_id(lobby), _reset_state)
+        if time.time() - lobby.last_activity > LOBBY_TTL:
+            remove_lobby(code)
+            return None
         if not lobby.target_word:
             pick_new_word(lobby)
             save_data(lobby, _lobby_id(lobby))
     return lobby
 
 
+def remove_lobby(code: str) -> None:
+    """Remove a lobby from memory and persistence, including late-request protection."""
+    if code == DEFAULT_LOBBY:
+        return
+    LOBBIES.pop(code, None)
+    RECENTLY_REMOVED_LOBBIES[code] = time.time()
+    delete_data(code)
+
+
 def purge_lobbies() -> None:
     """Remove lobbies that are finished or idle beyond ``LOBBY_TTL``.
-    
+
     Performance optimization: Only perform actual purge at most once every
     PURGE_COOLDOWN seconds to avoid O(n) operations on every lobby request.
     """
     global _last_purge_time
     now = time.time()
-    
+
     # Rate limit purge operations - only purge if enough time has passed
     if now - _last_purge_time < PURGE_COOLDOWN:
         return
-    
+
     _last_purge_time = now
     _do_purge_lobbies()
 
 
 def force_purge_lobbies() -> None:
     """Force immediate purge of lobbies, bypassing rate limiting.
-    
+
     Used for scheduled cleanup operations and background maintenance.
     """
     global _last_purge_time
@@ -303,12 +426,10 @@ def _do_purge_lobbies() -> None:
     for cid, state in LOBBIES.items():
         if cid == DEFAULT_LOBBY:
             continue
-        if now - state.last_activity > LOBBY_TTL and (
-            state.phase == "finished" or not state.leaderboard
-        ):
+        if now - state.last_activity > LOBBY_TTL:
             expired.append(cid)
     for cid in expired:
-        LOBBIES.pop(cid, None)
+        remove_lobby(cid)
 
     # Clean up old entries from recently removed lobbies tracking
     expired_removals = []
@@ -321,33 +442,34 @@ def _do_purge_lobbies() -> None:
 
 
 def _with_lobby(code: str, func):
-    """Temporarily switch ``current_state`` to the lobby for ``code``."""
+    """Select a lobby without changing another request's state."""
     if not LOBBY_CODE_RE.fullmatch(code):
         return jsonify({"status": "error", "msg": "Invalid lobby code"}), 400
     purge_lobbies()
-    global current_state
+    if code.startswith("p"):
+        if private_rooms is None:
+            return jsonify({"status": "error", "msg": "Room unavailable"}), 404
+        return private_rooms.run(code, func)
     state = get_lobby(code)
     if state is None:
-        # Lobby was recently removed and shouldn't be recreated
-        return jsonify({"status": "error", "msg": "Lobby no longer exists"}), 404
-    prev = current_state
-    current_state = state
+        return jsonify({"status": "error", "msg": "Room unavailable"}), 404
+    token = _lobby_context.set(state)
     try:
         return func()
     finally:
-        current_state = prev
+        _lobby_context.reset(token)
 
 
 def _reset_state(s: GameState | None = None) -> GameState:
     """Initialize all persistent in-memory structures to defaults.
 
-    When ``s`` is ``None``, reset :data:`current_state` in place rather than
+    When ``s`` is ``None``, reset the default state in place rather than
     creating a new ``GameState``.  The previous behaviour of returning a brand
     new instance made it easy to accidentally discard the reset object and
     leave the global state unchanged.
     """
     if s is None:
-        s = current_state
+        s = _state()
     else:
         host_token = s.host_token
         s.leaderboard.clear()
@@ -395,9 +517,7 @@ def _definition_worker(word: str, s: GameState) -> None:
 
 
 def get_client_ip():
-    """Return the client's IP address, accounting for proxies."""
-    if request.headers.getlist("X-Forwarded-For"):
-        return request.headers.getlist("X-Forwarded-For")[0].split(",")[0]
+    """Use the connection address, never a caller-supplied forwarding header."""
     return request.remote_addr or "unknown"
 
 
@@ -405,14 +525,14 @@ def check_api_rate_limit(ip: str) -> bool:
     """Check if the IP has exceeded the API rate limit."""
     now = time.time()
     times = API_REQUEST_TIMES.setdefault(ip, collections.deque())
-    
+
     # Remove timestamps older than the window using efficient left-pop
     while times and now - times[0] >= API_RATE_WINDOW:
         times.popleft()
-    
+
     if len(times) >= API_RATE_LIMIT:
         return False
-    
+
     times.append(now)
     return True
 
@@ -421,14 +541,14 @@ def check_guess_rate_limit(player_id: str) -> bool:
     """Check if the player has exceeded the guess rate limit."""
     now = time.time()
     times = GUESS_REQUEST_TIMES.setdefault(player_id, collections.deque())
-    
+
     # Remove timestamps older than the window using efficient left-pop
     while times and now - times[0] >= GUESS_RATE_WINDOW:
         times.popleft()
-    
+
     if len(times) >= GUESS_RATE_LIMIT:
         return False
-    
+
     times.append(now)
     return True
 
@@ -453,7 +573,7 @@ def result_for_guess(guess, target):
 def get_required_letters_and_positions(s: GameState | None = None):
     """Aggregate hard mode constraints from prior guesses."""
     if s is None:
-        s = current_state
+        s = _state()
     required_letters = set()
     green_positions = {}
     for g in s.guesses:
@@ -469,7 +589,7 @@ def get_required_letters_and_positions(s: GameState | None = None):
 def validate_hard_mode(guess, s: GameState | None = None):
     """Check a guess against hard mode constraints."""
     if s is None:
-        s = current_state
+        s = _state()
     required_letters, green_positions = get_required_letters_and_positions(s)
     for idx, ch in green_positions.items():
         if guess[idx] != ch:
@@ -483,13 +603,13 @@ def validate_hard_mode(guess, s: GameState | None = None):
 
 
 def build_state_payload(emoji: str | None = None, s: GameState | None = None):
-    """Assemble the full game current_state dictionary returned to clients.
+    """Assemble the full game state dictionary returned to clients.
 
     When ``emoji`` is provided, include a ``daily_double_available`` boolean
     indicating whether that player currently has an unused hint.
     """
     if s is None:
-        s = current_state
+        s = _state()
     lb = [
         {
             "emoji": player,
@@ -530,9 +650,11 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
 
 
 def broadcast_state(s: GameState | None = None) -> None:
-    """Send the latest game current_state to all connected SSE clients."""
+    """Send the latest game state to all connected SSE clients."""
     if s is None:
-        s = current_state
+        s = _state()
+    if s.private:
+        return  # Private streams read committed shared state.
     data = json.dumps(build_state_payload(s=s))
     for q in list(s.listeners):
         try:
@@ -550,7 +672,7 @@ def broadcast_server_update_notification(message: str = "Server is being updated
         "timestamp": time.time()
     }
     data = json.dumps(update_data)
-    
+
     # Broadcast to all lobbies including the default lobby
     total_clients = 0
     for lobby_state in LOBBIES.values():
@@ -560,8 +682,15 @@ def broadcast_server_update_notification(message: str = "Server is being updated
                 total_clients += 1
             except Exception:
                 lobby_state.listeners.discard(q)
-    
+
     logger.info(f"Server update notification sent to {total_clients} clients across {len(LOBBIES)} lobbies")
+
+
+def player_data():
+    data = request.get_json(silent=True) or {}
+    if _state().private:
+        return private_rooms.player_data(data)
+    return data
 
 
 # ---- API Routes ----
@@ -573,15 +702,26 @@ def stream():
     from flask import Response
 
     q = queue.Queue()
-    current_state.listeners.add(q)
+    stream_state = _state()
+    stream_state.listeners.add(q)
+    expires_at = session.get("age_checked_at", 0) + AGE_SESSION_TTL
 
     def gen():
         try:
             while True:
-                data = q.get()
+                remaining = expires_at - time.time()
+                if remaining <= 0:
+                    return
+                try:
+                    data = q.get(timeout=min(remaining, 15))
+                except queue.Empty:
+                    yield ": keepalive\n\n"
+                    continue
+                if time.time() >= expires_at:
+                    return
                 yield f"data: {data}\n\n"
         finally:
-            current_state.listeners.discard(q)
+            stream_state.listeners.discard(q)
 
     return Response(gen(), mimetype="text/event-stream")
 
@@ -591,53 +731,50 @@ def state():
     # ——— Heartbeat: bump AFK timestamp on every client poll ———
     emoji = None
     if request.method == "POST":
-        data = request.get_json(silent=True) or {}
+        data = player_data()
         e = data.get("emoji")
         pid = data.get("player_id")
         ip = get_client_ip()
-        
+
         if (
             e
             and pid
-            and e in current_state.leaderboard
-            and current_state.leaderboard[e].get("player_id") == pid
+            and e in _state().leaderboard
+            and _state().leaderboard[e].get("player_id") == pid
         ):
-            current_state.leaderboard[e]["last_active"] = time.time()
-            current_state.last_activity = time.time()
+            _state().leaderboard[e]["last_active"] = time.time()
+            _state().last_activity = time.time()
             save_data_legacy()
             emoji = e
         elif (
             e
             and pid
-            and e in current_state.leaderboard
-            and current_state.leaderboard[e].get("player_id") != pid
+            and e in _state().leaderboard
+            and _state().leaderboard[e].get("player_id") != pid
         ):
             # Check if this might be a player reconnecting after server restart
             # If the emoji exists in leaderboard but player_id doesn't match,
             # and the IP matches the emoji's registered IP, re-register the player
             # Additional safety: both player_ids should look like UUIDs (server restart scenario)
-            if (e in current_state.leaderboard and 
-                current_state.leaderboard[e].get("ip") == ip and
+            if (e in _state().leaderboard and
+                _state().leaderboard[e].get("ip") == ip and
                 pid is not None and
                 len(pid) == 32 and  # UUID hex string length
                 all(c in '0123456789abcdef' for c in pid)):  # Valid hex chars
-                old_player_id = current_state.leaderboard[e].get("player_id")
+                old_player_id = _state().leaderboard[e].get("player_id")
                 # Also check that old player_id looks like a UUID for safety
-                if (old_player_id and len(old_player_id) == 32 and 
+                if (old_player_id and len(old_player_id) == 32 and
                     all(c in '0123456789abcdef' for c in old_player_id)):
                     # This looks like a server restart scenario - player exists but player_id doesn't match
                     # Update the player_id to re-register them automatically
-                    current_state.leaderboard[e]["player_id"] = pid
+                    _state().leaderboard[e]["player_id"] = pid
                     # Update player_map
-                    current_state.player_map.pop(old_player_id, None)
-                    current_state.player_map[pid] = e
-                    logger.info(
-                        "Auto-reconnected player %s (old_id=%s, new_id=%s) on state request after server restart", 
-                        e, old_player_id, pid
-                    )
+                    _state().player_map.pop(old_player_id, None)
+                    _state().player_map[pid] = e
+                    logger.info("Player reconnected")
                     # Update the last_active time for the reconnected player
-                    current_state.leaderboard[e]["last_active"] = time.time()
-                    current_state.last_activity = time.time()
+                    _state().leaderboard[e]["last_active"] = time.time()
+                    _state().last_activity = time.time()
                     save_data_legacy()
                     emoji = e
     else:
@@ -653,7 +790,7 @@ def state():
 @app.route("/emoji", methods=["POST"])
 def set_emoji():
     """Register or change the player's emoji avatar."""
-    data = request.json or {}
+    data = player_data()
     base_emoji = data.get("emoji")
     player_id = data.get("player_id")
     ip = get_client_ip()
@@ -664,14 +801,12 @@ def set_emoji():
 
     if not player_id:
         player_id = uuid.uuid4().hex
-    new_player = player_id not in current_state.player_map
-    logger.info(
-        "Emoji request: %s player=%s ip=%s", base_emoji, player_id, ip
-    )
+    new_player = player_id not in _state().player_map
+    logger.info("Emoji registration processed")
 
     with emoji_lock:
         # Check if player already has an emoji assigned
-        prev_emoji = current_state.player_map.get(player_id)
+        prev_emoji = _state().player_map.get(player_id)
 
         # If player is requesting the same base emoji they already have
         # (any variant), keep their current emoji
@@ -681,7 +816,7 @@ def set_emoji():
             # Player is changing to a different base emoji or is new
             # Get a unique emoji variant for this base emoji, excluding their
             # current emoji if changing
-            existing_emojis = set(current_state.leaderboard.keys())
+            existing_emojis = set(_state().leaderboard.keys())
             if prev_emoji and prev_emoji in existing_emojis:
                 existing_emojis.remove(prev_emoji)
             emoji_variant = get_emoji_variant(base_emoji, existing_emojis)
@@ -689,7 +824,7 @@ def set_emoji():
         # If player had a different emoji before, remove the old entry
         if prev_emoji and prev_emoji != emoji_variant:
             # Move existing entry so score and history persist
-            entry = current_state.leaderboard.pop(
+            entry = _state().leaderboard.pop(
                 prev_emoji,
                 {
                     "ip": ip,
@@ -700,10 +835,10 @@ def set_emoji():
                     "last_active": now,
                 },
             )
-            current_state.leaderboard[emoji_variant] = entry
+            _state().leaderboard[emoji_variant] = entry
         else:
             # Create new entry or update existing one
-            current_state.leaderboard.setdefault(
+            _state().leaderboard.setdefault(
                 emoji_variant,
                 {
                     "ip": ip,
@@ -716,25 +851,18 @@ def set_emoji():
             )
 
         # Update player mappings
-        current_state.leaderboard[emoji_variant]["ip"] = ip
-        current_state.leaderboard[emoji_variant]["player_id"] = player_id
-        current_state.leaderboard[emoji_variant]["last_active"] = now
-        current_state.ip_to_emoji[ip] = emoji_variant
-        current_state.player_map[player_id] = emoji_variant
-        current_state.last_activity = now
+        _state().leaderboard[emoji_variant]["ip"] = ip
+        _state().leaderboard[emoji_variant]["player_id"] = player_id
+        _state().leaderboard[emoji_variant]["last_active"] = now
+        _state().ip_to_emoji[ip] = emoji_variant
+        _state().player_map[player_id] = emoji_variant
+        _state().last_activity = now
         save_data_legacy()
 
-    logger.info(
-        "Emoji %s (variant: %s) mapped to player %s (ip %s) new=%s",
-        base_emoji,
-        emoji_variant,
-        player_id,
-        ip,
-        new_player,
-    )
+    logger.info("Emoji registration processed")
     broadcast_state()
     if new_player:
-        log_lobby_joined(_lobby_id(current_state), emoji_variant, ip)
+        log_lobby_joined(_lobby_id(_state()), emoji_variant, ip)
 
     # Return the variant that was assigned
     return jsonify({
@@ -752,39 +880,37 @@ def guess_word():
     ip = get_client_ip()
     if not check_api_rate_limit(ip):
         return jsonify({"status": "error", "msg": "Too many requests. Please slow down."}), 429
-    
-    data = request.json or {}
+
+    data = player_data()
     guess = (data.get("guess") or "").strip().lower()
     # ▶ Prevent duplicates
     emoji = data.get("emoji")
     player_id = data.get("player_id")
-    
-    # Apply guess-specific rate limiting  
+
+    # Apply guess-specific rate limiting
     if player_id and not check_guess_rate_limit(player_id):
         return jsonify({"status": "error", "msg": "Too many guesses. Please wait before trying again."}), 429
-    
+
     ip = get_client_ip()
     points_delta = 0
-    logger.info(
-        "Guess attempt '%s' by %s (player=%s ip=%s)", guess, emoji, player_id, ip
-    )
+    logger.info("Guess received")
     now = time.time()
 
-    current_state.last_activity = now
-    if current_state.phase == "waiting":
-        current_state.phase = "active"
-    if current_state.is_over:
+    _state().last_activity = now
+    if _state().phase == "waiting":
+        _state().phase = "active"
+    if _state().is_over:
         close_call = None
         if (
-            guess == current_state.target_word
-            and current_state.win_timestamp
-            and emoji != current_state.winner_emoji
+            guess == _state().target_word
+            and _state().win_timestamp
+            and emoji != _state().winner_emoji
         ):
-            diff = now - current_state.win_timestamp
+            diff = now - _state().win_timestamp
             if diff <= CLOSE_CALL_WINDOW:
                 close_call = {
                     "delta_ms": int(diff * 1000),
-                    "winner": current_state.winner_emoji,
+                    "winner": _state().winner_emoji,
                 }
         resp = {"status": "error", "msg": "Game is over. Please reset."}
         if close_call:
@@ -792,36 +918,33 @@ def guess_word():
         return jsonify(resp), 403
     if not guess or len(guess) != 5 or guess not in WORDS:
         return jsonify({"status": "error", "msg": "Not a valid 5-letter word."}), 400
-    existing = [g["guess"] for g in current_state.guesses]
+    existing = [g["guess"] for g in _state().guesses]
     if guess in existing:
         return jsonify(status="error", msg="You’ve already guessed that word."), 400
     if (
-        emoji not in current_state.leaderboard
-        or current_state.leaderboard[emoji].get("player_id") != player_id
+        emoji not in _state().leaderboard
+        or _state().leaderboard[emoji].get("player_id") != player_id
     ):
         # Check if this might be a player reconnecting after server restart
         # If the emoji exists in leaderboard but player_id doesn't match,
         # and the IP matches the emoji's registered IP, re-register the player
         # Additional safety: both player_ids should look like UUIDs (server restart scenario)
-        if (emoji in current_state.leaderboard and 
-            current_state.leaderboard[emoji].get("ip") == ip and
+        if (emoji in _state().leaderboard and
+            _state().leaderboard[emoji].get("ip") == ip and
             player_id is not None and
             len(player_id) == 32 and  # UUID hex string length
             all(c in '0123456789abcdef' for c in player_id)):  # Valid hex chars
-            old_player_id = current_state.leaderboard[emoji].get("player_id")
+            old_player_id = _state().leaderboard[emoji].get("player_id")
             # Also check that old player_id looks like a UUID for safety
-            if (old_player_id and len(old_player_id) == 32 and 
+            if (old_player_id and len(old_player_id) == 32 and
                 all(c in '0123456789abcdef' for c in old_player_id)):
                 # This looks like a server restart scenario - player exists but player_id doesn't match
                 # Update the player_id to re-register them automatically
-                current_state.leaderboard[emoji]["player_id"] = player_id
+                _state().leaderboard[emoji]["player_id"] = player_id
                 # Update player_map
-                current_state.player_map.pop(old_player_id, None)
-                current_state.player_map[player_id] = emoji
-                logger.info(
-                    "Auto-reconnected player %s (old_id=%s, new_id=%s) after server restart", 
-                    emoji, old_player_id, player_id
-                )
+                _state().player_map.pop(old_player_id, None)
+                _state().player_map[player_id] = emoji
+                logger.info("Player reconnected")
             else:
                 return (
                     jsonify({"status": "error", "msg": "Please pick an emoji before playing."}),
@@ -833,30 +956,30 @@ def guess_word():
                 403,
             )
 
-    current_state.leaderboard[emoji]["last_active"] = now
+    _state().leaderboard[emoji]["last_active"] = now
 
     ok, msg = validate_hard_mode(guess)
     if not ok:
         return jsonify({"status": "error", "msg": msg}), 400
 
-    row_index = len(current_state.guesses)
-    result = result_for_guess(guess, current_state.target_word)
+    row_index = len(_state().guesses)
+    result = result_for_guess(guess, _state().target_word)
     new_entry = {"guess": guess, "result": result, "emoji": emoji, "ts": now}
-    current_state.guesses.append(new_entry)
+    _state().guesses.append(new_entry)
 
     dd_award = False
     award_row = None
     award_col = None
-    if current_state.daily_double_index is not None:
-        dd_row = current_state.daily_double_index // 5
-        dd_col = current_state.daily_double_index % 5
+    if _state().daily_double_index is not None:
+        dd_row = _state().daily_double_index // 5
+        dd_col = _state().daily_double_index % 5
         if (
             row_index == dd_row
             and result[dd_col] == "correct"
-            and emoji not in current_state.daily_double_winners
+            and emoji not in _state().daily_double_winners
         ):
-            current_state.daily_double_winners.add(emoji)
-            current_state.daily_double_pending[emoji] = row_index + 1
+            _state().daily_double_winners.add(emoji)
+            _state().daily_double_pending[emoji] = row_index + 1
             dd_award = True
             award_row = dd_row
             award_col = dd_col
@@ -869,57 +992,58 @@ def guess_word():
         if r == "correct":
             # if we've never scored this letter as green *this game*:
             if (
-                letter not in current_state.found_greens
+                letter not in _state().found_greens
                 and letter not in global_found_this_turn
             ):
-                if letter in current_state.found_yellows:
+                if letter in _state().found_yellows:
                     # yellow previously discovered → award remaining half
                     points_delta += value / 2
-                    current_state.found_yellows.remove(letter)
+                    _state().found_yellows.remove(letter)
                 else:
                     # brand-new green → full value
                     points_delta += value
-                current_state.found_greens.add(letter)
+                _state().found_greens.add(letter)
                 global_found_this_turn.add(letter)
         elif r == "present":
             if (
-                letter not in current_state.found_greens
-                and letter not in current_state.found_yellows
+                letter not in _state().found_greens
+                and letter not in _state().found_yellows
                 and letter not in global_found_this_turn
             ):
                 # yellow discovery → half value
                 points_delta += value / 2
-                current_state.found_yellows.add(letter)
+                _state().found_yellows.add(letter)
                 global_found_this_turn.add(letter)
 
     # Bonus for win, penalty for wrong final guess
-    won = guess == current_state.target_word
+    won = guess == _state().target_word
     over = False
 
     if won:
         points_delta += 3
-        current_state.winner_emoji = emoji
-        current_state.is_over = True
+        _state().winner_emoji = emoji
+        _state().is_over = True
         over = True
-        current_state.win_timestamp = now
-    elif len(current_state.guesses) == MAX_ROWS:
-        current_state.is_over = True
+        _state().win_timestamp = now
+    elif len(_state().guesses) == MAX_ROWS:
+        _state().is_over = True
         over = True
         if not won:
             points_delta -= 3  # Last guess, failed
 
     if over:
-        current_state.phase = "finished"
+        _state().phase = "finished"
         # Fetch definition synchronously when game ends
-        current_state.definition = fetch_definition(current_state.target_word)
-        current_state.last_word = current_state.target_word
-        current_state.last_definition = current_state.definition
+        _state().definition = (_game_logic.OFFLINE_DEFINITIONS_CACHE.get(_state().target_word)
+                               if _state().private else fetch_definition(_state().target_word))
+        _state().last_word = _state().target_word
+        _state().last_definition = _state().definition
 
     # -1 penalty for duplicate guesses with no new yellows/greens
     if points_delta == 0 and not won and not over:
         points_delta -= 1
 
-    current_state.leaderboard[emoji]["score"] += points_delta
+    _state().leaderboard[emoji]["score"] += points_delta
     save_data_legacy()
     # — attach this turn’s points so client can render a history
     new_entry["points"] = points_delta
@@ -927,14 +1051,7 @@ def guess_word():
     resp_state = build_state_payload(emoji)
     broadcast_state()
 
-    logger.info(
-        "Guess result '%s' by %s points=%s won=%s over=%s",
-        guess,
-        emoji,
-        points_delta,
-        won,
-        over,
-    )
+    logger.info("Guess processed points=%s won=%s over=%s", points_delta, won, over)
 
     resp = {
         "status": "ok",
@@ -943,7 +1060,7 @@ def guess_word():
         "won": won,
         "over": over,
         "daily_double": dd_award,
-        "daily_double_available": emoji in current_state.daily_double_pending,
+        "daily_double_available": emoji in _state().daily_double_pending,
     }
     if dd_award:
         resp["daily_double_tile"] = {"row": award_row, "col": award_col}
@@ -953,38 +1070,36 @@ def guess_word():
 @app.route("/hint", methods=["POST"])
 def select_hint():
     """Allow a Daily Double winner to reveal a letter in the next row."""
-    data = request.get_json(silent=True) or {}
+    data = player_data()
     emoji = data.get("emoji")
     player_id = data.get("player_id")
     col = data.get("col")
     ip = get_client_ip()
 
     if (
-        emoji not in current_state.leaderboard
-        or current_state.leaderboard[emoji].get("player_id") != player_id
+        emoji not in _state().leaderboard
+        or _state().leaderboard[emoji].get("player_id") != player_id
     ):
         # Check if this might be a player reconnecting after server restart
-        if (emoji in current_state.leaderboard and 
-            current_state.leaderboard[emoji].get("ip") == ip and
+        if (emoji in _state().leaderboard and
+            _state().leaderboard[emoji].get("ip") == ip and
             player_id is not None and
             len(player_id) == 32 and  # UUID hex string length
             all(c in '0123456789abcdef' for c in player_id)):  # Valid hex chars
-            old_player_id = current_state.leaderboard[emoji].get("player_id")
-            if (old_player_id and len(old_player_id) == 32 and 
+            old_player_id = _state().leaderboard[emoji].get("player_id")
+            if (old_player_id and len(old_player_id) == 32 and
                 all(c in '0123456789abcdef' for c in old_player_id)):
                 # Auto-reconnect the player
-                current_state.leaderboard[emoji]["player_id"] = player_id
-                current_state.player_map.pop(old_player_id, None)
-                current_state.player_map[player_id] = emoji
-                logger.info(
-                    "Auto-reconnected player %s for hint selection after server restart", emoji
-                )
+                _state().leaderboard[emoji]["player_id"] = player_id
+                _state().player_map.pop(old_player_id, None)
+                _state().player_map[player_id] = emoji
+                logger.info("Player reconnected")
             else:
                 return jsonify({"status": "error", "msg": "Invalid player."}), 403
         else:
             return jsonify({"status": "error", "msg": "Invalid player."}), 403
 
-    if emoji not in current_state.daily_double_pending:
+    if emoji not in _state().daily_double_pending:
         return jsonify({"status": "error", "msg": "No hint available."}), 400
 
     try:
@@ -995,8 +1110,8 @@ def select_hint():
     if not 0 <= col < 5:
         return jsonify({"status": "error", "msg": "Invalid column."}), 400
 
-    row = current_state.daily_double_pending.pop(emoji)
-    letter = current_state.target_word[col]
+    row = _state().daily_double_pending.pop(emoji)
+    letter = _state().target_word[col]
     save_data_legacy()
     broadcast_state()  # Notify other players that daily double was used
     log_daily_double_used(emoji, ip)
@@ -1014,72 +1129,70 @@ def select_hint():
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
     if request.method == "POST":
-        data = request.get_json(silent=True) or {}
+        data = player_data()
         text = (data.get("text") or "").strip()
         emoji = data.get("emoji")
         player_id = data.get("player_id")
         current_time = time.time()
-        
+
         if not text:
             return jsonify({"status": "error", "msg": "Empty message."}), 400
-            
+
         if len(text) > 140:
             return jsonify({"status": "error", "msg": "Message too long."}), 400
-            
+
         if (
-            emoji not in current_state.leaderboard
-            or current_state.leaderboard[emoji].get("player_id") != player_id
+            emoji not in _state().leaderboard
+            or _state().leaderboard[emoji].get("player_id") != player_id
         ):
             # Check if this might be a player reconnecting after server restart
             ip = get_client_ip()
-            if (emoji in current_state.leaderboard and 
-                current_state.leaderboard[emoji].get("ip") == ip and
+            if (emoji in _state().leaderboard and
+                _state().leaderboard[emoji].get("ip") == ip and
                 player_id is not None and
                 len(player_id) == 32 and  # UUID hex string length
                 all(c in '0123456789abcdef' for c in player_id)):  # Valid hex chars
-                old_player_id = current_state.leaderboard[emoji].get("player_id")
-                if (old_player_id and len(old_player_id) == 32 and 
+                old_player_id = _state().leaderboard[emoji].get("player_id")
+                if (old_player_id and len(old_player_id) == 32 and
                     all(c in '0123456789abcdef' for c in old_player_id)):
                     # Auto-reconnect the player
-                    current_state.leaderboard[emoji]["player_id"] = player_id
-                    current_state.player_map.pop(old_player_id, None)
-                    current_state.player_map[player_id] = emoji
-                    logger.info(
-                        "Auto-reconnected player %s for chat after server restart", emoji
-                    )
+                    _state().leaderboard[emoji]["player_id"] = player_id
+                    _state().player_map.pop(old_player_id, None)
+                    _state().player_map[player_id] = emoji
+                    logger.info("Player reconnected")
                 else:
                     return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
             else:
                 return jsonify({"status": "error", "msg": "Pick an emoji first."}), 400
-            
+
         # Rate limiting: 1 message per second per player
-        last_message_time = current_state.chat_rate_limits.get(player_id, 0)
+        last_message_time = _state().chat_rate_limits.get(player_id, 0)
         if current_time - last_message_time < 1.0:
             return jsonify({"status": "error", "msg": "Please wait before sending another message."}), 429
-            
-        current_state.chat_rate_limits[player_id] = current_time
-        current_state.chat_messages.append(
+
+        _state().chat_rate_limits[player_id] = current_time
+        _state().chat_messages.append(
             {"emoji": emoji, "text": text, "ts": current_time}
         )
-        current_state.last_activity = current_time
+        _state().last_activity = current_time
         save_data_legacy()
         broadcast_state()
         return jsonify({"status": "ok"})
-    return jsonify({"messages": current_state.chat_messages})
+    return jsonify({"messages": _state().chat_messages})
 
 
 @app.route("/reset", methods=["POST"])
 def reset_game():
     """Archive the current game and start a fresh one."""
     # Save the just-finished game into history
-    logger.info("Resetting lobby %s", _lobby_id(current_state))
-    current_state.past_games.append(list(current_state.guesses))
-    pick_new_word(current_state)
-    current_state.last_activity = time.time()
+    logger.info("Resetting lobby")
+    _state().past_games.append(list(_state().guesses))
+    pick_new_word(_state())
+    _state().last_activity = time.time()
     save_data_legacy()
     broadcast_state()
-    log_lobby_finished(_lobby_id(current_state), get_client_ip())
-    logger.info("Lobby %s reset complete", _lobby_id(current_state))
+    log_lobby_finished(_lobby_id(_state()), get_client_ip())
+    logger.info("Lobby reset complete")
     return jsonify({"status": "ok"})
 
 
@@ -1089,6 +1202,11 @@ def reset_game():
 @app.route("/lobby", methods=["POST"])
 def lobby_create():
     """Create a new lobby and return its code."""
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or type(data.get("private", False)) is not bool:
+        return jsonify({"status": "error", "msg": "Invalid room options"}), 400
+    if data.get("private"):
+        return private_rooms.create()
     purge_lobbies()
     ip = get_client_ip()
     now = time.time()
@@ -1100,25 +1218,26 @@ def lobby_create():
         return jsonify({"status": "error", "msg": "Rate limit"}), 429
     times.append(now)
 
-    logger.info("Lobby create request from %s", ip)
+    logger.info("Lobby creation requested")
 
     code = generate_lobby_code()
     while code in LOBBIES:
         code = generate_lobby_code()
     state = _reset_state(GameState())
     pick_new_word(state)
-    token = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+    token = secrets.token_urlsafe(32)
     state.host_token = token
     LOBBIES[code] = state
     save_data(state, _lobby_id(state))
     log_lobby_created(code, ip)
-    logger.info("Lobby %s created host=%s", code, ip)
+    logger.info("Lobby created")
     return jsonify({"id": code, "host_token": token})
 
 
 @app.route("/lobbies", methods=["GET"])
 def lobby_list():
     """Return a list of active lobbies and player counts."""
+    purge_lobbies()
     data = [
         {"id": cid, "players": len(s.leaderboard)}
         for cid, s in LOBBIES.items()
@@ -1130,6 +1249,7 @@ def lobby_list():
 @app.route("/lobbies/network", methods=["GET"])
 def lobby_network_list():
     """Return a list of active lobbies from the same network as the client."""
+    purge_lobbies()
     client_ip = get_client_ip()
     data = []
 
@@ -1161,38 +1281,23 @@ def lobby_network_list():
 
 
 def _is_same_network(ip1, ip2):
-    """Check if two IP addresses are likely on the same local network."""
-    if ip1 == ip2:
-        return True
-
-    # Handle localhost/loopback
-    if ip1 in ["127.0.0.1", "localhost"] or ip2 in ["127.0.0.1", "localhost"]:
-        return ip1 == ip2
-
-    # For simplicity, check if they share the same first 3 octets for
-    # private networks
+    """Match private IPv4 /24 networks, including players on the server itself."""
     try:
-        parts1 = ip1.split('.')
-        parts2 = ip2.split('.')
-
-        if len(parts1) == 4 and len(parts2) == 4:
-            # Check for common private network prefixes
-            if (parts1[0] == '192' and parts1[1] == '168' and
-                    parts2[0] == '192' and parts2[1] == '168' and
-                    parts1[2] == parts2[2]):
-                return True
-            elif (parts1[0] == '10' and parts2[0] == '10' and
-                  parts1[1] == parts2[1] and parts1[2] == parts2[2]):
-                return True
-            elif (parts1[0] == '172' and parts2[0] == '172' and
-                  16 <= int(parts1[1]) <= 31 and
-                  16 <= int(parts2[1]) <= 31 and
-                  parts1[1] == parts2[1] and parts1[2] == parts2[2]):
-                return True
-    except (ValueError, IndexError):
-        pass
-
-    return False
+        addresses = [ipaddress.ip_address('127.0.0.1' if ip == 'localhost' else ip)
+                     for ip in (ip1, ip2)]
+    except ValueError:
+        return False
+    if addresses[0] == addresses[1]:
+        return True
+    private_networks = [ipaddress.ip_network(prefix) for prefix in
+                        ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
+    local = [address.version == 4 and any(address in network for network in private_networks)
+             for address in addresses]
+    # Localhost players are on this server's LAN; never expose them to public IPs.
+    if any(address.is_loopback for address in addresses):
+        return all(address.is_loopback or is_local
+                   for address, is_local in zip(addresses, local))
+    return all(local) and addresses[0].packed[:3] == addresses[1].packed[:3]
 
 
 @app.route("/lobby/<code>/stream")
@@ -1210,6 +1315,11 @@ def lobby_emoji(code):
     return _with_lobby(code, set_emoji)
 
 
+@app.route("/lobby/<code>/hint", methods=["POST"])
+def lobby_hint(code):
+    return _with_lobby(code, select_hint)
+
+
 @app.route("/lobby/<code>/guess", methods=["POST"])
 def lobby_guess(code):
     return _with_lobby(code, guess_word)
@@ -1217,12 +1327,14 @@ def lobby_guess(code):
 
 @app.route("/lobby/<code>/reset", methods=["POST"])
 def lobby_reset(code):
+    if code.startswith("p"):
+        return _with_lobby(code, reset_game)
     state = LOBBIES.get(code)
     if not state:
         return jsonify({"status": "error", "msg": "No such lobby"}), 404
     data = request.get_json(silent=True) or {}
     token = data.get("host_token")
-    if token != state.host_token:
+    if not state.host_token or token != state.host_token:
         return jsonify({"status": "error", "msg": "Invalid host token"}), 403
     resp = _with_lobby(code, reset_game)
     return resp
@@ -1235,28 +1347,26 @@ def kick_player():
     token = data.get("host_token")
     if not emoji:
         return jsonify({"status": "error", "msg": "Missing emoji"}), 400
-    if token != current_state.host_token:
+    if not _state().host_token or token != _state().host_token:
         return jsonify({"status": "error", "msg": "Invalid host token"}), 403
-    if emoji not in current_state.leaderboard:
+    if emoji not in _state().leaderboard:
         return jsonify({"status": "error", "msg": "No such player"}), 404
-    ip = current_state.leaderboard[emoji]["ip"]
-    pid = current_state.leaderboard[emoji].get("player_id")
-    current_state.leaderboard.pop(emoji, None)
-    current_state.ip_to_emoji.pop(ip, None)
+    ip = _state().leaderboard[emoji]["ip"]
+    pid = _state().leaderboard[emoji].get("player_id")
+    _state().leaderboard.pop(emoji, None)
+    _state().ip_to_emoji.pop(ip, None)
     if pid:
-        current_state.player_map.pop(pid, None)
-    current_state.daily_double_pending.pop(emoji, None)
-    if current_state.winner_emoji == emoji:
-        current_state.winner_emoji = None
+        _state().player_map.pop(pid, None)
+    _state().daily_double_pending.pop(emoji, None)
+    if _state().winner_emoji == emoji:
+        _state().winner_emoji = None
 
     # Check if lobby is now empty and remove it immediately
-    lobby_code = _lobby_id(current_state)
-    if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
+    lobby_code = _lobby_id(_state())
+    if lobby_code != DEFAULT_LOBBY and not _state().leaderboard:
         # Lobby is empty, remove it immediately
-        LOBBIES.pop(lobby_code, None)
-        # Track the removal time to prevent immediate recreation
-        RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
-        logger.info(f"Removed empty lobby {lobby_code}")
+        remove_lobby(lobby_code)
+        logger.info("Removed empty lobby")
         return jsonify({"status": "ok", "lobby_removed": True})
 
     broadcast_state()
@@ -1267,7 +1377,7 @@ def kick_player():
 
 def leave_lobby():
     """Remove the calling player from the current lobby."""
-    data = request.get_json(silent=True) or {}
+    data = player_data()
     emoji = data.get("emoji")
     player_id = data.get("player_id")
 
@@ -1277,51 +1387,47 @@ def leave_lobby():
         return jsonify({"status": "error", "msg": "Missing player_id"}), 400
 
     # Verify the player exists in the lobby
-    if emoji not in current_state.leaderboard:
+    if emoji not in _state().leaderboard:
         return jsonify({"status": "error", "msg": "Player not in lobby"}), 404
 
     # Verify player_id matches
-    stored_player_id = current_state.leaderboard[emoji].get("player_id")
+    stored_player_id = _state().leaderboard[emoji].get("player_id")
     if stored_player_id != player_id:
         # Check if this might be a player reconnecting after server restart
         ip = get_client_ip()
-        if (current_state.leaderboard[emoji].get("ip") == ip and
+        if (_state().leaderboard[emoji].get("ip") == ip and
             player_id is not None and
             len(player_id) == 32 and  # UUID hex string length
             all(c in '0123456789abcdef' for c in player_id) and  # Valid hex chars
-            stored_player_id and len(stored_player_id) == 32 and 
+            stored_player_id and len(stored_player_id) == 32 and
             all(c in '0123456789abcdef' for c in stored_player_id)):
             # Auto-reconnect the player before allowing them to leave
-            current_state.leaderboard[emoji]["player_id"] = player_id
-            current_state.player_map.pop(stored_player_id, None)
-            current_state.player_map[player_id] = emoji
-            logger.info(
-                "Auto-reconnected player %s for leave request after server restart", emoji
-            )
+            _state().leaderboard[emoji]["player_id"] = player_id
+            _state().player_map.pop(stored_player_id, None)
+            _state().player_map[player_id] = emoji
+            logger.info("Player reconnected")
         else:
             return jsonify({"status": "error", "msg": "Invalid player credentials"}), 403
 
     # Remove the player from the lobby
-    ip = current_state.leaderboard[emoji]["ip"]
-    current_state.leaderboard.pop(emoji, None)
-    current_state.ip_to_emoji.pop(ip, None)
-    current_state.player_map.pop(player_id, None)
-    current_state.daily_double_pending.pop(emoji, None)
-    if current_state.winner_emoji == emoji:
-        current_state.winner_emoji = None
+    ip = _state().leaderboard[emoji]["ip"]
+    _state().leaderboard.pop(emoji, None)
+    _state().ip_to_emoji.pop(ip, None)
+    _state().player_map.pop(player_id, None)
+    _state().daily_double_pending.pop(emoji, None)
+    if _state().winner_emoji == emoji:
+        _state().winner_emoji = None
 
     # Check if lobby is now empty and remove it immediately
-    lobby_code = _lobby_id(current_state)
-    if lobby_code != DEFAULT_LOBBY and not current_state.leaderboard:
+    lobby_code = _lobby_id(_state())
+    if lobby_code != DEFAULT_LOBBY and not _state().leaderboard:
         # Lobby is empty, remove it immediately
-        LOBBIES.pop(lobby_code, None)
-        # Track the removal time to prevent immediate recreation
-        RECENTLY_REMOVED_LOBBIES[lobby_code] = time.time()
-        logger.info(f"Removed empty lobby {lobby_code} after player {emoji} left")
+        remove_lobby(lobby_code)
+        logger.info("Removed empty lobby")
         return jsonify({"status": "ok", "lobby_removed": True})
 
     # Save state and broadcast changes
-    current_state.last_activity = time.time()
+    _state().last_activity = time.time()
     save_data_legacy()
     broadcast_state()
 
@@ -1346,6 +1452,12 @@ def lobby_chat(code):
 # ---- Maintenance ----
 
 
+def operator_authorized():
+    token = os.environ.get("OPERATOR_TOKEN", "")
+    return bool(token) and secrets.compare_digest(
+        request.headers.get("Authorization", ""), "Bearer " + token)
+
+
 @app.route("/internal/purge", methods=["POST"])
 def cleanup_lobbies():
     """Purge idle or finished lobbies.
@@ -1353,6 +1465,8 @@ def cleanup_lobbies():
     This endpoint is intended for the scheduled Lambda job defined in the
     Terraform configuration. It forces immediate purge bypassing rate limiting.
     """
+    if not operator_authorized():
+        return jsonify({"status": "error", "msg": "Unauthorized"}), 403
     force_purge_lobbies()
     return jsonify({"status": "ok"})
 
@@ -1360,32 +1474,34 @@ def cleanup_lobbies():
 @app.route("/admin/notify-update", methods=["POST"])
 def notify_server_update():
     """Notify all connected clients to refresh their page due to server update.
-    
+
     This endpoint can be called by deployment scripts to trigger a graceful
     page refresh for all connected clients when the server is being updated.
-    
+
     Request body (optional JSON):
     {
         "message": "Custom message to display to users",
         "delay_seconds": 10  // How long to wait before refresh (default: 5)
     }
     """
+    if not operator_authorized():
+        return jsonify({"status": "error", "msg": "Unauthorized"}), 403
     data = request.get_json(silent=True) or {}
     message = data.get("message", "Server is being updated. Please save your progress.")
     delay_seconds = data.get("delay_seconds", 5)
-    
+
     # Validate delay_seconds is reasonable (1-60 seconds)
     if not isinstance(delay_seconds, int) or delay_seconds < 1 or delay_seconds > 60:
         return jsonify({"status": "error", "msg": "delay_seconds must be an integer between 1 and 60"}), 400
-    
+
     # Log the update notification
-    logger.info(f"Server update notification triggered: message='{message}', delay={delay_seconds}s")
-    
+    logger.info("Server update notification triggered delay=%ss", delay_seconds)
+
     # Broadcast to all connected clients
     broadcast_server_update_notification(message, delay_seconds)
-    
+
     return jsonify({
-        "status": "ok", 
+        "status": "ok",
         "message": message,
         "delay_seconds": delay_seconds,
         "lobbies_notified": len(LOBBIES)
@@ -1401,27 +1517,27 @@ def health() -> Any:
         from game_logic import WORDS
     missing = []
     warnings = []
-    
+
     # Check critical assets
     if not WORDS:
         missing.append("word_list")
     if not OFFLINE_DEFINITIONS_FILE.exists():
         missing.append("definitions_cache")
-    
+
     # Check production configuration
     if os.environ.get("FLASK_ENV") == "production":
         if not os.environ.get("SECRET_KEY"):
             missing.append("secret_key")
         if app.secret_key == "dev_key_for_local_testing_only":
             missing.append("production_secret_key")
-    
+
     # Check Redis connection if configured
     if REDIS_URL and redis_client:
         try:
             redis_client.ping()
         except Exception as e:
             warnings.append(f"redis_connection_issue: {str(e)}")
-    
+
     # Check file system permissions
     try:
         # Check if we can write to the game file directory
@@ -1431,20 +1547,20 @@ def health() -> Any:
         test_file.unlink()
     except Exception as e:
         warnings.append(f"filesystem_write_issue: {str(e)}")
-    
+
     # Return status
     if missing:
         return jsonify({
-            "status": "unhealthy", 
+            "status": "unhealthy",
             "missing": missing,
             "warnings": warnings,
             "timestamp": time.time()
         }), 503
-    
+
     return jsonify({
         "status": "ok",
         "warnings": warnings,
-        "active_lobbies": len(LOBBIES),
+
         "words_loaded": len(WORDS),
         "redis_enabled": bool(redis_client),
         "timestamp": time.time()
@@ -1477,6 +1593,13 @@ def game_page():
     """Serve the main game client."""
     root = STATIC_DIR if (STATIC_DIR / "game.html").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root), "game.html")
+
+
+@app.route("/age-check", methods=["GET"])
+def age_page():
+    """Serve the neutral age screen for direct game/lobby links."""
+    root = STATIC_DIR if (STATIC_DIR / "age-check.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "age-check.html")
 
 
 @app.route("/lobby/<code>")
@@ -1544,10 +1667,20 @@ def spa_fallback_route(requested_path: str):
     return send_from_directory(str(root), "index.html")
 
 
+# The isolated legacy unit-test stub has no routing registry.
+if hasattr(app, "add_url_rule"):
+    try:
+        from .private_rooms import PrivateRooms
+    except ImportError:
+        from private_rooms import PrivateRooms
+    import sys
+    private_rooms = PrivateRooms(sys.modules[__name__])
+
+
 if __name__ == "__main__":
     load_data_legacy()
-    if not current_state.target_word:
-        pick_new_word(current_state)
+    if not _state().target_word:
+        pick_new_word(_state())
         save_data_legacy()
 
     # Launch a background thread that periodically purges idle lobbies

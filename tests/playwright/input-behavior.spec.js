@@ -10,8 +10,7 @@ function activeGuessTiles(page) {
   return page.locator('#board .tile').evaluateAll((tiles, rowStart) => (
     tiles
       .slice(rowStart, rowStart + 5)
-      // Correct-position hints remain visible as ghost letters in the active
-      // row. They are board guidance, not part of currentGuess.
+      // Greens ahead of the typing position remain ghost guidance.
       .map((tile) => tile.classList.contains('ghost') ? '' : tile.textContent.trim())
       .join('')
   ), ACTIVE_ROW_START);
@@ -27,10 +26,71 @@ async function enterVirtualGuess(page, guess) {
   }
 }
 
+test.describe('green letter autofill', () => {
+  test.use({ viewport: { width: 1200, height: 900 }, hasTouch: false });
+
+  for (const input of ['virtual', 'physical', 'guess field']) {
+    test(`${input} entry fills _ A _ A L, animates greens, and submits the complete word`, async ({ page, deterministicLobby }) => {
+      const state = {
+        ...FIXTURE_STATES.active,
+        guesses: [{ guess: 'canal', result: ['absent', 'correct', 'absent', 'correct', 'correct'], emoji: '🐶', points: 3 }],
+      };
+      await page.route(/\/lobby\/ACT001\/(state|stream)(\?|$)/, async route => {
+        if (new URL(route.request().url()).pathname.endsWith('/stream')) {
+          await route.fulfill({ contentType: 'text/event-stream', body: `data: ${JSON.stringify(state)}\n\n` });
+        } else {
+          await route.fulfill({ json: state });
+        }
+      });
+      await deterministicLobby.openActive();
+      await expect(page.locator('#board .tile').nth(6)).not.toHaveClass(/letter-in/);
+      // Keep the animation observable even on slower browser workers.
+      await page.addStyleTag({ content: '.tile.letter-in { animation-duration: 10s; }' });
+      const field = page.locator('#guessInput');
+      const tiles = page.locator('#board .tile');
+      await expect(field).toHaveValue('');
+
+      const type = async letter => {
+        if (input === 'virtual') await page.locator(`.key[data-key="${letter}"]`).click();
+        else {
+          if (input === 'guess field') await field.focus();
+          else await field.blur();
+          await page.keyboard.type(letter);
+        }
+      };
+      const backspace = async () => {
+        if (input === 'virtual') await page.locator('.key[data-key="Backspace"]').click();
+        else await page.keyboard.press('Backspace');
+      };
+      await type('n');
+      await expect(field).toHaveValue('NA');
+      await expect(tiles.nth(6)).toHaveClass(/correct/);
+      await expect(tiles.nth(6)).toHaveClass(/letter-in/);
+      await expect(tiles.nth(6)).not.toHaveClass(/ghost/);
+      await type('v');
+      await expect(field).toHaveValue('NAVAL');
+      await expect(tiles.nth(8)).toHaveClass(/correct/);
+      await expect(tiles.nth(9)).toHaveClass(/correct/);
+      await backspace();
+      await expect(field).toHaveValue('NA');
+      await expect(tiles.nth(8)).toHaveClass(/ghost/);
+      await backspace();
+      await expect(field).toHaveValue('');
+      await type('n');
+      await type('v');
+
+      const request = page.waitForRequest(request => new URL(request.url()).pathname.endsWith('/guess'));
+      if (input === 'virtual') await page.locator('.key[data-key="Enter"]').click();
+      else await page.keyboard.press('Enter');
+      expect((await request).postDataJSON().guess).toBe('naval');
+    });
+  }
+});
+
 test.describe('Phase 2.7 input behavior', () => {
   test.use({ viewport: { width: 1200, height: 900 }, hasTouch: false });
 
-  test('a virtual key adds exactly one character per activation', async ({
+  test('a virtual key adds one typed character and fills leading greens', async ({
     page,
     deterministicLobby,
   }) => {
@@ -38,8 +98,8 @@ test.describe('Phase 2.7 input behavior', () => {
 
     await page.locator('.key[data-key="q"]').click();
 
-    await expectActiveGuess(page, 'q');
-    await expect(page.locator('#guessInput')).toHaveValue('Q');
+    await expectActiveGuess(page, 'sq');
+    await expect(page.locator('#guessInput')).toHaveValue('SQ');
   });
 
   test('virtual Backspace removes exactly one character', async ({
@@ -51,8 +111,8 @@ test.describe('Phase 2.7 input behavior', () => {
 
     await page.locator('.key[data-key="Backspace"]').click();
 
-    await expectActiveGuess(page, 'q');
-    await expect(page.locator('#guessInput')).toHaveValue('Q');
+    await expectActiveGuess(page, 'sq');
+    await expect(page.locator('#guessInput')).toHaveValue('SQ');
   });
 
   test('virtual Enter submits exactly once', async ({ page, deterministicLobby }) => {
@@ -64,7 +124,7 @@ test.describe('Phase 2.7 input behavior', () => {
     });
 
     await deterministicLobby.openActive();
-    await enterVirtualGuess(page, 'stave');
+    await enterVirtualGuess(page, 'tav');
 
     await page.locator('.key[data-key="Enter"]').click();
 
@@ -82,10 +142,10 @@ test.describe('Phase 2.7 input behavior', () => {
     await page.locator('#guessInput').blur();
     await expect(page.locator('#guessInput')).not.toBeFocused();
 
-    await page.keyboard.type('crate');
+    await page.keyboard.type('tar');
 
-    await expectActiveGuess(page, 'crate');
-    await expect(page.locator('#guessInput')).toHaveValue('CRATE');
+    await expectActiveGuess(page, 'stare');
+    await expect(page.locator('#guessInput')).toHaveValue('STARE');
     await expect(page.locator('#guessInput')).not.toBeFocused();
   });
 
@@ -101,7 +161,7 @@ test.describe('Phase 2.7 input behavior', () => {
     await page.keyboard.type('chat');
 
     await expect(page.locator('#chatInput')).toHaveValue('chat');
-    await expectActiveGuess(page, 'q');
+    await expectActiveGuess(page, 'sq');
   });
 
   test('typing while a modal control has focus never changes the active guess', async ({
@@ -113,16 +173,11 @@ test.describe('Phase 2.7 input behavior', () => {
     await page.locator('#optionsToggle').click();
     await page.locator('#menuInfo').click();
     await expect(page.locator('#infoPopup')).toBeVisible();
-    // The legacy options-menu close animation restores focus after 300 ms.
-    // Focus the modal control after that transition so this assertion tests
-    // input routing rather than the pending menu animation.
-    await page.waitForTimeout(350);
-    await page.locator('#infoClose').focus();
     await expect(page.locator('#infoClose')).toBeFocused();
 
     await page.keyboard.type('word');
 
-    await expectActiveGuess(page, 'q');
+    await expectActiveGuess(page, 'sq');
   });
 });
 
@@ -139,7 +194,7 @@ test.describe('Phase 2.7 touch input behavior', () => {
 
     await page.locator('.key[data-key="q"]').tap();
 
-    await expectActiveGuess(page, 'q');
+    await expectActiveGuess(page, 'sq');
     await expect(guessInput).not.toBeFocused();
     await expect(page.locator('.key[data-key="q"]')).toBeFocused();
   });

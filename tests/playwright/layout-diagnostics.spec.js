@@ -4,7 +4,7 @@ const {
 } = require('./fixtures/deterministic-lobby');
 
 test.describe('test-only layout diagnostics', () => {
-  test('exposes the current profile, capacity, and viewport bounds', async ({ page, deterministicLobby }) => {
+  test('exposes the current profile, capacity, and viewport bounds', async ({ page, deterministicLobby, hasTouch }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await deterministicLobby.openActive();
 
@@ -15,7 +15,7 @@ test.describe('test-only layout diagnostics', () => {
     expect(snapshot.profile).toEqual({
       mode: 'desktop',
       historyPopup: false,
-      panelCapacity: 2,
+      panelCapacity: hasTouch ? 1 : 2,
     });
     expect(snapshot.metrics.layoutViewport).toEqual({ width: 1280, height: 800 });
     expect(snapshot.metrics.visualViewport).toMatchObject({

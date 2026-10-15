@@ -9,7 +9,8 @@ import { sendEmoji } from './api.js';
 import { loadHintState } from './hintState.js';
 import { GAME_NAME } from './config.js';
 import { StateManager, STATES } from './stateManager.js';
-import { initAudio, stopAllSounds, isSoundEnabled } from './audioManager.js';
+import { initAudio, stopAllSounds } from './audioManager.js';
+import { initHaptics } from './haptics.js';
 import {
   alignStampsWithBoardRows,
   setupMobileLeaderboard,
@@ -43,7 +44,6 @@ class AppInitializer {
     this.networkManager = null;
     this.gameStateManager = null;
     this.eventListenersManager = null;
-    this.mobileMenuManager = null;
     this.layoutManager = null;
     this.inputController = null;
     this.unsubscribeViewportUpdates = null;
@@ -57,7 +57,7 @@ class AppInitializer {
     this.dailyDoubleHint = null;
     
     // Configuration
-    this.HOST_TOKEN = localStorage.getItem('hostToken');
+    this.HOST_TOKEN = window.PRIVATE_ROOM ? null : localStorage.getItem('hostToken');
   }
 
   /**
@@ -69,7 +69,6 @@ class AppInitializer {
     this.networkManager = managers.networkManager;
     this.gameStateManager = managers.gameStateManager;
     this.eventListenersManager = managers.eventListenersManager;
-    this.mobileMenuManager = managers.mobileMenuManager;
     
     // Initialize game state
     this.gameState = new StateManager();
@@ -77,7 +76,10 @@ class AppInitializer {
     // Initialize layout manager (new deterministic layout system)
     this.layoutManager = new LayoutManager();
     this._applyGuessFieldPresentation(this.layoutManager.getCurrentLayoutProfile());
-    installLayoutDiagnostics(() => this.layoutManager.getCurrentLayoutState());
+    installLayoutDiagnostics(() => ({
+      ...this.layoutManager.getCurrentLayoutState(),
+      panelCapacity: this.layoutManager.getCurrentLayoutProfile().panelCapacity
+    }));
     console.log('[AppInitializer] Layout manager initialized:', this.layoutManager.getCurrentLayout());
     
     // Extract lobby code from URL
@@ -105,6 +107,7 @@ class AppInitializer {
       
       // 2. Setup audio system
       initAudio();
+      initHaptics();
       
       // 3. Apply user preferences
       this._applyUserPreferences();
@@ -127,11 +130,14 @@ class AppInitializer {
       // 9. Initialize panels and layout
       this._initializePanelsAndLayout();
       
-      // 10. Phase 7: Best-effort portrait lock for phone mode
-      this._lockPortraitOrientation();
-      
       // 11. Initialize network and game state
       await this._initializeNetworkAndGameState();
+
+      // Let the scheduled viewport update size the restored board before its first paint.
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const appContainer = document.getElementById('appContainer');
+      appContainer.removeAttribute('data-starting');
+      appContainer.inert = false;
       
       console.log('✅ App initialization complete');
       return true;
@@ -148,24 +154,15 @@ class AppInitializer {
    */
   _extractLobbyCode() {
     const match = window.location.pathname.match(/\/lobby\/([A-Za-z0-9]{6})/);
-    return match ? match[1] : null;
+    return window.PRIVATE_ROOM?.room || (match ? match[1] : null);
   }
 
   /**
-   * Update game title based on screen size and lobby code
+   * Keep the game title separate from the lobby code in the header
    * @private
    */
   _updateGameTitle() {
-    // Use layoutManager if available, fallback to the phone/tablet contract
-    const isSmallLayout = this.layoutManager ? this.layoutManager.isMobile() : window.innerWidth <= 900;
-    let title = GAME_NAME;
-    
-    // On smaller layouts, include lobby code in the title if available
-    if (isSmallLayout && this.lobbyCode) {
-      title = `${GAME_NAME} - ${this.lobbyCode}`;
-    }
-    
-    this.domManager.setGameTitle(title);
+    this.domManager.setGameTitle(GAME_NAME);
   }
 
   /**
@@ -173,12 +170,12 @@ class AppInitializer {
    * @private
    */
   _initializeBasicUI() {
-    // Set game title based on screen size
+    // Set the game title
     this._updateGameTitle();
     
     // Setup lobby header
     if (this.lobbyCode) {
-      this.domManager.setLobbyCode(this.lobbyCode);
+      this.domManager.setLobbyCode(window.PRIVATE_ROOM ? 'Private room' : this.lobbyCode);
     } else {
       this.domManager.hideLobbyHeader();
     }
@@ -202,14 +199,9 @@ class AppInitializer {
    */
   _applyUserPreferences() {
     const menuDarkMode = this.domManager.get('menuDarkMode');
-    const menuSound = this.domManager.get('menuSound');
     
     if (menuDarkMode) {
       applyDarkModePreference(menuDarkMode);
-    }
-    
-    if (menuSound) {
-      menuSound.textContent = isSoundEnabled() ? '🔊 Sound On' : '🔈 Sound Off';
     }
     
     // Layout is automatically managed by LayoutManager now
@@ -303,14 +295,6 @@ class AppInitializer {
       titleHintBadge: this.domManager.get('titleHintBadge')
     });
 
-    // Initialize mobile menu manager
-    if (this.mobileMenuManager) {
-      this.mobileMenuManager.initialize({
-        domManager: this.domManager,
-        lobbyCode: this.lobbyCode,
-        messageHandlers
-      });
-    }
   }
 
   /**
@@ -324,6 +308,7 @@ class AppInitializer {
     
     if (keyboard && guessInput && submitButton) {
       this.inputController = new InputController({
+        getGreenPositions: () => this.gameStateManager.getGreenPositions(),
         getCurrentGuess: () => this.gameStateManager.getCurrentGuess(),
         setCurrentGuess: (value) => this.gameStateManager.setCurrentGuess(value, { render: false }),
         submitGuess: this._getSubmitGuessHandler(),
@@ -458,9 +443,7 @@ class AppInitializer {
    * @private
    */
   _handleViewportUpdate(viewportSnapshot) {
-    const layoutState = this.layoutManager.getCurrentLayoutState();
-
-    refreshOverlayStateForLayout(layoutState);
+    refreshOverlayStateForLayout();
     this._updateGameTitle();
     repositionResetButton();
     updatePanelVisibility();
@@ -475,29 +458,6 @@ class AppInitializer {
    */
   _applyGuessFieldPresentation(profile) {
     applyGuessFieldPresentation(profile, this.domManager.get('guessInput'));
-  }
-
-  /**
-   * Phase 7: Best-effort portrait orientation lock for phone-sized viewports.
-   * Uses the Screen Orientation API where supported; silently ignores errors
-   * on browsers that do not support locking (e.g., iOS Safari).
-   * @private
-   */
-  _lockPortraitOrientation() {
-    try {
-      if (
-        typeof screen !== 'undefined' &&
-        screen.orientation &&
-        typeof screen.orientation.lock === 'function'
-      ) {
-        screen.orientation.lock('portrait').catch(() => {
-          // Silently ignore – locking is best-effort and may be denied
-          // by the browser (e.g., desktop, or browsers that don't support it).
-        });
-      }
-    } catch (_) {
-      // Ignore any synchronous errors from older browsers
-    }
   }
 
   /**
@@ -523,6 +483,10 @@ class AppInitializer {
     if (this.myEmoji) {
       try {
         const result = await sendEmoji(this.myEmoji, this.myPlayerId, this.lobbyCode);
+        if (result.emoji) {
+          this.myEmoji = result.emoji;
+          setMyEmoji(result.emoji);
+        }
         if (result.player_id) {
           this.myPlayerId = result.player_id;
           setMyPlayerId(result.player_id);

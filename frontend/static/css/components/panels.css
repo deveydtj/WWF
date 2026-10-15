@@ -72,33 +72,6 @@
   animation: wiggle 0.6s;
 }
 
-/* Chat message popup */
-#chatMessagePopup {
-  position: absolute;
-  background: var(--bg-color);
-  border-radius: 12px;
-  padding: 8px 12px;
-  box-shadow: 
-    4px 4px 8px var(--shadow-color-dark),
-    -4px -4px 8px var(--shadow-color-light);
-  z-index: var(--z-chat-popup);
-  pointer-events: none;
-  opacity: 0;
-  white-space: nowrap;
-  max-width: 200px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--text-color);
-}
-
-#chatMessagePopup.show {
-  animation: chatPopupOut 3s ease-out forwards;
-}
-
 #optionsMenu {
   position: absolute;
   background: var(--bg-color);
@@ -114,6 +87,8 @@
 
 /* Ensure close button is properly positioned and visible */
 #optionsMenu .close-btn {
+  width: var(--modal-close-control-size);
+  height: var(--modal-close-control-size);
   z-index: calc(var(--z-options-menu) + 1);
 }
 
@@ -148,63 +123,25 @@
   background-color: var(--shadow-color-light);
 }
 
-.close-btn {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--bg-color);
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: var(--text-color-light);
-  box-shadow: 2px 2px 4px var(--shadow-color-dark),
-              -2px -2px 4px var(--shadow-color-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  z-index: 1000;
-  transition: color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.close-btn:hover {
-  color: var(--text-color);
-}
-
-.close-btn:active {
-  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
-              inset -2px -2px 4px var(--inset-shadow-light);
-}
-
-/* Enhanced visibility for close buttons in dark mode */
-body.dark-mode .close-btn {
-  color: #e1e1e1;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(44, 48, 58, 0.95);
-  box-shadow: 2px 2px 6px var(--shadow-color-dark),
-              -2px -2px 6px var(--shadow-color-light),
-              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-}
-
-body.dark-mode .close-btn:hover {
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(44, 48, 58, 1);
-  box-shadow: 2px 2px 8px var(--shadow-color-dark),
-              -2px -2px 8px var(--shadow-color-light),
-              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-}
-
-body.dark-mode .close-btn:active {
-  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
-              inset -2px -2px 4px var(--inset-shadow-light),
-              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-}
-
 /* Panel content styling - positioning handled by CSS Grid and media queries */
+
+.panel-empty-state {
+  display: none;
+  margin: 0;
+  padding-block: 16px;
+  color: var(--text-color-light);
+  line-height: 1.5;
+}
+
+#historyList:empty + .panel-empty-state,
+#definitionText:empty + .panel-empty-state,
+#chatMessages:empty + .panel-empty-state {
+  display: block;
+}
+
+#definitionText:empty + .panel-empty-state {
+  padding-inline-end: var(--modal-close-control-reserve);
+}
 
 /* History Panel - content styles only */
 #historyBox {
@@ -225,14 +162,14 @@ body.dark-mode .close-btn:active {
 }
 
 .history-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(2.5em, 1fr) max-content minmax(3.5em, 1fr);
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 4px;
 }
 
 .history-emoji {
-  margin-right: 6px;
+  justify-self: start;
 }
 
 .history-guess {
@@ -242,8 +179,9 @@ body.dark-mode .close-btn:active {
 }
 
 .history-points {
-  margin-left: 6px;
   font-weight: bold;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .history-item .history-guess-tiles {
@@ -252,6 +190,7 @@ body.dark-mode .close-btn:active {
 }
 
 .history-item .history-guess-tiles .tile {
+  box-sizing: border-box;
   width: 24px;
   height: 24px;
   font-size: 14px;
@@ -510,11 +449,7 @@ body.players-open #playerSidebar {
 }
 
 /* Initial layout states */
-#emojiModal,
-#closeCallPopup,
-#infoPopup,
-#optionsMenu,
-#shareModal {
+#optionsMenu {
   display: none;
 }
 

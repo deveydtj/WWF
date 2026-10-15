@@ -24,12 +24,6 @@
   100% { opacity: 0; transform: translateY(-10px); }
 }
 
-/* Overlay fade-out animation */
-@keyframes fadeOutOverlay {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
 /* Tile reset animations */
 @keyframes tileResetOut {
   to {

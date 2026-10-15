@@ -1,0 +1,84 @@
+.age-check-page {
+  margin: 0;
+  padding: 24px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+#ageCheckDialog {
+  box-sizing: border-box;
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  border: 1px solid var(--popup-border);
+  border-radius: 22px;
+  background: var(--popup-surface);
+  color: var(--text-color);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  overflow-y: auto;
+  box-shadow: 0 18px 48px var(--popup-shadow-color);
+}
+
+#ageCheckDialog::backdrop {
+  background: var(--popup-backdrop);
+}
+
+#ageCheckDialog h2 {
+  margin: 0 0 12px;
+}
+
+#ageCheckDialog label {
+  display: block;
+  font-weight: 600;
+}
+
+#ageCheckDialog input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: inherit;
+  font-size: 16px;
+}
+
+#ageCheckDialog button {
+  min-height: 44px;
+  margin: 8px 8px 0 0;
+  padding: 8px 16px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: var(--popup-accent);
+  color: var(--popup-on-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+#ageCheckDialog button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+#ageCheckClose {
+  background: var(--popup-surface) !important;
+  color: var(--text-color) !important;
+}
+
+#ageCheckError {
+  color: var(--error-color);
+}
+
+#ageCheckDialog [hidden] {
+  display: none;
+}
+
+#ageCheckDialog :focus-visible {
+  outline: 3px solid var(--popup-accent);
+  outline-offset: 3px;
+}

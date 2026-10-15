@@ -5,19 +5,18 @@
 
 import { closeDialog, openDialog, showMessage, focusFirstElement, shakeInput, announce } from './utils.js';
 import { togglePanel, setManualPanelToggle, toggleHistory, toggleDefinition, updatePanelVisibility } from './panelManager.js';
-import { positionContextMenu } from './popupPositioning.js';
 import { hideChatNotify } from './uiNotifications.js';
 import { closeOptionsMenu, showInfo, toggleDarkMode } from './optionsManager.js';
 import { toggleSound } from './audioManager.js';
 import { toggleHintSelection } from './hintManager.js';
 import { sendChatMessage } from './api.js';
+import { hapticFeedback } from './haptics.js';
 import { LAYOUT_MODES } from './layoutModes.js';
 import { getCurrentLayoutState } from './layoutManager.js';
 import {
   OVERLAYS,
   closeOverlay,
   isOverlayOpen,
-  openOverlay,
   toggleOverlay
 } from './overlayState.js';
 
@@ -78,14 +77,8 @@ class EventListenersManager {
     const definitionBox = this.domManager.get('definitionBox');
     const chatBox = this.domManager.get('chatBox');
 
-    // Debounce flag to prevent rapid clicking issues during animations
-    let isAnimating = false;
-
     if (historyClose) {
       historyClose.addEventListener('click', () => {
-        if (isAnimating) return;
-        isAnimating = true;
-        
         setManualPanelToggle('history', false);
         closeOverlay(OVERLAYS.HISTORY);
         // Delay position update until after close animation completes
@@ -98,16 +91,12 @@ class EventListenersManager {
             mainElement.focus();
           }
           
-          isAnimating = false;
         }, animationDelay);
       });
     }
 
     if (definitionClose) {
       definitionClose.addEventListener('click', () => {
-        if (isAnimating) return;
-        isAnimating = true;
-        
         setManualPanelToggle('definition', false);
         closeOverlay(OVERLAYS.DEFINITION);
         // Delay position updates until after close animation completes
@@ -120,16 +109,12 @@ class EventListenersManager {
             mainElement.focus();
           }
           
-          isAnimating = false;
         }, animationDelay);
       });
     }
 
     if (chatClose) {
       chatClose.addEventListener('click', () => {
-        if (isAnimating) return;
-        isAnimating = true;
-        
         this._cleanupChatState();
         setManualPanelToggle('chat', false);
         closeOverlay(OVERLAYS.CHAT);
@@ -142,7 +127,6 @@ class EventListenersManager {
           if (chatNotify) {
             chatNotify.style.display = 'block';
           }
-          isAnimating = false;
         }, animationDelay);
       });
     }
@@ -195,7 +179,9 @@ class EventListenersManager {
     if (!panelBackdrop) return;
 
     panelBackdrop.addEventListener('click', () => {
-      if (isOverlayOpen(OVERLAYS.HISTORY)) {
+      if (isOverlayOpen(OVERLAYS.OPTIONS)) {
+        closeDialog(document.getElementById('optionsMenu'));
+      } else if (isOverlayOpen(OVERLAYS.HISTORY)) {
         setManualPanelToggle(OVERLAYS.HISTORY, false);
         closeOverlay(OVERLAYS.HISTORY);
       } else if (isOverlayOpen(OVERLAYS.DEFINITION)) {
@@ -237,22 +223,7 @@ class EventListenersManager {
           return;
         }
         
-        const currentMode = getCurrentLayoutState().mode;
-        if (currentMode === LAYOUT_MODES.TABLET) {
-          // In tablet mode, center the options menu on screen
-          optionsMenu.style.display = 'flex';
-          optionsMenu.style.position = 'fixed';
-          optionsMenu.style.top = '50%';
-          optionsMenu.style.left = '50%';
-          optionsMenu.style.transform = 'translate(-50%, -50%)';
-          optionsMenu.style.zIndex = '80';
-        } else {
-          optionsMenu.style.display = 'block';
-          positionContextMenu(optionsMenu, optionsToggle);
-        }
-        
-        openOverlay(OVERLAYS.OPTIONS);
-        openDialog(optionsMenu);
+        openDialog(optionsMenu, optionsToggle);
       });
     }
 
@@ -262,20 +233,21 @@ class EventListenersManager {
 
     if (menuHistory) {
       menuHistory.addEventListener('click', () => { 
-        toggleHistory(); 
-        closeOptionsMenu(); 
+        closeOptionsMenu();
+        toggleHistory();
       });
     }
 
     if (menuDefinition) {
       menuDefinition.addEventListener('click', () => { 
-        toggleDefinition(); 
-        closeOptionsMenu(); 
+        closeOptionsMenu();
+        toggleDefinition();
       });
     }
 
     if (menuChat) {
       menuChat.addEventListener('click', () => {
+        closeOptionsMenu();
         setManualPanelToggle('chat', !isOverlayOpen(OVERLAYS.CHAT));
         const willBeOpen = !isOverlayOpen(OVERLAYS.CHAT);
         togglePanel('chat-open');
@@ -300,15 +272,14 @@ class EventListenersManager {
         if (mode === LAYOUT_MODES.TABLET && !historyPopup) {
           updatePanelVisibility();
         }
-        
-        closeOptionsMenu();
+
       });
     }
 
     if (menuInfo) {
       menuInfo.addEventListener('click', () => { 
-        showInfo(); 
-        closeOptionsMenu(); 
+        closeOptionsMenu();
+        showInfo();
       });
     }
 
@@ -349,18 +320,29 @@ class EventListenersManager {
     }
 
     if (shareCopy && shareLink) {
-      shareCopy.addEventListener('click', () => {
+      shareCopy.addEventListener('click', async () => {
         if (!shareLink.value) {
           showMessage('No link to copy!', this.messageHandlers);
           return;
         }
-        navigator.clipboard.writeText(shareLink.value).then(() => {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareLink.value);
+          } else {
+            shareLink.focus();
+            shareLink.select();
+            shareLink.setSelectionRange(0, shareLink.value.length);
+            if (!document.execCommand('copy')) throw new Error('Copy unavailable');
+          }
           showMessage('Link copied!', this.messageHandlers);
+          hapticFeedback(18);
           announce('Lobby link copied');
-        }).catch((err) => {
+        } catch (err) {
           console.error('Failed to copy:', err);
+          shareLink.focus();
+          shareLink.select();
           showMessage('Failed to copy link. Try selecting and copying manually.', this.messageHandlers);
-        });
+        }
       });
     }
 
@@ -540,11 +522,10 @@ class EventListenersManager {
    */
   _setupLobbyEventListeners() {
     const copyLobbyLink = this.domManager.get('copyLobbyLink');
-    const leaveLobby = this.domManager.get('leaveLobby');
     const shareModal = this.domManager.get('shareModal');
     const shareLink = this.domManager.get('shareLink');
     
-    if (copyLobbyLink && this.lobbyCode) {
+    if (copyLobbyLink && this.lobbyCode && !window.PRIVATE_ROOM) {
       copyLobbyLink.addEventListener('click', () => {
         const url = window.location.href;
         
@@ -556,7 +537,7 @@ class EventListenersManager {
           }).catch(() => {
             if (shareLink) {
               shareLink.value = url;
-              openDialog(shareModal);
+              openDialog(shareModal, copyLobbyLink);
               shareLink.focus();
               shareLink.select();
             }
@@ -564,21 +545,11 @@ class EventListenersManager {
         } else {
           if (shareLink) {
             shareLink.value = url;
-            openDialog(shareModal);
+            openDialog(shareModal, copyLobbyLink);
             shareLink.focus();
             shareLink.select();
           }
         }
-      });
-    }
-
-    if (leaveLobby && this.lobbyCode) {
-      leaveLobby.addEventListener('click', async () => {
-        // Lobby leaving logic would be handled here
-        // Immediately update URL to prevent refresh back into lobby
-        window.history.replaceState(null, '', '/');
-        // For now, just redirect
-        window.location.href = '/';
       });
     }
   }

@@ -42,9 +42,7 @@ function computedPixels(element, property) {
  * Calculate optimal sizing for tiles, keyboard, and UI elements
  * Based on available viewport space
  * 
- * Note: This function expects the DOM to be fully loaded. If called during
- * initialization before elements are rendered, it will use fallback values
- * for header height (60px) which may result in less accurate initial sizing.
+ * The rendered center region supplies the budget after header and shell space.
  */
 function tuneSizing(viewportSnapshot = null) {
   const root = document.documentElement;
@@ -79,116 +77,65 @@ function tuneSizing(viewportSnapshot = null) {
     ? measuredGameplayHeight
     : layoutHeight;
 
-  // Vertical padding approximation from CSS variables (fallback if not computed)
-  const styles = getComputedStyle(root);
-  const padY = parseFloat(styles.getPropertyValue("--pad-y")) || 14;
-
-  // Calculate responsive gaps
-  const gap = clamp(Math.round(Math.min(vw, vh) * 0.012), 6, 12);
-  const kbGap = clamp(Math.round(Math.min(vw, vh) * 0.010), 6, 10);
-  root.style.setProperty("--gap", gap + "px");
-  root.style.setProperty("--tile-gap", gap + "px");
-  root.style.setProperty("--keyboard-row-gap", kbGap + "px");
-  root.style.setProperty("--keyboard-inline-gap", kbGap + "px");
-
-  // Width-driven tile size (guaranteed to fit 5 tiles + 4 gaps)
-  const usableW = gameplayWidth - 2; // small safety margin
-  const tileByWidth = Math.floor((usableW - 4 * gap) / 5);
-
-  // Height-driven tile size: ensure board + keyboard + header fits in viewport
-  // Note: Keyboard uses flex layout with 3 rows. This calculation assumes a standard
-  // 3-row QWERTY layout. If keyboard layout changes, this may need adjustment.
-  const headerH = measuredBlockSize(titleBar) || 60;
-  const statusH = measuredBlockSize(message);
-  const stableStatusH = Math.max(computedPixels(message, 'minHeight'), 20);
-  const actionRowH = measuredBlockSize(inputArea);
+  // The shell has already removed the lobby header, gutters, and safe areas.
+  // Read all remaining reservations before committing sizing tokens.
+  const columnWidth = gameColumn?.getBoundingClientRect?.().width || gameplayWidth;
+  const gap = clamp(Math.min(vw, vh) * 0.012, 6, 12);
+  const kbGap = clamp(Math.min(vw, vh) * 0.010, 4, 8);
   const gameColumnGap = computedPixels(gameColumn, 'rowGap')
-    || computedPixels(gameColumn, 'gap')
-    || parseFloat(styles.getPropertyValue('--component-gap'))
-    || gap;
-  const keyboardPadding = computedPixels(keyboard, 'paddingTop')
-    + computedPixels(keyboard, 'paddingBottom');
+    || computedPixels(gameColumn, 'gap') || 6;
+  const controlGutter = computedPixels(gameColumn, '--board-control-gutter') || 52;
+  const keyboardShown = document.body?.dataset?.showOnscreenKeyboard !== 'false';
+  const touchFirst = document.body?.dataset?.interaction !== 'keyboard-first';
+  const keyH = clamp(visualHeight * 0.06, touchFirst ? 44 : 34, 56);
+  const keyboardH = keyboardShown ? 3 * keyH + 2 * kbGap : 0;
+  const verticalBudget = calculateVerticalBudget({
+    layoutViewportBlockSize: layoutHeight,
+    visualViewportBlockSize: visualHeight,
+    gameplayBlockSize: gameplayHeight,
+    headerBlockSize: measuredBlockSize(titleBar),
+    statusBlockSize: measuredBlockSize(message),
+    statusMinimumBlockSize: 20,
+    actionRowBlockSize: measuredBlockSize(inputArea),
+    keyboardBlockSize: keyboardH,
+    verticalGap: gameColumnGap,
+    chatOpen: Boolean(document.body?.classList?.contains('chat-open')),
+    nativeKeyboardLikelyOpen: viewportSnapshot?.nativeKeyboardLikelyOpen
+  }, { verticalGapCount: keyboardShown ? 4 : 3 });
+  // Short windows scroll the vertical stack rather than shrinking tiles away.
+  const tile = Math.max(30, Math.min(
+    (columnWidth - 2 * controlGutter - 4 * gap) / 5,
+    (verticalBudget.availableBoardBlockSize - 5 * gap) / 6,
+    66
+  ));
+  const boardWidth = tile * 5 + gap * 4;
   const safeArea = viewportSnapshot?.safeArea || {};
   const safeAreaTop = Number.isFinite(safeArea.top) ? safeArea.top : 0;
   const safeAreaBottom = Number.isFinite(safeArea.bottom) ? safeArea.bottom : 0;
-  const chatOpen = Boolean(document.body?.classList?.contains('chat-open'));
 
-  // Start with width-constrained tile size
-  let tile = clamp(tileByWidth, 34, 66);
-
-  /**
-   * Check if a given tile size fits in the viewport
-   */
-  function fits(t) {
-    const keyH = clamp(Math.round(t * 0.80), 34, 56);
-    const boardH = 6 * t + 5 * gap;
-    const kbH = 3 * keyH + 2 * kbGap + keyboardPadding;
-    const verticalBudget = calculateVerticalBudget({
-      layoutViewportBlockSize: layoutHeight,
-      visualViewportBlockSize: visualHeight,
-      gameplayBlockSize: gameplayHeight,
-      headerBlockSize: headerH,
-      statusBlockSize: statusH,
-      statusMinimumBlockSize: stableStatusH,
-      actionRowBlockSize: actionRowH,
-      keyboardBlockSize: kbH,
-      verticalGap: gameColumnGap,
-      safeAreaTop,
-      safeAreaBottom,
-      additionalReservedBlockSize: padY * 2,
-      chatOpen,
-      nativeKeyboardLikelyOpen: viewportSnapshot?.nativeKeyboardLikelyOpen
-    });
-    const total = verticalBudget.reservedBlockSize + boardH;
-    return {
-      ok: boardH <= verticalBudget.availableBoardBlockSize,
-      keyH,
-      total,
-      verticalBudget
-    };
-  }
-
-  // Reduce tile until it fits (important for small phones)
-  // Maximum 40 iterations allows reduction from max tile (66px) to min tile (26px)
-  // at 1px per iteration, which covers all reasonable viewport sizes
-  for (let i = 0; i < 40; i++) {
-    const r = fits(tile);
-    if (r.ok) break;
-    tile -= 1;
-    if (tile < 30) break;
-  }
-
-  const r = fits(tile);
-  root.style.setProperty("--tile-size", tile + "px");
-  root.style.setProperty("--keyboard-key-height", r.keyH + "px");
-  root.style.setProperty(
-    "--available-board-block-size",
-    r.verticalBudget.availableBoardBlockSize + "px"
-  );
-
-  // Calculate board width
-  const boardWidth = tile * 5 + gap * 4;
-  root.style.setProperty("--board-width", boardWidth + "px");
-
-  // Scale typography with tile/key sizes
-  const tileFont = clamp(Math.round(tile * 0.52), 16, 34);
-  const keyFont = clamp(Math.round(r.keyH * 0.38), 11, 18);
-  const uiFont = clamp(Math.round(Math.min(vw, vh) * 0.020), 12, 16);
-  root.style.setProperty("--tile-font", tileFont + "px");
-  root.style.setProperty("--key-font", keyFont + "px");
-  root.style.setProperty("--ui-font", uiFont + "px");
-
-  // Radius scales mildly
-  const radius = clamp(Math.round(Math.min(tile, r.keyH) * 0.16), 8, 12);
-  root.style.setProperty("--radius", radius + "px");
-
-  // Set scale factor for UI elements
-  // Baseline of 60px represents the standard tile size for desktop viewports
-  const BASELINE_TILE_SIZE = 60;
-  const scaleFactor = tile / BASELINE_TILE_SIZE;
-  root.style.setProperty("--ui-scale", scaleFactor);
-  root.style.setProperty("--current-scale-factor", scaleFactor);
-  root.style.setProperty("--current-tile-size", tile + "px");
+  // Fractional sizes track continuous resizes without one-pixel tile steps.
+  const tokens = {
+    "--gap": gap + "px",
+    "--tile-gap": gap + "px",
+    "--keyboard-row-gap": kbGap + "px",
+    "--keyboard-inline-gap": kbGap + "px",
+    "--tile-size": tile + "px",
+    "--keyboard-key-height": keyH + "px",
+    "--available-board-block-size": verticalBudget.availableBoardBlockSize + "px",
+    "--board-width": boardWidth + "px",
+    "--tile-font": clamp(tile * 0.52, 12, 34) + "px",
+    "--key-font": clamp(keyH * 0.38, 11, 18) + "px",
+    "--ui-font": clamp(Math.min(vw, vh) * 0.020, 12, 16) + "px",
+    "--radius": clamp(Math.min(tile, keyH) * 0.16, 6, 12) + "px",
+    "--ui-scale": tile / 60,
+    "--current-scale-factor": tile / 60,
+    "--current-tile-size": tile + "px"
+  };
+  Object.entries(tokens).forEach(([property, value]) => {
+    if (root.style.getPropertyValue?.(property) !== String(value)) {
+      root.style.setProperty(property, value);
+    }
+  });
 
   // Modal metrics share the pure engine with the board. In particular, they
   // use the visual viewport (including its pan offset) so native keyboards and
@@ -232,16 +179,16 @@ function tuneSizing(viewportSnapshot = null) {
         inlineSize: keyboardRect.width,
         blockSize: keyboardRect.height,
         availableInlineSize: gameplayWidth,
-        availableBlockSize: r.verticalBudget.reservations.keyboardBlockSize
+        availableBlockSize: keyboardH
       },
       tokens: {
         '--tile-size': tile,
         '--tile-gap': gap,
         '--board-width': boardWidth,
-        '--keyboard-key-height': r.keyH,
+        '--keyboard-key-height': keyH,
         '--keyboard-row-gap': kbGap,
         '--keyboard-inline-gap': kbGap,
-        '--available-board-block-size': r.verticalBudget.availableBoardBlockSize
+        '--available-board-block-size': verticalBudget.availableBoardBlockSize
       }
     }, { enabled: true });
   }

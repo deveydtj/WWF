@@ -8,6 +8,7 @@ import { animateTilesOut, animateTilesIn } from './board.js';
 import { resetGame } from './api.js';
 import { showMessage } from './utils.js';
 import { STATES } from './stateManager.js';
+import { hapticFeedback } from './haptics.js';
 
 // DOM elements for reset functionality
 const holdReset = document.getElementById('holdReset');
@@ -47,6 +48,7 @@ function initResetManager(dependencies) {
 }
 
 async function performReset() {
+  hapticFeedback(25);
   stopAllSounds();
   await animateTilesOut(board);
   const resp = await resetGame(LOBBY_CODE, HOST_TOKEN);
@@ -67,8 +69,12 @@ async function quickResetHandler() {
 }
 
 function updateResetButton() {
+  if (window.PRIVATE_ROOM && !window.PRIVATE_ROOM.host) {
+    holdReset.hidden = true;
+    return;
+  }
   if (gameState.is(STATES.GAME_OVER)) {
-    holdResetText.textContent = 'Reset';
+    holdResetText.textContent = 'New Game';
     holdResetProgress.style.width = '0%';
     holdResetProgress.style.opacity = '0';
     holdReset.onmousedown = null;

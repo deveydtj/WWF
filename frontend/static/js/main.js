@@ -5,6 +5,7 @@ import { sendEmoji, sendGuess, leaveLobbyRequest } from './api.js';
 import { showMessage, shakeInput, closeDialog, openDialog, announce } from './utils.js';
 import { loadHintState, saveHintState } from './hintState.js';
 import { STATES } from './stateManager.js';
+import { hapticFeedback } from './haptics.js';
 
 // Import UI notification functions
 import { showPointsDelta, showHintTooltip, hideHintTooltip, burstConfetti } from './uiNotifications.js';
@@ -16,26 +17,14 @@ import domManager from './domManager.js';
 import networkManager from './networkManager.js';
 import gameStateManager from './gameStateManager.js';
 import eventListenersManager from './eventListenersManager.js';
-import mobileMenuManager from './mobileMenuManager.js';
 import appInitializer from './appInitializer.js';
-import { toggleDefinition } from './panelManager.js';
-import { positionContextMenu } from './popupPositioning.js';
 
 // Global state variables
 let skipAutoClose = false;
 let myEmoji = getMyEmoji();
 let myPlayerId = getMyPlayerId();
-let waitingOverlayDismissed = false;
 const controlsHelpText = 'Use arrow keys to choose a tile';
 const supportsWebShare = typeof navigator !== 'undefined' && !!navigator.share;
-
-if (typeof document !== 'undefined' && document.addEventListener) {
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      dismissWaitingOverlay();
-    }
-  });
-}
 
 // Function to update global myPlayerId (called by appInitializer during auto-reconnection)
 export function updateGlobalPlayerId(newPlayerId) {
@@ -45,7 +34,7 @@ export function updateGlobalPlayerId(newPlayerId) {
 // Get lobby code from URL
 const LOBBY_CODE = (() => {
   const m = window.location.pathname.match(/\/lobby\/([A-Za-z0-9]{6})/);
-  return m ? m[1] : null;
+  return window.PRIVATE_ROOM?.room || (m ? m[1] : null);
 })();
 window.LOBBY_CODE = LOBBY_CODE;
 
@@ -61,18 +50,13 @@ async function initializeApp() {
     domManager,
     networkManager,
     gameStateManager,
-    eventListenersManager,
-    mobileMenuManager
+    eventListenersManager
   });
 
   if (!success) {
     console.error('Failed to initialize application');
     return;
   }
-
-  setupDefinitionToggle();
-  setupOptionsMenuPositioning();
-  setupWaitingOverlay();
 
   console.log('🚀 Application initialized successfully');
 }
@@ -91,6 +75,7 @@ async function submitGuessHandler() {
   const guess = gameStateManager.getCurrentGuess().trim().toLowerCase();
   
   if (guess.length !== 5) {
+    hapticFeedback([20, 40, 20]);
     if (shakeTarget) shakeInput(shakeTarget);
     showMessage('Please enter a 5-letter word.', {
       messageEl: domManager.get('messageEl'),
@@ -108,10 +93,13 @@ async function submitGuessHandler() {
       messagePopup: domManager.get('messagePopup')
     })
   )) {
+    hapticFeedback([20, 40, 20]);
     if (shakeTarget) shakeInput(shakeTarget);
     return;
   }
   
+  hapticFeedback(18);
+
   if (!myPlayerId) {
     try {
       // Record the emoji registration attempt for grace period protection
@@ -185,6 +173,7 @@ async function submitGuessHandler() {
     if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
     
     if (resp.won) {
+      hapticFeedback([20, 50, 30, 50, 40]);
       showMessage('You got it! The word was ' + resp.state.target_word.toUpperCase(), {
         messageEl: domManager.get('messageEl'),
         messagePopup: domManager.get('messagePopup')
@@ -199,6 +188,7 @@ async function submitGuessHandler() {
       });
     }
   } else {
+    hapticFeedback([20, 40, 20]);
     if (resp.close_call) {
       const closeCallText = domManager.get('closeCallText');
       const closeCallPopup = domManager.get('closeCallPopup');
@@ -268,55 +258,10 @@ function updateDefinitionPanel(state) {
   }
 }
 
-function dismissWaitingOverlay() {
-  if (waitingOverlayDismissed) return;
-  const waitingOverlay = domManager.get('waitingOverlay');
-  if (waitingOverlay) {
-    waitingOverlayDismissed = true;
-    waitingOverlay.classList.add('fade-out');
-    setTimeout(() => {
-      waitingOverlay.style.display = 'none';
-    }, 350);
-  }
-}
-
-function setupWaitingOverlay() {
-  const waitingOverlay = domManager.get('waitingOverlay');
-  const waitingDismiss = domManager.get('waitingDismiss');
-  if (waitingOverlay) {
-    waitingOverlay.classList.add('active');
-  }
-  if (waitingDismiss && waitingOverlay) {
-    waitingDismiss.addEventListener('click', dismissWaitingOverlay);
-  }
-  // Auto-hide after a reasonable delay in case initialization stalls
-  setTimeout(dismissWaitingOverlay, 4000);
-}
-
-function setupDefinitionToggle() {
-  const definitionClose = domManager.get('definitionClose');
-  if (definitionClose) {
-    definitionClose.addEventListener('click', () => {
-      toggleDefinition();
-    });
-  }
-}
-
-function setupOptionsMenuPositioning() {
-  const optionsToggle = domManager.get('optionsToggle');
-  const optionsMenu = domManager.get('optionsMenu');
-  if (optionsToggle && optionsMenu) {
-    optionsToggle.addEventListener('click', () => {
-      positionContextMenu(optionsMenu, optionsToggle);
-    });
-  }
-}
-
 // Enhanced applyState wrapper that includes emoji modal handling
 function applyStateWithEmojiModal(state) {
   gameStateManager.applyState(state);
   updateDefinitionPanel(state);
-  dismissWaitingOverlay();
   handleEmojiModal(state.active_emojis || []);
 }
 
@@ -377,10 +322,14 @@ function setupLobbyLeaving() {
   const leaveLobby = domManager.get('leaveLobby');
   if (leaveLobby && LOBBY_CODE) {
     leaveLobby.addEventListener('click', async () => {
+      if (leaveLobby.disabled) return;
+      leaveLobby.disabled = true;
+      // Registration may have assigned an ID or emoji after this module loaded.
+      myEmoji = getMyEmoji();
+      myPlayerId = getMyPlayerId();
       // Immediately update URL to prevent refresh back into lobby before any async operations
       if (window.parent !== window) {
-        // Clear the hash in the parent window to ensure proper navigation
-        window.parent.location.hash = '';
+        // Clear the hash without showing the landing list before the request finishes.
         window.parent.history.replaceState(null, '', '/');
       } else {
         // Immediately update URL to prevent refresh back into lobby
@@ -388,17 +337,23 @@ function setupLobbyLeaving() {
       }
       
       // Only call the API if we have player info and are in a lobby
-      if (myEmoji && myPlayerId) {
+      if (window.PRIVATE_ROOM || (myEmoji && myPlayerId)) {
         try {
           await leaveLobbyRequest(LOBBY_CODE, myEmoji, myPlayerId);
         } catch (err) {
           console.error('Failed to leave lobby:', err);
-          // Still redirect even if the API call fails
+          leaveLobby.disabled = false;
+          showMessage('Could not leave the lobby. Please try again.', {
+            messageEl: domManager.get('messageEl'),
+            messagePopup: domManager.get('messagePopup')
+          });
+          return;
         }
       }
       
       // Clear stored lobby info when user explicitly leaves
       localStorage.removeItem('lastLobby');
+      if (window.PRIVATE_ROOM) sessionStorage.removeItem('privateRoom');
       
       // Cleanup and redirect
       networkManager.cleanup();

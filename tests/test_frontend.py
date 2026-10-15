@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 import subprocess
 import json
+import pytest
 
 LANDING = Path('frontend/index.html')
 GAME = Path('frontend/game.html')
@@ -20,7 +21,6 @@ _CSS_FILES = [
     CSS_DIR / 'components' / 'buttons.css',
     CSS_DIR / 'components' / 'leaderboard.css',
     CSS_DIR / 'components' / 'modals.css',
-    CSS_DIR / 'components' / 'mobile-menu.css',
     CSS_DIR / 'responsive-layout.css',
     CSS_DIR / 'mobile-layout.css',
     CSS_DIR / 'desktop-layout.css',
@@ -52,7 +52,7 @@ def test_landing_page_assets():
 
 def test_landing_page_elements_exist():
     text = LANDING.read_text(encoding='utf-8')
-    for el_id in ['createBtn', 'joinForm', 'quickBtn', 'rejoinChip', 'emojiDisplay']:
+    for el_id in ['createBtn', 'joinForm', 'rejoinChip', 'emojiDisplay']:
         assert f'id="{el_id}"' in text
 
 def test_set_dark_mode_stores_preference():
@@ -123,11 +123,12 @@ def test_index_html_uses_module_script():
     assert '<link rel="stylesheet" href="static/css/responsive-layout.css">' in text
     assert '<link rel="stylesheet" href="static/css/mobile-layout.css"' not in text
     assert '<link rel="stylesheet" href="static/css/desktop-layout.css"' not in text
-    scripts = re.findall(r'<script[^>]*>.*?</script>', text, flags=re.DOTALL)
-    assert len(scripts) == 1, "index.html should contain exactly one script tag"
+    # The saved-theme initializer runs before paint; gameplay has one module entry.
+    scripts = re.findall(r'<script[^>]*type="module"[^>]*>.*?</script>', text, flags=re.DOTALL)
+    assert len(scripts) == 1, "game.html should contain exactly one module entry"
     script = scripts[0]
     assert 'type="module"' in script
-    assert 'src="static/js/main.js"' in script
+    assert 'src="static/js/gameBootstrap.js"' in script
     # ensure no inline script content
     inside = re.sub(r'<script[^>]*>|</script>', '', script, flags=re.DOTALL).strip()
     assert inside == ''
@@ -137,8 +138,8 @@ def test_responsive_layout_is_the_authoritative_all_viewport_entry_point():
     css = (CSS_DIR / 'responsive-layout.css').read_text(encoding='utf-8')
     assert '@import url("./mobile-layout.css");' in css
     assert '@import url("./desktop-layout.css");' in css
-    assert 'body[data-density="compact"]' in css
-    assert 'body[data-interaction="touch-first"]' in css
+    assert 'body[data-density]' in css
+    assert '--shell-inline-gutter: clamp(' in css
     assert 'body[data-show-onscreen-keyboard="false"] #keyboard' in css
     assert '@container app (inline-size <= 600px)' in css
 
@@ -198,12 +199,14 @@ def test_definition_panel_css_rules():
 
 def test_toggle_definition_function():
     main_text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
+    events_text = (SRC_DIR / 'eventListenersManager.js').read_text(encoding='utf-8')
     panel_text = (SRC_DIR / 'panelManager.js').read_text(encoding='utf-8')
-    # toggleDefinition function is now in panelManager.js but imported and used in main.js
-    assert 'toggleDefinition' in main_text  # Check it's imported and used
+    # Panel interactions belong to the event manager; main must not bind a second close handler.
+    assert 'toggleDefinition' in events_text
     assert 'function toggleDefinition()' in panel_text  # Check it's defined in panelManager
     assert "togglePanel('definition-open')" in panel_text
-    assert 'definitionClose.addEventListener' in main_text
+    assert 'definitionClose.addEventListener' in events_text
+    assert 'definitionClose.addEventListener' not in main_text
 
 
 def test_apply_state_updates_definition_text():
@@ -226,20 +229,25 @@ def test_side_panels_centered_and_limited_in_tablet_mode():
 
 
 def test_popups_fill_viewport():
-    css = read_css()
-    for popup_id in ['#emojiModal', '#closeCallPopup', '#infoPopup', '#shareModal']:
-        assert f'{popup_id} {{' in css
-        assert 'position: fixed;' in css
-        for edge in ['top: 0', 'left: 0', 'right: 0', 'bottom: 0']:
-            assert edge in css
+    css = (CSS_DIR / 'components' / 'modals.css').read_text(encoding='utf-8')
+    shared = re.search(
+        r'#emojiModal,\s*#closeCallPopup,\s*#infoPopup,\s*#shareModal \{([^}]+)', css
+    ).group(1)
+    assert 'position: fixed;' in shared
+    assert 'top: var(--visual-viewport-offset-top, 0px);' in shared
+    assert 'left: var(--visual-viewport-offset-left, 0px);' in shared
+    assert 'width: var(--visual-viewport-width, 100vw);' in shared
+    assert 'height: var(--visual-viewport-height, 100dvh);' in shared
+    assert 'display: none;' in shared
 
 
 def test_options_menu_clamped_to_viewport():
-    main_text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    utils_text = (SRC_DIR / 'utils.js').read_text(encoding='utf-8')
-    # Options menu now uses positionContextMenu instead of showPopup
-    assert 'positionContextMenu(optionsMenu, optionsToggle)' in main_text
-    assert 'export function positionPopup' in utils_text
+    css = (CSS_DIR / 'responsive-layout.css').read_text(encoding='utf-8')
+    menu = re.search(r'#appContainer #optionsMenu,\s*#appContainer #playerSidebar \{([^}]+)', css).group(1)
+    assert 'position: fixed;' in menu
+    assert 'top: var(--modal-viewport-center-block);' in menu
+    assert 'max-height: var(--modal-max-block-size);' in menu
+    assert 'box-sizing: border-box;' in menu
 
 
 def test_side_panels_fixed_to_bottom_in_phone_mode():
@@ -359,28 +367,6 @@ def test_message_containers_exist():
     assert '<div id="messagePopup"' in text
     assert '<div id="ariaLive"' in text
 
-
-def test_waiting_overlay_present():
-    text = GAME.read_text(encoding='utf-8')
-    assert '<div id="waitingOverlay"' in text
-
-def test_waiting_overlay_pointer_events_none():
-    css = read_css()
-    rules = [m.group(0) for m in re.finditer(r'#waitingOverlay\s*{[^}]*}', css)]
-    assert any('pointer-events: none' in r for r in rules)
-
-def test_waiting_overlay_dismiss_logic_present():
-    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    assert 'waitingOverlayDismissed' in text
-    assert 'document.addEventListener' in text
-
-
-def test_waiting_overlay_fade_out_animation():
-    css = read_css()
-    assert '@keyframes fadeOutOverlay' in css
-    assert '#waitingOverlay.fade-out' in css
-    text = (SRC_DIR / 'main.js').read_text(encoding='utf-8')
-    assert "waitingOverlay.classList.add('fade-out')" in text
 
 def test_extra_small_mobile_rules_present():
     css = read_css()
@@ -1074,14 +1060,14 @@ console.log(JSON.stringify(properties));
         capture_output=True, text=True, check=True
     )
     properties = json.loads(result.stdout.strip())
-    assert properties['--tile-size'] == '50px'
-    assert properties['--board-width'] == '294px'
-    assert properties['--keyboard-key-height'] == '40px'
-    assert properties['--keyboard-row-gap'] == '9px'
-    assert properties['--keyboard-inline-gap'] == '9px'
-    assert properties['--modal-max-inline-size'] == '323px'
+    assert float(properties['--tile-size'].removesuffix('px')) == pytest.approx(30.56)
+    assert float(properties['--board-width'].removesuffix('px')) == pytest.approx(196)
+    assert properties['--keyboard-key-height'] == '54px'
+    assert properties['--keyboard-row-gap'] == '8px'
+    assert properties['--keyboard-inline-gap'] == '8px'
+    assert properties['--modal-max-inline-size'] == '280px'
     assert properties['--modal-max-block-size'] == '700px'
-    assert properties['--modal-padding'] == '20px'
+    assert properties['--modal-padding'] == '16px'
 
 
 def test_keyboard_sizing_uses_layout_tokens_without_container_scaling():
@@ -1149,7 +1135,7 @@ console.log(JSON.stringify({ touch, keyboard, hybrid }));
     assert data['touch'] == {
         'density': 'spacious',
         'interaction': 'touch-first',
-        'gameFlow': 'split-landscape',
+        'gameFlow': 'vertical',
         'panelCapacity': 1,
         'panelPresentation': {
             'history': 'left-rail',
@@ -1523,7 +1509,7 @@ function createClassList() {
 }
 
 const elements = {};
-['historyBox', 'definitionBox', 'chatBox', 'playerSidebar', 'optionsMenu', 'mobileMenuPopup'].forEach((id) => {
+['historyBox', 'definitionBox', 'chatBox', 'playerSidebar', 'optionsMenu'].forEach((id) => {
   elements[id] = {
     id,
     attributes: {},
@@ -1760,7 +1746,8 @@ function classList() {
   return {
     add(){},
     remove(){},
-    toggle(){}
+    toggle(){},
+    contains(){ return false; }
   };
 }
 
@@ -1899,7 +1886,7 @@ console.log(JSON.stringify({
         'virtualKeyFocused': True,
         'submitCount': 0,
         'currentGuessAfterVirtualActivation': 'c',
-        'keyboardListenerTypes': ['click']
+        'keyboardListenerTypes': ['click', 'touchcancel', 'touchend', 'touchmove', 'touchstart']
     }
 
 
@@ -2134,7 +2121,7 @@ console.log(JSON.stringify({
     assert json.loads(result.stdout.strip()) == {
         'currentGuess': 'a',
         'changeCount': 1,
-        'listenerTypes': ['click']
+        'listenerTypes': ['click', 'touchcancel', 'touchend', 'touchmove', 'touchstart']
     }
 
 
@@ -2199,6 +2186,74 @@ console.log(JSON.stringify({
         'setCount': 4,
         'sanitized': 'stone'
     }
+
+
+def test_input_controller_autofills_greens_and_skips_them_when_deleting():
+    script = """
+import assert from 'node:assert/strict';
+import { InputController } from './frontend/static/js/inputController.js';
+
+let currentGuess = '';
+let greens = { 1: 'a', 3: 'a', 4: 'l' };
+let submitted;
+const controller = new InputController({
+  getCurrentGuess: () => currentGuess,
+  setCurrentGuess: value => { currentGuess = value; },
+  getGreenPositions: () => greens,
+  submitGuess: () => { submitted = currentGuess; }
+});
+controller.append('N');
+assert.equal(currentGuess, 'na');
+controller.append('v');
+assert.equal(currentGuess, 'naval');
+controller.append('x');
+assert.equal(currentGuess, 'naval');
+controller.submit();
+assert.equal(submitted, 'naval');
+controller.delete();
+assert.equal(currentGuess, 'na');
+controller.delete();
+assert.equal(currentGuess, '');
+
+// Native field entry and Backspace use the same fill/skip behavior.
+controller.replace('n');
+assert.equal(currentGuess, 'na');
+controller.replace('nav');
+assert.equal(currentGuess, 'naval');
+controller.replace('nava');
+assert.equal(currentGuess, 'na');
+controller.replace('n');
+assert.equal(currentGuess, '');
+controller.replace('naval');
+assert.equal(currentGuess, 'naval');
+controller.replace('nexxx');
+assert.equal(currentGuess, 'naxal');
+controller.replace('');
+assert.equal(currentGuess, '');
+
+// Leading greens fill on the first keystroke; constraints are read live.
+greens = { 0: 's', 4: 'e' };
+controller.append('t');
+assert.equal(currentGuess, 'st');
+controller.append('a');
+controller.append('r');
+assert.equal(currentGuess, 'stare');
+controller.delete();
+assert.equal(currentGuess, 'sta');
+controller.delete();
+controller.delete();
+assert.equal(currentGuess, '');
+greens = {};
+controller.append('c');
+controller.append('r');
+assert.equal(currentGuess, 'cr');
+controller.delete();
+assert.equal(currentGuess, 'c');
+"""
+    subprocess.run(
+        ['node', '--input-type=module', '-e', script],
+        capture_output=True, text=True, check=True
+    )
 
 
 def test_hard_mode_constraints_and_validation():
@@ -2286,7 +2341,7 @@ const code = fs.readFileSync('./frontend/static/js/resetManager.js', 'utf8');
 const m = code.match(/async function performReset\(\) {([\s\S]*?)^}/m);
 const body = m[1];
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-const performReset = new AsyncFunction('stopAllSounds','animateTilesOut','board','resetGame','LOBBY_CODE','HOST_TOKEN','fetchState','animateTilesIn','showMessage','messageEl','messagePopup', body);
+const performReset = new AsyncFunction('stopAllSounds','animateTilesOut','board','resetGame','LOBBY_CODE','HOST_TOKEN','fetchState','animateTilesIn','showMessage','messageEl','messagePopup','hapticFeedback', body);
 
 let shown = null;
 const board = { state: 'orig' };
@@ -2298,7 +2353,7 @@ async function animateTilesIn(){ board.state = 'animated'; }
 function showMessage(msg){ shown = msg; }
 
 (async () => {
-  await performReset(stopAllSounds, animateTilesOut, board, resetGame, null, null, fetchState, animateTilesIn, showMessage, {}, {});
+  await performReset(stopAllSounds, animateTilesOut, board, resetGame, null, null, fetchState, animateTilesIn, showMessage, {}, {}, () => {});
   console.log(JSON.stringify({ state: board.state, msg: shown }));
 })();
 """
@@ -2346,13 +2401,9 @@ def test_leave_lobby_immediately_updates_url():
     m = re.search(r"leaveLobby\.addEventListener.*?window\.history\.replaceState.*?window\.location\.href", text, re.DOTALL)
     assert m, "history.replaceState not found before location.href in leaveLobby event listener"
     
-    # Check mobile menu manager also has the fix
-    mobile_text = (SRC_DIR / 'mobileMenuManager.js').read_text(encoding='utf-8')
-    assert "window.history.replaceState(null, '', '/')" in mobile_text, "window.history.replaceState not found in mobileMenuManager.js"
-    
-    # Check event listeners manager also has the fix 
+    # The header door has a single owner; no competing immediate redirect.
     event_text = (SRC_DIR / 'eventListenersManager.js').read_text(encoding='utf-8')
-    assert "window.history.replaceState(null, '', '/')" in event_text, "window.history.replaceState not found in eventListenersManager.js"
+    assert "leaveLobby.addEventListener" not in event_text
 
 
 def test_legacy_production_sizing_paths_are_removed():

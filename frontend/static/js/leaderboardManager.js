@@ -261,7 +261,7 @@ function renderPlayerSidebar() {
     // Kick button: shown to host for other players when lobby code is available.
     // `player_id` is required to identify the target; entries without it (e.g. legacy
     // server responses) silently skip the kick button rather than crashing.
-    if (hostToken && lobbyCode && player_id && emoji !== myEmoji) {
+    if (lobbyCode && emoji !== myEmoji && (window.PRIVATE_ROOM?.host || (!window.PRIVATE_ROOM && hostToken && player_id))) {
       const kickBtn = document.createElement('button');
       kickBtn.className = 'roster-kick-btn';
       kickBtn.textContent = '✕';
