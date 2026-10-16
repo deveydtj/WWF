@@ -56,27 +56,28 @@
   pointer-events: none;
 }
 
-/* Dark mode stamp styling */
-@media (prefers-color-scheme: dark) {
-  .emoji-stamp {
-    /* White stroke outline for dark mode */
-    -webkit-text-stroke: 1px white;
-  }
+/* Dark mode stamp styling follows the in-game theme, not the OS setting. */
+body.dark-mode .emoji-stamp {
+  /* White stroke outline for dark mode */
+  -webkit-text-stroke: 1px white;
 }
 
-.confetti-container {
+/* A new guess is stamped beside its row once the tiles finish flipping. */
+.emoji-stamp.stamp-in > span {
+  display: inline-block;
+  animation: stampIn 420ms cubic-bezier(0.3, 1.4, 0.5, 1) var(--stamp-delay, 0ms) backwards;
+}
+
+/* Daily Double burst, drawn over the board from the tile that earned it. */
+.confetti-particle {
   position: absolute;
-  width: 0;
-  height: 0;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 2px;
   pointer-events: none;
   z-index: var(--z-board-overlay);
-}
-
-.confetti-piece {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
+  animation: confettiBurst 900ms cubic-bezier(0.2, 0.7, 0.3, 1) var(--burst-delay, 0ms) backwards;
 }
 
 /* Individual tiles */
@@ -124,15 +125,19 @@ body.hint-selecting .tile:not(.hint-target) {
   pointer-events: none;
 }
 
+.tile:focus-visible {
+  outline: 2px solid var(--popup-accent);
+  outline-offset: 2px;
+}
+
 /* Tile states */
 .tile.correct,
 .tile.present,
 .tile.absent {
   color: white;
   border-color: transparent;
-  transform: rotateX(360deg);
   transition: background-color 0.3s, color 0.3s, box-shadow 0.3s,
-              transform 0.6s, border-color 0.3s;
+              transform 120ms ease, border-color 0.3s;
 }
 
 .tile.correct {
@@ -166,9 +171,24 @@ body.hint-selecting .tile:not(.hint-target) {
   animation: tileLetterIn 0.2s ease-out;
 }
 
-/* Tile flip animation for color reveal */
+/* Colour reveal: each tile flips in turn (the landing page's tile flip) and
+   keeps its blank face until it is edge-on, so the colour lands mid-flip.
+   board.js sets --reveal-delay and --reveal-flip per tile. */
 .tile.flip-reveal {
-  animation: tileFlip 0.6s ease-in-out;
+  animation: tileFlip var(--reveal-flip, 500ms) ease-in-out var(--reveal-delay, 0ms),
+             tileBlankFace calc(var(--reveal-flip, 500ms) / 2) linear var(--reveal-delay, 0ms) backwards;
+}
+
+/* A winning row hops in sequence once every tile has turned green. */
+.tile.flip-reveal.win-hop {
+  animation: tileFlip var(--reveal-flip, 500ms) ease-in-out var(--reveal-delay, 0ms),
+             tileBlankFace calc(var(--reveal-flip, 500ms) / 2) linear var(--reveal-delay, 0ms) backwards,
+             tileWinHop 480ms ease-out var(--hop-delay, 0ms);
+}
+
+/* Rejected guesses shake only the row being typed. */
+.tile.row-shake {
+  animation: shake 0.4s ease-in-out;
 }
 
 /* Input area */

@@ -36,7 +36,7 @@ parental consent, or certification.
 
 AWS configuration injects the signing key using `session_secret_arn`, sets
 production cookie behavior, and routes age/game endpoints through CloudFront
-to the ALB without caching, forwarding only the age-session cookie. A missing
+to the game server without caching, forwarding only the age-session cookie. A missing
 secret ARN blocks API deployment; a missing or short signing key blocks
 production startup. These settings still need verification on the deployed
 HTTPS domain; no AWS deployment was performed in this work.

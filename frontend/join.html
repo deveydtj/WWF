@@ -4,28 +4,257 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
   <script>
     window.privateInvitation = location.hash.slice(1);
     history.replaceState(null, '', '/join');
+    // Paint the saved theme before the stylesheets load.
+    let dark = false;
+    try { dark = localStorage.getItem('darkMode') === 'true'; } catch { /* Default to light. */ }
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    document.documentElement.style.backgroundColor = dark ? '#2c303a' : '#e0e5ec';
   </script>
   <title>Join a private WordSquad room</title>
+  <link rel="stylesheet" href="/static/css/theme.css">
   <link rel="stylesheet" href="/static/css/components/age-check.css">
   <style>
-    body { font: 1rem system-ui, sans-serif; max-width: 32rem; margin: 3rem auto; padding: 1rem; }
-    input, button { font: inherit; padding: .7rem; margin: .4rem 0; }
-    label, input { display: block; }
+    /* Same sculpted card, green accent and tile motif as the landing page. */
+    body {
+      --join-green: #126b37;
+      --join-surface-start: #edf1f6;
+      --join-surface-end: #dfe5ed;
+      --join-inset: #e0e5ec;
+      --join-border: #3d4a5a26;
+      --join-sheen: #ffffff80;
+      box-sizing: border-box;
+      display: grid;
+      place-items: center;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 1rem;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body.dark-mode {
+      --join-green: #64f696;
+      --join-surface-start: #2c313b;
+      --join-surface-end: #22262f;
+      --join-inset: #242932;
+      --join-border: #ffffff0d;
+      --join-sheen: #ffffff12;
+    }
+
+    .join-card {
+      box-sizing: border-box;
+      width: min(100%, 28rem);
+      padding: 2.25rem 2rem 1.75rem;
+      border: 1px solid var(--join-border);
+      border-radius: 28px;
+      background: radial-gradient(ellipse at 90% 20%, #64f69612, transparent 55%),
+                  linear-gradient(135deg, var(--join-surface-start), var(--join-surface-end));
+      box-shadow: 12px 12px 28px var(--shadow-color-dark),
+                  -8px -8px 24px var(--shadow-color-light),
+                  inset 1px 1px 0 var(--join-sheen);
+      text-align: left;
+    }
+
+    .join-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 1rem;
+      color: var(--join-green);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .join-eyebrow svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentcolor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 6vw, 1.9rem);
+      line-height: 1.15;
+      letter-spacing: -0.035em;
+    }
+
+    .join-description {
+      margin: 0.75rem 0 1.5rem;
+      color: var(--text-color-light);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    #privateJoinForm {
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    #privateJoinForm[hidden] {
+      display: none;
+    }
+
+    label {
+      color: var(--text-color-light);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    #guestName {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 48px;
+      padding: 0.8rem 0.9rem;
+      border: 1px solid var(--join-border);
+      border-radius: 12px;
+      background: var(--join-inset);
+      color: var(--text-color);
+      font: inherit;
+      font-size: 1rem;
+      box-shadow: inset 4px 4px 10px var(--shadow-color-dark),
+                  inset -2px -2px 8px var(--shadow-color-light);
+    }
+
+    #privateJoinForm button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 48px;
+      margin-top: 0.4rem;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid #adffc14d;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #82ffaf, #53db83);
+      color: #11291b;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 0 26px #64f69626, 4px 4px 10px var(--shadow-color-dark),
+                  inset 0 1px 1px #ffffff66;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    #privateJoinForm button:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 36px #64f6964d, 4px 6px 12px var(--shadow-color-dark);
+    }
+
+    #privateJoinForm button:not(:disabled):active {
+      transform: translateY(1px);
+      box-shadow: inset 3px 3px 8px #1d6b3c40, 0 0 20px #64f69626;
+    }
+
+    #privateJoinForm button:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--join-green);
+      outline-offset: 4px;
+    }
+
+    /* Waiting: three tiles take turns flipping while the host decides. */
+    .join-wait {
+      display: none;
+      gap: 0.45rem;
+      margin: 0.5rem 0 0;
+    }
+
+    body[data-waiting] .join-wait {
+      display: flex;
+    }
+
+    .join-wait span {
+      width: 30px;
+      height: 34px;
+      border: 1px solid var(--join-border);
+      border-radius: 8px;
+      background: var(--tile-bg);
+      box-shadow: 4px 4px 8px var(--shadow-color-dark), -2px -2px 6px var(--shadow-color-light);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .join-wait span {
+        animation: join-wait-flip 2.4s ease-in-out infinite;
+      }
+
+      .join-wait span:nth-child(2) { animation-delay: 0.3s; }
+      .join-wait span:nth-child(3) { animation-delay: 0.6s; }
+    }
+
+    @keyframes join-wait-flip {
+      0%, 20%, 100% { transform: perspective(200px) rotateX(0); background: var(--tile-bg); }
+      10% { transform: perspective(200px) rotateX(-90deg); background: var(--tile-bg); }
+      10.01%, 19.99% { background: var(--correct-bg); }
+    }
+
+    #joinStatus {
+      min-height: 1.5em;
+      margin: 1rem 0 0;
+      color: var(--text-color-light);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    #joinStatus:empty {
+      display: none;
+    }
+
+    .join-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--join-border);
+      width: 100%;
+      color: var(--text-color-light);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .join-home:hover {
+      color: var(--text-color);
+    }
+
+    @media (max-width: 480px) {
+      .join-card {
+        padding: 1.75rem 1.25rem 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Join a private room</h1>
-  <p>The host must approve your request before you can see or join the game.</p>
-  <form id="privateJoinForm">
-    <label for="guestName">Name the host will recognize</label>
-    <input id="guestName" maxlength="40" autocomplete="off" required>
-    <button>Request entry</button>
-  </form>
-  <p id="joinStatus" role="status"></p>
-  <a href="/">Return home</a>
+  <script>
+    document.body.classList.toggle('dark-mode', document.documentElement.style.colorScheme === 'dark');
+  </script>
+  <main class="join-card" aria-labelledby="joinHeading">
+    <p class="join-eyebrow"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.8a3 3 0 0 1 6 0V9"/></svg> Private room</p>
+    <h1 id="joinHeading">Join a private room</h1>
+    <p class="join-description">The host must approve your request before you can see or join the game.</p>
+    <form id="privateJoinForm">
+      <label for="guestName">Name the host will recognize</label>
+      <input id="guestName" maxlength="40" autocomplete="off" required>
+      <button>Request entry <span aria-hidden="true">→</span></button>
+    </form>
+    <div class="join-wait" aria-hidden="true"><span></span><span></span><span></span></div>
+    <p id="joinStatus" role="status"></p>
+    <a class="join-home" href="/"><span aria-hidden="true">←</span> Return home</a>
+  </main>
   <script type="module" src="/static/js/privateJoin.js"></script>
 </body>
 </html>

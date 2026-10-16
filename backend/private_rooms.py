@@ -273,6 +273,10 @@ class PrivateRooms:
         return jsonify(private=True, host=sid == room['host'], player_id=member['player_id'],
                        emoji=room['game']['player_map'].get(member['player_id']))
 
+    def is_host(self):
+        room, sid, member = self.context.get()
+        return sid == room['host']
+
     def player_data(self, body):
         room, sid, member = self.context.get()
         result = dict(body)
@@ -311,6 +315,8 @@ class PrivateRooms:
                         return jsonify(status='error', msg='Invalid player credentials'), 403
                 if func == self.s.chat and not isinstance(body.get('text'), str):
                     return jsonify(status='error', msg='Invalid message'), 400
+                if func == self.s.vote_reset and body.get('vote', 'yes') not in ('yes', 'no'):
+                    return jsonify(status='error', msg='Invalid vote'), 400
                 if func == self.s.guess_word and not isinstance(body.get('guess'), str):
                     return jsonify(status='error', msg='Invalid guess'), 400
                 if func == self.s.set_emoji and (not isinstance(body.get('emoji'), str) or not 1 <= len(body['emoji']) <= 32):
@@ -352,6 +358,7 @@ class PrivateRooms:
         game['leaderboard'].pop(emoji, None)
         game['chat_rate_limits'].pop(member['player_id'], None)
         game['daily_double_pending'].pop(emoji, None)
+        game.get('round_points', {}).pop(emoji, None)
         game['ip_to_emoji'] = {key: value for key, value in game['ip_to_emoji'].items() if value != emoji}
         room['streams'] = {key: value for key, value in room['streams'].items() if value['sid'] != sid}
         room['pending'] = {key: value for key, value in room['pending'].items() if value['sid'] != sid}

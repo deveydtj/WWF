@@ -282,5 +282,5 @@ h1 {
 }
 
 #message.negative {
-  color: #ba1c1c;
+  color: var(--error-color);
 }

@@ -1,82 +1,54 @@
 """
-Tests for KMS encryption configuration in Terraform infrastructure.
+Tests for encryption configuration in Terraform infrastructure.
+
+The low-cost layout keeps data encrypted at rest without paying for extra KMS
+traffic where AWS-managed encryption is free: the server disk uses the project
+KMS key, and the static frontend bucket uses SSE-S3 so CloudFront can read it.
 """
 import re
 from pathlib import Path
 
+ROOT = Path(__file__).parent.parent
+MAIN_TF = ROOT / "infra/terraform/main.tf"
+KEY_ARN = "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35"
+
+
+def _block(content, resource_type, name):
+    match = re.search(rf'resource "{resource_type}" "{name}" \{{.*?\n\}}', content, re.DOTALL)
+    assert match is not None, f"{resource_type}.{name} not found"
+    return match.group(0)
+
 
 def test_kms_key_variable_defined():
     """Test that KMS key variable is defined in Terraform variables."""
-    variables_file = Path(__file__).parent.parent / "infra/terraform/variables.tf"
-    content = variables_file.read_text()
-    
-    # Check that kms_key_arn variable is defined
+    content = (ROOT / "infra/terraform/variables.tf").read_text()
     assert 'variable "kms_key_arn"' in content
     assert "KMS key ARN for encrypting AWS resources" in content
-    assert "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35" in content
+    assert KEY_ARN in content
 
 
 def test_s3_bucket_encryption_configured():
-    """Test that S3 bucket server-side encryption is configured with KMS."""
-    main_tf_file = Path(__file__).parent.parent / "infra/terraform/main.tf"
-    content = main_tf_file.read_text()
-    
-    # Check that S3 bucket server-side encryption configuration exists
-    assert 'resource "aws_s3_bucket_server_side_encryption_configuration" "frontend"' in content
-    assert "kms_master_key_id = var.kms_key_arn" in content
-    assert 'sse_algorithm     = "aws:kms"' in content
-    assert "bucket_key_enabled = true" in content
+    """The frontend bucket is encrypted at rest (SSE-S3, readable through CloudFront OAC)."""
+    block = _block(MAIN_TF.read_text(), "aws_s3_bucket_server_side_encryption_configuration", "frontend")
+    assert 'sse_algorithm = "AES256"' in block
 
 
-def test_cloudwatch_logs_kms_encryption():
-    """Test that CloudWatch log group is configured with KMS encryption."""
-    main_tf_file = Path(__file__).parent.parent / "infra/terraform/main.tf"
-    content = main_tf_file.read_text()
-    
-    # Check that CloudWatch log group has KMS key configuration
-    log_group_pattern = r'resource "aws_cloudwatch_log_group" "api".*?kms_key_id\s*=\s*var\.kms_key_arn'
-    assert re.search(log_group_pattern, content, re.DOTALL)
+def test_server_disk_encrypted_with_kms():
+    """The API server's disk is encrypted with the project KMS key when one is set."""
+    block = _block(MAIN_TF.read_text(), "aws_instance", "api")
+    assert "encrypted             = true" in block
+    assert "kms_key_id            = local.use_kms ? var.kms_key_arn : null" in block
 
 
-def test_efs_kms_encryption():
-    """Test that EFS file system is configured with KMS encryption."""
-    main_tf_file = Path(__file__).parent.parent / "infra/terraform/main.tf"
-    content = main_tf_file.read_text()
-    
-    # Check that EFS file system has encryption enabled with KMS
-    efs_pattern = r'resource "aws_efs_file_system" "wwf".*?encrypted\s*=\s*true.*?kms_key_id\s*=\s*var\.kms_key_arn'
-    assert re.search(efs_pattern, content, re.DOTALL)
+def test_server_can_be_started_with_kms_encrypted_disk():
+    """Starting an instance with a customer-managed KMS disk needs a KMS grant."""
+    content = MAIN_TF.read_text()
+    assert "kms:CreateGrant" in content
+    assert "ec2.${var.aws_region}.amazonaws.com" in content
 
 
 def test_kms_key_documented_in_live_config():
     """Test that KMS key is documented in live configuration."""
-    live_vars_file = Path(__file__).parent.parent / "infra/live/variables.tfvars"
-    content = live_vars_file.read_text()
-    
-    # Check that KMS key is documented with comment
+    content = (ROOT / "infra/live/variables.tfvars").read_text()
     assert "kms_key_arn" in content
-    assert "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35" in content
-
-
-def test_aws_resources_encrypted_with_kms():
-    """Test that key AWS resources are configured for KMS encryption."""
-    main_tf_file = Path(__file__).parent.parent / "infra/terraform/main.tf"
-    content = main_tf_file.read_text()
-    
-    # Ensure multiple resources reference the KMS key
-    kms_references = content.count("var.kms_key_arn")
-    assert kms_references >= 3, f"Expected at least 3 KMS key references, found {kms_references}"
-    
-    # Verify specific services are encrypted
-    assert "aws_s3_bucket_server_side_encryption_configuration" in content
-    
-    # Check CloudWatch logs have KMS configured
-    cloudwatch_log_section = re.search(r'resource "aws_cloudwatch_log_group" "api".*?}', content, re.DOTALL)
-    assert cloudwatch_log_section is not None
-    assert "kms_key_id" in cloudwatch_log_section.group(0)
-    
-    # Check EFS has encryption enabled
-    efs_section = re.search(r'resource "aws_efs_file_system" "wwf".*?}', content, re.DOTALL)
-    assert efs_section is not None
-    assert "encrypted  = true" in efs_section.group(0)
-    assert "kms_key_id = var.kms_key_arn" in efs_section.group(0)
+    assert KEY_ARN in content

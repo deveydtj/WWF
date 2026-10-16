@@ -1,0 +1,305 @@
+/* ─────────────────────────────────────────────
+   Squad vote - mid-round reset ballot
+   Voters are drawn as board tiles: green to scrap the word, grey to keep
+   playing, blank while they decide. Amber trim marks a round-timing notice,
+   like the close-call card.
+   ───────────────────────────────────────────── */
+
+.reset-vote {
+  position: fixed;
+  /* resetVote.js sets --reset-vote-top to the bottom of the lobby header. */
+  top: calc(var(--reset-vote-top, var(--viewport-safe-area-top, 0px)) + 8px);
+  left: 0;
+  right: 0;
+  z-index: var(--z-chat-popup);
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 32px));
+  margin-inline: auto;
+  padding: 14px 16px 18px;
+  overflow: hidden;
+  border: 1px solid var(--popup-border);
+  border-top: 4px solid var(--present-bg);
+  border-radius: 16px;
+  background: linear-gradient(145deg, var(--popup-surface), var(--bg-color));
+  box-shadow: 0 18px 48px var(--popup-shadow-color),
+    inset 1px 1px 0 var(--popup-sheen);
+  color: var(--text-color);
+  text-align: center;
+}
+
+.reset-vote[hidden] {
+  display: none;
+}
+
+.reset-vote.reset-vote-enter {
+  animation: popup-card-enter 180ms ease-out;
+}
+
+.reset-vote-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reset-vote-eyebrow {
+  margin-inline-end: auto;
+}
+
+.reset-vote-toggle {
+  min-height: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-color-light);
+}
+
+.reset-vote-toggle[hidden] {
+  display: none;
+}
+
+.reset-vote-eyebrow {
+  color: var(--popup-warning);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reset-vote-clock {
+  color: var(--text-color-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.reset-vote-urgent .reset-vote-clock {
+  color: var(--error-color);
+}
+
+.reset-vote-title {
+  margin: 6px 0 2px;
+  font-size: 1.05rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.reset-vote-note {
+  margin: 0;
+  color: var(--text-color-light);
+  font-size: 0.82rem;
+}
+
+.reset-vote-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.reset-vote-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  box-sizing: border-box;
+  width: 46px;
+  height: 50px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius, 8px);
+  background-color: var(--tile-bg);
+  box-shadow: 4px 4px 8px var(--shadow-color-dark),
+    -4px -4px 8px var(--shadow-color-light);
+  transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
+}
+
+.reset-vote-tile.vote-waiting {
+  border: 2px dashed color-mix(in srgb, var(--text-color) 35%, transparent);
+  box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+    inset -2px -2px 5px var(--inset-shadow-light);
+}
+
+.reset-vote-tile.vote-yes {
+  background-color: var(--correct-bg);
+  box-shadow: inset 3px 3px 6px var(--correct-shadow-dark),
+    inset -3px -3px 6px var(--correct-shadow-light);
+  color: white;
+}
+
+.reset-vote-tile.vote-no {
+  background-color: var(--absent-bg);
+  box-shadow: inset 3px 3px 6px var(--absent-shadow-dark),
+    inset -3px -3px 6px var(--absent-shadow-light);
+  color: white;
+}
+
+.reset-vote-tile.reset-vote-me {
+  outline: 2px solid var(--popup-accent);
+  outline-offset: 2px;
+}
+
+.reset-vote-tile.reset-vote-flip {
+  animation: reset-vote-flip 360ms ease-in-out;
+}
+
+.reset-vote-face {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.reset-vote-stake {
+  font-size: 0.65rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.reset-vote-count {
+  margin: 0 0 12px;
+  color: var(--text-color-light);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.reset-vote-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.reset-vote-actions[hidden],
+.reset-vote-sitout[hidden] {
+  display: none;
+}
+
+.reset-vote-actions button {
+  min-height: var(--min-touch-target, 44px);
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 750;
+}
+
+.reset-vote-actions .reset-vote-yes {
+  background: var(--correct-bg);
+  color: white;
+  box-shadow: 3px 3px 6px var(--shadow-color-dark),
+    -3px -3px 6px var(--shadow-color-light);
+}
+
+.reset-vote-actions button[aria-pressed="true"] {
+  box-shadow: inset 2px 2px 5px var(--inset-shadow-dark),
+    inset -2px -2px 5px var(--inset-shadow-light);
+  outline: 2px solid var(--popup-accent);
+  outline-offset: 2px;
+}
+
+.reset-vote-actions .reset-vote-yes[aria-pressed="true"] {
+  box-shadow: inset 3px 3px 6px var(--correct-shadow-dark),
+    inset -3px -3px 6px var(--correct-shadow-light);
+}
+
+.reset-vote-actions button:focus-visible {
+  outline: 2px solid var(--popup-accent);
+  outline-offset: 2px;
+}
+
+.reset-vote-sitout {
+  margin: 0;
+  color: var(--text-color-light);
+  font-size: 0.85rem;
+}
+
+/* After voting, the card shrinks to a ballot strip so the board stays clear. */
+.reset-vote.reset-vote-compact {
+  padding: 10px 14px 14px;
+}
+
+.reset-vote-compact .reset-vote-title {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.reset-vote-compact .reset-vote-note,
+.reset-vote-compact .reset-vote-actions,
+.reset-vote-compact .reset-vote-sitout {
+  display: none;
+}
+
+.reset-vote-compact .reset-vote-tiles {
+  margin: 8px 0 4px;
+  gap: 6px;
+}
+
+.reset-vote-compact .reset-vote-tile {
+  width: 34px;
+  height: 36px;
+}
+
+.reset-vote-compact .reset-vote-face {
+  font-size: 17px;
+}
+
+.reset-vote-compact .reset-vote-stake {
+  display: none;
+}
+
+.reset-vote-compact .reset-vote-count {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+/* Time left drains along the bottom edge. */
+.reset-vote-timer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: color-mix(in srgb, var(--present-bg) 18%, transparent);
+}
+
+.reset-vote-timer > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--present-bg);
+  transition: width 250ms linear;
+}
+
+.reset-vote-urgent .reset-vote-timer > span {
+  background: var(--error-color);
+}
+
+@keyframes reset-vote-flip {
+  0% { transform: rotateX(0); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reset-vote.reset-vote-enter,
+  .reset-vote-tile.reset-vote-flip {
+    animation: none;
+  }
+
+  .reset-vote-timer > span {
+    transition: none;
+  }
+}
+
+/* History: a scrapped round's points were refunded. */
+.history-item.history-voided .history-guess-tiles,
+.history-item.history-voided .history-emoji {
+  opacity: 0.55;
+}
+
+.history-item.history-voided .history-points {
+  color: var(--text-color-light);
+  text-decoration: line-through;
+}

@@ -37,9 +37,23 @@ overview and should be kept up to date as features evolve.
   rail according to the measured panel capacity.
 - **Word Definition:** After the game ends, the definition of the correct word
   is displayed in a panel or centered card modal depending on layout.
-- **Reset:** If the game is over, a reset button instantly starts a new game. If
-  the game is ongoing, the button must be held for two seconds before posting to
-  `/reset`. Compact-header profiles place the reset control in the top header.
+- **Reset:** A round is *settled* once the word is found or every row is used.
+  Settled rounds keep all points given and taken, and the button reads
+  **New Game** and starts the next word with one tap (in private rooms only the
+  host starts the next word). While a round is still live, the button must be
+  held for two seconds, and holding it calls a **squad vote** instead of
+  resetting. Compact-header profiles place the reset control in the top header.
+- **Squad Vote:** Calling a vote counts as a yes. Every player active in the last
+  five minutes when it is called gets a ballot, drawn as a board tile (green to
+  scrap the word, grey to keep playing, blank while deciding). More than half
+  must vote yes within 30 seconds. When it passes, a new word starts and every
+  point earned or lost in the scrapped round is refunded, including Daily
+  Double hints earned in it; earlier rounds are untouched. History keeps the
+  scrapped guesses with their points struck through. A failed or timed-out vote
+  can't be called again for 20 seconds. Finding the word or filling the board
+  closes an open vote and the round's points stay. Players who join after a vote
+  starts sit it out. A board with no guesses has nothing at stake and resets
+  without a vote.
 - **Close Call Notification:** When two players submit the winning word within two seconds of each other, display the difference in milliseconds between their submissions.
 - **Daily Double Bonus:** One random tile (not on the final row) contains a bonus. When a player turns it green, they may privately reveal one tile on the next row. Only that player sees the letter.
 - The client must display a persistent hint indicator whenever the player has an unused Daily Double bonus.
@@ -283,7 +297,12 @@ For complete cross-device validation specifications, see `docs/requirements/cros
   - `POST /lobby/<id>/state` – heartbeat used to mark a player active.
   - `POST /lobby/<id>/emoji` – claim or change an emoji inside the lobby.
   - `POST /lobby/<id>/guess` – submit a word guess.
-  - `POST /lobby/<id>/reset` – host only; begins a new round.
+  - `POST /lobby/<id>/vote-reset` – `{emoji, player_id, vote: "yes"|"no"}`.
+    Starts the next word when the round is settled or untouched; otherwise
+    calls or answers a squad vote. Returns `outcome` of `new_word`, `pending`,
+    `passed` (with `refunded` points by emoji) or `failed`.
+  - `POST /lobby/<id>/reset` – host only; begins a new round once the current
+    one is settled. A live round returns 409 and needs a squad vote.
   - `GET /lobby/<id>/stream` – SSE stream scoped to that lobby.
   - `GET /lobbies` – (optional) list of public lobbies with player counts.
 - All game data is namespaced by the six-character lobby code.

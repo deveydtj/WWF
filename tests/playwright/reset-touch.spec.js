@@ -2,12 +2,16 @@ const { test, expect, FIXTURE_STATES } = require('./fixtures/deterministic-lobby
 
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-test('holding Reset on a phone sends one reset request', async ({ page, deterministicLobby, browserName }) => {
+// Mid-round resets call a squad vote; New Game starts the next word. Both
+// go through /vote-reset.
+const isResetRequest = request => /\/(vote-)?reset$/.test(new URL(request.url()).pathname);
+
+test('holding Reset on a phone calls one squad vote', async ({ page, deterministicLobby, browserName }) => {
   test.skip(browserName !== 'chromium', 'A sustained native touch requires the Chromium DevTools protocol.');
   await deterministicLobby.openActive();
   let resets = 0;
   page.on('request', request => {
-    if (new URL(request.url()).pathname.endsWith('/reset')) resets += 1;
+    if (isResetRequest(request)) resets += 1;
   });
   const button = page.locator('#holdReset');
   const bounds = await button.boundingBox();
@@ -27,7 +31,7 @@ test('tapping New Game after a game ends resets once and enables the next round'
   await page.route('**/lobby/END001/state*', route => route.fulfill({ json: FIXTURE_STATES.active }));
   let resets = 0;
   page.on('request', request => {
-    if (new URL(request.url()).pathname.endsWith('/reset')) resets += 1;
+    if (isResetRequest(request)) resets += 1;
   });
   await page.locator('#holdReset').tap();
   await expect.poll(() => resets).toBe(1);

@@ -11,7 +11,9 @@ export default defineConfig(({ command }) => ({
         index: 'index.html',
         game: 'game.html',
         ageCheck: 'age-check.html',
-        join: 'join.html'
+        join: 'join.html',
+        // Shown by CloudFront while the game server is asleep.
+        waking: 'waking.html'
       }
     }
   }

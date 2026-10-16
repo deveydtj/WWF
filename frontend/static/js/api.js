@@ -50,6 +50,29 @@ export async function resetGame(lobbyId, hostToken) {
 }
 
 /**
+ * Start the next word, or call or answer a squad vote to scrap this one.
+ *
+ * Settled rounds (word found or every row used) start the next word at once.
+ * A live round needs a majority vote; when it passes, the round's points are
+ * refunded.
+ *
+ * @param {string|null} lobbyId - Lobby code, or null for the default game.
+ * @param {string} emoji - Player emoji.
+ * @param {string} playerId - Player identifier.
+ * @param {'yes'|'no'} [vote='yes'] - Calling a vote counts as a yes.
+ * @returns {Promise<Object>} `{status, outcome, vote?, refunded?}` or an error.
+ */
+export async function voteReset(lobbyId, emoji, playerId, vote = 'yes') {
+  const url = lobbyId ? `/lobby/${lobbyId}/vote-reset` : '/vote-reset';
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
+    body: JSON.stringify({ emoji, player_id: playerId, vote })
+  });
+  return r.json().catch(() => ({ status: 'error', msg: 'Could not reach the game.' }));
+}
+
+/**
  * Register the player's chosen emoji with the server.
  *
  * @param {string} emoji - Emoji avatar.

@@ -17,6 +17,7 @@ import {
   renderEmojiStamps
 } from './leaderboardManager.js';
 import { initResetManager } from './resetManager.js';
+import { initResetVote } from './resetVote.js';
 import { updatePanelVisibility } from './panelManager.js';
 import { refreshOverlayStateForLayout } from './overlayState.js';
 import { initHintManager, updateHintState } from './hintManager.js';
@@ -274,6 +275,16 @@ class AppInitializer {
       board: this.domManager.get('board'),
       messageEl: this.domManager.get('messageEl'),
       messagePopup: this.domManager.get('messagePopup')
+    });
+
+    // Squad vote card for mid-round resets
+    initResetVote({
+      lobbyCode: this.lobbyCode,
+      fetchState: () => this.networkManager.fetchState(this.myEmoji, this.lobbyCode),
+      messageHandlers: {
+        messageEl: this.domManager.get('messageEl'),
+        messagePopup: this.domManager.get('messagePopup')
+      }
     });
 
     // Initialize hint manager

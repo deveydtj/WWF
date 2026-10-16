@@ -173,7 +173,7 @@ async function installLobbyRoutes(page, statesByCode) {
     const lobbyPageMatch = url.pathname.match(/^\/lobby\/([A-Z0-9]{6})\/?$/);
     const lobbyAssetMatch = url.pathname.match(/^\/lobby\/static\/(.+)$/);
     const rootAssetMatch = url.pathname.match(/^\/static\/(.+)$/);
-    const apiMatch = url.pathname.match(/^\/lobby\/([A-Z0-9]{6})\/(state|emoji|stream|chat|guess|hint|reset|leave|kick)$/);
+    const apiMatch = url.pathname.match(/^\/lobby\/([A-Z0-9]{6})\/(state|emoji|stream|chat|guess|hint|reset|vote-reset|leave|kick)$/);
 
     if (lobbyPageMatch && statesByCode.has(lobbyPageMatch[1])) {
       await fulfillFile(route, 'game.html');
@@ -231,6 +231,25 @@ async function installLobbyRoutes(page, statesByCode) {
         won: false,
         over: state.is_over,
         pointsDelta: 0,
+      });
+      return;
+    }
+
+    if (action === 'vote-reset') {
+      // Settled or untouched rounds start a new word; live rounds open a vote.
+      if (state.is_over || !state.guesses.length) {
+        await fulfillJson(route, { status: 'ok', outcome: 'new_word' });
+        return;
+      }
+      const me = requestBody.emoji || '🐶';
+      await fulfillJson(route, {
+        status: 'ok',
+        outcome: 'pending',
+        vote: {
+          id: 'fixture-vote', starter: me, eligible: state.leaderboard.map(entry => entry.emoji),
+          yes: [me], no: [], needed: Math.floor(state.leaderboard.length / 2) + 1,
+          seconds_left: 30, duration: 30,
+        },
       });
       return;
     }

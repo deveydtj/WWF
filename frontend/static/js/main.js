@@ -1,8 +1,8 @@
 // Import core functionality
-import { isValidHardModeGuess } from './board.js';
+import { isValidHardModeGuess, shakeRow, getActiveRowIndex, getRevealDuration, getTileRevealMoment } from './board.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal, getMyPlayerId, setMyPlayerId } from './emoji.js';
 import { sendEmoji, sendGuess, leaveLobbyRequest } from './api.js';
-import { showMessage, shakeInput, closeDialog, openDialog, announce } from './utils.js';
+import { showMessage, shakeInput as shakeElement, closeDialog, openDialog, announce } from './utils.js';
 import { loadHintState, saveHintState } from './hintState.js';
 import { STATES } from './stateManager.js';
 import { hapticFeedback } from './haptics.js';
@@ -68,9 +68,14 @@ async function submitGuessHandler() {
   if (gameState?.is(STATES.GAME_OVER)) return;
   
   const guessInput = domManager.get('guessInput');
-  const shakeTarget = guessInput && !guessInput.hidden
-    ? guessInput
-    : domManager.get('board');
+  const board = domManager.get('board');
+  // The visible guess field shakes when it is in use; otherwise only the
+  // row being typed shakes, leaving earlier guesses still.
+  const shakeTarget = guessInput && !guessInput.hidden ? guessInput : board;
+  const shakeInput = (target) => {
+    if (target === board && shakeRow(board, getActiveRowIndex(board))) return;
+    shakeElement(target);
+  };
   
   const guess = gameStateManager.getCurrentGuess().trim().toLowerCase();
   
@@ -153,10 +158,13 @@ async function submitGuessHandler() {
   
   if (resp.status === 'ok') {
     gameStateManager.applyState(resp.state);
+    // Results that reveal the outcome wait for the tiles to finish flipping.
+    const afterReveal = (callback) => setTimeout(callback, getRevealDuration());
     
     if (resp.daily_double) {
       if (resp.daily_double_tile) {
-        burstConfetti(resp.daily_double_tile.row, resp.daily_double_tile.col);
+        const { row, col } = resp.daily_double_tile;
+        setTimeout(() => burstConfetti(row, col), getTileRevealMoment(col));
       }
       
       gameStateManager.setDailyDoubleState(resp.state.guesses.length, null);
@@ -170,22 +178,29 @@ async function submitGuessHandler() {
       announce('Daily Double earned – choose one tile in the next row to preview.');
     }
     
-    if (typeof resp.pointsDelta === 'number') showPointsDelta(resp.pointsDelta);
+    if (typeof resp.pointsDelta === 'number') {
+      const delta = resp.pointsDelta;
+      afterReveal(() => showPointsDelta(delta));
+    }
     
     if (resp.won) {
-      hapticFeedback([20, 50, 30, 50, 40]);
-      showMessage('You got it! The word was ' + resp.state.target_word.toUpperCase(), {
-        messageEl: domManager.get('messageEl'),
-        messagePopup: domManager.get('messagePopup')
+      const word = resp.state.target_word.toUpperCase();
+      afterReveal(() => {
+        hapticFeedback([20, 50, 30, 50, 40]);
+        showMessage('You got it! The word was ' + word, {
+          messageEl: domManager.get('messageEl'),
+          messagePopup: domManager.get('messagePopup')
+        });
+        playJingle();
       });
-      playJingle();
     }
     
     if (resp.over && !resp.won) {
-      showMessage('Game Over! The word was ' + resp.state.target_word.toUpperCase(), {
+      const word = resp.state.target_word.toUpperCase();
+      afterReveal(() => showMessage('Game Over! The word was ' + word, {
         messageEl: domManager.get('messageEl'),
         messagePopup: domManager.get('messagePopup')
-      });
+      }));
     }
   } else {
     hapticFeedback([20, 40, 20]);

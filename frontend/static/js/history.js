@@ -9,7 +9,7 @@ export function renderHistory(container, guesses) {
   for (let i = guesses.length - 1; i >= 0; i--) {
     const g = guesses[i];
     const li = document.createElement('li');
-    li.className = 'history-item';
+    li.className = g.voided ? 'history-item history-voided' : 'history-item';
 
     const spanEmoji = document.createElement('span');
     spanEmoji.className = 'history-emoji';
@@ -27,6 +27,11 @@ export function renderHistory(container, guesses) {
     const spanPoints = document.createElement('span');
     spanPoints.className = 'history-points';
     spanPoints.textContent = (g.points >= 0 ? '+' : '') + g.points;
+    if (g.voided) {
+      // The squad voted to scrap this round, so these points were refunded.
+      spanPoints.title = 'Refunded by squad vote';
+      spanPoints.setAttribute('aria-label', `${spanPoints.textContent}, refunded`);
+    }
 
     li.append(spanEmoji, tilesContainer, spanPoints);
     container.appendChild(li);

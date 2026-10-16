@@ -1,14 +1,16 @@
 import { ViewportService } from './static/js/layout/viewportService.js';
 import { applyDarkMode as applyTheme } from './static/js/themeManager.js';
 import { ensureAgeEligibility, getAgeStatus } from './static/js/ageEligibility.js';
+import { startActivityPings } from './static/js/activityPing.js';
 
 const viewportService = new ViewportService({
   appContainer: '#landingView',
   gameplayContainer: '#heroCard',
 });
 
-// Set the payment-provider link and manually maintained server-fund totals here.
-// Leave unknown totals null; no sample donations are shown to players.
+// Fallbacks only: the live total, goal and Stripe link come from /donations.json,
+// which the donations Lambda rewrites after every donation (see
+// infra/terraform/donations.tf). Leave null; no sample donations are shown.
 const donationSettings = { url: null, goal: null, raised: null };
 
 export function updateDonationSection({ url, goal, raised } = donationSettings) {
@@ -50,6 +52,154 @@ export function updateDonationSection({ url, goal, raised } = donationSettings) 
   document.getElementById('donationStatus').textContent = donationUrl
     ? 'Every contribution helps cover server hosting. Thank you for playing.'
     : 'Funding details are being set up. Check back soon.';
+}
+
+// ---- Live server-fund total ----
+
+const DONATION_SEEN_KEY = 'wordsquad.donationSeen';
+let donationShown = null;        // raised amount currently on screen
+let donationTotals = null;       // last totals from /donations.json
+let donationIntroDone = false;
+let donationCelebrated = false;
+let resolveDonationIntro;
+const donationIntro = new Promise(resolve => { resolveDonationIntro = resolve; });
+
+// Called once the card's reveal animation has played (or was skipped).
+export function finishDonationIntro() {
+  donationIntroDone = true;
+  resolveDonationIntro();
+}
+
+function currentMonth(now = new Date()) {
+  return now.toISOString().slice(0, 7); // UTC, matching the Lambda
+}
+
+// Turn the public JSON into card values; a total from a past month means $0 so far.
+export function parseDonationTotals(data, now = new Date()) {
+  if (!data || typeof data !== 'object') return null;
+  const goal = Number(data.goal);
+  const raised = data.month === currentMonth(now) ? Number(data.raised) : 0;
+  if (!Number.isFinite(goal) || !Number.isFinite(raised)) return null;
+  return {
+    month: currentMonth(now),
+    goal,
+    raised: Math.max(0, raised),
+    url: typeof data.url === 'string' ? data.url : donationSettings.url,
+  };
+}
+
+function readSeenDonation(month) {
+  try {
+    const seen = JSON.parse(localStorage.getItem(DONATION_SEEN_KEY) || 'null');
+    return seen?.month === month && Number.isFinite(seen.raised) ? seen.raised : null;
+  } catch { return null; }
+}
+
+function saveSeenDonation(month, raised) {
+  try { localStorage.setItem(DONATION_SEEN_KEY, JSON.stringify({ month, raised })); } catch { /* Not remembered. */ }
+}
+
+export async function loadDonationTotals() {
+  try {
+    const resp = await fetch('/donations.json', { cache: 'no-store' });
+    if (!resp.ok) return null;
+    const totals = parseDonationTotals(await resp.json());
+    if (totals) await showDonationTotals(totals);
+    return totals;
+  } catch {
+    return null; // Local dev or offline: keep whatever the card shows.
+  }
+}
+
+async function showDonationTotals(totals) {
+  const seen = readSeenDonation(totals.month);
+  let from = donationShown ?? seen;
+  // First load before the card has been revealed: show it where this player
+  // last saw it, then grow it once it's on screen.
+  if (donationShown === null && seen !== null && totals.raised > seen && !donationIntroDone) {
+    updateDonationSection({ ...totals, raised: from });
+    donationShown = from;
+    await donationIntro;
+    from = donationShown;
+  }
+  donationTotals = totals;
+  updateDonationSection(totals);
+  donationShown = totals.raised;
+  saveSeenDonation(totals.month, totals.raised);
+  if (from !== null && totals.raised > from) celebrateDonation(from, totals);
+}
+
+function celebrateDonation(from, totals) {
+  const section = document.getElementById('donationSection');
+  if (!section) return;
+  const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+  donationCelebrated = true;
+  const label = document.getElementById('donationProgressLabel');
+  label.textContent = `+${money.format(totals.raised - from)} · Thank you!`;
+  announce(`Server fund now ${money.format(totals.raised)}. Thank you!`);
+
+  if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    // Count the numbers up alongside the ring's CSS transition.
+    const percentEl = document.getElementById('donationPercent');
+    const raisedEl = document.getElementById('donationRaised');
+    const pct = value => Math.min(100, Math.round(value / totals.goal * 100));
+    const start = performance.now();
+    const duration = 1400;
+    const step = now => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const value = from + (totals.raised - from) * eased;
+      percentEl.textContent = `${pct(value)}%`;
+      raisedEl.textContent = money.format(value);
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    section.classList.remove('donation-celebrate');
+    void section.offsetWidth; // restart the pulse if it is already running
+    section.classList.add('donation-celebrate');
+  }
+  setTimeout(() => {
+    section.classList.remove('donation-celebrate');
+    if (donationTotals) updateDonationSection(donationTotals); // restore the normal label
+  }, 6000);
+}
+
+// Stripe sends donors back to /?donated=1. The webhook usually lands within a
+// few seconds, so keep checking briefly and bring the card into view.
+async function welcomeBackDonor(hadSeenTotal) {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('donated') !== '1') return;
+  params.delete('donated');
+  const query = params.toString();
+  history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+
+  document.getElementById('donationSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const status = document.getElementById('donationStatus');
+  const say = text => { if (status) status.textContent = text; };
+  // Without an earlier total to compare against (new browser), we can't tell
+  // whether this donation is already counted, so just say thanks.
+  if (hadSeenTotal) {
+    for (let i = 0; i < 20 && !donationCelebrated; i += 1) {
+      say('Thank you! Adding your donation to the server fund…');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      await loadDonationTotals();
+    }
+  }
+  say(donationCelebrated || !hadSeenTotal
+    ? 'Thank you for keeping the squad playing!'
+    : 'Thank you! Your donation will show up here shortly.');
+}
+
+function initLiveDonations() {
+  const hadSeenTotal = readSeenDonation(currentMonth()) !== null;
+  loadDonationTotals().then(() => welcomeBackDonor(hadSeenTotal));
+  // Back from the Stripe tab, or just watching: refresh while the page is visible.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadDonationTotals();
+  });
+  setInterval(() => {
+    if (!document.hidden) loadDonationTotals();
+  }, 60000);
 }
 
 // List of available emojis for the landing page (same as game)
@@ -117,6 +267,22 @@ function showJoinError(msg) {
 function clearJoinError() {
   const err = document.getElementById('joinError');
   if (err) err.classList.add('visually-hidden');
+}
+
+// The game server naps when nobody is playing (see infra/terraform). Ask it to
+// start as soon as someone opens the landing page so it is ready by the time
+// they pick an emoji. Harmless when it is already running.
+function wakeServer() {
+  fetch('/wake', { cache: 'no-store' }).catch(() => { /* Local dev has no /wake. */ });
+}
+
+// CloudFront answers with an HTML "waking up" page (503) while the server starts.
+function serverIsWaking(resp) {
+  const type = resp.headers.get('content-type') || '';
+  if (resp.status !== 503 || !type.includes('text/html')) return false;
+  showJoinError('The game server is waking up. Try again in about a minute.');
+  wakeServer();
+  return true;
 }
 
 export function showSavedEmoji() {
@@ -247,7 +413,15 @@ function checkEmojiSelected() {
   return true;
 }
 
+function showCreateError(message) {
+  const error = document.getElementById('createError');
+  if (!error) return;
+  error.textContent = message;
+  error.hidden = !message;
+}
+
 function updateRoomMode() {
+  showCreateError('');
   const mode = document.getElementById('privateRoom')?.checked ? 'private' : 'open';
   document.querySelector('.create-group').dataset.mode = mode;
   document.getElementById('createLabel').textContent = mode === 'private' ? 'Create Private Room' : 'Create Lobby';
@@ -275,25 +449,32 @@ export async function createLobby() {
   }
   
   const isPrivate = document.getElementById('privateRoom')?.checked === true;
+  showCreateError('');
   const resp = await fetch('/lobby', {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ private: isPrivate })
   });
-  const data = await resp.json();
-  if (resp.ok && data.id) {
-    if (data.private) {
-      sessionStorage.setItem('privateRoom', data.id);
-      window.location.href = '/game';
+  if (serverIsWaking(resp)) return;
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok || !data.id) {
+    showCreateError(data.msg || 'Could not create a lobby. Try again.');
+    return;
+  }
+  if (isPrivate) {
+    // Never fall back to a public lobby: its code would show in the URL and header.
+    if (!data.private) {
+      showCreateError('This server doesn\'t support private rooms. Restart it with the latest code, then try again.');
       return;
     }
-    storeLastLobby(data.id);
-    if (data.host_token) {
-      localStorage.setItem('hostToken', data.host_token);
-    }
-    window.location.hash = `#lobby/${data.id}`;
-  } else {
-    announce('Could not create lobby');
+    sessionStorage.setItem('privateRoom', data.id);
+    window.location.href = '/game';
+    return;
   }
+  storeLastLobby(data.id);
+  if (data.host_token) {
+    localStorage.setItem('hostToken', data.host_token);
+  }
+  window.location.hash = `#lobby/${data.id}`;
 }
 
 export async function joinLobby(code) {
@@ -303,6 +484,7 @@ export async function joinLobby(code) {
   }
   
   const resp = await fetch(`/lobby/${code}/state`);
+  if (serverIsWaking(resp)) return;
   if (resp.ok) {
     storeLastLobby(code);
     localStorage.removeItem('hostToken');
@@ -435,7 +617,10 @@ export function displayNetworkLobbies(lobbies) {
 
 async function initTileAnimation() {
   const landing = document.getElementById('landingView');
-  if (!landing?.classList.contains('tiles-preparing')) return;
+  if (!landing?.classList.contains('tiles-preparing')) {
+    finishDonationIntro();
+    return;
+  }
   const hero = document.getElementById('heroCard');
   const local = document.getElementById('networkLobbies');
   const donation = document.getElementById('donationSection');
@@ -520,12 +705,16 @@ async function initTileAnimation() {
         { strokeDasharray: `${progress} 100`, opacity: donation.dataset.funded === 'true' ? 1 : 0 }],
       { duration: 1100, easing: 'ease-out' }).finished));
   }
+  finishDonationIntro();
 }
 
 export function init() {
+  wakeServer();
+  startActivityPings();
   initTileAnimation();
   initDarkToggle();
   updateDonationSection();
+  initLiveDonations();
   initRoomMode();
   initJoinForm();
   initHowTo();
@@ -577,9 +766,12 @@ async function handleHashChange() {
       // Clear existing content and create iframe safely
       lobby.innerHTML = '';
       const iframe = document.createElement('iframe');
-      // Safari paints a pending iframe white, even inside a dark page.
-      iframe.hidden = true;
-      iframe.addEventListener('load', () => { iframe.hidden = false; }, { once: true });
+      // Safari paints a pending iframe white, even inside a dark page, so the
+      // frame stays invisible until it loads. It must still be laid out at full
+      // size: a display:none (hidden) frame boots the game against the wrong
+      // viewport in Safari and the board starts off-center on desktop.
+      iframe.dataset.loading = '';
+      iframe.addEventListener('load', () => { delete iframe.dataset.loading; }, { once: true });
       iframe.src = `/lobby/${match[1]}`;
       iframe.title = 'Game lobby';
       lobby.appendChild(iframe);

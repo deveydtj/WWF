@@ -89,6 +89,10 @@ for (const dark of [true, false]) {
         else await page.goto('http://wordsquad.test/index.html#lobby/ACT001', { waitUntil: 'domcontentloaded' });
         await downloading;
         await expect(page.locator('#lobbyView iframe')).toHaveCount(1);
+        // A pending frame stays laid out at full size, so the game boots against
+        // the real viewport instead of a display:none frame (off-center in Safari).
+        expect(await page.locator('#lobbyView iframe').evaluate(frame => Math.round(frame.getBoundingClientRect().width)))
+          .toBe(page.viewportSize().width);
         const shot = PNG.sync.read(await page.screenshot({ path: testInfo.outputPath(`pending-lobby-${load}.png`), timeout: 5000 }));
         const center = ((Math.floor(shot.height / 2) * shot.width) + Math.floor(shot.width / 2)) * 4;
         expect(Array.from(shot.data.subarray(center, center + 3))).toEqual(dark ? [44, 48, 58] : [224, 229, 236]);

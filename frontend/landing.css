@@ -224,6 +224,13 @@ body {
   grid-area: 1 / 1;
 }
 
+#createError {
+  margin: 0;
+  color: var(--landing-error);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
 .create-group[data-mode="open"] .private-only,
 .create-group[data-mode="private"] .open-only {
   visibility: hidden;
@@ -359,13 +366,15 @@ a:focus-visible {
 }
 
 #lobbyView iframe {
+  display: block;
   width: 100%;
   height: 100%;
   border: none;
 }
 
-#lobbyView iframe:not([hidden]) {
-  display: block;
+/* Keep a loading frame sized to the viewport but unpainted. */
+#lobbyView iframe[data-loading] {
+  visibility: hidden;
 }
 
 /* Nearby games reuse the landing card and control surfaces. */
@@ -989,4 +998,38 @@ body:has(#howTo[open]) {
     stroke-dasharray: 0 100;
     opacity: 0;
   }
+
+  /* Live donations: the ring glides to the new total. */
+  .donation-ring,
+  .donation-ring-glow {
+    transition: stroke-dasharray 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+  }
+
+  #donationSection.donation-celebrate .donation-meter {
+    animation: donation-pulse 1.4s ease-out;
+  }
+
+  #donationSection.donation-celebrate .donation-ring-glow {
+    animation: donation-glow 2.4s ease-out;
+  }
+
+  #donationSection.donation-celebrate .card-eyebrow span {
+    animation: donation-sparkle 1.2s ease-out 2;
+  }
+}
+
+@keyframes donation-pulse {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.045); }
+  65% { transform: scale(0.99); }
+}
+
+@keyframes donation-glow {
+  0%, 100% { stroke-width: 24; filter: blur(12px); }
+  40% { stroke-width: 36; filter: blur(18px); }
+}
+
+@keyframes donation-sparkle {
+  0%, 100% { text-shadow: 0 0 16px #64f696a6; }
+  50% { text-shadow: 0 0 28px #64f696ff; }
 }

@@ -1,11 +1,16 @@
 /**
  * Reset functionality management for WordSquad.
  * Handles game reset operations, hold-to-reset UI, and reset button states.
+ *
+ * A settled round (word found, or every row used) keeps its points and the
+ * New Game button starts the next word straight away. Holding Reset during a
+ * live round calls a squad vote instead; if it passes, that round's points
+ * are refunded (see resetVote.js and backend/reset_vote.py).
  */
 
 import { stopAllSounds } from './audioManager.js';
 import { animateTilesOut, animateTilesIn } from './board.js';
-import { resetGame } from './api.js';
+import { sendResetVote } from './resetVote.js';
 import { showMessage } from './utils.js';
 import { STATES } from './stateManager.js';
 import { hapticFeedback } from './haptics.js';
@@ -30,6 +35,10 @@ let HOST_TOKEN = null;
 let board = null;
 let messageEl = null;
 let messagePopup = null;
+
+// Every reset goes through the squad-vote endpoint; the server decides
+// whether the round is settled (new word now) or live (vote needed).
+const resetGame = () => sendResetVote('yes');
 
 // Initialize reset manager with required dependencies
 function initResetManager(dependencies) {
@@ -68,10 +77,41 @@ async function quickResetHandler() {
   return await performReset();
 }
 
-function updateResetButton() {
+// Holding Reset during a live round calls a squad vote (counting as a yes).
+async function callSquadVote() {
+  hapticFeedback(25);
+  let resp;
+  try {
+    resp = await resetGame(LOBBY_CODE, HOST_TOKEN);
+  } catch {
+    resp = { status: 'error', msg: 'Could not reach the game.' };
+  }
+  if (!resp || resp.status !== 'ok') {
+    if (resp && resp.msg) {
+      showMessage(resp.msg, { messageEl, messagePopup });
+    }
+    return resp;
+  }
+  if (resp.outcome === 'pending') {
+    morphResetButton('Vote called');
+    await fetchState();
+    return resp;
+  }
+  // A squad of one (or an untouched board) resets at once.
+  morphResetButton('Game Reset');
+  stopAllSounds();
+  await animateTilesOut(board);
+  await fetchState();
+  await animateTilesIn(board);
+  return resp;
+}
+
+function updateResetButton(state) {
+  const roundLive = !gameState.is(STATES.GAME_OVER) && !!state?.guesses?.length;
+  // Private-room guests can call a squad vote, but the host starts each word.
   if (window.PRIVATE_ROOM && !window.PRIVATE_ROOM.host) {
-    holdReset.hidden = true;
-    return;
+    holdReset.hidden = !roundLive;
+    if (!roundLive) return;
   }
   if (gameState.is(STATES.GAME_OVER)) {
     holdResetText.textContent = 'New Game';
@@ -116,9 +156,7 @@ function startHoldReset() {
         holdResetProgress.style.width = '0%';
       }, 350);
       
-      // Start button morphing animation instead of showing popup
-      morphResetButton();
-      performReset();
+      callSquadVote();
     }
   }, 20);
 }
@@ -134,8 +172,8 @@ function stopHoldReset() {
   holdResetProgress.style.opacity = '0.9';
 }
 
-// Morph the reset button to show "Game Reset" and then back to "Reset"
-function morphResetButton() {
+// Morph the reset button to show a short confirmation and then back to "Reset"
+function morphResetButton(label = 'Game Reset') {
   // Clear any existing timeout to prevent conflicts
   if (morphTimeout) {
     clearTimeout(morphTimeout);
@@ -218,12 +256,12 @@ function morphResetButton() {
       
       // Change text and fade in "Game Reset" slightly after width animation starts
       setTimeout(() => {
-        displayText.textContent = 'Game Reset';
+        displayText.textContent = label;
         displayText.style.transition = 'opacity 0.3s ease-in';
         displayText.style.opacity = '1';
       }, 100); // Small delay to let width animation start first
       
-      // Display "Game Reset" for exactly 3 seconds with no possibility of interruption
+      // Display the confirmation for exactly 3 seconds with no possibility of interruption
       morphTimeout = setTimeout(() => {
         revertResetButton(cleanDisplayButton, displayText, originalWidth);
       }, 3000);
@@ -289,6 +327,7 @@ function morphResetButton() {
 export {
   initResetManager,
   performReset,
+  callSquadVote,
   quickResetHandler,
   updateResetButton,
   startHoldReset,

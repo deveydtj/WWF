@@ -72,7 +72,7 @@ def test_publication_resources_depend_on_gate():
     source = (Path(__file__).resolve().parents[1] / 'infra/terraform/main.tf').read_text()
     for resource_type, name in [('aws_s3_bucket_policy', 'frontend'),
                                 ('aws_cloudfront_distribution', 'cdn'),
-                                ('aws_ecs_service', 'api')]:
+                                ('aws_instance', 'api')]:
         block = source.split(f'resource "{resource_type}" "{name}" {{', 1)[1].split('\nresource ', 1)[0]
         dependency = block.split('depends_on', 1)[1].split(']', 1)[0]
         assert 'terraform_data.privacy_publication_gate' in dependency

@@ -16,10 +16,12 @@ async function poll() {
       sessionStorage.removeItem('pendingPrivateRoom');
       location.replace('/game');
     } else {
+      document.body.dataset.waiting = '';
       status.textContent = 'Waiting for the host to approve your request…';
       timer = setTimeout(poll, 3000);
     }
   } catch {
+    delete document.body.dataset.waiting;
     sessionStorage.removeItem('pendingPrivateRoom');
     status.textContent = 'Your request is unavailable or expired. Ask the host for a new invitation.';
   }

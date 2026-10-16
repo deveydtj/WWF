@@ -82,6 +82,33 @@ function setupMobileLeaderboard() {
   // The leaderboard will work consistently across all screen sizes
 }
 
+/**
+ * Slide entries that changed rank from their old spot, and fade in players
+ * who just joined. Skipped on first render and for reduced motion.
+ */
+function animateLeaderboardChanges(leaderboardDiv, previousPositions, hadEntries) {
+  if (!hadEntries || typeof Element.prototype.animate !== 'function' ||
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+  Array.from(leaderboardDiv.children).forEach(entry => {
+    const before = previousPositions.get(entry.dataset.emoji);
+    if (before === undefined) {
+      entry.animate(
+        [{ opacity: 0, transform: 'scale(0.85)' }, { opacity: 1, transform: 'scale(1)' }],
+        { duration: 260, easing: 'ease-out' }
+      );
+      return;
+    }
+    const dx = before - entry.getBoundingClientRect().left;
+    if (Math.abs(dx) < 1) return;
+    entry.animate(
+      [{ transform: `translateX(${dx}px)` }, { transform: 'translateX(0)' }],
+      { duration: 360, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }
+    );
+  });
+}
+
 function renderLeaderboard() {
   const leaderboardDiv = document.getElementById('leaderboard');
   if (!leaderboardDiv) return;
@@ -99,6 +126,12 @@ function renderLeaderboard() {
     })
     .sort((a, b) => (b.score || 0) - (a.score || 0));
   
+  // Remember where each player sat so rank changes can glide (FLIP).
+  const previousPositions = new Map(
+    Array.from(leaderboardDiv.children, el => [el.dataset.emoji, el.getBoundingClientRect().left])
+  );
+  const hadEntries = previousPositions.size > 0;
+
   leaderboardDiv.innerHTML = '';
   
   sortedEntries.forEach(({ emoji, score = 0, last_active, hint_count = 0, player_id }) => {
@@ -158,6 +191,8 @@ function renderLeaderboard() {
     
     leaderboardDiv.appendChild(entry);
   });
+
+  animateLeaderboardChanges(leaderboardDiv, previousPositions, hadEntries);
   
   // Update previous leaderboard state
   prevLeaderboard = Object.fromEntries(
@@ -320,10 +355,20 @@ function alignStampsWithBoardRows() {
   });
 }
 
-function renderEmojiStamps(guesses) {
+// The newest stamp lands when its row finishes revealing: { index, at }.
+let pendingStamp = null;
+const STAMP_IN_MS = 420;
+
+function renderEmojiStamps(guesses, { animateIndex = -1, delay = 0 } = {}) {
   const stampsDiv = document.getElementById('stampContainer');
   if (!stampsDiv) return;
   
+  const time = performance.now();
+  if (animateIndex >= 0) pendingStamp = { index: animateIndex, at: time + delay };
+  if (pendingStamp && (pendingStamp.index >= guesses.length || time > pendingStamp.at + STAMP_IN_MS)) {
+    pendingStamp = null;
+  }
+
   stampsDiv.innerHTML = '';
   
   guesses.forEach((guess, index) => {
@@ -339,6 +384,11 @@ function renderEmojiStamps(guesses) {
     
     // No word labels - just the emoji
     stamp.appendChild(emojiSpan);
+    if (pendingStamp?.index === index) {
+      // A refresh mid-animation resumes it (negative delay) rather than replaying it.
+      stamp.classList.add('stamp-in');
+      stamp.style.setProperty('--stamp-delay', `${Math.round(pendingStamp.at - time)}ms`);
+    }
     
     stampsDiv.appendChild(stamp);
   });

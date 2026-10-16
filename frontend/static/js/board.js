@@ -1,3 +1,38 @@
+/*
+ * Reveal timing. Tiles flip one after another; each tile shows its colour at
+ * the moment it is edge-on. Other feedback (keyboard colours, emoji stamps,
+ * points) waits for getRevealDuration() so nothing spoils the reveal.
+ */
+export const REVEAL_STAGGER_MS = 220;
+export const REVEAL_FLIP_MS = 500;
+const WIN_HOP_PAUSE_MS = 80;
+const WIN_HOP_STAGGER_MS = 90;
+const WIN_HOP_MS = 480;
+const RESULT_CLASSES = ['correct', 'present', 'absent'];
+// Animation classes that must survive a state refresh until they finish.
+const PERSISTENT_ANIMATIONS = ['letter-in', 'row-shake'];
+const REVEAL_ANIMATIONS = ['flip-reveal', 'win-hop'];
+
+export function prefersReducedMotion() {
+  return typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** Milliseconds from a row's submission until its last tile has flipped. */
+export function getRevealDuration() {
+  return prefersReducedMotion() ? 0 : REVEAL_STAGGER_MS * 4 + REVEAL_FLIP_MS;
+}
+
+/** Milliseconds from submission until a tile is edge-on and changes colour. */
+export function getTileRevealMoment(col) {
+  return prefersReducedMotion() ? 0 : REVEAL_STAGGER_MS * col + REVEAL_FLIP_MS / 2;
+}
+
+function now() {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
 /**
  * Build an empty game board consisting of ``rows`` rows of tiles.
  *
@@ -40,22 +75,44 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
   const previousTexts = Array.from(tiles).map(tile => tile.textContent);
   const previousGhosts = Array.from(tiles).map(tile => tile.classList.contains('ghost'));
   
+  const renderTime = now();
   for (let i = 0; i < rows * 5; i++) {
-    tiles[i].textContent = '';
-    // State refreshes must not cancel a letter animation already in progress.
-    tiles[i].className = tiles[i].classList.contains('letter-in') ? 'tile letter-in' : 'tile';
+    const tile = tiles[i];
+    tile.textContent = '';
+    // State refreshes must not cancel an animation already in progress.
+    const kept = PERSISTENT_ANIMATIONS.filter(name => tile.classList.contains(name));
+    const revealEnd = tile.dataset?.revealEnd;
+    if (Number(revealEnd) > renderTime) {
+      kept.push(...REVEAL_ANIMATIONS.filter(name => tile.classList.contains(name)));
+    } else if (revealEnd) {
+      delete tile.dataset.revealEnd;
+      tile.style.removeProperty('--reveal-delay');
+      tile.style.removeProperty('--hop-delay');
+    }
+    tile.className = ['tile', ...kept].join(' ');
   }
+
+  const revealMs = animateRow >= 0 ? getRevealDuration() : 0;
+  const animatedGuess = revealMs ? guesses[animateRow] : null;
+  const isWinningRow = Boolean(animatedGuess?.result?.every(r => r === 'correct'));
   guesses.forEach((g, row) => {
     for (let i = 0; i < 5; i++) {
       const tile = tiles[row * 5 + i];
       tile.textContent = g.guess[i].toUpperCase();
       tile.classList.add(g.result[i]);
-      if (row === animateRow) {
-        tile.style.transitionDelay = `${i * 0.15}s`;
-        // Add flip animation for color reveal
+      if (row === animateRow && revealMs) {
+        tile.style.setProperty('--reveal-delay', `${i * REVEAL_STAGGER_MS}ms`);
+        tile.style.setProperty('--reveal-flip', `${REVEAL_FLIP_MS}ms`);
+        tile.classList.remove(...REVEAL_ANIMATIONS);
         tile.classList.add('flip-reveal');
-      } else {
-        tile.style.transitionDelay = '';
+        let end = revealMs;
+        if (isWinningRow) {
+          const hopDelay = revealMs + WIN_HOP_PAUSE_MS + i * WIN_HOP_STAGGER_MS;
+          tile.style.setProperty('--hop-delay', `${hopDelay}ms`);
+          tile.classList.add('win-hop');
+          end = hopDelay + WIN_HOP_MS;
+        }
+        tile.dataset.revealEnd = String(renderTime + end);
       }
     }
   });
@@ -101,6 +158,53 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
       }
     }
   }
+}
+
+/**
+ * Shake one row of tiles to reject a guess.
+ *
+ * @param {HTMLElement} board - Game board element.
+ * @param {number} rowIndex - Row to shake.
+ * @returns {boolean} False when the row does not exist.
+ */
+export function shakeRow(board, rowIndex) {
+  const tiles = Array.from(board?.children || []).slice(rowIndex * 5, rowIndex * 5 + 5);
+  if (tiles.length !== 5 || prefersReducedMotion()) return tiles.length === 5;
+  tiles.forEach(tile => {
+    tile.classList.remove('row-shake');
+    void tile.offsetWidth;
+    tile.classList.add('row-shake');
+    // Always clear the class, even if the animation is cancelled, so it can
+    // never linger and block a later reveal.
+    const done = () => {
+      clearTimeout(fallback);
+      tile.classList.remove('row-shake');
+      tile.removeEventListener('animationend', onEnd);
+      tile.removeEventListener('animationcancel', onEnd);
+    };
+    const onEnd = (event) => { if (event.animationName === 'shake') done(); };
+    const fallback = setTimeout(done, 600);
+    tile.addEventListener('animationend', onEnd);
+    tile.addEventListener('animationcancel', onEnd);
+  });
+  return true;
+}
+
+/**
+ * The first row that has not been submitted yet.
+ *
+ * @param {HTMLElement} board
+ * @returns {number}
+ */
+export function getActiveRowIndex(board) {
+  const tiles = Array.from(board?.children || []);
+  for (let row = 0; row * 5 < tiles.length; row++) {
+    const rowTiles = tiles.slice(row * 5, row * 5 + 5);
+    const submitted = rowTiles.every(t => !t.classList.contains('ghost') &&
+      RESULT_CLASSES.some(c => t.classList.contains(c)));
+    if (!submitted) return row;
+  }
+  return -1;
 }
 
 /**

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>WordSquad is waking up</title>
+  <!-- CloudFront serves this page in place of any game URL while the server is
+       asleep, so everything is inline (relative asset paths would break). -->
+  <style>
+    :root { --bg: #f6f7f9; --fg: #1d2330; --muted: #5d6677; --tile: #6aaa64; --tile2: #c9b458; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #121417; --fg: #e8eaef; --muted: #9aa3b2; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+           background: var(--bg); color: var(--fg);
+           font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-align: center; }
+    main { max-width: 26rem; }
+    .tiles { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+    .tiles span { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 6px;
+                  font-weight: 800; font-size: 22px; color: #fff; background: var(--tile);
+                  animation: pop 1.4s ease-in-out infinite; }
+    .tiles span:nth-child(even) { background: var(--tile2); }
+    .tiles span:nth-child(2) { animation-delay: .1s; } .tiles span:nth-child(3) { animation-delay: .2s; }
+    .tiles span:nth-child(4) { animation-delay: .3s; } .tiles span:nth-child(5) { animation-delay: .4s; }
+    @keyframes pop { 0%, 60%, 100% { transform: none; } 30% { transform: translateY(-8px); } }
+    @media (prefers-reduced-motion: reduce) { .tiles span { animation: none; } }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p { margin: 0 0 12px; color: var(--muted); }
+    button { font: inherit; padding: 10px 18px; border-radius: 8px; border: 0; cursor: pointer;
+             background: var(--tile); color: #fff; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="tiles" aria-hidden="true"><span>W</span><span>A</span><span>K</span><span>E</span><span>!</span></div>
+    <h1 id="title">Waking up the game server…</h1>
+    <p id="status" role="status" aria-live="polite">It naps when nobody's playing. This usually takes about a minute.</p>
+    <button id="retry" type="button" hidden>Try again</button>
+  </main>
+  <script>
+    (function () {
+      var title = document.getElementById('title');
+      var status = document.getElementById('status');
+      var retry = document.getElementById('retry');
+      var started = Date.now();
+      var lastWake = started;
+      var timer = null;
+
+      function wake() {
+        return fetch('/wake', { cache: 'no-store' }).then(function (r) {
+          if (r.status === 423) {
+            title.textContent = 'WordSquad is taking a short break';
+            status.textContent = 'The game is paused for now. Please check back later.';
+            throw new Error('paused');
+          }
+        });
+      }
+
+      function check() {
+        fetch('/health', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (data && data.status === 'ok') { window.location.reload(); return; }
+            if (Date.now() - started > 4 * 60 * 1000) { giveUp(); return; }
+            // Re-send the wake request now and then in case the server was
+            // still finishing a shutdown the first time.
+            if (Date.now() - lastWake > 30 * 1000) { lastWake = Date.now(); wake().catch(function () {}); }
+            timer = setTimeout(check, 4000);
+          })
+          .catch(function () { timer = setTimeout(check, 4000); });
+      }
+
+      function giveUp() {
+        status.textContent = 'This is taking longer than usual.';
+        retry.hidden = false;
+      }
+
+      retry.addEventListener('click', function () {
+        retry.hidden = true;
+        status.textContent = 'Trying again…';
+        started = Date.now();
+        clearTimeout(timer);
+        wake().then(check).catch(function () {});
+      });
+
+      wake().then(check).catch(function (err) { if (err.message !== 'paused') check(); });
+    })();
+  </script>
+</body>
+</html>

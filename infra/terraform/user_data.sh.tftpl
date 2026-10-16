@@ -1,0 +1,245 @@
+#!/bin/bash
+# WordSquad API server bootstrap (Amazon Linux 2023). Runs once, on first boot.
+# Rendered by Terraform templatefile(): a doubled $ escapes shell braces.
+set -euxo pipefail
+
+dnf -y install docker nginx
+dnf -y install python3.11 || true   # newer Python for certbot when available
+PY=$(command -v python3.11 || command -v python3)
+
+# Small swap file so a memory spike doesn't kill the game on a 1 GB box.
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=1024
+  chmod 600 /swapfile && mkswap /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+swapon -a || true
+
+# Let's Encrypt client (DNS validation through Route 53, no open ports needed).
+"$PY" -m venv /opt/certbot
+/opt/certbot/bin/pip install --quiet --upgrade pip certbot certbot-dns-route53
+
+mkdir -p /etc/wwf /opt/wwf/data
+chown 1001:1001 /opt/wwf/data   # "appuser" inside docker/Dockerfile
+
+cat > /etc/wwf/wwf.conf <<'EOF'
+AWS_REGION=${aws_region}
+API_IMAGE=${api_image}
+DOMAIN=${domain}
+ORIGIN_HOST=${origin_host}
+SESSION_SECRET_ARN=${session_secret_arn}
+REDIS_SECRET_ARN=${redis_secret_arn}
+OPERATOR_SECRET_ARN=${operator_secret_arn}
+SINGLE_INSTANCE=${single_instance}
+IDLE_MINUTES=${idle_minutes}
+ACME_EMAIL=${acme_email}
+EOF
+chmod 644 /etc/wwf/wwf.conf
+
+# ---------- helper scripts ----------
+
+cat > /usr/local/bin/wwf-secret <<'EOF'
+#!/bin/bash
+# Print one secret value from an SSM parameter ARN or Secrets Manager ARN.
+set -euo pipefail
+source /etc/wwf/wwf.conf
+case "$1" in
+  arn:aws:ssm:*) aws ssm get-parameter --region "$AWS_REGION" --with-decryption \
+                   --name "$1" --query Parameter.Value --output text ;;
+  arn:aws:secretsmanager:*) aws secretsmanager get-secret-value --region "$AWS_REGION" \
+                   --secret-id "$1" --query SecretString --output text ;;
+  *) echo "Unsupported secret ARN: $1" >&2; exit 1 ;;
+esac
+EOF
+
+cat > /usr/local/bin/wwf-prepare <<'EOF'
+#!/bin/bash
+# Runs before every app start: refresh the image and write the runtime env file.
+set -euo pipefail
+source /etc/wwf/wwf.conf
+registry=$(echo "$API_IMAGE" | cut -d/ -f1)
+if echo "$registry" | grep -q '\.dkr\.ecr\.'; then
+  aws ecr get-login-password --region "$AWS_REGION" \
+    | docker login --username AWS --password-stdin "$registry" || echo "ECR login failed" >&2
+fi
+docker pull "$API_IMAGE" || docker image inspect "$API_IMAGE" > /dev/null
+
+umask 077
+mkdir -p /run/wwf
+env_file=/run/wwf/app.env.tmp
+{
+  echo "FLASK_ENV=production"
+  echo "PUBLIC_ORIGIN=https://$DOMAIN"
+  echo "TRUSTED_PROXY_HOPS=2"
+  echo "SINGLE_INSTANCE=$SINGLE_INSTANCE"
+  echo "GAME_FILE=/app/runtime/game_persist.json"
+  echo "LOBBIES_FILE=/app/runtime/lobbies.json"
+  echo "SECRET_KEY=$(wwf-secret "$SESSION_SECRET_ARN")"
+  if [ -n "$REDIS_SECRET_ARN" ]; then echo "REDIS_URL=$(wwf-secret "$REDIS_SECRET_ARN")"; fi
+  if [ -n "$OPERATOR_SECRET_ARN" ]; then echo "OPERATOR_TOKEN=$(wwf-secret "$OPERATOR_SECRET_ARN")"; fi
+} > "$env_file"
+mv "$env_file" /run/wwf/app.env
+EOF
+
+cat > /usr/local/bin/wwf-cert <<'EOF'
+#!/bin/bash
+# Get or renew the origin TLS certificate. No-op unless within 30 days of expiry.
+set -euo pipefail
+source /etc/wwf/wwf.conf
+if [ -n "$ACME_EMAIL" ]; then contact=(--email "$ACME_EMAIL"); else contact=(--register-unsafely-without-email); fi
+/opt/certbot/bin/certbot certonly --non-interactive --agree-tos "$${contact[@]}" \
+  --dns-route53 -d "$ORIGIN_HOST" --keep-until-expiring \
+  --deploy-hook "systemctl try-reload-or-restart nginx"
+EOF
+
+cat > /usr/local/bin/wwf-idle-check <<'EOF'
+#!/bin/bash
+# Stop (not terminate) this server once no one has played for IDLE_MINUTES.
+# "Played" = a POST to the game API or opening a game/lobby page; see nginx map.
+# Health checks, live-update streams and lobby-list polling do not count, so an
+# idle browser tab can't keep the server running.
+set -euo pipefail
+source /etc/wwf/wwf.conf
+now=$(date +%s)
+booted=$(( now - $(cut -d. -f1 /proc/uptime) ))
+last=$booted
+log=/var/log/nginx/wwf-activity.log
+if [ -f "$log" ]; then
+  seen=$(stat -c %Y "$log")
+  if [ "$seen" -gt "$last" ]; then last=$seen; fi
+fi
+idle=$(( now - last ))
+if [ "$idle" -ge $(( IDLE_MINUTES * 60 )) ]; then
+  logger -t wwf-idle "No players for $(( idle / 60 )) min; stopping server"
+  systemctl stop wwf-app || true
+  systemctl poweroff
+fi
+EOF
+chmod 755 /usr/local/bin/wwf-*
+
+# ---------- nginx: TLS origin for CloudFront ----------
+
+cat > /etc/nginx/conf.d/wwf.conf <<'EOF'
+log_format wwf_activity '$time_iso8601 $request_method $uri $status';
+
+map $request_method $wwf_is_post { POST 1; default 0; }
+map "$wwf_is_post:$uri" $wwf_activity {
+    default 0;
+    "~^1:/(internal|admin)/" 0;
+    "~^1:/" 1;
+    "~^0:/(game|join|lobby/[A-Za-z0-9]{6})/?$" 1;
+}
+
+server {
+    listen 443 ssl default_server;
+    server_name _;
+    ssl_certificate     /etc/letsencrypt/live/${origin_host}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${origin_host}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    client_max_body_size 1m;
+    access_log /var/log/nginx/wwf-activity.log wwf_activity if=$wwf_activity;
+
+    # Only our CloudFront distribution knows this value.
+    if ($http_x_origin_verify != "${origin_verify_secret}") { return 403; }
+
+    # Player keep-alive (typing/tapping). Answered here so it costs the app
+    # nothing; the access log above records it, which resets the idle timer.
+    location = /activity {
+        if ($request_method != POST) { return 405; }
+        return 204;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host ${domain};
+        proxy_set_header X-Origin-Verify "";
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_buffering off;           # live-update streams (SSE)
+        proxy_read_timeout 1h;
+    }
+}
+EOF
+chmod 640 /etc/nginx/conf.d/wwf.conf
+
+# ---------- systemd units ----------
+
+cat > /etc/systemd/system/wwf-cert.service <<'EOF'
+[Unit]
+Description=WordSquad origin certificate
+Wants=network-online.target
+After=network-online.target
+Before=nginx.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wwf-cert
+[Install]
+WantedBy=multi-user.target
+EOF
+
+mkdir -p /etc/systemd/system/nginx.service.d
+cat > /etc/systemd/system/nginx.service.d/wwf.conf <<'EOF'
+[Unit]
+Wants=wwf-cert.service
+After=wwf-cert.service
+EOF
+
+cat > /etc/systemd/system/wwf-cert-renew.timer <<'EOF'
+[Unit]
+Description=Daily origin certificate renewal check
+[Timer]
+OnBootSec=1h
+OnUnitActiveSec=1d
+Unit=wwf-cert.service
+[Install]
+WantedBy=timers.target
+EOF
+
+cat > /etc/systemd/system/wwf-app.service <<'EOF'
+[Unit]
+Description=WordSquad API container
+Requires=docker.service
+After=docker.service network-online.target
+[Service]
+EnvironmentFile=/etc/wwf/wwf.conf
+ExecStartPre=-/usr/bin/docker rm -f wwf-api
+ExecStartPre=/usr/local/bin/wwf-prepare
+ExecStart=/usr/bin/docker run --rm --name wwf-api -p 127.0.0.1:5001:5001 \
+  --env-file /run/wwf/app.env -v /opt/wwf/data:/app/runtime \
+  --log-opt max-size=10m --log-opt max-file=3 $API_IMAGE
+ExecStop=/usr/bin/docker stop -t 20 wwf-api
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat > /etc/systemd/system/wwf-idle.service <<'EOF'
+[Unit]
+Description=Stop the server when nobody is playing
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wwf-idle-check
+EOF
+
+cat > /etc/systemd/system/wwf-idle.timer <<'EOF'
+[Unit]
+Description=Check for idle server every 5 minutes
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=wwf-idle.service
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now docker
+systemctl enable wwf-cert.service wwf-cert-renew.timer nginx wwf-app.service wwf-idle.timer
+# Idle timer first: even if something below fails, the server still stops itself.
+systemctl start wwf-idle.timer wwf-cert-renew.timer
+systemctl start wwf-cert.service || echo "Certificate request failed; retried on next boot" >&2
+systemctl start nginx wwf-app.service || echo "Startup failed; see journalctl -u nginx -u wwf-app" >&2

@@ -33,6 +33,12 @@ class GameState:
     host_token: str | None = None
     phase: str = "waiting"
     last_activity: float = field(default_factory=time.time)
+    # Score changes made during the current round, by emoji, so a voted
+    # mid-round reset can refund them. Cleared whenever a new word starts.
+    round_points: dict = field(default_factory=dict)
+    reset_vote: dict | None = None  # the open squad vote, if any
+    reset_vote_result: dict | None = None  # how the last vote ended
+    reset_vote_cooldown_until: float = 0.0
 
 
 # Color variants for duplicate emojis

@@ -3,7 +3,7 @@
  * Extracts the complex applyState logic and related state management from main.js
  */
 
-import { updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints } from './board.js';
+import { updateBoard, updateKeyboardFromGuesses, updateHardModeConstraints, getRevealDuration, getTileRevealMoment } from './board.js';
 import { renderHistory } from './history.js';
 import { renderChat } from './chat.js';
 import { updateLeaderboard, renderPlayerSidebar, renderEmojiStamps } from './leaderboardManager.js';
@@ -12,6 +12,7 @@ import { saveHintState } from './hintState.js';
 import { showMessage, setGameInputDisabled } from './utils.js';
 import { showChatNotify, showChatMessagePopup } from './uiNotifications.js';
 import { updateResetButton } from './resetManager.js';
+import { renderResetVote } from './resetVote.js';
 import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility } from './panelManager.js';
 import { OVERLAYS, isOverlayOpen } from './overlayState.js';
 import { STATES } from './stateManager.js';
@@ -437,15 +438,16 @@ class GameStateManager {
     // Handle daily double row progression
     this._handleDailyDoubleProgression(state);
     
-    // Play click sounds for new guesses
+    // Click as each tile turns over, in step with the flip.
+    const revealMs = animateRow >= 0 ? getRevealDuration() : 0;
     if (animateRow >= 0) {
       for (let i = 0; i < 5; i++) {
-        setTimeout(playClick, i * 150);
+        setTimeout(playClick, getTileRevealMoment(i));
       }
     }
     
-    renderEmojiStamps(state.guesses);
-    updateKeyboardFromGuesses(keyboard, state.guesses);
+    renderEmojiStamps(state.guesses, revealMs ? { animateIndex: animateRow, delay: revealMs } : {});
+    this._updateKeyboardAfterReveal(keyboard, state.guesses, revealMs);
     
     // Update hard mode constraints
     const constraints = updateHardModeConstraints(state.guesses);
@@ -453,7 +455,25 @@ class GameStateManager {
     this.greenPositions = constraints.greenPositions;
     
     setGameInputDisabled(this.gameState.is(STATES.GAME_OVER));
-    updateResetButton();
+    updateResetButton(state);
+    renderResetVote(state);
+  }
+
+  /**
+   * Colour the on-screen keyboard once the newest row has finished flipping,
+   * so the keys never give away a result before the tiles do.
+   * @private
+   */
+  _updateKeyboardAfterReveal(keyboard, guesses, revealMs) {
+    const time = Date.now();
+    if (revealMs) this._keyboardRevealUntil = time + revealMs;
+    clearTimeout(this._keyboardRevealTimer);
+    const wait = guesses.length ? Math.max(0, (this._keyboardRevealUntil || 0) - time) : 0;
+    if (!wait) {
+      updateKeyboardFromGuesses(keyboard, guesses);
+      return;
+    }
+    this._keyboardRevealTimer = setTimeout(() => updateKeyboardFromGuesses(keyboard, guesses), wait);
   }
 
   /**

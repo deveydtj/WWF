@@ -11,11 +11,12 @@ from backend.config import ConfigError, validate_production_config
 API_REQUESTS = [
     ('POST', '/lobby'), ('GET', '/lobbies'), ('GET', '/lobbies/network'),
     ('GET', '/state'), ('POST', '/state'), ('POST', '/emoji'),
-    ('POST', '/guess'), ('POST', '/hint'), ('POST', '/reset'),
+    ('POST', '/guess'), ('POST', '/hint'), ('POST', '/reset'), ('POST', '/vote-reset'),
     ('GET', '/chat'), ('POST', '/chat'), ('GET', '/stream'),
     ('GET', '/lobby/ABC123/state'), ('POST', '/lobby/ABC123/state'),
     ('POST', '/lobby/ABC123/emoji'), ('POST', '/lobby/ABC123/guess'),
-    ('POST', '/lobby/ABC123/reset'), ('POST', '/lobby/ABC123/kick'),
+    ('POST', '/lobby/ABC123/reset'), ('POST', '/lobby/ABC123/vote-reset'),
+    ('POST', '/lobby/ABC123/kick'),
     ('POST', '/lobby/ABC123/leave'), ('GET', '/lobby/ABC123/chat'),
     ('POST', '/lobby/ABC123/chat'), ('GET', '/lobby/ABC123/stream'),
 ]

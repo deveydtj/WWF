@@ -38,6 +38,7 @@ The implementation serializes private operations with one storage lock and caps 
 | `/lobby/<code>/state`, `/emoji`, `/guess`, `/hint`, `/chat` | Approved membership, server-derived actor, shared rate limit; mutations also require origin/custom header |
 | `/lobby/<code>/stream` | Membership before opening and on each tick; shared connection bounds; failure/expiry/revocation closes stream |
 | `/lobby/<code>/reset`, `/kick`, `/admission` | Host membership; invitation holders and ordinary members cannot manage rooms |
+| `/lobby/<code>/vote-reset` | Any member can call or answer a squad vote on a live round; only the host can start the next word once a round is settled |
 | `/lobby/<code>/leave` | Revokes the calling member; host leave deletes the room |
 | Legacy `/state`, `/emoji`, `/guess`, `/hint`, `/chat`, `/reset`, `/stream` | Always the ordinary default lobby; cannot select a private room via client parameters |
 | `/internal/purge`, `/admin/notify-update` | Dedicated `Authorization: Bearer <OPERATOR_TOKEN>`; age eligibility is not operator authorization |
@@ -63,15 +64,15 @@ The implementation serializes private operations with one storage lock and caps 
 | `ROOM_STREAMS_PER_MEMBER` | 3 |
 | `ROOM_MAX_CHAT_MESSAGES` | 100 retained messages per room |
 | `ROOM_MAX_PAST_GAMES` | 20 retained games per room |
-| `TRUSTED_PROXY_HOPS` | 0 unless the forwarding chain is restricted and verified; Terraform uses 2 for CloudFront → ALB |
+| `TRUSTED_PROXY_HOPS` | 0 unless the forwarding chain is restricted and verified; Terraform uses 2 for CloudFront → nginx on the game server |
 
 Request bodies are limited to 16 KiB. Shared limits per session per minute: creation 5, invitation exchanges 30, pending polls 120, private game access 240, guesses 30. Network allowances are 30 times session allowances so shared LANs remain usable. Rate records expire after a minute and are capped at 4096; reaching the cap denies new entries. An ordinary user cannot override the network identity with an arbitrary forwarding header.
 
 ## Deployment and launch checks
 
-Terraform forwards private paths, join pages, both session cookies, Origin, the custom request header, and operator Authorization to the API with caching disabled. The ALB permits only the AWS CloudFront origin-facing prefix list; ECS permits only the ALB. The cleanup Lambda now uses the public HTTPS domain and retrieves its dedicated operator token from Secrets Manager.
+Terraform forwards private paths, join pages, both session cookies, Origin, the custom request header, and operator Authorization to the API with caching disabled. The game server's security group permits only the AWS CloudFront origin-facing prefix list, nginx additionally requires a secret header that only this distribution sends, and the app container listens on localhost only. Idle lobbies are purged by the app itself during normal requests; there is no separate cleanup Lambda.
 
-Set `private_rooms_redis_secret_arn` to a Secrets Manager secret containing the Redis connection URL and `operator_secret_arn` to a separate service-token secret. Empty Redis configuration leaves private rooms unavailable in production. Grant the ECS execution role access to both secrets and their KMS key, when applicable. Terraform adds the cleanup Lambda's scoped GetSecretValue permission; a customer-managed secret KMS key also needs an appropriate decrypt grant. No secret values belong in tfvars.
+Set `private_rooms_redis_secret_arn` to an SSM SecureString parameter or Secrets Manager secret containing the Redis connection URL and `operator_secret_arn` to a separate service-token secret. Empty Redis configuration leaves private rooms unavailable in production. Terraform grants the game server's IAM role read access to exactly these ARNs; a customer-managed secret KMS key also needs an appropriate decrypt grant. No secret values belong in tfvars.
 
 Before advertising private rooms:
 

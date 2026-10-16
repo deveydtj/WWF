@@ -54,69 +54,40 @@ function hideHintTooltip() {
 
 function burstConfetti(row, col) {
   const board = document.getElementById('board');
-  if (!board) return;
-  
-  const tile = board.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-  if (!tile) return;
-  
+  const area = document.getElementById('boardArea') || board?.parentElement;
+  const tile = board?.children[row * 5 + col];
+  if (!area || !tile) return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+  // Particles live beside the board so they never become board children.
   const rect = tile.getBoundingClientRect();
-  const boardRect = board.getBoundingClientRect();
-  
-  // Create confetti particles
-  for (let i = 0; i < 8; i++) {
+  const areaRect = area.getBoundingClientRect();
+  const originX = rect.left - areaRect.left + rect.width / 2;
+  const originY = rect.top - areaRect.top + rect.height / 2;
+  const styles = getComputedStyle(document.body);
+  const colors = [
+    styles.getPropertyValue('--correct-bg').trim() || '#6aaa64',
+    styles.getPropertyValue('--present-bg').trim() || '#c9b458',
+    '#64f696'
+  ];
+  const count = 14;
+
+  for (let i = 0; i < count; i++) {
     const particle = document.createElement('div');
     particle.className = 'confetti-particle';
-    particle.style.left = (rect.left - boardRect.left + rect.width / 2) + 'px';
-    particle.style.top = (rect.top - boardRect.top + rect.height / 2) + 'px';
-    
-    // Random colors and animations
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
-    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    
-    const angle = (i / 8) * 2 * Math.PI;
-    const distance = 30 + Math.random() * 20;
-    const finalX = Math.cos(angle) * distance;
-    const finalY = Math.sin(angle) * distance;
-    
-    particle.style.setProperty('--final-x', finalX + 'px');
-    particle.style.setProperty('--final-y', finalY + 'px');
-    
-    board.appendChild(particle);
-    
-    // Remove particle after animation
-    setTimeout(() => {
-      if (particle.parentNode) {
-        particle.parentNode.removeChild(particle);
-      }
-    }, 1000);
-  }
-  
-  // Add CSS animation if not already present
-  if (!document.getElementById('confetti-styles')) {
-    const style = document.createElement('style');
-    style.id = 'confetti-styles';
-    style.textContent = `
-      .confetti-particle {
-        position: absolute;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        pointer-events: none;
-        animation: confetti-burst 1s ease-out forwards;
-        z-index: 1000;
-      }
-      @keyframes confetti-burst {
-        0% {
-          transform: translate(0, 0) scale(1);
-          opacity: 1;
-        }
-        100% {
-          transform: translate(var(--final-x), var(--final-y)) scale(0);
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
+    particle.style.left = `${originX}px`;
+    particle.style.top = `${originY}px`;
+    particle.style.backgroundColor = colors[i % colors.length];
+
+    const angle = (i / count) * 2 * Math.PI + Math.random() * 0.4;
+    const distance = rect.width * (0.7 + Math.random() * 0.6);
+    particle.style.setProperty('--final-x', `${Math.cos(angle) * distance}px`);
+    particle.style.setProperty('--final-y', `${Math.sin(angle) * distance}px`);
+    particle.style.setProperty('--spin', `${Math.round(Math.random() * 360 - 180)}deg`);
+
+    area.appendChild(particle);
+    particle.addEventListener('animationend', () => particle.remove(), { once: true });
+    setTimeout(() => particle.remove(), 1500);
   }
 }
 
@@ -124,10 +95,12 @@ function showChatNotify() {
   const notify = document.getElementById('chatNotify');
   if (notify) {
     notify.style.display = 'block';
-    // Auto-hide after a delay
-    setTimeout(() => {
-      hideChatNotify();
-    }, 5000);
+    // A short wiggle draws the eye to a new message.
+    notify.classList.remove('wiggle');
+    void notify.offsetWidth;
+    notify.classList.add('wiggle');
+    notify.addEventListener('animationend', () => notify.classList.remove('wiggle'), { once: true });
+    // The chat button stays put; it is hidden only while chat is open.
   }
 }
 

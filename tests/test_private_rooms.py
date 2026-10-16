@@ -50,7 +50,8 @@ def approve(host, code, guest, invitation, name='Friend'):
 @pytest.mark.parametrize('method,suffix', [
     ('GET', 'state'), ('POST', 'state'), ('GET', 'chat'), ('POST', 'chat'),
     ('GET', 'stream'), ('POST', 'emoji'), ('POST', 'guess'), ('POST', 'hint'),
-    ('POST', 'reset'), ('POST', 'kick'), ('POST', 'leave'), ('GET', 'admission'), ('POST', 'admission')])
+    ('POST', 'reset'), ('POST', 'vote-reset'), ('POST', 'kick'), ('POST', 'leave'), ('GET', 'admission'),
+    ('POST', 'admission')])
 def test_outsiders_and_pending_guests_cannot_access_private_routes(room, method, suffix):
     host, code, identity, invitation = room
     outsider = browser()

@@ -24,6 +24,7 @@ try:
     from .analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from .config import validate_production_config, get_config_summary
     from . import game_logic as _game_logic
+    from . import reset_vote as _reset_vote
 except ImportError:
     # Handle running as script instead of module
     from models import GameState, get_emoji_variant, get_base_emoji, EMOJI_VARIANTS
@@ -32,6 +33,7 @@ except ImportError:
     from analytics import init_analytics, log_daily_double_used, log_lobby_created, log_lobby_joined, log_lobby_finished, log_player_kicked
     from config import validate_production_config, get_config_summary
     import game_logic as _game_logic
+    import reset_vote as _reset_vote
 
 try:
     import requests as _requests
@@ -482,6 +484,7 @@ def _reset_state(s: GameState | None = None) -> GameState:
         s.chat_messages.clear()
         s.daily_double_winners.clear()
         s.daily_double_pending.clear()
+        s.round_points.clear()
         s.host_token = host_token
     s.winner_emoji = None
     s.target_word = ""
@@ -492,6 +495,9 @@ def _reset_state(s: GameState | None = None) -> GameState:
     s.win_timestamp = None
     s.daily_double_index = None
     s.phase = "waiting"
+    s.reset_vote = None
+    s.reset_vote_result = None
+    s.reset_vote_cooldown_until = 0.0
     s.last_activity = time.time()
     return s
 
@@ -634,6 +640,10 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
         "last_word": s.last_word,
         "last_definition": s.last_definition,
         "chat_messages": s.chat_messages,
+        # Points at stake if the squad votes to reset this round.
+        "round_points": s.round_points if not s.is_over else {},
+        "reset_vote": _reset_vote.public_view(s, time.time()),
+        "reset_vote_result": _reset_vote.public_result(s, time.time()),
     }
 
     if emoji is not None:
@@ -777,6 +787,10 @@ def state():
                     _state().last_activity = time.time()
                     save_data_legacy()
                     emoji = e
+        # Heartbeats close votes that ran out or lost voters who left.
+        if _settle_reset_vote():
+            save_data_legacy()
+            broadcast_state()
     else:
         try:
             emoji = request.args.get("emoji")
@@ -836,6 +850,7 @@ def set_emoji():
                 },
             )
             _state().leaderboard[emoji_variant] = entry
+            _reset_vote.rename_player(_state(), prev_emoji, emoji_variant)
         else:
             # Create new entry or update existing one
             _state().leaderboard.setdefault(
@@ -1044,6 +1059,10 @@ def guess_word():
         points_delta -= 1
 
     _state().leaderboard[emoji]["score"] += points_delta
+    _reset_vote.record_points(_state(), emoji, points_delta)
+    if over:
+        # A found word or a full board settles the round; any open vote ends.
+        _reset_vote.settle(_state(), now)
     save_data_legacy()
     # — attach this turn’s points so client can render a history
     new_entry["points"] = points_delta
@@ -1181,19 +1200,107 @@ def chat():
     return jsonify({"messages": _state().chat_messages})
 
 
-@app.route("/reset", methods=["POST"])
-def reset_game():
-    """Archive the current game and start a fresh one."""
-    # Save the just-finished game into history
-    logger.info("Resetting lobby")
-    _state().past_games.append(list(_state().guesses))
-    pick_new_word(_state())
-    _state().last_activity = time.time()
+def _start_next_word(refund: bool = False):
+    """Archive the current round and pick a new word.
+
+    With ``refund`` the round was unsettled and the squad voted to scrap it, so
+    every point earned or lost in it is returned first. Settled rounds (word
+    found, or every row used) always keep their points.
+    """
+    s = _state()
+    archived = list(s.guesses)
+    refunded = {}
+    if refund:
+        refunded = _reset_vote.refund_round(s)
+        # History still shows the scrapped round, marked as refunded.
+        archived = [dict(entry, voided=True) for entry in archived]
+    s.past_games.append(archived)
+    pick_new_word(s)
+    s.last_activity = time.time()
     save_data_legacy()
     broadcast_state()
-    log_lobby_finished(_lobby_id(_state()), get_client_ip())
+    log_lobby_finished(_lobby_id(s), get_client_ip())
+    return refunded
+
+
+def _settle_reset_vote() -> bool:
+    """Close the open vote when it is decided; True when anything changed."""
+    outcome = _reset_vote.settle(_state(), time.time())
+    if outcome == "passed":
+        _start_next_word(refund=True)
+    return outcome is not None
+
+
+SQUAD_VOTE_NEEDED = {"status": "error", "msg": "This round is still live. Call a squad vote to reset it."}
+
+
+@app.route("/reset", methods=["POST"])
+def reset_game():
+    """Start the next word once the current round is settled.
+
+    A round with guesses on the board and the word still hidden can only be
+    scrapped by a squad vote (``/vote-reset``), which refunds its points.
+    """
+    logger.info("Resetting lobby")
+    if _reset_vote.round_in_progress(_state()):
+        return jsonify(SQUAD_VOTE_NEEDED), 409
+    _start_next_word()
     logger.info("Lobby reset complete")
     return jsonify({"status": "ok"})
+
+
+@app.route("/vote-reset", methods=["POST"])
+def vote_reset():
+    """Start the next word, or call or answer a squad vote to scrap this one.
+
+    Body: ``{emoji, player_id, vote: "yes" | "no"}``. Calling a vote counts as
+    a yes. More than half of the players active when it was called must agree
+    within ``VOTE_SECONDS``.
+    """
+    data = player_data()
+    emoji = data.get("emoji")
+    player_id = data.get("player_id")
+    choice = data.get("vote", "yes")
+    s = _state()
+    if (
+        not emoji
+        or emoji not in s.leaderboard
+        or s.leaderboard[emoji].get("player_id") != player_id
+    ):
+        return jsonify({"status": "error", "msg": "Pick an emoji before voting."}), 403
+
+    now = time.time()
+    s.leaderboard[emoji]["last_active"] = now
+    s.last_activity = now
+    if _reset_vote.settle(s, now) == "passed":
+        # The vote was already decided (a no-voter left); don't skip two words.
+        refunded = _start_next_word(refund=True)
+        return jsonify({"status": "ok", "outcome": "passed", "refunded": refunded})
+
+    if not _reset_vote.round_in_progress(s):
+        # Nothing at stake: a settled round or an untouched board.
+        if choice != "yes":
+            return jsonify({"status": "error", "msg": "There's no vote to answer."}), 409
+        if s.private and not private_rooms.is_host():
+            return jsonify({"status": "error", "msg": "The host starts the next word."}), 403
+        _start_next_word()
+        return jsonify({"status": "ok", "outcome": "new_word"})
+
+    outcome, error = _reset_vote.cast(s, emoji, choice, now)
+    if error:
+        save_data_legacy()
+        return jsonify({"status": "error", "msg": error}), 409
+    refunded = None
+    if outcome == "passed":
+        refunded = _start_next_word(refund=True)
+    else:
+        save_data_legacy()
+        broadcast_state()
+    logger.info("Squad vote %s", outcome)
+    resp = {"status": "ok", "outcome": outcome, "vote": _reset_vote.public_view(s, now)}
+    if refunded is not None:
+        resp["refunded"] = refunded
+    return jsonify(resp)
 
 
 # ---- Lobby-aware Routes ----
@@ -1325,6 +1432,11 @@ def lobby_guess(code):
     return _with_lobby(code, guess_word)
 
 
+@app.route("/lobby/<code>/vote-reset", methods=["POST"])
+def lobby_vote_reset(code):
+    return _with_lobby(code, vote_reset)
+
+
 @app.route("/lobby/<code>/reset", methods=["POST"])
 def lobby_reset(code):
     if code.startswith("p"):
@@ -1355,6 +1467,7 @@ def kick_player():
     pid = _state().leaderboard[emoji].get("player_id")
     _state().leaderboard.pop(emoji, None)
     _state().ip_to_emoji.pop(ip, None)
+    _reset_vote.forget_player(_state(), emoji)
     if pid:
         _state().player_map.pop(pid, None)
     _state().daily_double_pending.pop(emoji, None)
@@ -1413,6 +1526,7 @@ def leave_lobby():
     ip = _state().leaderboard[emoji]["ip"]
     _state().leaderboard.pop(emoji, None)
     _state().ip_to_emoji.pop(ip, None)
+    _reset_vote.forget_player(_state(), emoji)
     _state().player_map.pop(player_id, None)
     _state().daily_double_pending.pop(emoji, None)
     if _state().winner_emoji == emoji:

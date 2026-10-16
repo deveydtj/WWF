@@ -71,6 +71,10 @@ def save_data(s: GameState, lobby_code: str = None):
         "host_token": s.host_token,
         "phase": s.phase,
         "last_activity": s.last_activity,
+        "round_points": s.round_points,
+        "reset_vote": s.reset_vote,
+        "reset_vote_result": s.reset_vote_result,
+        "reset_vote_cooldown_until": s.reset_vote_cooldown_until,
     }
     
     if redis_client:
@@ -178,6 +182,10 @@ def load_data(s: GameState, lobby_code: str = None, reset_state_func=None):
         s.host_token = data.get("host_token")
         s.phase = data.get("phase", "waiting")
         s.last_activity = data.get("last_activity", time.time())
+        s.round_points = data.get("round_points", {})
+        s.reset_vote = data.get("reset_vote")
+        s.reset_vote_result = data.get("reset_vote_result")
+        s.reset_vote_cooldown_until = data.get("reset_vote_cooldown_until", 0.0)
         return True
     except Exception:
         if reset_state_func:
