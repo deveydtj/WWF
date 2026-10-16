@@ -167,11 +167,9 @@ export function calculatePanelCapacity(
   if (available.blockSize < gameplay.blockSize) {
     return PANEL_CAPACITIES.NONE;
   }
+  // Even a lone rail needs room opposite it to keep gameplay centered.
   if (available.inlineSize >= requiredInlineSize(2, panel, gameplay)) {
     return PANEL_CAPACITIES.TWO;
-  }
-  if (available.inlineSize >= requiredInlineSize(1, panel, gameplay)) {
-    return PANEL_CAPACITIES.ONE;
   }
   return PANEL_CAPACITIES.NONE;
 }

@@ -51,6 +51,8 @@ body[data-density] {
   --board-control-gutter: 52px;
   --left-rail-size: 0px;
   --right-rail-size: 0px;
+  --rail-space: max(var(--left-rail-size), var(--right-rail-size));
+  --rail-gap: 16px;
 }
 
 body.history-open[data-panel-capacity="1"],
@@ -94,10 +96,12 @@ body.chat-open[data-panel-capacity="2"] {
 }
 
 #appContainer #mainGrid {
+  position: relative;
   grid-row: 2;
   display: grid;
   grid-template-areas: "left center right";
-  grid-template-columns: var(--left-rail-size) minmax(0, 1fr) var(--right-rail-size);
+  /* Equal reservations keep the board centered with either rail open. */
+  grid-template-columns: var(--rail-space) minmax(0, 1fr) var(--rail-space);
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
   box-sizing: border-box;
@@ -318,25 +322,32 @@ body[data-panel-capacity="1"] #appContainer #historyBox,
 body[data-panel-capacity="2"] #appContainer #historyBox,
 body[data-panel-capacity="2"] #appContainer #definitionBox,
 body[data-panel-capacity="2"] #appContainer #chatBox {
-  position: relative;
+  position: absolute;
+  grid-area: auto;
   inset: auto;
+  top: calc(var(--shell-inline-gutter) + 24px + var(--component-gap));
   transform: none;
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
+  max-width: none;
+  /* Stop beside the board so the wider keyboard below remains unobstructed. */
+  height: min(calc(6 * var(--tile-size) + 5 * var(--tile-gap)),
+    calc(100% - var(--shell-inline-gutter) - max(var(--shell-inline-gutter), var(--viewport-safe-area-bottom)) - 24px - var(--component-gap)));
   min-height: 0;
   max-height: 100%;
   padding: 16px;
   z-index: var(--z-panel-base);
 }
 
-#appContainer #historyBox {
-  grid-area: left;
+/* Anchor rails to the board's control gutters instead of the viewport edges. */
+body[data-panel-capacity="1"] #appContainer #historyBox,
+body[data-panel-capacity="2"] #appContainer #historyBox {
+  width: var(--left-rail-size);
+  right: calc(50% + var(--board-width) / 2 + var(--board-control-gutter) + var(--rail-gap));
 }
 
-#appContainer #definitionBox,
-#appContainer #chatBox {
-  grid-area: right;
+body[data-panel-capacity="2"] #appContainer #definitionBox,
+body[data-panel-capacity="2"] #appContainer #chatBox {
+  width: var(--right-rail-size);
+  left: calc(50% + var(--board-width) / 2 + var(--board-control-gutter) + var(--rail-gap));
 }
 
 /* History rows and title use the full content width. */

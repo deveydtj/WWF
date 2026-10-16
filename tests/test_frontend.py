@@ -602,8 +602,8 @@ console.log(JSON.stringify({
     )
     assert json.loads(result.stdout.strip()) == {
         'belowOneRail': 0,
-        'exactOneRail': 1,
-        'belowTwoRails': 1,
+        'exactOneRail': 0,
+        'belowTwoRails': 0,
         'exactTwoRails': 2,
         'insufficientHeight': 0,
     }
@@ -1550,11 +1550,11 @@ console.log(JSON.stringify({
         capture_output=True, text=True, check=True
     )
     data = json.loads(result.stdout.strip())
-    assert data['active'] == ['history', 'definition']
-    assert 'history-open' in data['bodyClasses']
+    assert data['active'] == ['definition']
+    assert 'history-open' not in data['bodyClasses']
     assert 'definition-open' in data['bodyClasses']
     assert 'chat-open' not in data['bodyClasses']
-    assert data['historyVisible'] is True
+    assert data['historyVisible'] is False
     assert data['chatOpen'] is False
     assert data['definitionOpen'] is True
 

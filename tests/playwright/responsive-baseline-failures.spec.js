@@ -81,7 +81,7 @@ test.describe('responsive gameplay regressions', () => {
     page,
     deterministicLobby,
   }) => {
-    await page.setViewportSize({ width: 844, height: 1100 });
+    await page.setViewportSize({ width: 1024, height: 1100 });
     await deterministicLobby.openActive();
     const tallCapacity = await page.evaluate(
       () => window.__wordSquadDebug.layout.getSnapshot().profile.panelCapacity
@@ -93,7 +93,7 @@ test.describe('responsive gameplay regressions', () => {
       () => window.__wordSquadDebug.layout.getSnapshot().profile.panelCapacity
     );
 
-    expect(tallCapacity).toBe(1);
+    expect(tallCapacity).toBe(2);
     expect(shortCapacity).toBe(0);
   });
 
