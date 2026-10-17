@@ -55,10 +55,13 @@ const overlayState = Object.fromEntries(
   Object.values(OVERLAYS).map((key) => [key, false])
 );
 
+// A player's own choice for each rail panel: true (they opened it), false
+// (they closed it) or null (no choice yet, so the layout decides). A closed
+// panel must stay closed even when it has content the layout would show.
 const manualOverlayState = {
-  [OVERLAYS.HISTORY]: false,
-  [OVERLAYS.DEFINITION]: false,
-  [OVERLAYS.CHAT]: false
+  [OVERLAYS.HISTORY]: null,
+  [OVERLAYS.DEFINITION]: null,
+  [OVERLAYS.CHAT]: null
 };
 
 let initializedFromDom = false;
@@ -251,7 +254,7 @@ export function toggleOverlay(keyOrClass, options = {}) {
 export function setManualOverlayState(keyOrClass, value) {
   const key = normalizeOverlayKey(keyOrClass);
   if (key && Object.prototype.hasOwnProperty.call(manualOverlayState, key)) {
-    manualOverlayState[key] = Boolean(value);
+    manualOverlayState[key] = value === null || value === undefined ? null : Boolean(value);
   }
 }
 
@@ -261,7 +264,7 @@ export function getManualOverlayState(keyOrClass = null) {
   }
 
   const key = normalizeOverlayKey(keyOrClass);
-  return key ? Boolean(manualOverlayState[key]) : false;
+  return key ? manualOverlayState[key] : null;
 }
 
 export function refreshOverlayStateForLayout() {

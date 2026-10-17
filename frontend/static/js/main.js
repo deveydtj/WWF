@@ -1,16 +1,16 @@
 // Import core functionality
-import { isValidHardModeGuess, shakeRow, getActiveRowIndex, getRevealDuration, getTileRevealMoment } from './board.js';
+import { isValidHardModeGuess, shakeRow, getActiveRowIndex, msUntilReveal, REVEAL_FLIP_MS } from './board.js';
 import { getMyEmoji, setMyEmoji, showEmojiModal, getMyPlayerId, setMyPlayerId } from './emoji.js';
 import { sendEmoji, sendGuess, leaveLobbyRequest } from './api.js';
 import { showMessage, shakeInput as shakeElement, closeDialog, openDialog, announce } from './utils.js';
-import { loadHintState, saveHintState } from './hintState.js';
+import { loadHintState } from './hintState.js';
 import { STATES } from './stateManager.js';
 import { hapticFeedback } from './haptics.js';
 
 // Import UI notification functions
-import { showPointsDelta, showHintTooltip, hideHintTooltip, burstConfetti } from './uiNotifications.js';
+import { showPointsDelta, showHintTooltip, burstConfetti, glowDailyDoubleTile } from './uiNotifications.js';
 import { playJingle, playClick, stopAllSounds } from './audioManager.js';
-import { selectHint } from './hintManager.js';
+import { selectHint, updateHintState, exitHintSelection, HINT_SAVED_MESSAGE } from './hintManager.js';
 
 // Import the new modular managers
 import domManager from './domManager.js';
@@ -105,6 +105,12 @@ async function submitGuessHandler() {
   
   hapticFeedback(18);
 
+  // Startup may have reclaimed or re-assigned our identity after this module
+  // loaded. Always read the stored values so a first guess never registers a
+  // second (variant) copy of our emoji.
+  myEmoji = getMyEmoji() || myEmoji;
+  myPlayerId = getMyPlayerId() || myPlayerId;
+
   if (!myPlayerId) {
     try {
       // Record the emoji registration attempt for grace period protection
@@ -113,6 +119,11 @@ async function submitGuessHandler() {
       if (d && d.player_id) {
         myPlayerId = d.player_id;
         setMyPlayerId(d.player_id);
+        if (d.emoji) {
+          myEmoji = d.emoji;
+          setMyEmoji(d.emoji);
+          gameStateManager.setMyEmoji(d.emoji);
+        }
         eventListenersManager.updatePlayerInfo(myEmoji, myPlayerId);
       }
     } catch {}
@@ -131,7 +142,9 @@ async function submitGuessHandler() {
     try {
       // Record the emoji registration attempt for grace period protection
       gameStateManager.recordEmojiRegistration();
-      const emojiResp = await sendEmoji(myEmoji, null, LOBBY_CODE);
+      // Keep our player ID so the server restores this player rather than
+      // treating us as a newcomer and assigning a duplicate variant.
+      const emojiResp = await sendEmoji(myEmoji, myPlayerId, LOBBY_CODE);
       if (emojiResp && emojiResp.status === 'ok') {
         // Update our local state with the corrected information
         if (emojiResp.player_id) {
@@ -141,6 +154,7 @@ async function submitGuessHandler() {
         if (emojiResp.emoji) {
           myEmoji = emojiResp.emoji;
           setMyEmoji(emojiResp.emoji);
+          gameStateManager.setMyEmoji(emojiResp.emoji);
         }
         eventListenersManager.updatePlayerInfo(myEmoji, myPlayerId);
         console.log('🔧 Re-registration successful, retrying guess...');
@@ -159,23 +173,13 @@ async function submitGuessHandler() {
   if (resp.status === 'ok') {
     gameStateManager.applyState(resp.state);
     // Results that reveal the outcome wait for the tiles to finish flipping.
-    const afterReveal = (callback) => setTimeout(callback, getRevealDuration());
+    // Time it from the flip on screen, which a live update may have started.
+    const board = domManager.get('board');
+    const guessRow = resp.state.guesses.length - 1;
+    const afterReveal = (callback, extra = 0) => setTimeout(callback, msUntilReveal(board, guessRow) + extra);
     
     if (resp.daily_double) {
-      if (resp.daily_double_tile) {
-        const { row, col } = resp.daily_double_tile;
-        setTimeout(() => burstConfetti(row, col), getTileRevealMoment(col));
-      }
-      
-      gameStateManager.setDailyDoubleState(resp.state.guesses.length, null);
-      saveHintState(myEmoji, resp.state.guesses.length, null);
-      
-      showMessage('Daily Double! Tap a tile in the next row for a hint.', {
-        messageEl: domManager.get('messageEl'),
-        messagePopup: domManager.get('messagePopup')
-      });
-      showHintTooltip('Tap a tile in the next row to reveal a letter!');
-      announce('Daily Double earned – choose one tile in the next row to preview.');
+      announceDailyDouble(resp, board, afterReveal);
     }
     
     if (typeof resp.pointsDelta === 'number') {
@@ -223,6 +227,45 @@ async function submitGuessHandler() {
   }
 }
 
+/**
+ * Celebrate a Daily Double once its tile has flipped green, then explain how
+ * to use the hint: tap a tile in the next row, or, when the guess also ended
+ * the round, that the hint is saved for the next round.
+ */
+function announceDailyDouble(resp, board, afterReveal) {
+  const messageHandlers = {
+    messageEl: domManager.get('messageEl'),
+    messagePopup: domManager.get('messagePopup')
+  };
+  const tile = resp.daily_double_tile;
+  if (tile) {
+    setTimeout(() => burstConfetti(tile.row, tile.col), msUntilReveal(board, tile.row, tile.col));
+    // The ring follows once the tile has finished turning over.
+    setTimeout(() => glowDailyDoubleTile(tile.row, tile.col),
+      msUntilReveal(board, tile.row, tile.col) + REVEAL_FLIP_MS / 2);
+  }
+
+  const carried = resp.daily_double_carried ?? resp.over;
+  if (carried) {
+    // The win or game-over message comes first; this follows it.
+    const text = `Daily Double! ${HINT_SAVED_MESSAGE}`;
+    afterReveal(() => {
+      showMessage(text, messageHandlers);
+      announce(text);
+    }, 2200);
+    return;
+  }
+
+  afterReveal(() => {
+    const row = gameStateManager.getDailyDoubleRow();
+    if (row === null) return; // already spent, or another guess ended the round
+    // One callout, pointing at the row to tap, rather than a separate banner
+    // that would cover the top of the board on phones.
+    showHintTooltip('🎉 Daily Double! Tap a tile in this row to reveal its letter.', row);
+    announce('Daily Double earned – choose one tile in the next row to preview its letter.');
+  });
+}
+
 // Handle emoji modal logic - only for users without an emoji
 function handleEmojiModal(activeEmojis) {
   const haveMy = activeEmojis.includes(myEmoji);
@@ -239,6 +282,7 @@ function handleEmojiModal(activeEmojis) {
         
         const { row, hint } = loadHintState(myEmoji);
         gameStateManager.setDailyDoubleState(row, hint);
+        updateHintState(myEmoji, myPlayerId);
         
         networkManager.fetchState(myEmoji, LOBBY_CODE);
       },
@@ -280,6 +324,18 @@ function applyStateWithEmojiModal(state) {
   handleEmojiModal(state.active_emojis || []);
 }
 
+// Spend the hint on a column, unless that letter is already known.
+async function chooseHintColumn(col) {
+  if (gameStateManager.getGreenPositions()[col]) {
+    showMessage('You already know that letter – pick another tile.', {
+      messageEl: domManager.get('messageEl'),
+      messagePopup: domManager.get('messagePopup')
+    });
+    return;
+  }
+  await selectHint(col);
+}
+
 // Setup board-specific event listeners for hints
 function setupBoardHintListeners() {
   const board = domManager.get('board');
@@ -301,7 +357,7 @@ function setupBoardHintListeners() {
     const col = index % 5;
     if (row !== dailyDoubleRow) return;
     
-    await selectHint(col);
+    await chooseHintColumn(col);
   });
 
   // Board keyboard navigation for hints
@@ -323,11 +379,11 @@ function setupBoardHintListeners() {
       tiles[(index + 1) % 5].focus();
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      await selectHint(index);
+      await chooseHintColumn(index);
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      document.body.classList.remove('hint-selecting');
-      tiles.forEach(t => (t.tabIndex = -1));
+      exitHintSelection({ announceCancel: true });
+      gameStateManager.refreshHintBadge();
     }
   });
 }

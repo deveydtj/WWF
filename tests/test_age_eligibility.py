@@ -87,12 +87,25 @@ def test_age13_can_create_register_play_and_chat_without_rechecking(client):
     assert client.get('/age-status').json == {'eligibility': 'eligible'}
 
 
-def test_under13_cannot_change_answer_in_same_session(client):
+def test_under13_stays_blocked_until_answering_again(client):
     assert client.post('/age-check', json={'age': 12}).status_code == 403
-    assert client.post('/age-check', json={'age': 99}).status_code == 403
     assert client.get('/age-status').json == {'eligibility': 'blocked'}
+    assert client.get('/state').status_code == 403
     assert client.get('/').status_code == 200
     assert client.get('/age-check').status_code == 200
+
+
+def test_mistyped_age_can_be_corrected(client):
+    assert client.post('/age-check', json={'age': 3}).status_code == 403
+    assert client.post('/age-check', json={'age': 30}).status_code == 200
+    assert client.get('/age-status').json == {'eligibility': 'eligible'}
+
+
+def test_corrected_answer_is_still_screened(client):
+    assert client.post('/age-check', json={'age': 3}).status_code == 403
+    assert client.post('/age-check', json={'age': 12}).status_code == 403
+    assert client.post('/age-check', json={'age': 'thirty'}).status_code == 400
+    assert client.get('/age-status').json == {'eligibility': 'blocked'}
 
 
 @pytest.mark.parametrize('age', [None, True, False, '13', 13.5, -1, 121, {}, []])

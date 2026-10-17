@@ -45,6 +45,7 @@ async function checkEligibility() {
       </form>
       <p id="ageBlockedMessage" hidden role="status">Multiplayer and chat are unavailable for this session.
         You can still read how to play on the home page.</p>
+      <button id="ageRetry" type="button" hidden>Wrong age? Try again</button>
       <button id="ageCheckClose" type="button">Back to browsing</button>`;
     document.body.appendChild(dialog);
     const form = dialog.querySelector('form');
@@ -53,13 +54,28 @@ async function checkEligibility() {
     const continueButton = form.querySelector('button');
     let accepted = false;
 
+    const retryButton = dialog.querySelector('#ageRetry');
+
     function block() {
       clearGameIdentity();
       form.hidden = true;
       dialog.querySelector('#ageCheckDescription').hidden = true;
       dialog.querySelector('#ageBlockedMessage').hidden = false;
+      retryButton.hidden = false;
       dialog.querySelector('#ageCheckClose').focus();
     }
+
+    // A mistyped age can be corrected by answering again.
+    function retry() {
+      form.hidden = false;
+      dialog.querySelector('#ageCheckDescription').hidden = false;
+      dialog.querySelector('#ageBlockedMessage').hidden = true;
+      retryButton.hidden = true;
+      message.textContent = '';
+      input.value = '';
+      input.focus();
+    }
+    retryButton.addEventListener('click', retry);
     if (eligibility === 'blocked') block();
     if (error) {
       message.textContent = error;

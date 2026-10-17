@@ -37,19 +37,76 @@ function showPointsDelta(delta) {
   }, 1500);
 }
 
-function showHintTooltip(text) {
+const HINT_TOOLTIP_MS = 6000;
+let hintTooltipRow = null;
+let hintTooltipTimer;
+
+/**
+ * Point the hint tooltip at a board row. It sits just below the row (above
+ * it for the final row) so it never hides the tiles the player should tap.
+ */
+function positionHintTooltip(row = hintTooltipRow) {
   const tooltip = document.getElementById('hintTooltip');
-  if (tooltip && text) {
-    tooltip.textContent = text;
-    tooltip.style.display = 'block';
-  }
+  const board = document.getElementById('board');
+  const area = document.getElementById('boardArea') || board?.parentElement;
+  if (!tooltip || !board || !area || row === null || tooltip.style.display === 'none') return;
+  const first = board.children[row * 5];
+  const last = board.children[row * 5 + 4];
+  if (!first || !last) return;
+  const areaRect = area.getBoundingClientRect();
+  const rowTop = first.getBoundingClientRect().top - areaRect.top;
+  const rowBottom = first.getBoundingClientRect().bottom - areaRect.top;
+  const centre = (first.getBoundingClientRect().left + last.getBoundingClientRect().right) / 2 - areaRect.left;
+  const rows = Math.floor(board.children.length / 5);
+  const above = row >= rows - 1;
+  tooltip.dataset.placement = above ? 'above' : 'below';
+  tooltip.style.left = `${centre}px`;
+  tooltip.style.bottom = 'auto';
+  tooltip.style.top = above ? `${rowTop - 10}px` : `${rowBottom + 10}px`;
+}
+
+function showHintTooltip(text, row = null) {
+  const tooltip = document.getElementById('hintTooltip');
+  if (!tooltip || !text) return;
+  tooltip.textContent = text;
+  tooltip.style.display = 'block';
+  hintTooltipRow = row;
+  positionHintTooltip(row);
+  clearTimeout(hintTooltipTimer);
+  // The highlighted row and the 🔍 badge remain as the lasting reminder.
+  hintTooltipTimer = setTimeout(hideHintTooltip, HINT_TOOLTIP_MS);
 }
 
 function hideHintTooltip() {
+  clearTimeout(hintTooltipTimer);
+  hintTooltipRow = null;
   const tooltip = document.getElementById('hintTooltip');
   if (tooltip) {
     tooltip.style.display = 'none';
   }
+}
+
+/** Keep an open hint tooltip on its row as the row or the layout changes. */
+function moveHintTooltip(row) {
+  if (hintTooltipRow === null) return;
+  if (row === null) {
+    hideHintTooltip();
+    return;
+  }
+  hintTooltipRow = row;
+  positionHintTooltip(row);
+}
+
+/** Ring the Daily Double tile once it has flipped green. */
+function glowDailyDoubleTile(row, col) {
+  const tile = document.getElementById('board')?.children[row * 5 + col];
+  if (!tile) return;
+  tile.classList.remove('dd-glow');
+  void tile.offsetWidth;
+  tile.classList.add('dd-glow');
+  const done = () => tile.classList.remove('dd-glow');
+  tile.addEventListener('animationend', (e) => { if (e.pseudoElement) done(); }, { once: true });
+  setTimeout(done, 2000);
 }
 
 function burstConfetti(row, col) {
@@ -148,6 +205,9 @@ export {
   showPointsDelta,
   showHintTooltip,
   hideHintTooltip,
+  moveHintTooltip,
+  positionHintTooltip,
+  glowDailyDoubleTile,
   burstConfetti,
   showChatNotify,
   showChatMessagePopup,

@@ -27,14 +27,13 @@ test('landing does not discover lobbies before screening; screen is neutral and 
   expect(requests).not.toContain('/lobby');
 });
 
-test('under13 direct lobby visitors remain blocked after retry and reload', async ({ page, context }) => {
+test('under13 direct lobby visitors remain blocked after reload', async ({ page, context }) => {
   await page.goto('/lobby/AGE001');
   await expect(page).toHaveURL(/\/age-check\?next=/);
   await answerAge(page, 12);
   await expect(page.locator('#ageBlockedMessage')).toBeVisible();
   await expect(page.locator('#ageInput')).toBeHidden();
-  const retry = await context.request.post('/age-check', { data: { age: 40 } });
-  expect(retry.status()).toBe(403);
+  await expect(page.locator('#ageRetry')).toBeVisible();
   await page.reload();
   await expect(page.locator('#ageBlockedMessage')).toBeVisible();
   expect((await context.request.get('/lobby/AGE001/state')).status()).toBe(403);
@@ -76,4 +75,15 @@ test('direct game links cannot reveal game state before screening', async ({ pag
   await answerAge(page, 13);
   await expect(page).toHaveURL(/\/game$/);
   await expect(page.locator('#board .tile')).toHaveCount(30);
+});
+
+test('a mistyped age can be corrected without clearing site data', async ({ page }) => {
+  await page.goto('/lobby/AGE002');
+  await answerAge(page, 3);
+  await expect(page.locator('#ageBlockedMessage')).toBeVisible();
+  await page.locator('#ageRetry').click();
+  await expect(page.locator('#ageInput')).toBeVisible();
+  await expect(page.locator('#ageInput')).toHaveValue('');
+  await answerAge(page, 30);
+  await expect(page).toHaveURL(/\/lobby\/AGE002$/);
 });

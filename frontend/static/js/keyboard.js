@@ -92,6 +92,77 @@ export function animatePhysicalKey(keyboardEl, key) {
   keyAnimationTimers.set(keyElement, timer);
 }
 
+// Physical key presses hold the on-screen key down until the key is released,
+// so a computer keyboard visibly drives the game keyboard. Phones and tablets
+// type through the on-screen keys themselves, so this is for fine pointers.
+const PHYSICAL_PRESS_CLASS = 'physical-press';
+const MIN_PHYSICAL_PRESS_MS = 90;
+const physicalPresses = new Map(); // key element -> { downAt, timer }
+
+function supportsPhysicalPressFeedback() {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
+
+/**
+ * Press the on-screen key matching a physical key.
+ *
+ * @param {HTMLElement} keyboardEl
+ * @param {string} key - Canonical key from normalizePhysicalKey().
+ */
+export function pressPhysicalKey(keyboardEl, key) {
+  const keyElement = keyboardEl?.querySelector(`.key[data-key="${key}"]`);
+  if (!keyElement) return;
+  const previous = physicalPresses.get(keyElement);
+  if (previous?.timer) clearTimeout(previous.timer);
+  physicalPresses.set(keyElement, { downAt: Date.now(), timer: null });
+  keyElement.classList.add(PHYSICAL_PRESS_CLASS);
+}
+
+/**
+ * Release a pressed on-screen key, keeping a quick tap visible briefly.
+ *
+ * @param {HTMLElement} keyboardEl
+ * @param {string} key
+ */
+export function releasePhysicalKey(keyboardEl, key) {
+  const keyElement = keyboardEl?.querySelector(`.key[data-key="${key}"]`);
+  const press = keyElement && physicalPresses.get(keyElement);
+  if (!press || press.timer) return;
+  const remaining = Math.max(0, MIN_PHYSICAL_PRESS_MS - (Date.now() - press.downAt));
+  press.timer = setTimeout(() => {
+    keyElement.classList.remove(PHYSICAL_PRESS_CLASS);
+    physicalPresses.delete(keyElement);
+  }, remaining);
+}
+
+/** Release every held key, e.g. when the window loses focus mid-press. */
+export function releaseAllPhysicalKeys() {
+  physicalPresses.forEach((press, keyElement) => {
+    if (press.timer) clearTimeout(press.timer);
+    keyElement.classList.remove(PHYSICAL_PRESS_CLASS);
+  });
+  physicalPresses.clear();
+}
+
+/**
+ * Whether a physical key press should show on the on-screen keyboard. Typing
+ * into the visible guess field counts; chat, other fields and modals do not.
+ *
+ * @param {KeyboardEvent} event
+ * @param {HTMLInputElement} guessInput
+ * @returns {boolean}
+ */
+export function shouldMirrorPhysicalKey(event, guessInput) {
+  if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey ||
+      !normalizePhysicalKey(event.key) || guessInput.disabled) {
+    return false;
+  }
+  const target = event.target?.tagName ? event.target : document.activeElement;
+  if (target === guessInput) return true;
+  return !isEditableElement(target) && !isWithinModal(target);
+}
+
 /**
  * Handle an activation click on the on-screen keyboard.
  *
@@ -196,8 +267,22 @@ export function setupTypingListeners({
     const key = normalizePhysicalKey(event.key);
     inputController.routeKey(key, 'physical-keyboard');
     event.preventDefault();
-    animatePhysicalKey(keyboardEl, key);
   });
+
+  if (supportsPhysicalPressFeedback()) {
+    // Capture phase: mirror the press even when another handler takes the key.
+    document.addEventListener('keydown', (event) => {
+      if (shouldMirrorPhysicalKey(event, guessInput)) {
+        pressPhysicalKey(keyboardEl, normalizePhysicalKey(event.key));
+      }
+    }, true);
+    document.addEventListener('keyup', (event) => {
+      const key = normalizePhysicalKey(event.key);
+      if (key) releasePhysicalKey(keyboardEl, key);
+    }, true);
+    window.addEventListener('blur', releaseAllPhysicalKeys);
+    document.addEventListener('visibilitychange', releaseAllPhysicalKeys);
+  }
 }
 
 /**

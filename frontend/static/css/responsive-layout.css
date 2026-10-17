@@ -23,12 +23,6 @@ body[data-show-onscreen-keyboard="false"] #keyboard {
   display: none;
 }
 
-body[data-panel-capacity="1"] #historyClose,
-body[data-panel-capacity="2"] #historyClose,
-body[data-panel-capacity="2"] #definitionClose {
-  display: none;
-}
-
 /* The app is the responsive shell's query container. Container conditions are
  * used for local fit adjustments; product interaction still comes from the
  * capability profile rather than from these measurements. */

@@ -88,7 +88,7 @@
           <h3>Scoring</h3>
           <p>Each letter is worth its Scrabble tile value. Green letters award the full value, while yellow letters grant half until confirmed green.</p>
           <h3>Daily Double</h3>
-          <p>A random tile may hide a bonus. When you turn it green, a “🔍” hint becomes available. A badge next to your emoji shows when you have a hint. Tap any unrevealed tile in the next row to preview its letter – only you can see this ghosted tile.</p>
+          <p>A random tile may hide a bonus. When you turn it green, a “🔍” hint becomes available and a badge appears by the title. Tap any unrevealed tile in the next open row to preview its letter – only you can see this ghosted tile, and it stays until your next guess. If the guess that earns it also ends the round, the hint is saved for the next round.</p>
           <h3>Controls</h3>
           <p>Type guesses using the on‑screen or physical keyboard. Press the <strong>Guess</strong> button or the <strong>Enter</strong> key to submit. When selecting a hint, use the arrow keys to choose a tile and press <strong>Enter</strong> to confirm.</p>
         </div>
@@ -160,7 +160,7 @@
               <div class="mobile-leaderboard-container">
                 <!-- Leaderboard will be moved here on mobile -->
               </div>
-              <span id="titleHintBadge" class="hint-badge" style="display:none">🔍 x1</span>
+              <span id="titleHintBadge" class="hint-badge" role="button" tabindex="0" style="display:none">🔍 x1</span>
             </div>
           </div>
 

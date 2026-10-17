@@ -358,6 +358,7 @@ class PrivateRooms:
         game['leaderboard'].pop(emoji, None)
         game['chat_rate_limits'].pop(member['player_id'], None)
         game['daily_double_pending'].pop(emoji, None)
+        game.get('daily_double_revealed', {}).pop(emoji, None)
         game.get('round_points', {}).pop(emoji, None)
         game['ip_to_emoji'] = {key: value for key, value in game['ip_to_emoji'].items() if value != emoji}
         room['streams'] = {key: value for key, value in room['streams'].items() if value['sid'] != sid}

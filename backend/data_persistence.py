@@ -68,6 +68,7 @@ def save_data(s: GameState, lobby_code: str = None):
         "daily_double_index": s.daily_double_index,
         "daily_double_winners": list(s.daily_double_winners),
         "daily_double_pending": s.daily_double_pending,
+        "daily_double_revealed": s.daily_double_revealed,
         "host_token": s.host_token,
         "phase": s.phase,
         "last_activity": s.last_activity,
@@ -179,6 +180,7 @@ def load_data(s: GameState, lobby_code: str = None, reset_state_func=None):
         s.daily_double_index = data.get("daily_double_index")
         s.daily_double_winners = set(data.get("daily_double_winners", []))
         s.daily_double_pending = data.get("daily_double_pending", {})
+        s.daily_double_revealed = data.get("daily_double_revealed", {})
         s.host_token = data.get("host_token")
         s.phase = data.get("phase", "waiting")
         s.last_activity = data.get("last_activity", time.time())

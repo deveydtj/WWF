@@ -1,6 +1,11 @@
 /**
  * Hint system management for WordSquad.
  * Handles hint selection UI and hint application functionality.
+ *
+ * Daily Double rules (the server enforces them; this module mirrors them):
+ * - A hint can be spent on the next open row while the round is in play.
+ * - Earned on the round's final guess, it is saved for the next round.
+ * - The revealed letter is private and stays until the player guesses again.
  */
 
 import { focusFirstElement, announce, setGameInputDisabled, showMessage } from './utils.js';
@@ -22,6 +27,9 @@ let getDailyDoubleState = null; // Function to get current hint state
 let setDailyDoubleState = null; // Function to set hint state
 let updateHintBadge = null; // Function to update hint badge
 let titleHintBadge = null; // Hint badge element
+let requestInFlight = false;
+
+export const HINT_SAVED_MESSAGE = 'Your 🔍 hint is saved for the next round.';
 
 // Initialize hint manager with required dependencies
 function initHintManager(dependencies) {
@@ -45,62 +53,95 @@ function updateHintState(newMyEmoji, newMyPlayerId) {
   myPlayerId = newMyPlayerId;
 }
 
+function rowTiles(row) {
+  return board ? Array.from(board.children).slice(row * 5, row * 5 + 5) : [];
+}
+
+/** Leave selection mode, e.g. when the hint is spent or its row is gone. */
+function exitHintSelection({ announceCancel = false } = {}) {
+  if (!document.body.classList.contains('hint-selecting')) return;
+  document.body.classList.remove('hint-selecting');
+  if (board) Array.from(board.children).forEach(t => (t.tabIndex = -1));
+  if (announceCancel) announce('Hint selection canceled.');
+}
+
+/**
+ * Keep selection mode on the row the hint now targets. Another player's guess
+ * moves the next open row down; a finished round ends selection.
+ */
+function syncHintSelection(row) {
+  if (!document.body.classList.contains('hint-selecting')) return;
+  if (row === null) {
+    exitHintSelection();
+    return;
+  }
+  if (!board) return;
+  Array.from(board.children).forEach((t, i) => {
+    t.tabIndex = Math.floor(i / 5) === row ? 0 : -1;
+  });
+}
+
 function toggleHintSelection() {
-  const { dailyDoubleRow } = getDailyDoubleState();
-  if (dailyDoubleRow === null) return;
-  
+  const { dailyDoubleRow, dailyDoubleAvailable } = getDailyDoubleState();
+  if (dailyDoubleRow === null) {
+    if (dailyDoubleAvailable) {
+      showMessage(HINT_SAVED_MESSAGE, { messageEl, messagePopup });
+      announce(HINT_SAVED_MESSAGE);
+    }
+    return;
+  }
+
   const isCurrentlySelecting = document.body.classList.contains('hint-selecting');
-  
+
   if (isCurrentlySelecting) {
-    // Cancel hint selection mode
-    document.body.classList.remove('hint-selecting');
-    const tiles = Array.from(board.children);
-    tiles.forEach((t) => {
-      t.tabIndex = -1;
-    });
-    // Update badge to show normal state
+    exitHintSelection({ announceCancel: true });
     if (updateHintBadge && titleHintBadge) {
       updateHintBadge(titleHintBadge, true, false);
     }
-    announce('Hint selection canceled.');
   } else {
     // Enter hint selection mode
     document.body.classList.add('hint-selecting');
-    const tiles = Array.from(board.children);
-    tiles.forEach((t, i) => {
-      const row = Math.floor(i / 5);
-      t.tabIndex = row === dailyDoubleRow ? 0 : -1;
-    });
-    // Update badge to show selection mode
+    syncHintSelection(dailyDoubleRow);
     if (updateHintBadge && titleHintBadge) {
       updateHintBadge(titleHintBadge, true, true);
     }
-    focusFirstElement(board);
+    const first = rowTiles(dailyDoubleRow)[0];
+    if (first) first.focus(); else focusFirstElement(board);
     announce('Hint selection active. Use arrow keys to choose a tile, then press Enter.');
   }
 }
 
 async function selectHint(col) {
+  if (requestInFlight) return;
+  requestInFlight = true;
   hideHintTooltip();
-  const resp = await requestHint(col, myEmoji, myPlayerId, LOBBY_CODE);
+  let resp;
+  try {
+    resp = await requestHint(col, myEmoji, myPlayerId, LOBBY_CODE);
+  } catch {
+    resp = { status: 'error', msg: 'Could not reach the server. Try again.' };
+  } finally {
+    requestInFlight = false;
+  }
   if (resp.status === 'ok') {
     const dailyDoubleHint = { row: resp.row, col: resp.col, letter: resp.letter };
     const dailyDoubleRow = null;
     setDailyDoubleState(dailyDoubleRow, dailyDoubleHint);
-    document.body.classList.remove('hint-selecting');
-    Array.from(board.children).forEach(t => (t.tabIndex = -1));
+    exitHintSelection();
     setGameInputDisabled(gameState.is(STATES.GAME_OVER));
     saveHintState(myEmoji, dailyDoubleRow, dailyDoubleHint);
     // Hide the hint badge since hint is now consumed
     if (updateHintBadge && titleHintBadge) {
       updateHintBadge(titleHintBadge, false, false);
     }
-    hideHintTooltip();
-    showMessage(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`, { messageEl, messagePopup });
-    announce(`Hint applied – the letter '${resp.letter.toUpperCase()}' is shown only to you.`);
+    const text = `Hint: the letter '${resp.letter.toUpperCase()}' – only you can see it.`;
+    showMessage(text, { messageEl, messagePopup });
+    announce(text);
     fetchState();
-  } else if (resp.msg) {
-    showMessage(resp.msg, { messageEl, messagePopup });
+  } else {
+    exitHintSelection();
+    if (resp.msg) showMessage(resp.msg, { messageEl, messagePopup });
+    fetchState();
   }
 }
 
@@ -108,5 +149,7 @@ export {
   initHintManager,
   updateHintState,
   toggleHintSelection,
+  syncHintSelection,
+  exitHintSelection,
   selectHint
 };

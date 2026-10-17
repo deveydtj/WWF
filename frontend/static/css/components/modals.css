@@ -124,6 +124,20 @@
   font-size: 24px;
   box-shadow: none;
   z-index: auto;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
+              box-shadow 150ms ease, transform 120ms ease;
+}
+
+/* Close controls lift on hover and press in when clicked, like other buttons. */
+.popup-header .close-btn:active,
+#appContainer .popup-header .close-btn:active,
+#appContainer .popup-header :is(#historyClose, #definitionClose, #chatClose, #playerClose, #optionsClose):active {
+  background: var(--popup-accent-soft);
+  border-color: var(--popup-accent);
+  box-shadow: inset 2px 2px 4px var(--inset-shadow-dark),
+              inset -2px -2px 4px var(--inset-shadow-light);
+  transform: scale(0.92);
 }
 
 [data-popup] :is(button, input, [tabindex]):focus-visible {
@@ -185,10 +199,15 @@
     transform: none;
   }
 
-  .popup-header .close-btn:hover,
-  #appContainer .popup-header .close-btn:hover {
+  .popup-header .close-btn:hover:not(:active),
+  #appContainer .popup-header .close-btn:hover:not(:active),
+  #appContainer .popup-header :is(#historyClose, #definitionClose, #chatClose, #playerClose, #optionsClose):hover:not(:active) {
     background: var(--popup-surface);
-    transform: none;
+    border-color: var(--popup-accent);
+    color: var(--popup-accent);
+    box-shadow: 3px 3px 6px var(--shadow-color-dark),
+                -3px -3px 6px var(--shadow-color-light);
+    transform: translateY(-1px) rotate(90deg);
   }
 }
 
@@ -440,6 +459,40 @@ body #appContainer :is(#historyBox, #definitionBox, #chatBox)[data-popup="utilit
   border-right: 6px solid transparent;
   border-top: 6px solid var(--popup-surface);
   transform: translateX(-50%);
+}
+
+/* Placed against the row the hint is for (see positionHintTooltip). */
+#hintTooltip[data-placement] {
+  width: max-content;
+  max-width: min(100%, 280px);
+  margin: 0;
+  animation: hintTooltipIn 220ms ease-out;
+}
+
+#hintTooltip[data-placement="above"] {
+  transform: translate(-50%, -100%);
+}
+
+#hintTooltip[data-placement="below"] {
+  transform: translate(-50%, 0);
+}
+
+#hintTooltip[data-placement="below"]::after {
+  top: auto;
+  bottom: 100%;
+  border-top: none;
+  border-bottom: 6px solid var(--popup-surface);
+}
+
+@keyframes hintTooltipIn {
+  from { opacity: 0; translate: 0 6px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #hintTooltip[data-placement] {
+    animation: none;
+  }
 }
 
 #pointsPopup {
@@ -730,3 +783,10 @@ body:has(.popup-backdrop.show, #howTo[open]) {
 
 #copyLobbyLink[hidden],
 #holdReset[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  #appContainer .popup-header .close-btn:is(:hover, :active),
+  #appContainer .popup-header :is(#historyClose, #definitionClose, #chatClose, #playerClose, #optionsClose):is(:hover, :active) {
+    transform: none;
+  }
+}

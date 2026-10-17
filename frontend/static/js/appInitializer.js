@@ -34,6 +34,7 @@ import { initializeResponsiveScaling, recalculateScaling } from './responsiveSca
 // Expose repositionResetButton to global scope for debugging and manual calls
 window.repositionResetButton = repositionResetButton;
 import { updateHintBadge } from './hintBadge.js';
+import { positionHintTooltip } from './uiNotifications.js';
 import { setupTypingListeners, updateBoardFromTyping } from './keyboard.js';
 import { InputController } from './inputController.js';
 import { applyGuessFieldPresentation } from './guessFieldPresentation.js';
@@ -299,7 +300,8 @@ class AppInitializer {
       messagePopup: this.domManager.get('messagePopup'),
       getDailyDoubleState: () => ({
         dailyDoubleRow: this.gameStateManager.getDailyDoubleRow(),
-        dailyDoubleHint: this.gameStateManager.getDailyDoubleHint()
+        dailyDoubleHint: this.gameStateManager.getDailyDoubleHint(),
+        dailyDoubleAvailable: this.gameStateManager.getDailyDoubleAvailable()
       }),
       setDailyDoubleState: (row, hint) => this.gameStateManager.setDailyDoubleState(row, hint),
       updateHintBadge: updateHintBadge,
@@ -372,64 +374,8 @@ class AppInitializer {
    * @private
    */
   _setupEventListeners() {
-    // Event listeners are handled by the EventListenersManager
-    // Additional board-specific listeners
-    this._setupBoardEventListeners();
-  }
-
-  /**
-   * Setup board-specific event listeners
-   * @private
-   */
-  _setupBoardEventListeners() {
-    const board = this.domManager.get('board');
-    if (!board) return;
-
-    // Board click handler for hint selection
-    board.addEventListener('click', async (e) => {
-      const dailyDoubleRow = this.gameStateManager.getDailyDoubleRow();
-      if (dailyDoubleRow === null) return;
-      
-      const tile = e.target.closest('.tile');
-      if (!tile) return;
-      
-      const tiles = Array.from(board.children);
-      const index = tiles.indexOf(tile);
-      if (index === -1) return;
-      
-      const row = Math.floor(index / 5);
-      const col = index % 5;
-      if (row !== dailyDoubleRow) return;
-      
-      // Call hint selection (would need to import selectHint)
-      // await selectHint(col);
-    });
-
-    // Board keyboard navigation for hints
-    board.addEventListener('keydown', async (e) => {
-      if (!document.body.classList.contains('hint-selecting')) return;
-      
-      const dailyDoubleRow = this.gameStateManager.getDailyDoubleRow();
-      const tiles = Array.from(board.children).slice(dailyDoubleRow * 5, dailyDoubleRow * 5 + 5);
-      let index = tiles.indexOf(document.activeElement);
-      if (index === -1) index = 0;
-      
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        tiles[(index + 4) % 5].focus();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        tiles[(index + 1) % 5].focus();
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        // await selectHint(index);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        document.body.classList.remove('hint-selecting');
-        tiles.forEach(t => (t.tabIndex = -1));
-        // Update hint badge would go here
-      }
-    });
+    // Event listeners are handled by the EventListenersManager; main.js adds
+    // the board's hint-selection listeners.
   }
 
   /**
@@ -460,6 +406,7 @@ class AppInitializer {
     updatePanelVisibility();
     recalculateScaling(viewportSnapshot);
     alignStampsWithBoardRows();
+    positionHintTooltip();
   }
 
   /**
@@ -497,10 +444,13 @@ class AppInitializer {
         if (result.emoji) {
           this.myEmoji = result.emoji;
           setMyEmoji(result.emoji);
+          this.gameStateManager.setMyEmoji(result.emoji);
         }
         if (result.player_id) {
           this.myPlayerId = result.player_id;
           setMyPlayerId(result.player_id);
+          // main.js keeps its own copy for guess submission.
+          updateGlobalPlayerId(result.player_id);
           
           // Update managers with new player ID
           this.eventListenersManager.updatePlayerInfo(this.myEmoji, this.myPlayerId);

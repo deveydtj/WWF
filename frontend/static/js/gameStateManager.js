@@ -10,7 +10,8 @@ import { updateLeaderboard, renderPlayerSidebar, renderEmojiStamps } from './lea
 import { updateHintBadge } from './hintBadge.js';
 import { saveHintState } from './hintState.js';
 import { showMessage, setGameInputDisabled } from './utils.js';
-import { showChatNotify, showChatMessagePopup } from './uiNotifications.js';
+import { showChatNotify, showChatMessagePopup, moveHintTooltip, showHintTooltip } from './uiNotifications.js';
+import { syncHintSelection } from './hintManager.js';
 import { updateResetButton } from './resetManager.js';
 import { renderResetVote } from './resetVote.js';
 import { hasHistoryContent, hasDefinitionContent, updatePanelVisibility } from './panelManager.js';
@@ -18,6 +19,7 @@ import { OVERLAYS, isOverlayOpen } from './overlayState.js';
 import { STATES } from './stateManager.js';
 import { playClick } from './audioManager.js';
 import { sendEmoji } from './api.js';
+import { getMyPlayerId } from './emoji.js';
 
 class GameStateManager {
   constructor() {
@@ -35,9 +37,12 @@ class GameStateManager {
     this.currentGuess = '';
     
     // Daily double state
-    this.dailyDoubleRow = null;
-    this.dailyDoubleHint = null;
-    this.dailyDoubleAvailable = false;
+    this.dailyDoubleRow = null; // next open row a hint can be spent on, if any
+    this.dailyDoubleHint = null; // the letter already revealed: { row, col, letter }
+    this.dailyDoubleAvailable = false; // the server holds an unspent hint for us
+    this._hintRowHiddenUntil = 0; // keep a fresh bonus secret until its tile flips
+    this._hintRevealTimer = null;
+    this._hintSaved = false; // holding a hint carried into the next round
     
     // Dependencies (to be injected)
     this.gameState = null;
@@ -81,6 +86,8 @@ class GameStateManager {
    * @param {Object} state - Server state object
    */
   applyState(state) {
+    // Error replies (rate limits, expired sessions) are not game states.
+    if (!state || !Array.isArray(state.guesses)) return;
     const prevGuessCount = this.latestState ? this.latestState.guesses.length : 0;
     // Initial chat history belongs in the panel; previews announce only new messages.
     const prevChatCount = this.latestState?.chat_messages?.length ?? state.chat_messages?.length ?? 0;
@@ -92,6 +99,7 @@ class GameStateManager {
     this.activeEmojis = state.active_emojis || [];
     this.leaderboard = state.leaderboard || [];
     
+    const wasAvailable = this.dailyDoubleAvailable;
     // Handle daily double availability - check both old format (player-specific) and new format (all players)
     if ('daily_double_available' in state) {
       // Player-specific response (from /state endpoint with emoji parameter)
@@ -105,7 +113,7 @@ class GameStateManager {
     }
     
     // Handle daily double state
-    this._handleDailyDoubleState(state);
+    this._handleDailyDoubleState(state, prevGuessCount, wasAvailable);
     
     // Check if player was removed
     this._checkPlayerRemoval();
@@ -137,17 +145,65 @@ class GameStateManager {
    * Handle daily double state logic
    * @private
    */
-  _handleDailyDoubleState(state) {
-    if (this.dailyDoubleAvailable && state.guesses.length === 0) {
-      this.dailyDoubleRow = 0;
-      this.dailyDoubleHint = null;
-      saveHintState(this.myEmoji, this.dailyDoubleRow, this.dailyDoubleHint);
-    } else if (!this.dailyDoubleAvailable && (this.dailyDoubleRow !== null || this.dailyDoubleHint !== null)) {
-      // Clear hint state if server says no daily double available
-      this.dailyDoubleRow = null;
-      this.dailyDoubleHint = null;
-      saveHintState(this.myEmoji, this.dailyDoubleRow, this.dailyDoubleHint);
+  _handleDailyDoubleState(state, prevGuessCount = 0, wasAvailable = false) {
+    const guessCount = state.guesses ? state.guesses.length : 0;
+    const maxRows = state.max_rows || this.maxRows || 6;
+
+    // An unspent hint targets the next open row while the round is in play.
+    // When the round is over it is saved for the next one, with no row yet.
+    this.dailyDoubleRow = this.dailyDoubleAvailable && !state.is_over && guessCount < maxRows
+      ? guessCount
+      : null;
+
+    // The revealed letter comes from our own state; live updates only say
+    // whether we still hold one, never the letter itself.
+    if ('daily_double_hint' in state) {
+      this.dailyDoubleHint = state.daily_double_hint || null;
+    } else if (Array.isArray(state.daily_double_hint_holders)) {
+      if (!this.myEmoji || !state.daily_double_hint_holders.includes(this.myEmoji)) {
+        this.dailyDoubleHint = null;
+      }
+    } else if (this.dailyDoubleHint && guessCount > this.dailyDoubleHint.row) {
+      this.dailyDoubleHint = null; // older servers: the row has been played
     }
+    if (state.is_over || guessCount < prevGuessCount) {
+      this.dailyDoubleHint = null;
+    }
+
+    // A bonus just earned by a row that is still flipping stays hidden
+    // until the tile shows its colour, so the highlight cannot spoil it.
+    const freshlyEarned = this.dailyDoubleAvailable && !wasAvailable && guessCount > prevGuessCount;
+    const revealMs = freshlyEarned ? getRevealDuration() : 0;
+    if (revealMs) {
+      this._hintRowHiddenUntil = Date.now() + revealMs;
+      clearTimeout(this._hintRevealTimer);
+      this._hintRevealTimer = setTimeout(() => {
+        this.renderCurrentGuess();
+        this._updateHintBadge();
+      }, revealMs);
+    }
+
+    // A hint saved from the last round becomes usable when the next starts.
+    const saved = this.dailyDoubleAvailable && this.dailyDoubleRow === null && !!state.is_over;
+    if (this._hintSaved && this.dailyDoubleRow !== null) {
+      showHintTooltip('Your saved 🔍 hint is ready – tap a tile in this row', this.dailyDoubleRow);
+    }
+    this._hintSaved = saved;
+
+    saveHintState(this.myEmoji, this.dailyDoubleRow, this.dailyDoubleHint);
+    syncHintSelection(this.dailyDoubleRow);
+    moveHintTooltip(this.dailyDoubleRow);
+  }
+
+  /** The row to highlight for hint selection, once it may be shown. */
+  _visibleHintRow() {
+    return Date.now() < this._hintRowHiddenUntil ? null : this.dailyDoubleRow;
+  }
+
+  /** The revealed letter, drawn on whichever row is open for our next guess. */
+  _hintForBoard(state) {
+    if (!this.dailyDoubleHint || !state || state.is_over) return null;
+    return { ...this.dailyDoubleHint, row: state.guesses.length };
   }
 
   /**
@@ -312,8 +368,8 @@ class GameStateManager {
       this.maxRows,
       this.gameState.is(STATES.GAME_OVER),
       -1,
-      this.dailyDoubleHint,
-      this.dailyDoubleRow
+      this._hintForBoard(latestState),
+      this._visibleHintRow()
     );
   }
 
@@ -334,8 +390,9 @@ class GameStateManager {
       // Record the registration attempt before making the call to provide grace period
       this.recordEmojiRegistration();
       
-      // Call the /emoji endpoint with null player_id to trigger re-registration
-      const emojiResp = await sendEmoji(this.myEmoji, null, this.lobbyCode);
+      // Re-register under our existing player ID; a null ID would make the
+      // server treat us as a newcomer and add a duplicate variant entry.
+      const emojiResp = await sendEmoji(this.myEmoji, getMyPlayerId(), this.lobbyCode);
       
       if (emojiResp && emojiResp.status === 'ok') {
         console.log('🔧 Emoji re-registration successful:', emojiResp);
@@ -369,9 +426,10 @@ class GameStateManager {
     const titleHintBadge = this.domManager ? this.domManager.get('titleHintBadge') : null;
     if (!titleHintBadge) return;
     
-    const hasUnusedHint = this.dailyDoubleRow !== null && this.dailyDoubleHint === null;
     const isSelecting = document.body.classList.contains('hint-selecting');
-    updateHintBadge(titleHintBadge, this.dailyDoubleAvailable || hasUnusedHint, isSelecting);
+    const hidden = Date.now() < this._hintRowHiddenUntil;
+    const saved = this.dailyDoubleAvailable && this.dailyDoubleRow === null;
+    updateHintBadge(titleHintBadge, this.dailyDoubleAvailable && !hidden, isSelecting, saved);
   }
 
   /**
@@ -427,16 +485,20 @@ class GameStateManager {
     this.maxRows = state.max_rows || 6;
     // Server snapshots are authoritative, including reloads and new rounds.
     this.gameState.set(state.is_over ? STATES.GAME_OVER : STATES.PLAYING);
+    // Letters typed but never submitted belong to the round they were typed
+    // in. Drop them when that round ends (or a new one starts without us
+    // seeing the end), so they are not carried onto the next board.
+    const roundRestarted = (state.guesses?.length ?? 0) < prevGuessCount;
+    if (state.is_over || roundRestarted) {
+      this.clearCurrentGuess({ render: false });
+    }
     this._syncGuessInput();
     const animateRow = state.guesses && state.guesses.length > prevGuessCount ? 
                       state.guesses.length - 1 : -1;
     
     updateBoard(board, state, this.currentGuess, this.maxRows, 
                this.gameState.is(STATES.GAME_OVER), animateRow, 
-               this.dailyDoubleHint, this.dailyDoubleRow);
-    
-    // Handle daily double row progression
-    this._handleDailyDoubleProgression(state);
+               this._hintForBoard(state), this._visibleHintRow());
     
     // Click as each tile turns over, in step with the flip.
     const revealMs = animateRow >= 0 ? getRevealDuration() : 0;
@@ -477,25 +539,6 @@ class GameStateManager {
   }
 
   /**
-   * Handle daily double row progression
-   * @private
-   */
-  _handleDailyDoubleProgression(state) {
-    if (this.dailyDoubleRow !== null && state.guesses.length > this.dailyDoubleRow) {
-      this.dailyDoubleRow = null;
-      this.dailyDoubleHint = null;
-      // hideHintTooltip(); // Would need to import this
-      setGameInputDisabled(this.gameState.is(STATES.GAME_OVER));
-      saveHintState(this.myEmoji, this.dailyDoubleRow, this.dailyDoubleHint);
-    }
-    
-    if (this.dailyDoubleHint && state.guesses.length > this.dailyDoubleHint.row) {
-      this.dailyDoubleHint = null;
-      saveHintState(this.myEmoji, this.dailyDoubleRow, this.dailyDoubleHint);
-    }
-  }
-
-  /**
    * Handle definition text updates
    * @private
    */
@@ -526,6 +569,9 @@ class GameStateManager {
   getDailyDoubleHint() { return this.dailyDoubleHint; }
   getDailyDoubleAvailable() { return this.dailyDoubleAvailable; }
   
+  /** Redraw the 🔍 badge after selection mode changes. */
+  refreshHintBadge() { this._updateHintBadge(); }
+
   // Setters for external modification
   setDailyDoubleState(row, hint) {
     this.dailyDoubleRow = row;

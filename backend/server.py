@@ -140,7 +140,7 @@ def age_eligibility():
     """Return only eligibility; never retain the submitted age or birthdate."""
     eligible = session.get("age_eligible")
     if eligible is False:
-        # Keep a denied result for the browser session, preventing easy retries.
+        # Denied for this browser session until the player answers again.
         return "blocked"
     checked_at = session.get("age_checked_at", 0)
     if eligible is True and 0 <= time.time() - checked_at < AGE_SESSION_TTL:
@@ -188,8 +188,10 @@ def submit_age():
     if not same_origin_request():
         return jsonify({"status": "error", "msg": "Use the age check on this website."}), 403
     eligibility = age_eligibility()
-    if eligibility != "unknown":
-        return jsonify({"eligibility": eligibility}), (200 if eligibility == "eligible" else 403)
+    if eligibility == "eligible":
+        return jsonify({"eligibility": eligibility}), 200
+    # A blocked answer may be corrected (e.g. a mistyped age); the new answer
+    # replaces it. Only the result is kept, never the age itself.
     data = request.get_json(silent=True)
     age = data.get("age") if isinstance(data, dict) else None
     # Booleans, floats, strings, missing values, and implausible ages fail closed.
@@ -485,6 +487,7 @@ def _reset_state(s: GameState | None = None) -> GameState:
         s.chat_messages.clear()
         s.daily_double_winners.clear()
         s.daily_double_pending.clear()
+        s.daily_double_revealed.clear()
         s.round_points.clear()
         s.host_token = host_token
     s.winner_emoji = None
@@ -650,12 +653,16 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
     if emoji is not None:
         # Include player-specific daily double status when requested for a specific player
         payload["daily_double_available"] = emoji in s.daily_double_pending
+        # The revealed letter is private, so only the player's own state has it.
+        payload["daily_double_hint"] = s.daily_double_revealed.get(emoji)
     else:
         # For broadcasts (SSE), include daily double status for all active players
         payload["daily_double_status"] = {
             player: player in s.daily_double_pending
             for player in s.leaderboard.keys()
         }
+        # Who is still looking at a revealed hint, without the letters.
+        payload["daily_double_hint_holders"] = sorted(s.daily_double_revealed)
 
     return payload
 
@@ -982,6 +989,8 @@ def guess_word():
     result = result_for_guess(guess, _state().target_word)
     new_entry = {"guess": guess, "result": result, "emoji": emoji, "ts": now}
     _state().guesses.append(new_entry)
+    # A revealed hint previews the player's next guess; this was that guess.
+    _state().daily_double_revealed.pop(emoji, None)
 
     dd_award = False
     award_row = None
@@ -995,6 +1004,8 @@ def guess_word():
             and emoji not in _state().daily_double_winners
         ):
             _state().daily_double_winners.add(emoji)
+            # The hint is for the next row. If this guess ends the round, the
+            # hint carries over to the next round instead (see pick_new_word).
             _state().daily_double_pending[emoji] = row_index + 1
             dd_award = True
             award_row = dd_row
@@ -1084,6 +1095,8 @@ def guess_word():
     }
     if dd_award:
         resp["daily_double_tile"] = {"row": award_row, "col": award_col}
+        # Earned on the round's final guess: saved for the next round.
+        resp["daily_double_carried"] = over
     return jsonify(resp)
 
 
@@ -1122,6 +1135,15 @@ def select_hint():
     if emoji not in _state().daily_double_pending:
         return jsonify({"status": "error", "msg": "No hint available."}), 400
 
+    if _state().is_over:
+        # Keep the hint; it is spent on the next round's word instead.
+        return jsonify({"status": "error",
+                        "msg": "Your hint is saved for the next round."}), 409
+
+    row = len(_state().guesses)
+    if row >= MAX_ROWS:
+        return jsonify({"status": "error", "msg": "No rows left for a hint."}), 409
+
     try:
         col = int(col)
     except (TypeError, ValueError):
@@ -1130,8 +1152,10 @@ def select_hint():
     if not 0 <= col < 5:
         return jsonify({"status": "error", "msg": "Invalid column."}), 400
 
-    row = _state().daily_double_pending.pop(emoji)
+    # The hint previews the next open row, wherever play has reached.
+    _state().daily_double_pending.pop(emoji)
     letter = _state().target_word[col]
+    _state().daily_double_revealed[emoji] = {"row": row, "col": col, "letter": letter}
     save_data_legacy()
     broadcast_state()  # Notify other players that daily double was used
     log_daily_double_used(emoji, ip)
@@ -1472,6 +1496,7 @@ def kick_player():
     if pid:
         _state().player_map.pop(pid, None)
     _state().daily_double_pending.pop(emoji, None)
+    _state().daily_double_revealed.pop(emoji, None)
     if _state().winner_emoji == emoji:
         _state().winner_emoji = None
 
@@ -1530,6 +1555,7 @@ def leave_lobby():
     _reset_vote.forget_player(_state(), emoji)
     _state().player_map.pop(player_id, None)
     _state().daily_double_pending.pop(emoji, None)
+    _state().daily_double_revealed.pop(emoji, None)
     if _state().winner_emoji == emoji:
         _state().winner_emoji = None
 

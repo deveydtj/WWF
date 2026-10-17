@@ -30,6 +30,9 @@ class GameState:
     daily_double_index: int | None = None
     daily_double_winners: set = field(default_factory=set)
     daily_double_pending: dict = field(default_factory=dict)
+    # Hints a player has revealed this round: emoji -> {"row", "col", "letter"}.
+    # A revealed letter stays on that player's board until they guess again.
+    daily_double_revealed: dict = field(default_factory=dict)
     host_token: str | None = None
     phase: str = "waiting"
     last_activity: float = field(default_factory=time.time)

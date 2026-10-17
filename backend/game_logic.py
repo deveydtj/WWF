@@ -160,12 +160,15 @@ def pick_new_word(s: GameState) -> None:
     s.definition = None
     s.win_timestamp = None
     if MAX_ROWS > 1:
-        s.daily_double_index = random.randint(0, MAX_ROWS * 5 - 1)
+        # Never on the final row: a hint earned there would have no row to use.
+        s.daily_double_index = random.randint(0, (MAX_ROWS - 1) * 5 - 1)
     else:
         s.daily_double_index = None
     s.daily_double_winners.clear()
+    # Unused hints carry over and can be spent from the first row onward.
     for player in list(s.daily_double_pending.keys()):
         s.daily_double_pending[player] = 0
+    s.daily_double_revealed.clear()
     s.phase = "waiting"
     s.round_points.clear()
     s.reset_vote = None

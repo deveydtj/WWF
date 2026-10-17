@@ -10,7 +10,7 @@ const WIN_HOP_STAGGER_MS = 90;
 const WIN_HOP_MS = 480;
 const RESULT_CLASSES = ['correct', 'present', 'absent'];
 // Animation classes that must survive a state refresh until they finish.
-const PERSISTENT_ANIMATIONS = ['letter-in', 'row-shake'];
+const PERSISTENT_ANIMATIONS = ['letter-in', 'row-shake', 'dd-glow'];
 const REVEAL_ANIMATIONS = ['flip-reveal', 'win-hop'];
 
 export function prefersReducedMotion() {
@@ -31,6 +31,20 @@ export function getTileRevealMoment(col) {
 
 function now() {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
+/**
+ * Milliseconds until a row that is flipping right now finishes, or until one
+ * tile in it changes colour when ``col`` is given. Zero when nothing is
+ * flipping. Measured from the reveal that is actually on screen, which may
+ * have started from a live update before this player's own response arrived.
+ */
+export function msUntilReveal(board, row, col = null) {
+  const tile = board?.children?.[row * 5 + (col ?? 0)];
+  const start = Number(tile?.dataset?.revealStart);
+  if (!start) return 0;
+  const offset = col === null ? getRevealDuration() : getTileRevealMoment(col);
+  return Math.max(0, Math.round(start + offset - now()));
 }
 
 /**
@@ -86,6 +100,7 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
       kept.push(...REVEAL_ANIMATIONS.filter(name => tile.classList.contains(name)));
     } else if (revealEnd) {
       delete tile.dataset.revealEnd;
+      delete tile.dataset.revealStart;
       tile.style.removeProperty('--reveal-delay');
       tile.style.removeProperty('--hop-delay');
     }
@@ -113,6 +128,7 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
           end = hopDelay + WIN_HOP_MS;
         }
         tile.dataset.revealEnd = String(renderTime + end);
+        tile.dataset.revealStart = String(renderTime);
       }
     }
   });
@@ -133,14 +149,8 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
       const tileIndex = rowIndex * 5 + i;
       
       tile.classList.toggle('hint-target', hintRow === rowIndex);
-      if (hint && hint.row === rowIndex && hint.col === i) {
-        if (previousTexts[tileIndex] !== hint.letter.toUpperCase()) {
-          animateLetterIn(tile, hint.letter);
-        } else {
-          tile.textContent = hint.letter.toUpperCase();
-        }
-        tile.classList.add('ghost');
-      } else if (i < activeGuess.length) {
+      if (i < activeGuess.length) {
+        // A typed letter always shows; the hint stays as a ghost behind it.
         const newLetter = activeGuess[i].toUpperCase();
         if (previousTexts[tileIndex] !== newLetter || previousGhosts[tileIndex]) {
           animateLetterIn(tile, newLetter);
@@ -148,6 +158,13 @@ export function updateBoard(board, state, currentGuess = '', rows = 6, gameOver 
           tile.textContent = newLetter;
         }
         if (greenPositions[i] === activeGuess[i]) tile.classList.add('correct');
+      } else if (hint && hint.row === rowIndex && hint.col === i) {
+        if (previousTexts[tileIndex] !== hint.letter.toUpperCase()) {
+          animateLetterIn(tile, hint.letter);
+        } else {
+          tile.textContent = hint.letter.toUpperCase();
+        }
+        tile.classList.add('ghost', 'hint-letter');
       } else if (greenPositions[i]) {
         if (previousTexts[tileIndex] !== greenPositions[i].toUpperCase()) {
           animateLetterIn(tile, greenPositions[i]);

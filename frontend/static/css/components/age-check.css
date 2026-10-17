@@ -86,6 +86,7 @@
   cursor: wait;
 }
 
+#ageRetry,
 #ageCheckClose {
   border-color: var(--popup-border) !important;
   background: var(--bg-color) !important;

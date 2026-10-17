@@ -105,4 +105,11 @@
   margin-left: 6px;
   font-size: calc(0.75em * var(--ui-scale));
   animation: hint-pulse 4s ease-in-out infinite;
+  cursor: pointer;
+}
+
+/* A hint carried into the next round waits quietly until it can be used. */
+.hint-badge.hint-saved {
+  animation: none;
+  opacity: 0.6;
 }

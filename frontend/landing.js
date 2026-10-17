@@ -490,7 +490,45 @@ export async function joinLobby(code) {
     localStorage.removeItem('hostToken');
     window.location.hash = `#lobby/${code}`;
   } else {
-    announce('Lobby not found');
+    if (resp.status === 404 && code === getLastLobby()) forgetLastLobby();
+    showJoinError('Lobby not found. It may have ended, so create a new one or check the code.');
+  }
+}
+
+function forgetLastLobby() {
+  localStorage.removeItem('lastLobby');
+  const rejoin = document.getElementById('rejoinChip');
+  if (rejoin) rejoin.hidden = true;
+}
+
+let rejoinRetry = null;
+
+// Only offer Re-join for a lobby the server still has. Lobbies are purged when
+// idle and lost when the server restarts, so a saved code can go stale.
+export async function refreshRejoinChip() {
+  const rejoin = document.getElementById('rejoinChip');
+  const last = getLastLobby();
+  clearTimeout(rejoinRetry);
+  if (!rejoin || !last) {
+    if (rejoin) rejoin.hidden = true;
+    return;
+  }
+  let resp;
+  try {
+    resp = await fetch(`/lobby/${last}/state`, { cache: 'no-store' });
+  } catch {
+    rejoin.hidden = true;
+    return;
+  }
+  if (getLastLobby() !== last) return;
+  if (resp.ok) {
+    rejoin.hidden = false;
+  } else if (resp.status === 404 || resp.status === 400) {
+    forgetLastLobby();
+  } else {
+    // Server asleep or waking: keep the code and check again once it is up.
+    rejoin.hidden = true;
+    rejoinRetry = setTimeout(refreshRejoinChip, 10000);
   }
 }
 
@@ -499,11 +537,16 @@ function initJoinForm() {
   const input = document.getElementById('joinCode');
   const rejoin = document.getElementById('rejoinChip');
 
-  const last = getLastLobby();
-  if (last) {
-    rejoin.hidden = false;
-    rejoin.addEventListener('click', () => joinLobby(last));
-  }
+  rejoin.addEventListener('click', () => {
+    const last = getLastLobby();
+    if (last) joinLobby(last);
+  });
+  refreshRejoinChip();
+  // The lobby can expire while this tab sits idle, so check again on return.
+  window.addEventListener('focus', refreshRejoinChip);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshRejoinChip();
+  });
 
   input.addEventListener('input', () => {
     input.value = input.value.toUpperCase();
@@ -708,10 +751,32 @@ async function initTileAnimation() {
   finishDonationIntro();
 }
 
+// Hovering a SQUAD tile with the mouse flips it, like the intro does.
+function initTileHover() {
+  const landing = document.getElementById('landingView');
+  const tiles = landing?.querySelectorAll('.play-tiles span') || [];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  tiles.forEach(tile => {
+    let flip = null;
+    tile.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'mouse' || reduceMotion.matches) return;
+      // Let the intro finish first, and let a flip finish before the next.
+      if (landing.classList.contains('tiles-preparing') || landing.classList.contains('tiles-ready')) return;
+      if (flip?.playState === 'running') return;
+      flip = tile.animate([
+        { transform: 'perspective(240px) translateY(0) rotateX(0deg)' },
+        { transform: 'perspective(240px) translateY(4px) rotateX(-180deg)', offset: 0.45 },
+        { transform: 'perspective(240px) translateY(0) rotateX(-360deg)' }
+      ], { duration: 650, easing: 'ease-out' });
+    });
+  });
+}
+
 export function init() {
   wakeServer();
   startActivityPings();
   initTileAnimation();
+  initTileHover();
   initDarkToggle();
   updateDonationSection();
   initLiveDonations();

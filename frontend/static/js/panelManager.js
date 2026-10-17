@@ -48,11 +48,15 @@ function hasDefinitionContent() {
 function updatePanelVisibility() {
   const capacity = getCurrentLayoutProfile().panelCapacity;
   const manual = getManualOverlayState();
-  setOverlayOpen(OVERLAYS.HISTORY, manual.history || (capacity >= 1 && hasHistoryContent()), {
-    closeCompeting: false, activate: false
-  });
+  // An explicit open/close from the player wins; otherwise rails fill
+  // themselves when there is content and room for them.
+  const choose = (choice, automatic) => (choice === null ? automatic : choice);
+  setOverlayOpen(OVERLAYS.HISTORY,
+    choose(manual.history, capacity >= 1 && hasHistoryContent()),
+    { closeCompeting: false, activate: false });
+  // Chat takes the definition's rail unless the player asked for both.
   setOverlayOpen(OVERLAYS.DEFINITION,
-    manual.definition || (capacity >= 2 && hasDefinitionContent() && !isOverlayOpen(OVERLAYS.CHAT)),
+    choose(manual.definition, capacity >= 2 && hasDefinitionContent() && !isOverlayOpen(OVERLAYS.CHAT)),
     { closeCompeting: false, activate: false });
 
   const panels = [

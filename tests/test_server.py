@@ -1008,8 +1008,9 @@ def test_daily_double_not_awarded(server_env):
 def test_hint_selection_for_daily_double_winner(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
+    server.WORDS.append('ample')  # earns the bonus without ending the round
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
@@ -1043,8 +1044,9 @@ def test_hint_selection_invalid_player(server_env):
 def test_hint_cannot_be_used_twice(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
+    server.WORDS.append('ample')  # earns the bonus without ending the round
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
@@ -1063,8 +1065,9 @@ def test_hint_cannot_be_used_twice(server_env):
 def test_state_reports_daily_double_available(server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
+    server.WORDS.append('ample')  # earns the bonus without ending the round
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
@@ -1100,6 +1103,7 @@ def test_chat_post_and_get(server_env):
 def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
     server, request = server_env
     server.current_state.daily_double_index = 0
+    server.WORDS.append('ample')  # earns the bonus without ending the round
     log_file = tmp_path / 'analytics.log'
     monkeypatch.setattr(server, 'ANALYTICS_FILE', str(log_file))
     
@@ -1107,7 +1111,7 @@ def test_hint_logs_analytics(tmp_path, monkeypatch, server_env):
     import backend.analytics
     backend.analytics.ANALYTICS_FILE = log_file
 
-    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
     request.remote_addr = '1'
     server.guess_word()
 
@@ -1170,6 +1174,99 @@ def test_daily_double_carries_over_on_win(server_env):
     hint_resp = server.select_hint()
     assert hint_resp['status'] == 'ok'
     assert '😀' not in server.current_state.daily_double_pending
+
+
+def test_daily_double_never_placed_on_final_row(server_env):
+    server, _ = server_env
+    last_row_start = (server.MAX_ROWS - 1) * 5
+    for _ in range(300):
+        server.pick_new_word(server.current_state)
+        assert 0 <= server.current_state.daily_double_index < last_row_start
+
+
+def test_daily_double_on_winning_guess_is_carried(server_env):
+    server, request = server_env
+    server.current_state.daily_double_index = 0
+    request.json = {'guess': server.current_state.target_word, 'emoji': '😀', 'player_id': 'p1'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+    assert resp['daily_double'] is True
+    assert resp['daily_double_carried'] is True
+
+    # The finished round cannot spend it, and the hint is not lost.
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 1}
+    data, status = server.select_hint()
+    assert status == 409
+    assert '😀' in server.current_state.daily_double_pending
+
+
+def test_daily_double_mid_round_is_not_carried(server_env):
+    server, request = server_env
+    server.WORDS.append('ample')
+    server.current_state.daily_double_index = 0
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
+    request.remote_addr = '1'
+    resp = server.guess_word()
+    assert resp['daily_double'] is True
+    assert resp['daily_double_carried'] is False
+
+
+def test_hint_uses_current_next_row_after_others_guess(server_env, monkeypatch):
+    server, request = server_env
+    # Free guesses: these tests are about who plays which row, not hard mode.
+    monkeypatch.setattr(server, 'validate_hard_mode', lambda guess: (True, ''))
+    server.WORDS.append('ample')
+    server.current_state.daily_double_index = 0
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
+    request.remote_addr = '1'
+    server.guess_word()
+
+    # Another player takes the row the hint was earned for.
+    request.json = {'guess': 'enter', 'emoji': '😎', 'player_id': 'p2'}
+    server.guess_word()
+
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 1}
+    request.remote_addr = '1'
+    resp = server.select_hint()
+    assert resp['status'] == 'ok'
+    assert resp['row'] == 2
+
+
+def test_revealed_hint_is_private_and_cleared_by_own_guess(server_env, monkeypatch):
+    server, request = server_env
+    # Free guesses: these tests are about who plays which row, not hard mode.
+    monkeypatch.setattr(server, 'validate_hard_mode', lambda guess: (True, ''))
+    server.WORDS.append('ample')
+    server.current_state.daily_double_index = 0
+    request.json = {'guess': 'ample', 'emoji': '😀', 'player_id': 'p1'}
+    request.remote_addr = '1'
+    server.guess_word()
+    request.json = {'emoji': '😀', 'player_id': 'p1', 'col': 1}
+    server.select_hint()
+
+    mine = server.build_state_payload('😀')
+    assert mine['daily_double_hint'] == {'row': 1, 'col': 1, 'letter': 'p'}
+    assert server.build_state_payload('😎')['daily_double_hint'] is None
+    broadcast = server.build_state_payload()
+    assert broadcast['daily_double_hint_holders'] == ['😀']
+    assert 'daily_double_hint' not in broadcast
+
+    # Someone else's guess keeps it; the holder's own next guess spends it.
+    request.json = {'guess': 'enter', 'emoji': '😎', 'player_id': 'p2'}
+    request.remote_addr = '2'
+    server.guess_word()
+    assert server.build_state_payload('😀')['daily_double_hint'] is not None
+    request.json = {'guess': 'crane', 'emoji': '😀', 'player_id': 'p1'}
+    request.remote_addr = '1'
+    server.guess_word()
+    assert server.build_state_payload('😀')['daily_double_hint'] is None
+
+
+def test_new_round_clears_revealed_hints(server_env):
+    server, _ = server_env
+    server.current_state.daily_double_revealed['😀'] = {'row': 1, 'col': 0, 'letter': 'a'}
+    server.pick_new_word(server.current_state)
+    assert server.current_state.daily_double_revealed == {}
 
 
 def test_broadcast_state_includes_daily_double_status(server_env):

@@ -118,6 +118,64 @@ body.dark-mode .emoji-stamp {
 .tile.hint-target {
   border: 2px dashed var(--present-bg);
   cursor: pointer;
+  animation: hintTargetPulse 1.6s ease-in-out infinite;
+}
+
+/* Letters already found green are not worth a hint. */
+.tile.hint-target.ghost {
+  cursor: not-allowed;
+  animation: none;
+}
+
+@media (hover: hover) {
+  .tile.hint-target:not(.ghost):hover {
+    background-color: color-mix(in srgb, var(--present-bg) 18%, var(--tile-bg));
+  }
+}
+
+/* The revealed hint letter: a ghost tile marked in the bonus colour. */
+.tile.ghost.hint-letter {
+  border-color: var(--present-bg);
+  outline-color: var(--present-bg);
+  opacity: 0.65;
+}
+
+/* Daily Double: a gold ring pulses out from the tile that earned it. The ring
+   is a pseudo-element so it never interrupts the tile's own flip. */
+.tile.dd-glow {
+  position: relative;
+}
+
+.tile.dd-glow::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 3px var(--present-bg), 0 0 18px 4px var(--present-bg);
+  animation: ddRing 650ms ease-out 2 both;
+}
+
+@keyframes ddRing {
+  0% { opacity: 0; transform: scale(0.9); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+
+@keyframes hintTargetPulse {
+  0%, 100% { border-color: var(--present-bg); }
+  50% { border-color: color-mix(in srgb, var(--present-bg) 35%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile.hint-target {
+    animation: none;
+  }
+
+  .tile.dd-glow::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 body.hint-selecting .tile:not(.hint-target) {

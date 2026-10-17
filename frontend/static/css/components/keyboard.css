@@ -79,6 +79,21 @@
   filter: brightness(0.95);
 }
 
+/* A key held on the computer keyboard sinks into the board until released. */
+#keyboard .key.physical-press {
+  box-shadow: inset 3px 3px 6px var(--inset-shadow-dark),
+              inset -3px -3px 6px var(--inset-shadow-light);
+  transform: translateY(2px) scale(0.93);
+  filter: brightness(0.9);
+  transition: filter 40ms ease, transform 40ms ease, box-shadow 40ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #keyboard .key.physical-press {
+    transform: none;
+  }
+}
+
 /* The cap and curved neck share an edge and move together as one silhouette. */
 .key.touch-preview {
   z-index: 1;
