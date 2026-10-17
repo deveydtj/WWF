@@ -128,6 +128,7 @@ if not os.environ.get("SECRET_KEY") and os.environ.get("FLASK_ENV") == "producti
 PUBLIC_ENDPOINTS = {
     "index", "spa_fallback_route", "health", "cleanup_lobbies",
     "age_status", "submit_age", "age_page", "notify_server_update", "landing_css", "landing_js",
+    "license_file",
     "js_files", "css_files", "asset_files", "lobby_js_files",
     "lobby_css_files", "lobby_asset_files",
 }
@@ -1700,6 +1701,14 @@ def landing_js():
     """Serve the landing page script."""
     root = STATIC_DIR if (STATIC_DIR / "landing.js").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root), "landing.js")
+
+
+@app.route("/LICENSE.txt")
+def license_file():
+    """Serve the project's MIT license."""
+    if (STATIC_DIR / "LICENSE.txt").exists():
+        return send_from_directory(str(STATIC_DIR), "LICENSE.txt", mimetype="text/plain")
+    return send_from_directory(str(BASE_DIR), "LICENSE", mimetype="text/plain")
 
 
 @app.route("/game")
