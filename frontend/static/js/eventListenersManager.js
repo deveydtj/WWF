@@ -527,7 +527,7 @@ class EventListenersManager {
     
     if (copyLobbyLink && this.lobbyCode && !window.PRIVATE_ROOM) {
       copyLobbyLink.addEventListener('click', () => {
-        const url = window.location.href;
+        const url = `${window.location.origin}/invite.html#lobby/${this.lobbyCode}`;
         
         if (navigator.share) {
           navigator.share({

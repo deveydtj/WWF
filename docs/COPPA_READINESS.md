@@ -25,14 +25,14 @@ The owner chose ages 13+ for multiplayer and chat. A neutral age screen now
 runs before lobby creation/registration, direct game initialization, or chat.
 The server checks the signed eligibility cookie for game requests, including
 state, lobby discovery and SSE, so hiding the screen or changing localStorage
-does not grant access. An under-13 result prevents resubmission in the same
-browser session; public home/how-to content remains accessible. The submitted
-age is not stored. Only eligibility, check time and the nonpermanent session
-marker are retained in the cookie. Eligible sessions expire after 12 hours,
-and existing streams close at that deadline. Denied results remain blocked
-for the validity of the browser-session cookie. Cookies are HttpOnly and
-SameSite=Lax, and Secure in production. Browser session restoration can retain
-session cookies, and deleting cookies or using another browser can permit a
+does not grant access. An under-13 result blocks participation, with an option
+to correct the answer; public home/how-to content remains accessible. The submitted
+age is not stored. Only eligibility, check time and the permanent session
+marker are retained locally in a signed cookie for one year, including across
+browser restarts. Eligible sessions expire at that deadline, and existing
+streams close then. Denied results remain blocked for the validity of the
+cookie unless corrected. Cookies are HttpOnly and SameSite=Lax, and Secure in
+production. Deleting cookies or using another browser profile requires a
 new screen. This is self-reported eligibility, not identity verification,
 parental consent, or certification.
 
@@ -57,7 +57,7 @@ HTTPS domain; no AWS deployment was performed in this work.
 
 | Area | Current behavior | Required work before child access / certification |
 | --- | --- | --- |
-| Eligibility / consent | Multiplayer, registration, lobby discovery, chat and state/SSE require a signed age-eligibility session. Ages 13+ are allowed; under-13 results are blocked for that browser session. | Verify actual audience classification and deployed enforcement. If the service is child-directed or under-13 participation is added, implement the applicable parent notices, verifiable consent, rights and disclosure controls before collecting child data. An age screen alone cannot resolve audience classification. |
+| Eligibility / consent | Multiplayer, registration, lobby discovery, chat and state/SSE require a signed age-eligibility cookie remembered for one year. Ages 13+ are allowed; under-13 results block participation until corrected or the cookie expires. | Verify actual audience classification and deployed enforcement. If the service is child-directed or under-13 participation is added, implement the applicable parent notices, verifiable consent, rights and disclosure controls before collecting child data. An age screen alone cannot resolve audience classification. |
 | Public disclosure | Eligible players can submit free-text chat, which is persisted and included in gated state/SSE broadcasts. Unscreened/under-13 requests cannot reach chat or lobby discovery. Emoji input still accepts arbitrary nonempty strings. | Review chat safety and data handling for the approved audience. If child participation is added, prevent unconsented collection/disclosure across all input and broadcast paths. Filtering alone is insufficient. |
 | Privacy notice | No dedicated privacy notice was found in the frontend. | Publish accurate operator/contact, data categories, purposes, recipients, retention/deletion, parental rights, and internal-operations practices; link prominently on home and collection pages. Finalize from verified operations rather than invented contacts or promises. |
 | Parent rights / actual knowledge | Under-13 participation is blocked by the new screen. Leave/kick is not comprehensive deletion; existing chat/history can remain. | Establish a process for reports that an existing player is under 13, including stopping collection and removing any improperly retained data. If child participation is added, provide the required authenticated parent review, refusal, revocation and deletion process. |

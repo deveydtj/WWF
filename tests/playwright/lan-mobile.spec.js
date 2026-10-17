@@ -33,10 +33,24 @@ test('invite link copies on an HTTP LAN origin without Clipboard API', async ({ 
   });
   await page.locator('#copyLobbyLink').click();
   await expect(page.locator('#shareModal')).toBeVisible();
-  await expect(page.locator('#shareLink')).toHaveValue(page.url());
+  const inviteUrl = `${new URL(page.url()).origin}/invite.html#lobby/ACT001`;
+  await expect(page.locator('#shareLink')).toHaveValue(inviteUrl);
   await page.locator('#shareCopy').click();
   expect(errors).toEqual([]);
-  expect(await page.evaluate(() => window.copiedInvite)).toBe(page.url());
+  expect(await page.evaluate(() => window.copiedInvite)).toBe(inviteUrl);
+});
+
+test('native sharing includes the preview URL and the current lobby code', async ({ page, deterministicLobby }) => {
+  await deterministicLobby.openActive();
+  await page.evaluate(() => {
+    navigator.share = async data => { window.sharedInvitation = data; };
+  });
+  await page.locator('#copyLobbyLink').click();
+  expect(await page.evaluate(() => window.sharedInvitation)).toEqual({
+    title: 'Join my WordSquad game',
+    text: 'Come play WordSquad with me!',
+    url: `${new URL(page.url()).origin}/invite.html#lobby/ACT001`,
+  });
 });
 
 test('game has no server waiting screen', async ({ page, deterministicLobby }) => {
@@ -192,6 +206,7 @@ for (const [width, height] of [[320, 568], [844, 390]]) {
     await page.setViewportSize({ width, height });
     await deterministicLobby.openActive();
     await page.locator('#optionsToggle').click();
+    await page.locator('#optionsClose').click();
     await page.locator('#playerToggle').click();
     await expect(page.locator('#optionsMenu')).toBeHidden();
     for (const id of ['playerSidebar', 'playerClose']) {

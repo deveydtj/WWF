@@ -68,11 +68,13 @@ def test_age13_can_create_register_play_and_chat_without_rechecking(client):
     assert result.status_code == 200
     cookie = result.headers['Set-Cookie']
     assert 'HttpOnly' in cookie and 'SameSite=Lax' in cookie
-    assert 'Expires=' not in cookie and 'Max-Age=' not in cookie
+    assert 'Expires=' in cookie
+    assert abs(client.get_cookie('wordsquad_age_session').expires.timestamp()
+               - time.time() - server.AGE_SESSION_TTL) < 2
     with client.session_transaction() as stored:
         assert set(stored) == {'age_eligible', 'age_checked_at', '_permanent'}
         assert stored['age_eligible'] is True
-        assert stored['_permanent'] is False
+        assert stored['_permanent'] is True
     assert client.get('/age-status').json == {'eligibility': 'eligible'}
     assert client.get('/game').status_code == 200
     created = client.post('/lobby').json
@@ -137,7 +139,21 @@ def test_tampered_cookie_cannot_grant_access(client):
     assert client.get('/state').status_code == 403
 
 
-def test_a_new_browser_session_requires_its_own_check(client):
+@pytest.mark.parametrize(('age', 'eligibility'), [(13, 'eligible'), (12, 'blocked')])
+def test_returning_browser_keeps_eligibility_beyond_twelve_hours(client, age, eligibility):
+    client.post('/age-check', json={'age': age})
+    with client.session_transaction() as stored:
+        stored['age_checked_at'] = time.time() - 2 * 24 * 60 * 60
+    cookie = client.get_cookie('wordsquad_age_session')
+    returning = server.app.test_client()
+    returning.set_cookie(cookie.key, cookie.value)
+    response = returning.get('/age-status')
+    assert response.json == {'eligibility': eligibility}
+    # Reading the result must not extend the one-year deadline.
+    assert 'Set-Cookie' not in response.headers
+
+
+def test_a_new_browser_profile_requires_its_own_check(client):
     client.post('/age-check', json={'age': 13})
     other = server.app.test_client()
     assert other.get('/age-status').json == {'eligibility': 'unknown'}

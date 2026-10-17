@@ -18,7 +18,8 @@ flag cause a hard failure. Run a fresh plan after these prerequisites are ready.
 This gate does not establish COPPA certification; the additional unresolved
 requirements are recorded in [COPPA_READINESS.md](COPPA_READINESS.md).
 
-The 13+ age screen uses a signed browser-session cookie. Before deployment,
+The 13+ age screen remembers eligibility in a signed, persistent browser cookie
+for one year. Before deployment,
 store a random `SECRET_KEY` of at least 32 characters in AWS Secrets Manager
 or SSM, and supply its ARN as `session_secret_arn` in the live tfvars. Terraform
 grants the server's IAM role read access to exactly that ARN.
@@ -50,7 +51,11 @@ sleep/wake works and what it costs.
 | Awake all month | ~$11/mo; the $10 budget cap stops it before that |
 
 The first visitor after a nap waits about a minute while the server boots.
-The landing page starts the wake-up as soon as it loads.
+The landing page starts the wake-up as soon as it loads, and the waiting
+screens (the waking page and the landing page's Create/Join) show a live
+countdown. Deploy the Lambda (`terraform apply`) with the frontend so `/wake`
+reports how far along the boot is; without it the countdown starts from the
+moment the player asked.
 
 API origin connections use CloudFront Origin Shield in `us-east-1` to avoid
 the regional DNS failure observed during the October 17 rollout. API caching

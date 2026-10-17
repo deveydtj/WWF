@@ -279,6 +279,7 @@ body {
   display: flex;
   gap: 0.45rem;
   margin-top: 1.5rem;
+  touch-action: pan-y pinch-zoom;
 }
 
 .play-tiles span {
@@ -1032,4 +1033,165 @@ body:has(#howTo[open]) {
 @keyframes donation-sparkle {
   0%, 100% { text-shadow: 0 0 16px #64f696a6; }
   50% { text-shadow: 0 0 28px #64f696ff; }
+}
+
+/* ---------- Wake panel: shown in place of Create/Join while the server starts ---------- */
+#heroCard .play-actions[data-waking] > :not(#wakePanel) {
+  display: none;
+}
+
+.wake-panel {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  border: 1px solid var(--landing-border);
+  border-radius: 20px;
+  background: var(--landing-inset);
+  box-shadow: inset 3px 3px 8px var(--landing-shadow), inset -2px -2px 6px var(--landing-highlight);
+  color: var(--landing-text);
+  text-align: center;
+}
+
+.wake-tiles {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.wake-tiles span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 40px;
+  border-radius: 9px;
+  background: #64f696;
+  color: #11291b;
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 0 18px #64f69633, 3px 3px 7px var(--landing-shadow);
+}
+
+.wake-tiles span:nth-child(even) {
+  background: #e6c86f;
+  color: #332a13;
+  box-shadow: 0 0 16px #e6c86f26, 3px 3px 7px var(--landing-shadow);
+}
+
+.wake-panel[data-state="ready"] .wake-tiles span {
+  background: #64f696;
+  color: #11291b;
+}
+
+.wake-panel[data-state="disabled"] .wake-tiles span,
+.wake-panel[data-state="timeout"] .wake-tiles span {
+  background: var(--tile-bg);
+  color: var(--landing-muted);
+  box-shadow: 3px 3px 7px var(--landing-shadow), -2px -2px 6px var(--landing-highlight);
+}
+
+.wake-panel h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.wake-panel h3:focus {
+  outline: none;
+}
+
+.wake-status {
+  margin: 0;
+  max-width: 24rem;
+  color: var(--landing-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.wake-eta {
+  display: grid;
+  gap: 0.1rem;
+  margin-top: 0.25rem;
+}
+
+.wake-eta strong {
+  color: var(--squad-green);
+  font-size: 1.9rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.wake-eta span {
+  color: var(--landing-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wake-progress {
+  --wake-progress: 0%;
+  position: relative;
+  width: 100%;
+  max-width: 18rem;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--landing-track);
+  box-shadow: inset 2px 2px 4px var(--landing-shadow);
+}
+
+.wake-progress::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--wake-progress);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #53db83, #82ffaf);
+  box-shadow: 0 0 12px #64f69666;
+  transition: width 1s linear;
+}
+
+.wake-panel[data-state="disabled"] .wake-eta,
+.wake-panel[data-state="disabled"] .wake-progress,
+.wake-panel[data-state="timeout"] .wake-eta,
+.wake-panel[data-state="timeout"] .wake-progress {
+  display: none;
+}
+
+.wake-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.wake-actions .play-secondary {
+  justify-content: center;
+  min-width: 7rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wake-tiles span {
+    animation: wake-tile-hop 1.4s ease-in-out infinite;
+  }
+
+  .wake-tiles span:nth-child(2) { animation-delay: 0.1s; }
+  .wake-tiles span:nth-child(3) { animation-delay: 0.2s; }
+  .wake-tiles span:nth-child(4) { animation-delay: 0.3s; }
+  .wake-tiles span:nth-child(5) { animation-delay: 0.4s; }
+
+  .wake-panel[data-state="ready"] .wake-tiles span {
+    animation: squad-tile-flip 500ms ease-out backwards;
+  }
+
+  .wake-panel[data-state="disabled"] .wake-tiles span,
+  .wake-panel[data-state="timeout"] .wake-tiles span {
+    animation: none;
+  }
+}
+
+@keyframes wake-tile-hop {
+  0%, 60%, 100% { transform: none; }
+  30% { transform: translateY(-8px); }
 }

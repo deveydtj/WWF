@@ -15,6 +15,22 @@
     document.documentElement.style.backgroundColor = dark ? '#2c303a' : '#e0e5ec';
   </script>
   <title>WordSquad</title>
+  <meta name="description" content="Five letters. Six guesses. One squad. Guess, chat, and celebrate together in WordSquad.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WordSquad">
+  <meta property="og:title" content="WordSquad · Better words. Better together.">
+  <meta property="og:description" content="Five letters. Six guesses. One squad. Guess, chat, and celebrate together in WordSquad.">
+  <meta property="og:url" content="https://wordsquad.io/">
+  <meta property="og:image" content="https://wordsquad.io/assets/wordsquad-share-v1.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="WordSquad: Better words. Better together. Five letters. Six guesses. One squad.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WordSquad · Better words. Better together.">
+  <meta name="twitter:description" content="Five letters. Six guesses. One squad. Guess, chat, and celebrate together in WordSquad.">
+  <meta name="twitter:image" content="https://wordsquad.io/assets/wordsquad-share-v1.png">
+  <meta name="twitter:image:alt" content="WordSquad: Better words. Better together. Five letters. Six guesses. One squad.">
   <link rel="stylesheet" href="static/css/theme.css">
   <link rel="stylesheet" href="landing.css">
   <link rel="stylesheet" href="static/css/components/modals.css">
@@ -95,6 +111,21 @@
           <p id="joinError" class="error-text visually-hidden" role="alert"></p>
         </form>
         <button id="rejoinChip" class="play-secondary" type="button" hidden>Re-join</button>
+        <!-- Shown by landing.js while a sleeping game server starts up. -->
+        <div id="wakePanel" class="wake-panel" hidden>
+          <div class="wake-tiles" aria-hidden="true"><span>W</span><span>A</span><span>K</span><span>E</span><span>!</span></div>
+          <h3 id="wakeTitle" tabindex="-1">Waking up the game server…</h3>
+          <p id="wakeStatus" class="wake-status" role="status" aria-live="polite">It naps when nobody's playing.</p>
+          <div class="wake-eta">
+            <strong id="wakeEta">~1:00</strong>
+            <span id="wakeEtaLabel">usual wait</span>
+          </div>
+          <div id="wakeProgress" class="wake-progress" role="progressbar" aria-label="Server start-up" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+          <div class="wake-actions">
+            <button id="wakeRetry" class="glow-button" type="button" hidden>Try again</button>
+            <button id="wakeCancel" class="play-secondary" type="button">Cancel</button>
+          </div>
+        </div>
       </div>
     </section>
 

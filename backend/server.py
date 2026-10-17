@@ -109,11 +109,14 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
+AGE_SESSION_TTL = 365 * 24 * 60 * 60
 app.config.update(
     SESSION_COOKIE_NAME="wordsquad_age_session",
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("FLASK_ENV") == "production",
+    PERMANENT_SESSION_LIFETIME=AGE_SESSION_TTL,
+    SESSION_REFRESH_EACH_REQUEST=False,
 )
 
 # Validate secret key for production
@@ -128,19 +131,18 @@ if not os.environ.get("SECRET_KEY") and os.environ.get("FLASK_ENV") == "producti
 PUBLIC_ENDPOINTS = {
     "index", "spa_fallback_route", "health", "cleanup_lobbies", "activity_ping",
     "age_status", "submit_age", "age_page", "notify_server_update", "landing_css", "landing_js",
-    "license_file",
+    "license_file", "invite_page",
     "js_files", "css_files", "asset_files", "lobby_js_files",
     "lobby_css_files", "lobby_asset_files",
 }
 GAME_PAGE_ENDPOINTS = {"game_page", "lobby_page", "enhanced_scaling_test"}
-AGE_SESSION_TTL = 12 * 60 * 60
 
 
 def age_eligibility():
     """Return only eligibility; never retain the submitted age or birthdate."""
     eligible = session.get("age_eligible")
     if eligible is False:
-        # Denied for this browser session until the player answers again.
+        # Denied while this cookie is valid, unless the player corrects the answer.
         return "blocked"
     checked_at = session.get("age_checked_at", 0)
     if eligible is True and 0 <= time.time() - checked_at < AGE_SESSION_TTL:
@@ -199,7 +201,7 @@ def submit_age():
         return jsonify({"status": "error", "msg": "Enter your age in whole years."}), 400
     session["age_eligible"] = age >= 13
     session["age_checked_at"] = time.time()
-    session.permanent = False
+    session.permanent = True
     return jsonify({"eligibility": "eligible" if age >= 13 else "blocked"}), (200 if age >= 13 else 403)
 
 
@@ -1754,6 +1756,13 @@ def landing_css():
     return send_from_directory(str(root), "landing.css")
 
 
+@app.route("/invite.html")
+def invite_page():
+    """Public, static invitation preview; opening it still uses normal admission."""
+    root = STATIC_DIR if (STATIC_DIR / "invite.html").exists() else DEV_FRONTEND_DIR
+    return send_from_directory(str(root), "invite.html")
+
+
 @app.route("/landing.js")
 def landing_js():
     """Serve the landing page script."""
@@ -1827,6 +1836,10 @@ def lobby_css_files(filename):
 # Serve Vite-generated assets
 @app.route("/assets/<path:filename>")
 def asset_files(filename):
+    # Vite's public assets also need to work before a local frontend build.
+    public_assets = DEV_FRONTEND_DIR / "public" / "assets"
+    if (public_assets / filename).is_file():
+        return send_from_directory(str(public_assets), filename)
     root = STATIC_DIR if (STATIC_DIR / "assets").exists() else DEV_FRONTEND_DIR
     return send_from_directory(str(root / "assets"), filename)
 
@@ -1856,6 +1869,24 @@ if hasattr(app, "add_url_rule"):
         from private_rooms import PrivateRooms
     import sys
     private_rooms = PrivateRooms(sys.modules[__name__])
+
+
+def restore_default_game() -> None:
+    """Bring back the shared /game board saved before the last stop.
+
+    Production imports this module under gunicorn, so the ``__main__`` block
+    below never runs there. Without this, every boot (wake, deploy, crash)
+    started /game with no target word, which made every guess fail, and with
+    an empty leaderboard that the next save wrote over the saved board.
+    Lobbies don't need this: get_lobby() loads them on first use.
+    """
+    load_data_legacy(current_state)
+    if not current_state.target_word:
+        # Saved with the next change, so importing never writes files.
+        pick_new_word(current_state)
+
+
+restore_default_game()
 
 
 if __name__ == "__main__":

@@ -5,3 +5,12 @@ __pycache__/
 .github/
 frontend/node_modules
 tests/
+.venv/
+node_modules/
+infra/
+dev-tools/
+docs/
+promo/
+test-results/
+playwright-report/
+runtime/

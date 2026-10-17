@@ -168,7 +168,8 @@ async function submitGuessHandler() {
     }
   }
   
-  gameStateManager.clearCurrentGuess();
+  // While the server is waking, keep the typed word so Enter sends it again.
+  if (!resp.waking) gameStateManager.clearCurrentGuess();
   
   if (resp.status === 'ok') {
     gameStateManager.applyState(resp.state);
@@ -223,7 +224,7 @@ async function submitGuessHandler() {
         messagePopup: domManager.get('messagePopup')
       });
     }
-    if (shakeTarget) shakeInput(shakeTarget);
+    if (shakeTarget && !resp.waking) shakeInput(shakeTarget);
   }
 }
 

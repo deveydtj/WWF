@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS Sim Control</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #fff; --fg: #1b2130; --muted: #636c7d; --line: #dde1e8;
+    --ok: #2f8a4a; --warn: #b7791f; --bad: #c0392b; --off: #8a93a3; --accent: #3b6fd8;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111318; --panel: #1a1d24; --fg: #e6e8ee; --muted: #9aa2b1; --line: #2a2f3a;
+            --ok: #4cc06d; --warn: #e0a640; --bad: #ef6b5b; --off: #6b7383; --accent: #7aa2ff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 16px; border-bottom: 1px solid var(--line); display: flex; gap: 12px;
+           align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 16px; margin: 0; }
+  header a { color: var(--accent); }
+  header .sub { color: var(--muted); font-size: 13px; }
+  main { padding: 16px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr);
+         max-width: 1200px; margin: 0 auto; }
+  @media (min-width: 900px) { main { grid-template-columns: 380px minmax(0, 1fr); } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+       margin: 0 0 10px; }
+  .chain { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+  .hop { border: 1px solid var(--line); border-radius: 8px; padding: 8px 6px; text-align: center; }
+  .hop b { display: block; font-size: 12px; }
+  .hop span { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .hop.ok { border-color: var(--ok); } .hop.ok b { color: var(--ok); }
+  .hop.warn { border-color: var(--warn); } .hop.warn b { color: var(--warn); }
+  .hop.bad { border-color: var(--bad); } .hop.bad b { color: var(--bad); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+  dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); font-size: 13px; }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .bar i { display: block; height: 100%; background: var(--warn); width: 0; transition: width .4s; }
+  .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  button { font: inherit; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--line);
+           background: var(--bg); color: var(--fg); cursor: pointer; text-align: left; }
+  button:hover { border-color: var(--accent); }
+  button small { display: block; color: var(--muted); font-size: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  input[type=number] { width: 80px; font: inherit; padding: 6px; border-radius: 6px;
+                       border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+  .log { font-family: var(--mono); font-size: 12px; max-height: 60vh; overflow: auto; margin: 0;
+         padding: 0; list-style: none; }
+  .log li { padding: 3px 0; border-bottom: 1px solid var(--line); display: grid;
+            grid-template-columns: 88px 56px minmax(0, 1fr); gap: 8px; }
+  .log time { white-space: nowrap; }
+  .log time { color: var(--muted); } .log .k { color: var(--accent); }
+  .log li.req .k { color: var(--off); }
+  .log li.req .m { color: var(--muted); }
+  .counters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .counters span { font-family: var(--mono); font-size: 12px; padding: 2px 8px; border-radius: 99px;
+                   border: 1px solid var(--line); }
+  label { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>WordSquad AWS simulator</h1>
+  <span class="sub">open the game at <a href="/" target="_blank">/</a> · this page polls once a second</span>
+</header>
+<main>
+  <div style="display:grid;gap:16px;align-content:start">
+    <section>
+      <h2>Request path</h2>
+      <div class="chain">
+        <div class="hop" id="h-ec2"><b>EC2</b><span id="v-ec2">–</span></div>
+        <div class="hop" id="h-dns"><b>DNS</b><span id="v-dns">–</span></div>
+        <div class="hop" id="h-nginx"><b>nginx</b><span id="v-nginx">–</span></div>
+        <div class="hop" id="h-app"><b>app</b><span id="v-app">–</span></div>
+      </div>
+      <dl>
+        <dt>in state for</dt><dd id="v-for">–</dd>
+        <dt>idle</dt><dd><span id="v-idle">–</span><div class="bar"><i id="v-idlebar"></i></div></dd>
+        <dt>next idle check</dt><dd id="v-check">–</dd>
+        <dt>wakes / app starts</dt><dd id="v-wakes">–</dd>
+        <dt>kill switch</dt><dd id="v-kill">–</dd>
+        <dt>app</dt><dd id="v-kind">–</dd>
+      </dl>
+    </section>
+    <section>
+      <h2>Make things happen</h2>
+      <div class="buttons">
+        <button data-a="wake">Wake<small>what /wake does</small></button>
+        <button data-a="sleep">Idle shutdown now<small>wwf-idle fires</small></button>
+        <button data-a="stop">Force stop<small>nightly / console stop</small></button>
+        <button data-a="restart">Restart app<small>deploy_api.sh</small></button>
+        <button data-a="crash">Crash app<small>SIGKILL, systemd restarts</small></button>
+        <button data-a="activity">Fake activity<small>resets idle timer</small></button>
+        <button data-a="kill-on">Budget cap hit<small>stop + block wakes</small></button>
+        <button data-a="kill-off">Clear budget cap<small>allow wakes again</small></button>
+      </div>
+      <div class="row">
+        <label for="idle">Idle limit (s)</label>
+        <input type="number" id="idle" min="5" step="5">
+        <button data-a="idle">Set</button>
+        <button data-a="check-idle-now">Run idle check</button>
+      </div>
+    </section>
+  </div>
+  <section>
+    <h2>Timeline</h2>
+    <div class="counters" id="counters"></div>
+    <label><input type="checkbox" id="showreq"> show every request</label>
+    <ul class="log" id="log"></ul>
+  </section>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = s => s == null ? '–' : (s >= 120 ? (s / 60).toFixed(1) + ' min' : Math.round(s) + ' s');
+  let idleSet = false;
+  function hop(id, cls, text) { $('h-' + id).className = 'hop ' + cls; $('v-' + id).textContent = text; }
+
+  async function act(action, extra = {}) {
+    await fetch('/__sim/api/action', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...extra }) });
+    refresh();
+  }
+  document.querySelectorAll('button[data-a]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.a;
+    if (a === 'kill-on') return act('killswitch', { on: true });
+    if (a === 'kill-off') return act('killswitch', { on: false });
+    if (a === 'idle') return act('idle', { seconds: Number($('idle').value) });
+    act(a);
+  }));
+
+  async function refresh() {
+    let s;
+    try { s = await (await fetch('/__sim/api/status', { cache: 'no-store' })).json(); }
+    catch { hop('ec2', 'bad', 'sim down'); return; }
+    const st = s.instance;
+    hop('ec2', st === 'running' ? (s.shutting_down ? 'warn' : 'ok') : st === 'stopped' ? 'bad' : 'warn',
+        s.shutting_down && st === 'running' ? 'shutting down' : st);
+    hop('dns', s.dns === '192.0.2.1' ? 'bad' : 'ok', s.dns === '192.0.2.1' ? 'parked' : 'live');
+    hop('nginx', s.nginx_up ? 'ok' : 'bad', s.nginx_up ? 'up' : 'down');
+    hop('app', s.app_listening ? 'ok' : s.app_running ? 'warn' : 'bad',
+        s.app_listening ? 'serving' : s.app_running ? 'starting' : 'down');
+    $('v-for').textContent = fmt(s.state_for);
+    $('v-idle').textContent = s.idle_for == null ? '–' : `${fmt(s.idle_for)} of ${fmt(s.idle_limit)}`;
+    $('v-idlebar').style.width = s.idle_for == null ? 0 : Math.min(100, 100 * s.idle_for / s.idle_limit) + '%';
+    $('v-check').textContent = s.next_idle_check_in == null ? '–' : fmt(Math.max(0, s.next_idle_check_in));
+    $('v-wakes').textContent = `${s.wakes} / ${s.app_launches}`;
+    $('v-kill').textContent = s.kill_switch ? 'ON (wakes refused)' : 'off';
+    $('v-kind').textContent = `${s.app_kind}, ${s.app_env}`;
+    if (!idleSet) { $('idle').value = s.idle_limit; idleSet = true; }
+    $('counters').innerHTML = Object.entries(s.counters).sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `<span>${k} ${v}</span>`).join('');
+    const showReq = $('showreq').checked;
+    const items = s.events.filter(e => showReq || e.kind !== 'req').slice(-200).reverse();
+    $('log').innerHTML = items.map(e => {
+      const t = new Date(e.t * 1000).toLocaleTimeString();
+      const m = e.msg.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      return `<li class="${e.kind}"><time>${t}</time><span class="k">${e.kind}</span><span class="m">${m}</span></li>`;
+    }).join('');
+  }
+  refresh();
+  setInterval(refresh, 1000);
+</script>
+</body>
+</html>

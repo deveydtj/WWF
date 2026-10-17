@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Five letters. Six guesses. One squad. A ten-second animated introduction to WordSquad.">
+  <title>WordSquad · Better together</title>
+  <script>
+    // Open wordsquad.html?format=mobile for the 9:16 portrait composition.
+    if (new URLSearchParams(location.search).get('format') === 'mobile') {
+      document.documentElement.dataset.format = 'mobile';
+    }
+  </script>
+  <style>
+    /* Standalone, silent, 10-second loop. No fonts, assets, or network needed.
+       Keep every animation on the same clock for a clean recording/export. */
+    * { box-sizing: border-box; }
+    :root { font-family: Arial, Helvetica, sans-serif; color: #f0f3f7; background: #191d24; }
+    body { margin: 0; min-height: 100svh; display: grid; place-items: center; }
+    .film {
+      width: min(100vw, 100svh); aspect-ratio: 1; position: relative; overflow: hidden;
+      container-type: inline-size; isolation: isolate; background: #2c303a;
+      --mint: #64f696; --gold: #e6c86f; --muted: #bbc3cf;
+    }
+    .film::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 78% 35%, #64f69612, transparent 48%),
+        radial-gradient(ellipse at 12% 90%, #e6c86f09, transparent 48%);
+    }
+    header, footer { position: absolute; left: 6.5cqw; right: 6.5cqw; z-index: 5; display: flex; align-items: center; justify-content: space-between; }
+    header { top: 5.5cqw; }
+    .brand { display: flex; align-items: center; gap: 1.2cqw; font-size: 2.7cqw; font-weight: 800; letter-spacing: -.12cqw; }
+    .brand-mark { width: 3.5cqw; height: 3.5cqw; background: var(--mint); color: #11291b; display: grid; place-items: center; border-radius: .8cqw; font-size: 2.4cqw; box-shadow: 0 0 3cqw #64f69626; }
+    .edition { color: var(--muted); font: 1.05cqw/1.4 monospace; letter-spacing: .2cqw; text-transform: uppercase; }
+    footer { bottom: 5cqw; color: var(--muted); font-size: 1.45cqw; }
+    .url { color: #f0f3f7; font-weight: 700; letter-spacing: .03cqw; }
+    .online { display: flex; gap: .7cqw; align-items: center; }
+    .dot { width: .6cqw; height: .6cqw; border-radius: 50%; background: var(--mint); box-shadow: 0 0 1.2cqw #64f69688; }
+    .scene { position: absolute; inset: 0; pointer-events: none; }
+    .eyebrow { margin: 0; color: var(--mint); font-size: 1.35cqw; font-weight: 700; letter-spacing: .25cqw; text-transform: uppercase; }
+    .eyebrow::before { content: "✦"; margin-right: .8cqw; }
+    h1, h2, p { margin: 0; }
+    h1, h2 { font-weight: 800; letter-spacing: -.5cqw; line-height: 1.02; }
+    em { color: var(--mint); font-style: normal; }
+    .intro { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 1cqw; animation: intro 10s infinite both; }
+    .intro h1 { margin-top: 3cqw; text-align: center; font-size: 9.3cqw; }
+    .intro .subtitle { font-size: 2cqw; color: var(--muted); margin-top: 2.6cqw; }
+    .hero-tiles { display: flex; gap: 1.4cqw; margin-top: 5cqw; perspective: 80cqw; }
+    .hero-tile { display: grid; place-items: center; width: 11cqw; height: 12cqw; border: 1px solid #ffffff0d; border-radius: 2cqw; font-size: 5cqw; font-weight: 800;
+      background: linear-gradient(145deg, #303641, #272c35); box-shadow: .7cqw .7cqw 1.6cqw #1f2229, -.5cqw -.5cqw 1.5cqw #393e4b;
+      animation: hero-tile 10s infinite both; animation-delay: calc(var(--i) * 90ms); }
+    .hero-tile:first-child { background: var(--mint); color: #11291b; box-shadow: 0 0 3cqw #64f69633; }
+    .hero-tile:nth-child(2) { background: var(--gold); color: #332a13; }
+    .intro .under { font: 1.25cqw monospace; color: #bbc3cf; letter-spacing: .18cqw; margin-top: 3.3cqw; }
+    .play { animation: play 10s infinite both; }
+    .play-title { position: absolute; left: 6.5cqw; top: 16cqw; }
+    .play-title h2 { font-size: 5.8cqw; margin-top: 1.6cqw; letter-spacing: -.25cqw; }
+    .game {
+      position: absolute; left: 6.5cqw; top: 36.5cqw; width: 51.5cqw; padding: 2.7cqw 2.5cqw 2.8cqw;
+      border-radius: 3cqw; border: 1px solid #ffffff0d;
+      background: linear-gradient(145deg, #2c313b, #242932);
+      box-shadow: 1cqw 1cqw 3cqw #1a1e2688, -.6cqw -.6cqw 2cqw #3b424e66, inset 1px 1px #ffffff0a;
+    }
+    .game-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.4cqw; font-size: 1.25cqw; color: var(--muted); }
+    .game-top strong { color: #f0f3f7; font-size: 1.5cqw; }
+    .players { display: flex; align-items: center; gap: .5cqw; }
+    .players .dot { width: .5cqw; height: .5cqw; }
+    .row { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: .9cqw; margin: 1cqw 0 1cqw 4cqw; }
+    .stamp { position: absolute; left: -4.7cqw; top: 1.4cqw; font-size: 2.9cqw; animation: stamp 10s infinite both; animation-delay: var(--stamp); }
+    .tile { position: relative; display: grid; place-items: center; height: 7.1cqw; font-size: 3.3cqw; font-weight: 900; perspective: 40cqw; }
+    .face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 1.1cqw; border: 1px solid #ffffff0a; background: #2c303a;
+      box-shadow: .4cqw .4cqw .8cqw #1f2229, -.3cqw -.3cqw .7cqw #393e4b; backface-visibility: hidden;
+      animation: front 10s infinite both; animation-delay: var(--at); }
+    .back { background: var(--color); color: #fff; transform: rotateX(180deg); box-shadow: inset .25cqw .25cqw .6cqw #00000016, inset -.2cqw -.2cqw .5cqw #ffffff12;
+      animation-name: back; }
+    .face:not(.back) > span { animation: type-letter 10s infinite both; animation-delay: calc(var(--at) - .45s); }
+    .row.win .tile { animation: hop 10s infinite both; animation-delay: calc(var(--i) * 80ms); }
+    .empty .tile { height: 5.5cqw; border: 1px solid #ffffff06; border-radius: 1cqw; background: #242932; box-shadow: inset .25cqw .25cqw .7cqw #1a1e2677; }
+    .keyboard { margin: 2cqw 0 0 4cqw; display: grid; gap: .6cqw; }
+    .keys { display: flex; gap: .5cqw; justify-content: center; }
+    .keys span { display: grid; place-items: center; width: 3.2cqw; height: 3.2cqw; border-radius: .5cqw; color: #bbc3cf; background: #3b414e; font-size: 1cqw; font-weight: 700; }
+    .conversation { position: absolute; top: 38cqw; right: 6.5cqw; width: 30cqw; }
+    .squad-label { color: var(--muted); font-size: 1.2cqw; letter-spacing: .2cqw; text-transform: uppercase; margin-bottom: 2cqw; }
+    .bubble { display: flex; align-items: flex-start; gap: 1.1cqw; margin-bottom: 1.8cqw; animation: message 10s infinite both; animation-delay: var(--message); }
+    .avatar { display: grid; place-items: center; flex: 0 0 4.3cqw; height: 4.3cqw; background: #343a45; box-shadow: .3cqw .3cqw .7cqw #1f2229; border-radius: 1.3cqw; font-size: 2.7cqw; }
+    .message { padding: 1.3cqw 1.6cqw; border: 1px solid #ffffff0a; border-radius: .4cqw 1.5cqw 1.5cqw; background: #343a45; font-size: 1.75cqw; line-height: 1.4; box-shadow: .4cqw .4cqw 1cqw #1a1e2633; }
+    .message b { display: block; font-size: 1.1cqw; margin-bottom: .4cqw; color: var(--gold); }
+    .bubble:nth-of-type(3) .message b { color: #8abaff; }
+    .bubble:last-of-type .message { background: #344b3e; border-color: #64f69622; }
+    .bubble:last-of-type .message b { color: var(--mint); }
+    .score { margin-top: 2.7cqw; padding: 1.7cqw; display: flex; align-items: center; gap: 1cqw; border-radius: 1.5cqw; background: #242932;
+      box-shadow: inset .3cqw .3cqw .8cqw #1a1e2688, inset -.2cqw -.2cqw .6cqw #3b424e88; animation: score 10s infinite both; }
+    .score > span { font-size: 2.8cqw; }
+    .score p { font-size: 1.2cqw; color: var(--muted); line-height: 1.5; }
+    .score strong { display: block; color: var(--mint); font-size: 1.8cqw; }
+    .solved { position: absolute; top: 27cqw; right: 6.5cqw; color: var(--mint); font-size: 1.5cqw; border: 1px solid #64f69633; border-radius: 5cqw; padding: 1.1cqw 1.7cqw; background: #304238; transform: rotate(-5deg); animation: solved 10s infinite both; }
+    .outro { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 1cqw; text-align: center; animation: outro 10s infinite both; }
+    .squad { display: flex; margin-bottom: 3.5cqw; padding-left: 1.5cqw; }
+    .squad span { display: grid; place-items: center; width: 8cqw; height: 8cqw; margin-left: -1.5cqw; font-size: 4.5cqw; border: .5cqw solid #2c303a; border-radius: 50%; background: #3b424e; box-shadow: 0 .5cqw 2cqw #00000022; }
+    .squad span:nth-child(2) { transform: translateY(-1cqw); background: #465343; }
+    .squad span:nth-child(3) { background: #5c5141; }
+    .outro h2 { font-size: 8.8cqw; }
+    .outro .tagline { color: var(--muted); font-size: 2cqw; margin-top: 2.5cqw; }
+    .invite { margin-top: 4.5cqw; padding: 2cqw 3.2cqw; display: flex; align-items: center; gap: 3.5cqw; border-radius: 1.5cqw;
+      background: linear-gradient(135deg, #82ffaf, #53db83); color: #11291b; box-shadow: 0 0 4cqw #64f69626, inset 0 1px 1px #ffffff66; font-size: 2cqw; font-weight: 700; }
+    .outro .address { margin-top: 2.4cqw; color: var(--muted); font-size: 1.8cqw; letter-spacing: .1cqw; }
+    .confetti { position: absolute; left: 38%; top: 61%; width: .8cqw; height: 1.5cqw; border-radius: .2cqw; background: var(--color); animation: confetti 10s infinite both; }
+    .progress { position: absolute; bottom: 0; height: .35cqw; width: 100%; background: var(--mint); transform-origin: left; animation: progress 10s linear infinite; opacity: .65; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+    /* Portrait export: the same film, composed for a phone rather than cropped. */
+    html[data-format="mobile"] {
+      .film { width: min(100vw, 56.25svh); aspect-ratio: 9 / 16; }
+      header { top: 8cqw; }
+      .brand { font-size: 4.4cqw; gap: 1.8cqw; }
+      .brand-mark { width: 6cqw; height: 6cqw; font-size: 4cqw; border-radius: 1.3cqw; }
+      .edition { max-width: 32cqw; font-size: 1.75cqw; line-height: 1.6; text-align: right; }
+      footer { bottom: 7cqw; font-size: 2.2cqw; }
+      .dot { width: .9cqw; height: .9cqw; }
+      .eyebrow { font-size: 2.2cqw; }
+      .intro h1 { font-size: 12.5cqw; margin-top: 5cqw; }
+      .intro .subtitle { font-size: 3.3cqw; margin-top: 4cqw; }
+      .hero-tiles { margin-top: 8cqw; gap: 1.6cqw; }
+      .hero-tile { width: 14cqw; height: 15cqw; font-size: 6.8cqw; }
+      .intro .under { font-size: 1.95cqw; margin-top: 5cqw; }
+      .play-title { top: 24cqw; }
+      .play-title h2 { font-size: 8.6cqw; margin-top: 2.3cqw; }
+      .solved { top: 46cqw; font-size: 2.3cqw; padding: 1.3cqw 2cqw; }
+      .game { top: 54cqw; width: 87cqw; padding: 3.2cqw; border-radius: 4cqw; }
+      .game-top { font-size: 2.2cqw; margin-bottom: 2.8cqw; }
+      .game-top strong { font-size: 2.6cqw; }
+      .players { gap: 1cqw; }
+      .players .dot { width: .8cqw; height: .8cqw; }
+      .row { gap: 1.5cqw; margin-left: 6cqw; margin-top: 1.3cqw; margin-bottom: 1.3cqw; }
+      .tile { height: 10.4cqw; font-size: 5.1cqw; }
+      .face { border-radius: 1.5cqw; }
+      .stamp { left: -6.8cqw; top: 2.1cqw; font-size: 4.6cqw; }
+      .empty .tile { height: 5.5cqw; }
+      .keyboard { margin-left: 6cqw; margin-top: 2.5cqw; gap: .8cqw; }
+      .keys { gap: .7cqw; }
+      .keys span { width: 5.5cqw; height: 3.8cqw; font-size: 1.7cqw; border-radius: .7cqw; }
+      .conversation { top: 129cqw; width: 87cqw; }
+      .squad-label { display: none; }
+      .bubble { gap: 1.5cqw; margin-bottom: 1.3cqw; }
+      .avatar { flex-basis: 6.2cqw; height: 6.2cqw; font-size: 4cqw; }
+      .message { padding: 1.2cqw 2cqw; font-size: 2.9cqw; border-radius: .6cqw 2cqw 2cqw; }
+      .message b { display: inline; font-size: 2.3cqw; margin-right: 1.5cqw; }
+      .score { margin-top: 1.7cqw; padding: 1.5cqw 2cqw; gap: 2cqw; }
+      .score > span { font-size: 4.8cqw; }
+      .score p { font-size: 2.2cqw; }
+      .score strong { font-size: 2.9cqw; }
+      .squad { margin-bottom: 6cqw; }
+      .squad span { width: 12cqw; height: 12cqw; font-size: 7cqw; border-width: .7cqw; }
+      .outro h2 { font-size: 10.5cqw; line-height: 1.08; }
+      .outro .tagline { font-size: 3.3cqw; margin-top: 4cqw; }
+      .invite { margin-top: 7cqw; padding: 3.3cqw 4cqw; font-size: 3.3cqw; border-radius: 2cqw; }
+      .outro .address { font-size: 3cqw; margin-top: 4cqw; }
+      .confetti { left: 52%; top: 57%; width: 1.2cqw; height: 2cqw; }
+    }
+
+    @keyframes intro {
+      0% { opacity: 1; transform: scale(1); }
+      18% { opacity: 1; transform: scale(1.015); }
+      22%, 97% { opacity: 0; transform: scale(1.08); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes hero-tile {
+      0% { opacity: 0; transform: perspective(240px) translateY(20%) rotateX(-180deg); }
+      7%, 93% { opacity: 1; transform: perspective(240px) translateY(0) rotateX(0); }
+      97%, 100% { opacity: 0; transform: perspective(240px) translateY(20%) rotateX(-180deg); }
+    }
+    @keyframes play {
+      0%, 19% { opacity: 0; transform: translateY(3cqw) scale(.97); }
+      24%, 65% { opacity: 1; transform: translateY(0) scale(1); }
+      70%, 100% { opacity: 0; transform: translateY(-3cqw) scale(.97); }
+    }
+    /* Each reveal is a half-turn, with colour appearing only at the midpoint. */
+    @keyframes type-letter {
+      0%, 25% { opacity: 0; transform: scale(.8); }
+      26% { opacity: 1; transform: scale(1.1); }
+      27%, 90% { opacity: 1; transform: scale(1); }
+      91%, 100% { opacity: 0; transform: scale(1); }
+    }
+    @keyframes front {
+      0%, 27% { transform: rotateX(0deg); }
+      32%, 90% { transform: rotateX(-180deg); }
+      91%, 100% { transform: rotateX(0deg); }
+    }
+    @keyframes back {
+      0%, 27% { transform: rotateX(180deg); }
+      32%, 90% { transform: rotateX(0deg); }
+      91%, 100% { transform: rotateX(180deg); }
+    }
+    @keyframes stamp {
+      0%, 33% { opacity: 0; transform: scale(1.8) rotate(-14deg); }
+      35% { opacity: 1; transform: scale(.9) rotate(3deg); }
+      37%, 90% { opacity: 1; transform: scale(1) rotate(0); }
+      91%, 100% { opacity: 0; transform: scale(1); }
+    }
+    @keyframes hop {
+      0%, 56%, 64%, 100% { transform: translateY(0); }
+      59% { transform: translateY(-26%); filter: brightness(1.08); }
+      62% { transform: translateY(5%); }
+    }
+    @keyframes message {
+      0%, 28% { opacity: 0; transform: translateY(2cqw) scale(.9); }
+      32%, 85% { opacity: 1; transform: translateY(0) scale(1); }
+      90%, 100% { opacity: 0; transform: translateY(0); }
+    }
+    @keyframes score {
+      0%, 57% { opacity: 0; transform: scale(.85); }
+      61%, 85% { opacity: 1; transform: scale(1); }
+      90%, 100% { opacity: 0; }
+    }
+    @keyframes solved {
+      0%, 56% { opacity: 0; transform: scale(1.5) rotate(-14deg); }
+      60%, 85% { opacity: 1; transform: scale(1) rotate(-5deg); }
+      90%, 100% { opacity: 0; }
+    }
+    @keyframes outro {
+      0%, 68% { opacity: 0; transform: translateY(3cqw) scale(.96); }
+      73%, 94% { opacity: 1; transform: translateY(0) scale(1); }
+      98%, 100% { opacity: 0; transform: translateY(-2cqw) scale(1.03); }
+    }
+    @keyframes confetti {
+      0%, 57% { opacity: 0; transform: translate(0, 0) rotate(0); }
+      58% { opacity: 1; }
+      69%, 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--spin)); }
+    }
+    @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; }
+      .intro, .play, .confetti, .progress { display: none; }
+      .outro { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="film" aria-label="WordSquad animated promo">
+    <p class="sr-only">WordSquad. Five letters. Six guesses. One squad. Guess a shared word with friends, chat in real time, and celebrate together. Better words. Better together. Play at wordsquad.io.</p>
+    <div aria-hidden="true">
+      <header>
+        <div class="brand"><span class="brand-mark">W</span>WordSquad</div>
+        <span class="edition">A little wordplay. A lot of together.</span>
+      </header>
+
+      <section class="scene intro">
+        <p class="eyebrow">Your next group obsession</p>
+        <h1>Five letters.<br><em>One squad.</em></h1>
+        <p class="subtitle">The word game you play together.</p>
+        <div class="hero-tiles"><span class="hero-tile" style="--i:0">S</span><span class="hero-tile" style="--i:1">Q</span><span class="hero-tile" style="--i:2">U</span><span class="hero-tile" style="--i:3">A</span><span class="hero-tile" style="--i:4">D</span></div>
+        <p class="under">FIVE LETTERS · SIX GUESSES · ALL OF YOU</p>
+      </section>
+
+      <section class="scene play">
+        <div class="play-title"><p class="eyebrow">Guess. Chat. Celebrate.</p><h2>One board.<br><em>Your whole squad.</em></h2></div>
+        <div class="solved">✦ Squad goals.</div>
+        <div class="game">
+          <div class="game-top"><strong>WordSquad</strong><span class="players"><i class="dot"></i> 3 in the squad</span></div>
+          <div id="board"></div>
+          <div class="row empty"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+          <div class="keyboard" id="keyboard"></div>
+        </div>
+        <div class="conversation">
+          <p class="squad-label">The squad chat</p>
+          <div class="bubble" style="--message:0s"><span class="avatar">🦊</span><div class="message"><b>You</b>Okay, I've got an A 👀</div></div>
+          <div class="bubble" style="--message:.85s"><span class="avatar">🐸</span><div class="message"><b>Sam</b>Wait… try SQUAD!</div></div>
+          <div class="bubble" style="--message:2.7s"><span class="avatar">🐻</span><div class="message"><b>Alex</b>THAT'S US 🎉</div></div>
+          <div class="score"><span>🏆</span><p><strong>Better as a squad.</strong>A shared board. A shared win.</p></div>
+        </div>
+      </section>
+
+      <section class="scene outro">
+        <div class="squad"><span>🦊</span><span>🐸</span><span>🐻</span></div>
+        <h2>Better words.<br><em>Better together.</em></h2>
+        <p class="tagline">Make a little time for your people.</p>
+        <div class="invite">Get your squad together <span>↗</span></div>
+        <p class="address">wordsquad.io</p>
+      </section>
+      <div id="confetti"></div>
+      <footer><span class="url">wordsquad.io</span><span class="online"><i class="dot"></i> Multiplayer wordplay</span></footer>
+      <div class="progress"></div>
+    </div>
+  </main>
+  <script>
+    // Illustrative shared-board sequence; no game state, requests, or controls.
+    const guesses = [
+      { word: 'CRANE', colors: ['#505662', '#505662', '#b59f3b', '#505662', '#505662'], start: 0, emoji: '🦊' },
+      { word: 'SQUAT', colors: ['#538d4e', '#538d4e', '#538d4e', '#538d4e', '#505662'], start: 1.05, emoji: '🐸' },
+      { word: 'SQUAD', colors: Array(5).fill('#538d4e'), start: 2.05, emoji: '🐻' }
+    ];
+    document.getElementById('board').innerHTML = guesses.map((guess, row) => `
+      <div class="row ${row === 2 ? 'win' : ''}">
+        <span class="stamp" style="--stamp:${guess.start + .4}s">${guess.emoji}</span>
+        ${[...guess.word].map((letter, i) => `<span class="tile" style="--i:${i};--at:${guess.start + i * .1}s;--color:${guess.colors[i]}"><span class="face"><span>${letter}</span></span><span class="face back">${letter}</span></span>`).join('')}
+      </div>`).join('');
+    document.getElementById('keyboard').innerHTML = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map(row => `<div class="keys">${[...row].map(key => `<span>${key}</span>`).join('')}</div>`).join('');
+    document.getElementById('confetti').innerHTML = Array.from({ length: 28 }, (_, i) => {
+      const angle = i * 2.39996;
+      const distance = 15 + i % 7 * 3;
+      return `<i class="confetti" style="--color:${['#64f696', '#e6c86f', '#8abaff', '#ffffff'][i % 4]};--x:${Math.cos(angle) * distance}cqw;--y:${Math.sin(angle) * distance - 4}cqw;--spin:${i * 47}deg"></i>`;
+    }).join('');
+  </script>
+</body>
+</html>

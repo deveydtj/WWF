@@ -6,6 +6,11 @@
 import { getState, sendHeartbeat, subscribeToUpdates } from './api.js';
 import { getMyPlayerId } from './emoji.js';
 import { showMessage, announce } from './utils.js';
+import { requestWake, wakePaused } from './serverWake.js';
+
+const ASLEEP_MESSAGE = 'The game server is napping. Tap or type to wake it up.';
+const WAKING_MESSAGE = 'Waking up the game server. This takes about a minute.';
+const PAUSED_MESSAGE = 'The game is paused for now. Please check back later.';
 
 class NetworkManager {
   constructor() {
@@ -20,6 +25,13 @@ class NetworkManager {
     this.currentInterval = this.FAST_INTERVAL;
     this.eventSource = null;
     this.hadNetworkError = false;
+    // The live stream to (re)open: {lobbyCode, myEmoji}, set by initEventStream.
+    this.streamTarget = null;
+    this.lastStreamAttempt = 0;
+    this.STREAM_RETRY_MS = 10000;
+    // CloudFront is serving its "waking up" page: the server is stopped or starting.
+    this.serverAsleep = false;
+    this.wakeRequested = false;
     
     // Callbacks
     this.onStateUpdate = null;
@@ -53,10 +65,14 @@ class NetworkManager {
         showMessage('Reconnected to server.', this.messageHandlers);
       }
       this.hadNetworkError = false;
+      this.serverAsleep = false;
+      this.wakeRequested = false;
       
       if (this.onStateUpdate) {
         this.onStateUpdate(state);
       }
+      // Back after an outage (sleep, deploy, crash): resume live updates.
+      this.resumeStream();
     } catch (err) {
       console.error('fetchState error:', err);
       if (err?.data?.code === 'age_check_required') {
@@ -77,6 +93,12 @@ class NetworkManager {
         return;
       }
       
+      if (err && err.waking) {
+        this.hadNetworkError = true;
+        this.onServerAsleep();
+        return;
+      }
+
       if (!this.hadNetworkError) {
         showMessage('Connection lost. Retrying...', this.messageHandlers);
         this.hadNetworkError = true;
@@ -89,6 +111,8 @@ class NetworkManager {
    */
   onActivity(myEmoji, myPlayerId, lobbyCode) {
     this.lastActivity = Date.now();
+    // A player is here, so it is fine to start a sleeping server.
+    if (this.serverAsleep) this.wakeServer();
     
     if (!this.eventSource && this.currentInterval !== this.FAST_INTERVAL) {
       this.startPolling(this.FAST_INTERVAL, myEmoji, lobbyCode);
@@ -96,6 +120,38 @@ class NetworkManager {
     
     sendHeartbeat(myEmoji, myPlayerId, lobbyCode);
     this.fetchState(myEmoji, lobbyCode);
+  }
+
+  /**
+   * The server is stopped or starting. Wake it only if a player has been active
+   * in the last minute; an unattended tab just waits, so the server can sleep.
+   */
+  onServerAsleep() {
+    const firstNotice = !this.serverAsleep;
+    this.serverAsleep = true;
+    if (Date.now() - this.lastActivity < this.INACTIVE_DELAY) {
+      this.wakeServer();
+    } else if (firstNotice) {
+      showMessage(ASLEEP_MESSAGE, this.messageHandlers);
+    }
+  }
+
+  /**
+   * Ask /wake to start the server (rate-limited in serverWake.js) and keep
+   * checking quickly until it answers.
+   */
+  wakeServer() {
+    if (wakePaused()) return;
+    if (!this.wakeRequested) {
+      this.wakeRequested = true;
+      showMessage(WAKING_MESSAGE, this.messageHandlers);
+    }
+    requestWake().then((state) => {
+      if (state === 'disabled') showMessage(PAUSED_MESSAGE, this.messageHandlers);
+    });
+    if (!this.eventSource && this.streamTarget && this.currentInterval !== this.FAST_INTERVAL) {
+      this.startPolling(this.FAST_INTERVAL, this.streamTarget.myEmoji, this.streamTarget.lobbyCode);
+    }
   }
 
   /**
@@ -148,7 +204,9 @@ class NetworkManager {
       alert(message); // Fallback
     }
     
-    // Close event source to prevent additional messages
+    // Close event source to prevent additional messages, and don't reopen it
+    // before the page refreshes.
+    this.streamTarget = null;
     if (this.eventSource) {
       try { 
         this.eventSource.close(); 
@@ -193,6 +251,24 @@ class NetworkManager {
    * @param {string} myEmoji - Current player's emoji
    */
   initEventStream(lobbyCode, myEmoji) {
+    this.streamTarget = { lobbyCode, myEmoji };
+    this._openStream();
+  }
+
+  /**
+   * Reopen the live stream if it closed after an error. Called after every
+   * successful state fetch; at most one attempt per STREAM_RETRY_MS.
+   */
+  resumeStream() {
+    if (this.eventSource || !this.streamTarget) return;
+    if (Date.now() - this.lastStreamAttempt < this.STREAM_RETRY_MS) return;
+    this._openStream();
+  }
+
+  /** @private */
+  _openStream() {
+    const { lobbyCode, myEmoji } = this.streamTarget;
+    this.lastStreamAttempt = Date.now();
     this.eventSource = subscribeToUpdates((data) => {
       // Check if this is a server update notification
       if (data.type === 'server_update') {
@@ -207,9 +283,18 @@ class NetworkManager {
     }, lobbyCode);
     
     if (this.eventSource) {
-      this.eventSource.onerror = () => {
-        this.eventSource.close();
-        this.eventSource = null;
+      const source = this.eventSource;
+      // Live again: polling was only covering for the closed stream.
+      source.onopen = () => {
+        if (this.eventSource !== source || !this.pollTimer) return;
+        clearInterval(this.pollTimer);
+        this.pollTimer = null;
+      };
+      // A failed stream (server asleep, restarting or unreachable) falls back
+      // to polling; resumeStream() reopens it once a state fetch succeeds.
+      source.onerror = () => {
+        source.close();
+        if (this.eventSource === source) this.eventSource = null;
         this.startPolling(this.FAST_INTERVAL, myEmoji, lobbyCode);
       };
     } else {
@@ -245,6 +330,7 @@ class NetworkManager {
       }
       this.eventSource = null;
     }
+    this.streamTarget = null;
   }
 }
 

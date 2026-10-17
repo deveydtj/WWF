@@ -83,7 +83,7 @@ Local play needs no Redis or AWS account. Production private rooms deny access i
 
 ### Age eligibility
 
-Multiplayer and chat require a neutral age check before registration. Ages 13+ can participate. Only the eligibility result and check time are held in a signed, HttpOnly browser-session cookie; the submitted age is not retained. An under-13 answer blocks participation, with an option to correct the answer. Allowed sessions require a new check after 12 hours. Public home/how-to content remains available. See [COPPA readiness](docs/COPPA_READINESS.md) for the remaining privacy work.
+Multiplayer and chat require a neutral age check before registration. Ages 13+ can participate. Only the eligibility result and check time are held locally in a signed, HttpOnly cookie for one year; the submitted age is not retained. The result survives browser restarts. Clearing site cookies or using a different browser profile requires a new check. An under-13 answer blocks participation, with an option to correct the answer. Public home/how-to content remains available. See [COPPA readiness](docs/COPPA_READINESS.md) for the remaining privacy work.
 
 ## Docker workflow
 

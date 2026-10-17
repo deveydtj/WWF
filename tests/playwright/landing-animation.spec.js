@@ -86,10 +86,70 @@ test('A rotates continuously without reversing before settling', async ({ page }
   expect(Math.max(...angles)).toBeLessThanOrEqual(0.05);
 });
 
-test('reduced motion shows static tiles immediately', async ({ page }) => {
+test('hovering or touching each tile replays its flip', async ({ page, hasTouch }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('http://wordsquad.test/');
+  await expect(page.locator('#landingView')).not.toHaveClass(/tiles-(preparing|ready)/);
+  const tiles = page.locator('.play-tiles span');
+  for (const tile of await tiles.all()) {
+    if (hasTouch) await tile.tap();
+    else await tile.hover();
+    expect(await tile.evaluate(el => el.getAnimations().some(animation =>
+      animation.playState === 'running' && animation.effect.getTiming().duration === 650
+    ))).toBe(true);
+    await tile.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+  }
+  // Lifting and touching the same letter again must replay the animation.
+  if (hasTouch) await tiles.last().tap();
+  else {
+    await page.mouse.move(0, 0);
+    await tiles.last().hover();
+  }
+  expect(await tiles.last().evaluate(el => el.getAnimations().length)).toBe(1);
+});
+
+test('a held finger flips neighboring tiles in both directions', async ({ page, hasTouch, browserName }) => {
+  test.skip(!hasTouch || browserName !== 'chromium', 'Continuous native touch input uses Chromium CDP');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('http://wordsquad.test/');
+  await expect(page.locator('#landingView')).not.toHaveClass(/tiles-(preparing|ready)/);
+  const tiles = page.locator('.play-tiles span');
+  const centers = await tiles.evaluateAll(elements => elements.map(el => {
+    const rect = el.getBoundingClientRect();
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+  }));
+  await page.evaluate(() => {
+    window.touchedTiles = [];
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (...args) {
+      if (this.matches('.play-tiles span')) window.touchedTiles.push(this.textContent);
+      return animate.apply(this, args);
+    };
+  });
+  const touch = await page.context().newCDPSession(page);
+  try {
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [centers[0]] });
+    for (const center of centers.slice(1)) {
+      await touch.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [center] });
+    }
+    await expect.poll(() => page.evaluate(() => window.touchedTiles.join(''))).toBe('SQUAD');
+    await tiles.evaluateAll(elements => Promise.all(elements.flatMap(el => el.getAnimations().map(a => a.finished))));
+    for (const center of centers.slice(0, -1).reverse()) {
+      await touch.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [center] });
+    }
+    await expect.poll(() => page.evaluate(() => window.touchedTiles.join(''))).toBe('SQUADAUQS');
+  } finally {
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await touch.detach();
+  }
+});
+
+test('reduced motion shows static tiles immediately', async ({ page, hasTouch }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('http://wordsquad.test/');
   const tiles = page.locator('.play-tiles span');
+  if (hasTouch) await tiles.first().tap();
+  else await tiles.first().hover();
   expect(await tiles.evaluateAll(elements => elements.every(el => {
     const style = getComputedStyle(el);
     return !el.getAnimations().length && style.opacity === '1' && style.transform === 'none';
@@ -141,7 +201,7 @@ test(`glows precede tiles and funding waits for visibility, with themed Local Lo
   await expect.poll(() => page.evaluate(() => window.animationOrder.filter(e => e.name.includes('donation-ring') && e.phase === 'end').length)).toBe(2);
   events = await page.evaluate(() => window.animationOrder);
   expect(events.findIndex(e => e.name === 'donationSection:' && e.phase === 'end')).toBeLessThan(events.findIndex(e => e.name.includes('donation-ring')));
-  expect(await page.locator('.donation-ring').evaluate(el => getComputedStyle(el).strokeDasharray.split(',').map(parseFloat))).toEqual([65, 100]);
+  await expect.poll(() => page.locator('.donation-ring').evaluate(el => getComputedStyle(el).strokeDasharray.split(',').map(parseFloat))).toEqual([65, 100]);
   await expect(page.locator('#networkLobbies')).toHaveClass(/squad-card/);
   await expect(page.getByRole('button', { name: 'Join lobby LAN123' })).toHaveClass(/play-secondary/);
   await page.evaluate(async () => (await import('/landing.js')).displayNetworkLobbies([]));

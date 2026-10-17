@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const testUrl = process.env.WORDSQUAD_TEST_URL;
-test.use({ baseURL: testUrl || 'http://127.0.0.1:5058', channel: 'chrome' });
+test.use({ baseURL: testUrl || 'http://127.0.0.1:5058', channel: 'chromium' });
 test.skip(!testUrl, 'Use an isolated Flask server with WORDSQUAD_TEST_URL.');
 
 async function eligible(context) {
@@ -30,7 +30,7 @@ test('host approves a guest; concealed game survives reload and kick revokes acc
   await page.locator('#copyInvitation').click();
   await expect(page.locator('#privateRoomStatus')).toHaveText('Invitation copied. Send it privately.');
   const invitation = await page.evaluate(() => navigator.clipboard.readText());
-  expect(invitation).toContain('/join#');
+  expect(invitation).toContain('/invite.html#private/');
   expect(await page.locator('body').innerText()).not.toContain(invitation.split('#')[1]);
   await page.screenshot({ path: testInfo.outputPath('private-host-controls.png') });
 

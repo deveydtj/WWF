@@ -31,7 +31,13 @@ about $16/month plus public IPv4 charges.
 3. **Wake on visit.** Opening the landing page calls `/wake`, so the server
    is usually ready by the time a player has picked an emoji. If someone opens
    a lobby link while it sleeps, CloudFront shows `waking.html`. That page calls
-   `/wake` and reloads once `/health` is OK, usually within about a minute.
+   `/wake` and reloads once `/health` is OK, usually within about a minute. If
+   a player presses Create or Join on the landing page before it is up, the
+   card shows the same animation and continues by itself once it is. Both
+   screens count down a live estimate: while the server is `pending` or
+   `running`, `/wake` also returns `elapsed` (seconds since this boot began,
+   from EC2's `LaunchTime`), and each browser learns the usual boot length
+   from the wakes it has watched.
 4. **DNS follows the server.** The server has no Elastic IP. When it starts,
    the Lambda points `origin.<domain>` at its new public IP. When it stops,
    the Lambda parks that record on an unroutable address.

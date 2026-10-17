@@ -2,6 +2,9 @@ import { ViewportService } from './static/js/layout/viewportService.js';
 import { applyDarkMode as applyTheme, prefersDarkMode } from './static/js/themeManager.js';
 import { ensureAgeEligibility, getAgeStatus } from './static/js/ageEligibility.js';
 import { startActivityPings } from './static/js/activityPing.js';
+import { isWakingPage } from './static/js/serverWake.js';
+import { watchServerWake } from './static/js/wakeWatcher.js';
+import { estimateWake, formatClock, typicalWakeSeconds } from './static/js/wakeEstimate.js';
 
 const viewportService = new ViewportService({
   appContainer: '#landingView',
@@ -276,13 +279,192 @@ function wakeServer() {
   fetch('/wake', { cache: 'no-store' }).catch(() => { /* Local dev has no /wake. */ });
 }
 
-// CloudFront answers with an HTML "waking up" page (503) while the server starts.
-function serverIsWaking(resp) {
-  const type = resp.headers.get('content-type') || '';
-  if (resp.status !== 503 || !type.includes('text/html')) return false;
-  showJoinError('The game server is waking up. Try again in about a minute.');
-  wakeServer();
-  return true;
+// ---------- Waiting for a sleeping server ----------
+// While the server naps, CloudFront answers game requests with an HTML
+// "waking up" page (503). Create and Join check first, and if it is asleep
+// they show the wake panel (tiles, live estimate, progress), wait for the
+// server, then carry on with what the player asked for.
+
+const WAKE_COPY = {
+  waking: ['Waking up the game server…', "It naps when nobody's playing."],
+  stopping: ['Finishing its nap…', 'The server was just settling down. It will start right back up.'],
+  almost: ['Almost there…', 'Getting the game ready.'],
+  ready: ['Ready!', 'Taking you in…'],
+};
+
+let activeWake = null;
+
+function wakeIntentText(intent) {
+  if (intent.kind === 'join') return `You'll join ${intent.code} as soon as it's ready.`;
+  return intent.private
+    ? 'Your private room opens as soon as it\'s ready.'
+    : 'Your lobby opens as soon as it\'s ready.';
+}
+
+// Called every second while waiting, and whenever /wake reports something new.
+function renderWake() {
+  const wake = activeWake;
+  if (!wake?.status || wake.finished) return;
+  const { state, bootStartedAt, stoppingSince, typical } = wake.status;
+  const t = Date.now();
+  const elapsed = bootStartedAt == null ? null : (t - bootStartedAt) / 1000;
+  const estimate = estimateWake({
+    state,
+    elapsed,
+    stoppingFor: stoppingSince == null ? 0 : (t - stoppingSince) / 1000,
+    typical,
+  });
+
+  let phase = 'waking';
+  if (state === 'ready') phase = 'ready';
+  else if (state === 'stopping') phase = 'stopping';
+  else if (estimate.progress >= 0.6) phase = 'almost';
+  const [title, detail] = WAKE_COPY[phase];
+  const statusText = phase === 'ready' ? detail : `${detail} ${wakeIntentText(wake.intent)}`;
+  document.getElementById('wakePanel').dataset.state = phase;
+  const titleEl = document.getElementById('wakeTitle');
+  const statusEl = document.getElementById('wakeStatus');
+  if (titleEl.textContent !== title) titleEl.textContent = title;
+  if (statusEl.textContent !== statusText) statusEl.textContent = statusText;
+
+  const eta = document.getElementById('wakeEta');
+  const label = document.getElementById('wakeEtaLabel');
+  const bar = document.getElementById('wakeProgress');
+  if (estimate.remaining == null) {
+    eta.textContent = `~${formatClock(typical)}`;
+    label.textContent = 'usual wait';
+  } else if (estimate.overdue) {
+    eta.textContent = 'Any second';
+    label.textContent = elapsed > typical + 30 ? 'taking a little longer than usual' : 'just finishing up';
+  } else {
+    eta.textContent = formatClock(estimate.remaining);
+    label.textContent = 'estimated wait';
+  }
+  const percent = Math.round(estimate.progress * 100);
+  bar.style.setProperty('--wake-progress', `${percent}%`);
+  bar.setAttribute('aria-valuenow', String(percent));
+  bar.setAttribute('aria-valuetext', estimate.remaining == null || estimate.overdue
+    ? label.textContent
+    : `About ${estimate.remaining} seconds left`);
+}
+
+function renderWakeStatus(status) {
+  if (!activeWake) return;
+  activeWake.status = status;
+  renderWake();
+}
+
+function showWakeOutcome(outcome) {
+  const panel = document.getElementById('wakePanel');
+  panel.dataset.state = outcome;
+  const title = document.getElementById('wakeTitle');
+  const statusEl = document.getElementById('wakeStatus');
+  const retry = document.getElementById('wakeRetry');
+  const cancel = document.getElementById('wakeCancel');
+  if (outcome === 'disabled') {
+    title.textContent = 'WordSquad is taking a short break';
+    statusEl.textContent = 'The game is paused for now. Please check back later.';
+    cancel.textContent = 'Back';
+  } else {
+    title.textContent = 'This is taking longer than usual';
+    statusEl.textContent = 'The server still isn\'t answering. Try again, or check back in a few minutes.';
+    retry.hidden = false;
+  }
+}
+
+function setWakePanelVisible(visible) {
+  const actions = document.querySelector('.play-actions');
+  const panel = document.getElementById('wakePanel');
+  if (!actions || !panel) return;
+  actions.toggleAttribute('data-waking', visible);
+  panel.hidden = !visible;
+}
+
+function startWakeWatch() {
+  const wake = activeWake;
+  wake.finished = false;
+  wake.status = null;
+  document.getElementById('wakeRetry').hidden = true;
+  document.getElementById('wakeCancel').textContent = 'Cancel';
+  const typical = typicalWakeSeconds();
+  renderWakeStatus({ state: null, bootStartedAt: null, stoppingSince: null, typical, startedAt: Date.now() });
+  wake.watch = watchServerWake({ typical, onChange: status => { if (activeWake === wake) renderWakeStatus(status); } });
+  wake.watch.done.then(outcome => {
+    if (activeWake !== wake || outcome === 'cancelled') return;
+    wake.finished = true;
+    if (outcome === 'ready') {
+      const [title, detail] = WAKE_COPY.ready;
+      document.getElementById('wakePanel').dataset.state = 'ready';
+      document.getElementById('wakeTitle').textContent = title;
+      document.getElementById('wakeStatus').textContent = detail;
+      document.getElementById('wakeEta').textContent = '0:00';
+      document.getElementById('wakeEtaLabel').textContent = 'ready';
+      const bar = document.getElementById('wakeProgress');
+      bar.style.setProperty('--wake-progress', '100%');
+      bar.setAttribute('aria-valuenow', '100');
+      bar.setAttribute('aria-valuetext', 'Ready');
+      // A beat on "Ready!" so the finish registers before the page moves on.
+      setTimeout(() => finishWake(true), 600);
+    } else {
+      showWakeOutcome(outcome);
+    }
+  });
+}
+
+function finishWake(proceed) {
+  const wake = activeWake;
+  if (!wake) return;
+  activeWake = null;
+  wake.watch?.cancel();
+  clearInterval(wake.ticker);
+  setWakePanelVisible(false);
+  // Put focus back where the player was (the panel they were reading is gone).
+  wake.returnFocus?.focus?.({ preventScroll: true });
+  wake.resolve(proceed);
+}
+
+/**
+ * Show the wake panel and wait for the server.
+ * @returns {Promise<boolean>} true once it is up, false if the player cancelled
+ *   or wake-ups are paused.
+ */
+function waitForServer(intent) {
+  if (activeWake) {
+    // Already waiting: follow the newest request instead.
+    activeWake.intent = intent;
+    renderWake();
+    return activeWake.promise;
+  }
+  const wake = { intent, returnFocus: document.activeElement };
+  wake.promise = new Promise(resolve => { wake.resolve = resolve; });
+  activeWake = wake;
+  clearJoinError();
+  showCreateError('');
+  setWakePanelVisible(true);
+  wake.ticker = setInterval(renderWake, 1000);
+  startWakeWatch();
+  document.getElementById('wakeTitle').focus({ preventScroll: true });
+  announce('The game server is waking up.');
+  return wake.promise;
+}
+
+function initWakePanel() {
+  document.getElementById('wakeCancel')?.addEventListener('click', () => finishWake(false));
+  document.getElementById('wakeRetry')?.addEventListener('click', () => {
+    if (!activeWake) return;
+    startWakeWatch();
+  });
+}
+
+/** Resolve true when the server can take requests, waiting for it if it is asleep. */
+async function whenServerAwake(intent) {
+  let response;
+  try {
+    response = await fetch('/health', { cache: 'no-store' });
+  } catch {
+    return true; // Offline or local: let the real request report the problem.
+  }
+  return isWakingPage(response) ? waitForServer(intent) : true;
 }
 
 export function showSavedEmoji() {
@@ -442,7 +624,9 @@ function initRoomMode() {
   }));
 }
 
-export async function createLobby() {
+export async function createLobby({ retried = false } = {}) {
+  const intent = () => ({ kind: 'create', private: document.getElementById('privateRoom')?.checked === true });
+  if (!await whenServerAwake(intent())) return;
   if (!await ensureAgeEligibility()) return;
   if (!checkEmojiSelected()) {
     return;
@@ -454,7 +638,12 @@ export async function createLobby() {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ private: isPrivate })
   });
-  if (serverIsWaking(resp)) return;
+  if (isWakingPage(resp)) {
+    // It fell asleep between the check and the request: wait, then try once more.
+    if (!retried && await waitForServer(intent())) createLobby({ retried: true });
+    else if (retried) showCreateError('The game server is still starting. Try again in a moment.');
+    return;
+  }
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok || !data.id) {
     showCreateError(data.msg || 'Could not create a lobby. Try again.');
@@ -477,14 +666,19 @@ export async function createLobby() {
   window.location.hash = `#lobby/${data.id}`;
 }
 
-export async function joinLobby(code) {
+export async function joinLobby(code, { retried = false } = {}) {
+  if (!await whenServerAwake({ kind: 'join', code })) return;
   if (!await ensureAgeEligibility()) return;
   if (!checkEmojiSelected()) {
     return;
   }
   
   const resp = await fetch(`/lobby/${code}/state`);
-  if (serverIsWaking(resp)) return;
+  if (isWakingPage(resp)) {
+    if (!retried && await waitForServer({ kind: 'join', code })) joinLobby(code, { retried: true });
+    else if (retried) showJoinError('The game server is still starting. Try again in a moment.');
+    return;
+  }
   if (resp.ok) {
     storeLastLobby(code);
     localStorage.removeItem('hostToken');
@@ -751,15 +945,19 @@ async function initTileAnimation() {
   finishDonationIntro();
 }
 
-// Hovering a SQUAD tile with the mouse flips it, like the intro does.
+// Hovering or touching a SQUAD tile flips it, like the intro does.
 function initTileHover() {
   const landing = document.getElementById('landingView');
   const tiles = landing?.querySelectorAll('.play-tiles span') || [];
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   tiles.forEach(tile => {
     let flip = null;
-    tile.addEventListener('pointerenter', event => {
-      if (event.pointerType !== 'mouse' || reduceMotion.matches) return;
+    // Let a held finger enter neighboring tiles instead of staying captured here.
+    tile.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'touch') tile.releasePointerCapture(event.pointerId);
+    });
+    tile.addEventListener('pointerenter', () => {
+      if (reduceMotion.matches) return;
       // Let the intro finish first, and let a flip finish before the next.
       if (landing.classList.contains('tiles-preparing') || landing.classList.contains('tiles-ready')) return;
       if (flip?.playState === 'running') return;
@@ -784,9 +982,10 @@ export function init() {
   initJoinForm();
   initHowTo();
   initEmojiPicker();
+  initWakePanel();
   showSavedEmoji();
   viewportService.start();
-  document.getElementById('createBtn').addEventListener('click', createLobby);
+  document.getElementById('createBtn').addEventListener('click', () => createLobby());
   document.getElementById('findNetworkLobbies').addEventListener('click', async () => {
     if (await ensureAgeEligibility()) await fetchNetworkLobbies();
   });

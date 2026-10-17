@@ -211,7 +211,7 @@ export function installRoomControls() {
     copy.disabled = true;
     try {
       const data = await privateRequest(url, { action: 'rotate' });
-      const text = `${location.origin}/join#${data.invitation}`;
+      const text = `${location.origin}/invite.html#private/${data.invitation}`;
       if (await copyText(text, dialog)) {
         status.textContent = 'Invitation copied. Send it privately.';
       } else {

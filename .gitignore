@@ -64,3 +64,4 @@ playwright-report/
 # Playwright baseline snapshots (allowlist - must come after generic ignores)
 !tests/playwright/baseline/**/*.png
 !tests/playwright/baseline/**/*.json
+!frontend/public/assets/wordsquad-*.png

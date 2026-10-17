@@ -1,3 +1,31 @@
+import { isWakingPage, requestWake } from './serverWake.js';
+
+const WAKING_REPLY = {
+  status: 'error',
+  waking: true,
+  msg: 'The game server is waking up. Try again in a moment.'
+};
+
+/**
+ * Parse a game API reply. While the server sleeps, CloudFront returns its HTML
+ * "waking up" page instead of JSON: report that (and ask the server to start,
+ * since a player just acted) rather than throwing a JSON parse error.
+ *
+ * @param {Response} r - Fetch response.
+ * @returns {Promise<Object>} The JSON body, or a `{status: 'error', msg}` reply.
+ */
+export async function readJson(r) {
+  if (isWakingPage(r)) {
+    requestWake();
+    return { ...WAKING_REPLY };
+  }
+  try {
+    return await r.json();
+  } catch {
+    return { status: 'error', msg: 'Could not reach the game. Try again.' };
+  }
+}
+
 /**
  * Fetch the latest game state from the server.
  *
@@ -18,6 +46,8 @@ export async function getState(emoji, lobbyId, playerId) {
     const err = new Error('HTTP ' + r.status);
     err.status = r.status;
     err.data = data;
+    // Server asleep or starting: callers decide whether a player is here to wake it.
+    err.waking = isWakingPage(r);
     throw err;
   }
   return data;
@@ -37,7 +67,7 @@ export async function sendGuess(guess, emoji, playerId, lobbyId) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ guess, emoji, player_id: playerId })
   });
-  return r.json();
+  return readJson(r);
 }
 
 /**
@@ -51,7 +81,7 @@ export async function resetGame(lobbyId, hostToken) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify(body)
   });
-  return r.json();
+  return readJson(r);
 }
 
 /**
@@ -74,7 +104,7 @@ export async function voteReset(lobbyId, emoji, playerId, vote = 'yes') {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId, vote })
   });
-  return r.json().catch(() => ({ status: 'error', msg: 'Could not reach the game.' }));
+  return readJson(r);
 }
 
 /**
@@ -90,7 +120,7 @@ export async function sendEmoji(emoji, playerId, lobbyId) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId })
   });
-  return r.json();
+  return readJson(r);
 }
 
 /**
@@ -122,7 +152,7 @@ export async function sendChatMessage(text, emoji, playerId, lobbyId) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ text, emoji, player_id: playerId })
   });
-  return r.json();
+  return readJson(r);
 }
 
 /**
@@ -139,7 +169,7 @@ export async function requestHint(col, emoji, playerId, lobbyId) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ col, emoji, player_id: playerId })
   });
-  return r.json();
+  return readJson(r);
 }
 
 export async function leaveLobbyRequest(lobbyId, emoji, playerId) {
@@ -149,7 +179,7 @@ export async function leaveLobbyRequest(lobbyId, emoji, playerId) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId })
   });
-  const data = await r.json();
+  const data = await readJson(r);
   if (!r.ok || data.status !== 'ok') {
     throw new Error(data.msg || 'Could not leave lobby');
   }
@@ -172,7 +202,7 @@ export async function kickPlayer(emoji, playerId, lobbyId, hostToken) {
     headers: { 'Content-Type': 'application/json', 'X-WordSquad-Request': '1' },
     body: JSON.stringify({ emoji, player_id: playerId, host_token: hostToken })
   });
-  return r.json();
+  return readJson(r);
 }
 
 /**

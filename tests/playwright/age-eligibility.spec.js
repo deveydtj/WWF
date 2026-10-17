@@ -1,7 +1,7 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect, chromium } = require('@playwright/test');
 
 const testUrl = process.env.WORDSQUAD_TEST_URL;
-test.use({ baseURL: testUrl || 'http://127.0.0.1:5057', channel: 'chrome' });
+test.use({ baseURL: testUrl || 'http://127.0.0.1:5057', channel: 'chromium' });
 test.skip(!testUrl, 'Run against an isolated Flask server using WORDSQUAD_TEST_URL.');
 
 async function answerAge(page, age) {
@@ -63,7 +63,7 @@ test('age13 player creates a lobby, chats and reloads without another age questi
   await expect(page.locator('#ageCheckDialog')).toHaveCount(0);
   const cookie = (await context.cookies()).find(cookie => cookie.name === 'wordsquad_age_session');
   expect(cookie.httpOnly).toBe(true);
-  expect(cookie.expires).toBe(-1);
+  expect(cookie.expires).toBeGreaterThan(Date.now() / 1000 + 364 * 24 * 60 * 60);
   expect(await page.evaluate(() => Object.keys(localStorage).some(key => /age|birth/i.test(key)))).toBe(false);
 });
 
@@ -87,3 +87,31 @@ test('a mistyped age can be corrected without clearing site data', async ({ page
   await answerAge(page, 30);
   await expect(page).toHaveURL(/\/lobby\/AGE002$/);
 });
+
+for (const age of [13, 12]) {
+  test(`age ${age} result survives closing and reopening the browser`, async ({}, testInfo) => {
+    const profile = testInfo.outputPath('returning-browser');
+    const options = { channel: 'chromium', headless: true, baseURL: testUrl };
+    let context = await chromium.launchPersistentContext(profile, options);
+    try {
+      let page = await context.newPage();
+      await page.goto('/age-check?next=/game');
+      await answerAge(page, age);
+      if (age >= 13) await expect(page).toHaveURL(/\/game$/);
+      else await expect(page.locator('#ageBlockedMessage')).toBeVisible();
+      await context.close();
+      context = await chromium.launchPersistentContext(profile, options);
+      page = await context.newPage();
+      await page.goto('/game');
+      if (age >= 13) {
+        await expect(page.locator('#board .tile')).toHaveCount(30);
+        await expect(page.locator('#ageCheckDialog')).toHaveCount(0);
+      } else {
+        await expect(page.locator('#ageBlockedMessage')).toBeVisible();
+        await expect(page.locator('#ageInput')).toBeHidden();
+      }
+    } finally {
+      await context.close();
+    }
+  });
+}

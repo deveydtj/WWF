@@ -15,6 +15,7 @@ One small function handles every way the server gets started or stopped:
 import json
 import os
 import time
+from datetime import datetime, timezone
 
 import boto3
 from botocore.exceptions import ClientError
@@ -50,11 +51,14 @@ def _wake(event):
     if _wake_disabled():
         return _http(423, {"state": "disabled",
                            "msg": "Server paused by the monthly budget cap."})
-    state = _state()
+    instance = _describe()
+    state = instance["State"]["Name"]
+    elapsed = _seconds_since_start(instance)
     if state == "stopped":
         try:
             ec2.start_instances(InstanceIds=[INSTANCE_ID])
             state = "pending"
+            elapsed = 0
             # One bounded record per actual start, in the existing 7-day logs.
             # Keep cookies, credentials, query strings and request bodies out.
             http = event["requestContext"].get("http", {})
@@ -69,7 +73,11 @@ def _wake(event):
         except ClientError as err:  # e.g. still finishing a stop
             print(f"start_instances failed: {err}")
             state = "stopping"
-    return _http(202 if state != "running" else 200, {"state": state})
+    body = {"state": state}
+    # How long ago this boot began, so waiting pages can show a live estimate.
+    if state in ("pending", "running") and elapsed is not None:
+        body["elapsed"] = elapsed
+    return _http(202 if state != "running" else 200, body)
 
 
 def _http(status, body):
@@ -153,6 +161,16 @@ def _describe():
 
 def _state():
     return _describe()["State"]["Name"]
+
+
+def _seconds_since_start(instance):
+    """Whole seconds since the instance last started (EC2 resets LaunchTime on every start)."""
+    launched = instance.get("LaunchTime")
+    if not isinstance(launched, datetime):
+        return None
+    if launched.tzinfo is None:
+        launched = launched.replace(tzinfo=timezone.utc)
+    return max(0, int((datetime.now(timezone.utc) - launched).total_seconds()))
 
 
 def _public_ip():

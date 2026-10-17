@@ -45,7 +45,7 @@ async function checkEligibility() {
     dialog.innerHTML = `
       <h2 id="ageCheckHeading">Before you play</h2>
       <p id="ageCheckDescription">We use your answer to determine whether you can participate.
-        We remember only the result for this browser session, not your age.</p>
+        We remember only the result in this browser for one year, not your age.</p>
       <form id="ageCheckForm">
         <label for="ageInput">How old are you?</label>
         <input id="ageInput" name="age" type="number" min="0" max="120" step="1"
@@ -53,7 +53,7 @@ async function checkEligibility() {
         <p id="ageCheckError" role="alert"></p>
         <button type="submit">Continue</button>
       </form>
-      <p id="ageBlockedMessage" hidden role="status">Multiplayer and chat are unavailable for this session.
+      <p id="ageBlockedMessage" hidden role="status">Multiplayer and chat are unavailable in this browser.
         You can still read how to play on the home page.</p>
       <button id="ageRetry" type="button" hidden>Wrong age? Try again</button>
       <button id="ageCheckClose" type="button">Back to browsing</button>`;
