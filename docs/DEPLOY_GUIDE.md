@@ -194,9 +194,18 @@ Refunds made in Stripe subtract from the month the donation counted toward.
 
 ## Day-to-day
 
-- **Deploy backend changes:** `scripts/deploy_api.sh`. It restarts the app if
-  the server is awake; otherwise the next wake-up pulls the new image.
-- **Deploy frontend changes:** `scripts/deploy_frontend.sh`
+- **Deploy backend changes:** `scripts/deploy_api.sh`. It publishes the
+  build's hashed assets to S3 before pushing the image, then restarts the app
+  if the server is awake and waits until it is healthy on the pushed image.
+  It exits non-zero ("Deploy FAILED") if the restart, health check or image
+  check fails. A sleeping server stays asleep and pulls the image on wake-up.
+- **Deploy frontend changes:** `scripts/deploy_frontend.sh`. Hashed assets go
+  up before any page and are never deleted, so `/game`, `/join` and
+  `/age-check` HTML from the running image (and pages already open) keep
+  loading. It finishes by loading the live pages and every asset they
+  reference (pages served by a sleeping server are skipped, never woken).
+- **Changes to both:** either order is safe; each script publishes the assets
+  its own HTML needs before that HTML goes live.
 - **Shell on the server:** `aws ssm start-session --target <api_instance_id>`
   (no SSH key or open port)
 - **Server logs:** in that shell, `journalctl -u wwf-app -u nginx -u wwf-idle`

@@ -2,12 +2,17 @@
  * Fetch the latest game state from the server.
  *
  * @param {string} [emoji] - Current player's emoji to include in the request.
+ * @param {string} [lobbyId] - Lobby code, or omitted for the default game.
+ * @param {string} [playerId] - Proves the caller owns `emoji`, so the server
+ *   includes that player's private Daily Double letter. Sent as a header to
+ *   keep it out of URLs and logs; private rooms use their session instead.
  * @returns {Promise<Object>} Parsed JSON state payload.
  */
-export async function getState(emoji, lobbyId) {
+export async function getState(emoji, lobbyId, playerId) {
   const base = lobbyId ? `/lobby/${lobbyId}/state` : '/state';
   const url = emoji ? `${base}?emoji=${encodeURIComponent(emoji)}` : base;
-  const r = await fetch(url);
+  const headers = emoji && playerId ? { 'X-WordSquad-Player': playerId } : {};
+  const r = await fetch(url, { headers });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
     const err = new Error('HTTP ' + r.status);

@@ -20,7 +20,12 @@ for (const failure of ['unavailable', 'offline', 'waking']) {
       if (pathname === '/age-check' && route.request().method() === 'POST') {
         expect(route.request().postDataJSON()).toEqual({ age: 30 });
         // A failed submission must also leave the form usable for another try.
-        if (++submissions === 1) return route.fulfill({ status: 503, json: { msg: 'Please try again.' } });
+        if (++submissions === 1) {
+          if (failure === 'waking') return route.fulfill({
+            status: 503, contentType: 'text/html', body: '<h1>Starting the game server</h1>',
+          });
+          return route.fulfill({ status: 503, json: { msg: 'Please try again.' } });
+        }
         eligible = true;
         return route.fulfill({ json: { eligibility: 'eligible' } });
       }
@@ -31,11 +36,15 @@ for (const failure of ['unavailable', 'offline', 'waking']) {
     });
     await page.goto('http://wordsquad.test/age-check?next=/game');
     await expect(page.locator('#ageCheckError')).not.toBeEmpty();
+    if (failure === 'waking') await expect(page.locator('#ageCheckError'))
+      .toHaveText('Could not check eligibility. Please try again.');
     await expect(page.locator('#ageInput')).toBeEditable();
     await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeEnabled();
     await page.locator('#ageInput').fill('30');
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    await expect(page.locator('#ageCheckError')).toHaveText('Please try again.');
+    await expect(page.locator('#ageCheckError')).toHaveText(failure === 'waking'
+      ? 'The game server is waking up. Try again in about a minute.'
+      : 'Please try again.');
     await page.locator('#ageInput').fill('30');
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await expect(page).toHaveURL('http://wordsquad.test/game');

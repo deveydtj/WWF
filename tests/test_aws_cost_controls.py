@@ -118,3 +118,33 @@ def test_flask_acknowledges_activity_pings_locally():
     server, _ = load_server()
     assert server.activity_ping() == ("", 204)
     assert "activity_ping" in server.PUBLIC_ENDPOINTS
+
+
+def _cloudfront_api_paths():
+    match = re.search(r'dynamic "ordered_cache_behavior" \{\s*for_each = \[([^\]]*)\]', MAIN_TF)
+    assert match, "API cache behaviors not found"
+    return re.findall(r'"([^"]+)"', match.group(1))
+
+
+def test_cloudfront_routes_every_mutating_api_endpoint_to_the_server():
+    """S3 rejects POST, so any API path CloudFront misses breaks that action."""
+    from fnmatch import fnmatchcase
+    from backend import server
+
+    patterns = _cloudfront_api_paths()
+    missing = []
+    for rule in server.app.url_map.iter_rules():
+        if not rule.methods & {"POST", "PUT", "PATCH", "DELETE"}:
+            continue
+        path = re.sub(r"<[^>]+>", "x", rule.rule)
+        if not any(fnmatchcase(path, pattern) for pattern in patterns):
+            missing.append(rule.rule)
+    assert not missing, f"CloudFront sends these to S3: {missing}"
+    assert "/vote-reset" in patterns  # default game's reset votes and Next Word
+
+
+def test_cloudfront_forwards_the_hint_owner_header():
+    assert '"X-WordSquad-Player"' in MAIN_TF
+    from backend import server
+    assert server.PLAYER_HEADER == "X-WordSquad-Player"
+    assert "'X-WordSquad-Player'" in (ROOT / "frontend/static/js/api.js").read_text()

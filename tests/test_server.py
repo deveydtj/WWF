@@ -23,6 +23,7 @@ def load_server():
     class DummyRequest:
         def __init__(self):
             self.headers = Headers()
+            self.args = {}
             self.remote_addr = "127.0.0.1"
             self.json = None
             self.endpoint = None

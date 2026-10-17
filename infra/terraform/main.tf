@@ -281,7 +281,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = ["/activity", "/private/*", "/join", "/internal/*", "/age-*", "/lobby*", "/lobbies*", "/game", "/state", "/emoji", "/guess", "/hint", "/chat", "/reset", "/stream", "/health", "/admin/*"]
+    for_each = ["/activity", "/private/*", "/join", "/internal/*", "/age-*", "/lobby*", "/lobbies*", "/game", "/state", "/emoji", "/guess", "/hint", "/chat", "/reset", "/vote-reset", "/stream", "/health", "/admin/*"]
     content {
       path_pattern           = ordered_cache_behavior.value
       target_origin_id       = "api"
@@ -295,8 +295,9 @@ resource "aws_cloudfront_distribution" "cdn" {
       forwarded_values {
         query_string = true
         # The origin's nginx sets Host and X-Forwarded-Proto for Flask; Origin
-        # must reach Flask for its cross-origin checks.
-        headers = ["Origin", "Content-Type", "Sec-Fetch-Site", "X-WordSquad-Request", "Authorization"]
+        # must reach Flask for its cross-origin checks. X-WordSquad-Player
+        # proves which player is reading their private Daily Double hint.
+        headers = ["Origin", "Content-Type", "Sec-Fetch-Site", "X-WordSquad-Request", "X-WordSquad-Player", "Authorization"]
         cookies {
           forward           = "whitelist"
           whitelisted_names = ["wordsquad_age_session", "wordsquad_room_session", "__Host-wordsquad_room_session"]
@@ -314,6 +315,9 @@ resource "aws_cloudfront_distribution" "cdn" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
   }
 
   default_cache_behavior {

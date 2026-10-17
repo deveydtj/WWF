@@ -126,7 +126,7 @@ if not os.environ.get("SECRET_KEY") and os.environ.get("FLASK_ENV") == "producti
 # Public information and assets are available without registering a player.
 # New application endpoints require eligibility unless explicitly public.
 PUBLIC_ENDPOINTS = {
-    "index", "spa_fallback_route", "health", "cleanup_lobbies",
+    "index", "spa_fallback_route", "health", "cleanup_lobbies", "activity_ping",
     "age_status", "submit_age", "age_page", "notify_server_update", "landing_css", "landing_js",
     "license_file",
     "js_files", "css_files", "asset_files", "lobby_js_files",
@@ -612,11 +612,14 @@ def validate_hard_mode(guess, s: GameState | None = None):
     return True, ""
 
 
-def build_state_payload(emoji: str | None = None, s: GameState | None = None):
+def build_state_payload(emoji: str | None = None, s: GameState | None = None,
+                        *, include_hint: bool = True):
     """Assemble the full game state dictionary returned to clients.
 
     When ``emoji`` is provided, include a ``daily_double_available`` boolean
-    indicating whether that player currently has an unused hint.
+    indicating whether that player currently has an unused hint. The revealed
+    hint letter is added only when ``include_hint`` is true, which callers must
+    set only after proving the requester owns ``emoji``.
     """
     if s is None:
         s = _state()
@@ -654,7 +657,8 @@ def build_state_payload(emoji: str | None = None, s: GameState | None = None):
         # Include player-specific daily double status when requested for a specific player
         payload["daily_double_available"] = emoji in s.daily_double_pending
         # The revealed letter is private, so only the player's own state has it.
-        payload["daily_double_hint"] = s.daily_double_revealed.get(emoji)
+        if include_hint:
+            payload["daily_double_hint"] = s.daily_double_revealed.get(emoji)
     else:
         # For broadcasts (SSE), include daily double status for all active players
         payload["daily_double_status"] = {
@@ -712,6 +716,12 @@ def player_data():
 
 
 # ---- API Routes ----
+
+
+@app.route("/activity", methods=["POST"])
+def activity_ping():
+    """Acknowledge keep-alive pings when Flask serves local development."""
+    return "", 204
 
 
 @app.route("/stream")
@@ -800,13 +810,35 @@ def state():
             save_data_legacy()
             broadcast_state()
     else:
-        try:
-            emoji = request.args.get("emoji")
-        except Exception:
-            emoji = None
+        emoji, owns_emoji = _state_reader()
+        return jsonify(build_state_payload(emoji, include_hint=owns_emoji))
 
     # Build and return current game state
     return jsonify(build_state_payload(emoji))
+
+
+PLAYER_HEADER = "X-WordSquad-Player"
+
+
+def _state_reader() -> tuple[str | None, bool]:
+    """Return the emoji a state read is for, and whether the caller owns it.
+
+    Private rooms bind the reader to their authenticated member, ignoring the
+    query string. Public games accept any emoji for shared state, but only a
+    caller presenting that player's ID (in a header, so it stays out of URLs
+    and access logs) is treated as its owner.
+    """
+    if _state().private:
+        return player_data().get("emoji"), True
+    emoji = request.args.get("emoji")
+    if not emoji:
+        return None, False
+    player = _state().leaderboard.get(emoji) or {}
+    expected = player.get("player_id")
+    supplied = request.headers.get(PLAYER_HEADER, "")
+    owns = (isinstance(expected, str) and bool(supplied)
+            and secrets.compare_digest(supplied.encode(), expected.encode()))
+    return emoji, owns
 
 
 @app.route("/emoji", methods=["POST"])

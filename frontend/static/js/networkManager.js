@@ -4,6 +4,7 @@
  */
 
 import { getState, sendHeartbeat, subscribeToUpdates } from './api.js';
+import { getMyPlayerId } from './emoji.js';
 import { showMessage, announce } from './utils.js';
 
 class NetworkManager {
@@ -46,7 +47,7 @@ class NetworkManager {
    */
   async fetchState(myEmoji, lobbyCode) {
     try {
-      const state = await getState(myEmoji, lobbyCode);
+      const state = await getState(myEmoji, lobbyCode, getMyPlayerId());
       
       if (this.hadNetworkError) {
         showMessage('Reconnected to server.', this.messageHandlers);

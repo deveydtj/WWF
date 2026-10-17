@@ -1,10 +1,20 @@
 // Eligibility comes from the signed server session, never a localStorage flag.
 let pendingCheck;
 
+async function readEligibilityResponse(response) {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(response.status === 503
+      ? 'The game server is waking up. Try again in about a minute.'
+      : 'Could not check eligibility. Please try again.');
+  }
+}
+
 export async function getAgeStatus() {
   const response = await fetch('/age-status', { cache: 'no-store', credentials: 'same-origin' });
   if (!response.ok) throw new Error('Could not check eligibility. Please try again.');
-  return response.json();
+  return readEligibilityResponse(response);
 }
 
 function clearGameIdentity() {
@@ -92,7 +102,7 @@ async function checkEligibility() {
           method: 'POST', credentials: 'same-origin', cache: 'no-store',
           headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ age })
         });
-        const result = await response.json();
+        const result = await readEligibilityResponse(response);
         if (result.eligibility === 'blocked') {
           block();
         } else if (response.ok && result.eligibility === 'eligible') {

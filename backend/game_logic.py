@@ -83,6 +83,8 @@ SCRABBLE_SCORES = {
 
 # Game constants
 MAX_ROWS = 6
+# Gunicorn stops on a worker boot error; exit 1 would keep restarting workers.
+STARTUP_ERROR_EXIT_CODE = 3
 
 # Global word list - will be initialized by init_game_assets
 WORDS: list[str] = []
@@ -112,10 +114,10 @@ def init_game_assets(words_file: Path, offline_definitions_file: Path) -> None:
         logger.info(f"Loaded {len(WORDS)} words from {words_file}")
     except Exception as e:  # pragma: no cover - startup validation
         logger.error("Startup abort: could not load word list '%s': %s", words_file, e)
-        raise SystemExit(1)
+        raise SystemExit(STARTUP_ERROR_EXIT_CODE)
     if not WORDS:
         logger.error("Startup abort: word list '%s' contains no words", words_file)
-        raise SystemExit(1)
+        raise SystemExit(STARTUP_ERROR_EXIT_CODE)
     
     # Load and cache offline definitions with sanitization
     try:
@@ -140,7 +142,7 @@ def init_game_assets(words_file: Path, offline_definitions_file: Path) -> None:
             offline_definitions_file,
             e,
         )
-        raise SystemExit(1)
+        raise SystemExit(STARTUP_ERROR_EXIT_CODE)
 
 
 def generate_lobby_code() -> str:
