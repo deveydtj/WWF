@@ -305,6 +305,17 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  # Custom error pages use their own cache behavior's TTL. Never retain a
+  # startup response after the API is healthy, even on otherwise uncached paths.
+  ordered_cache_behavior {
+    path_pattern           = "/waking.html"
+    target_origin_id       = "frontend"
+    viewer_protocol_policy = "https-only"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id
+  }
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]

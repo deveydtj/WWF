@@ -65,6 +65,13 @@ def test_waking_page_is_built_and_served_on_origin_errors():
     assert "for_each = [502, 504]" in MAIN_TF
 
 
+def test_waking_page_cannot_cache_startup_errors_after_recovery():
+    behaviors = MAIN_TF.split('ordered_cache_behavior {')[1:]
+    waking = next((block for block in behaviors if '"/waking.html"' in block.split('\n  }', 1)[0]), '')
+    assert 'target_origin_id       = "frontend"' in waking
+    assert 'cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id' in waking
+
+
 def test_frontend_deploy_keeps_live_donation_total():
     script = (ROOT / "scripts/deploy_frontend.sh").read_text()
     assert "--exclude donations.json" in script
