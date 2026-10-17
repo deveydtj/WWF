@@ -8,9 +8,12 @@
   <script>
     window.privateInvitation = location.hash.slice(1);
     history.replaceState(null, '', '/join');
-    // Paint the saved theme before the stylesheets load.
-    let dark = false;
-    try { dark = localStorage.getItem('darkMode') === 'true'; } catch { /* Default to light. */ }
+    // Paint the preferred theme before the stylesheets load.
+    let dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    try {
+      const saved = localStorage.getItem('darkMode');
+      if (saved !== null) dark = saved === 'true';
+    } catch { /* Use the device preference when storage is blocked. */ }
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     document.documentElement.style.backgroundColor = dark ? '#2c303a' : '#e0e5ec';
   </script>

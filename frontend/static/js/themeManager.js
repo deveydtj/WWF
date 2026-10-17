@@ -1,3 +1,12 @@
+/** A saved choice overrides the device preference. */
+export function prefersDarkMode() {
+  try {
+    const saved = localStorage.getItem('darkMode');
+    if (saved != null) return saved === 'true';
+  } catch { /* Storage may be blocked; use the device preference. */ }
+  return typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+}
+
 let palette;
 let animation;
 let cleanupTimer;

@@ -195,6 +195,24 @@ resource "aws_cloudfront_origin_access_control" "wake" {
   signing_protocol                  = "sigv4"
 }
 
+# Preserve the browser's User-Agent for wake diagnostics without forwarding
+# cookies or query strings. CloudFront adds X-Forwarded-For automatically.
+resource "aws_cloudfront_origin_request_policy" "wake" {
+  name = "wwf-wake-diagnostics"
+  cookies_config {
+    cookie_behavior = "none"
+  }
+  query_strings_config {
+    query_string_behavior = "none"
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["User-Agent"]
+    }
+  }
+}
+
 data "aws_cloudfront_cache_policy" "disabled" {
   name = "Managed-CachingDisabled"
 }
@@ -253,12 +271,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/wake"
-    target_origin_id       = "wake"
-    viewer_protocol_policy = "https-only"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id
+    path_pattern             = "/wake"
+    target_origin_id         = "wake"
+    viewer_protocol_policy   = "https-only"
+    allowed_methods          = ["GET", "HEAD"]
+    cached_methods           = ["GET", "HEAD"]
+    cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.wake.id
   }
 
   dynamic "ordered_cache_behavior" {
@@ -533,18 +552,20 @@ resource "aws_instance" "api" {
     volume_size           = var.root_volume_gb
     encrypted             = true
     kms_key_id            = local.use_kms ? var.kms_key_arn : null
-    delete_on_termination = true
+    delete_on_termination = false
   }
 
   user_data_replace_on_change = true
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
-    aws_region           = var.aws_region
-    api_image            = var.api_image
-    domain               = var.domain
-    origin_host          = local.origin_host
-    session_secret_arn   = var.session_secret_arn
-    redis_secret_arn     = var.private_rooms_redis_secret_arn
-    operator_secret_arn  = var.operator_secret_arn
+    aws_region         = var.aws_region
+    api_image          = var.api_image
+    domain             = var.domain
+    origin_host        = local.origin_host
+    session_secret_arn = var.session_secret_arn
+    # Local Redis is configured by the SSM association after bootstrap. Keeping
+    # these empty avoids replacing the existing server and its persistent disk.
+    redis_secret_arn     = var.enable_local_redis ? "" : var.private_rooms_redis_secret_arn
+    operator_secret_arn  = var.enable_local_redis ? "" : var.operator_secret_arn
     single_instance      = var.single_instance ? "true" : "false"
     idle_minutes         = var.idle_shutdown_minutes
     acme_email           = var.acme_email
@@ -558,7 +579,10 @@ resource "aws_instance" "api" {
   }
 
   lifecycle {
-    ignore_changes = [ami] # don't rebuild the server every time AWS ships a new AMI
+    # A stopped instance has no public IP; AWS reports this attribute as false.
+    # Neither that transient state nor an AMI refresh may replace persisted data.
+    ignore_changes  = [ami, associate_public_ip_address]
+    prevent_destroy = true
     precondition {
       condition     = length(trimspace(var.session_secret_arn)) > 0
       error_message = "PUBLICATION BLOCKED: supply session_secret_arn for the signed age-session SECRET_KEY before deploying the API."

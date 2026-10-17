@@ -1,15 +1,15 @@
 # Terraform Variables Configuration
 # Copy this file and update all values before deployment
 
-# PUBLICATION BLOCKER: operator details deferred by the owner. Complete these
-# and publish/review the privacy notice before enabling the review flag.
-# Passing this gate does not establish COPPA compliance or certification.
+# The owner has temporarily deferred the publication gate. Re-enable it after
+# completing the operator details and publishing/reviewing the privacy notice.
+enforce_privacy_publication_gate = false
 privacy_operator = {
   legal_name      = ""
   mailing_address = ""
   phone           = ""
   email           = ""
-  website_url     = ""
+  website_url     = "https://wordsquad.io"
 }
 privacy_notice_reviewed = false
 
@@ -17,22 +17,27 @@ privacy_notice_reviewed = false
 # SecureString parameter (free) or in Secrets Manager ($0.40/month), e.g.
 #   arn:aws:ssm:us-east-1:718219275474:parameter/wwf/secret-key
 # The server's IAM role is granted read access to exactly this ARN.
-session_secret_arn = ""
+session_secret_arn = "arn:aws:ssm:us-east-1:718219275474:parameter/wwf/secret-key"
+
+# Private rooms share a bounded Redis container on the existing API server.
+enable_local_redis             = true
+private_rooms_redis_secret_arn = "arn:aws:ssm:us-east-1:718219275474:parameter/wwf/redis-url"
+operator_secret_arn            = "arn:aws:ssm:us-east-1:718219275474:parameter/wwf/operator-token"
 
 # AWS Configuration
-aws_region = "us-east-1"  # Keep us-east-1 (CloudFront certificates must live there)
+aws_region = "us-east-1" # Keep us-east-1 (CloudFront certificates must live there)
 
 # Frontend S3 Bucket (must be globally unique)
-frontend_bucket = "your-wwf-frontend-bucket-name"  # Replace with unique bucket name
+frontend_bucket = "wordsquad-frontend"
 
 # Domain Configuration
-domain = "wordsquad.io"  # Updated to wordsquad.io domain
-hosted_zone_id = "Z04938291S4N31CYCROQC"  # Hosted zone ID for wordsquad.io
+domain         = "wordsquad.io"          # Updated to wordsquad.io domain
+hosted_zone_id = "Z04938291S4N31CYCROQC" # Hosted zone ID for wordsquad.io
 
 # Network: the default VPC works. Pick ONE public subnet (it has a route to an
 # internet gateway). No NAT gateway or load balancer is created.
-vpc_id    = "vpc-123456"     # Replace with your VPC ID
-subnet_id = "subnet-abc"     # Replace with one public subnet ID
+vpc_id    = "vpc-056dafb3d65fc49ad"
+subnet_id = "subnet-0350e91eddb6720cd" # Public default subnet in us-east-1a
 
 # Container Configuration (arm64 image for the default t4g server).
 # scripts/deploy_api.sh builds and pushes this; check the repo name matches yours.
@@ -50,13 +55,13 @@ api_image = "718219275474.dkr.ecr.us-east-1.amazonaws.com/wwf-api:latest"
 # kms_key_arn = "arn:aws:kms:us-east-1:718219275474:key/cfde95d6-be42-44c1-96ff-67a671169f35"
 
 # Terraform State Configuration (only if you switch backend.tf to S3)
-state_bucket = "your-terraform-state-bucket"  # S3 bucket for Terraform state
-lock_table = "your-terraform-lock-table"     # DynamoDB table for state locking
+state_bucket = "your-terraform-state-bucket" # S3 bucket for Terraform state
+lock_table   = "your-terraform-lock-table"   # DynamoDB table for state locking
 
 # Live donation total on the landing page (Stripe). See docs/DEPLOY_GUIDE.md
 # "Donations" for the 5-minute Stripe setup. Goal defaults to monthly_budget_usd.
 enable_donations        = false
-stripe_payment_link_url = ""   # https://buy.stripe.com/...
+stripe_payment_link_url = "" # https://buy.stripe.com/...
 # stripe_payment_link_id = ""  # plink_... (optional: count only this link)
 # donation_goal_usd      = 10
 
@@ -64,4 +69,4 @@ stripe_payment_link_url = ""   # https://buy.stripe.com/...
 # spend the server is stopped and wake-ups pause until you run
 #   scripts/emergency_cost_control.sh --resume
 monthly_budget_usd = 10
-budget_alert_email = "deveydtj@gmail.com"  # Email for cost alerts and budget notifications
+budget_alert_email = "deveydtj@gmail.com" # Email for cost alerts and budget notifications

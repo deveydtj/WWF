@@ -66,7 +66,10 @@ test('host approves a guest; concealed game survives reload and kick revokes acc
     await expect(page.locator('#privateRoomDialog')).not.toBeVisible();
     await page.screenshot({ path: testInfo.outputPath('private-game.png') });
     await page.locator('#playerToggle').click();
+    const kickResponse = page.waitForResponse(response =>
+      response.url().endsWith(`/lobby/${code}/kick`) && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Kick 🦊', exact: true }).click();
+    expect((await kickResponse).status()).toBe(200);
     expect((await guestContext.request.get(`/lobby/${code}/state`)).status()).toBe(404);
     await guest.reload();
     await expect(guest.getByText('This private room is unavailable.', { exact: false })).toBeVisible();

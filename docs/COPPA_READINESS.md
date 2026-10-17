@@ -9,14 +9,16 @@ program. No certification seal or compliance claim has been added.
 
 ## Decisions needed from the operator
 
-The owner has deferred the operator details until before publication. AWS
-publication now has a hard Terraform gate in
+The owner has temporarily deferred the operator details and public notice.
+The live tfvars set `enforce_privacy_publication_gate = false` at the owner's
+request; `privacy_notice_reviewed` remains false. AWS publication has a
+Terraform gate, enabled by default, in
 `infra/terraform/privacy-publication.tf`: all five `privacy_operator` fields
 must be supplied, the contact email and HTTPS website URL must pass basic
 format checks, and `privacy_notice_reviewed` must be explicitly true after
 the notice is complete and reviewed. The live tfvars deliberately leave the
-fields empty and the flag false. This blocks fresh plans/applies, including
-`ci-plan.sh`; it does not control uploads made independently through AWS tools,
+details incomplete and the review flag false. When enabled, this blocks fresh
+plans/applies, including `ci-plan.sh`; it does not control uploads made independently through AWS tools,
 retroactively invalidate saved plans, or establish certification.
 
 The owner chose ages 13+ for multiplayer and chat. A neutral age screen now

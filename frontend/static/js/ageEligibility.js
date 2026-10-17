@@ -79,8 +79,6 @@ async function checkEligibility() {
     if (eligibility === 'blocked') block();
     if (error) {
       message.textContent = error;
-      input.disabled = true;
-      continueButton.disabled = true;
     }
     form.addEventListener('submit', async event => {
       event.preventDefault();

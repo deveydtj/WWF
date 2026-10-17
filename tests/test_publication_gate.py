@@ -67,6 +67,12 @@ def test_completed_operator_prerequisites_allow_plan(gate_dir):
     assert result.returncode == 0, result.stderr
 
 
+def test_owner_can_explicitly_defer_publication_gate(gate_dir):
+    result = plan(gate_dir, {'enforce_privacy_publication_gate': False})
+    assert result.returncode == 0, result.stderr
+    assert 'No changes.' in result.stdout
+
+
 def test_publication_resources_depend_on_gate():
     # Keep targeted publishing plans from bypassing the shared precondition.
     source = (Path(__file__).resolve().parents[1] / 'infra/terraform/main.tf').read_text()

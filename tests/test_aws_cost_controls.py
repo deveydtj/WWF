@@ -23,6 +23,13 @@ def test_server_stops_instead_of_terminating_and_avoids_burst_charges():
     assert "associate_public_ip_address          = true" in block
 
 
+def test_persistent_server_cannot_be_replaced_when_it_sleeps():
+    block = MAIN_TF.split('resource "aws_instance" "api" {', 1)[1].split("\nresource ", 1)[0]
+    assert 'ignore_changes  = [ami, associate_public_ip_address]' in block
+    assert 'prevent_destroy = true' in block
+    assert 'delete_on_termination = false' in block
+
+
 def test_idle_shutdown_runs_on_the_server():
     assert "systemctl poweroff" in USER_DATA
     assert "OnUnitActiveSec=5min" in USER_DATA

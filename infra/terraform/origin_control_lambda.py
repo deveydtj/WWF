@@ -40,13 +40,13 @@ def lambda_handler(event, context):
     if event.get("action") == "nightly-stop":
         return {"stopped": _stop("nightly backstop")}
     if "requestContext" in event:
-        return _wake()
+        return _wake(event)
     return {"ignored": True}
 
 
 # ---------- wake endpoint ----------
 
-def _wake():
+def _wake(event):
     if _wake_disabled():
         return _http(423, {"state": "disabled",
                            "msg": "Server paused by the monthly budget cap."})
@@ -55,6 +55,17 @@ def _wake():
         try:
             ec2.start_instances(InstanceIds=[INSTANCE_ID])
             state = "pending"
+            # One bounded record per actual start, in the existing 7-day logs.
+            # Keep cookies, credentials, query strings and request bodies out.
+            http = event["requestContext"].get("http", {})
+            headers = {key.lower(): value for key, value in event.get("headers", {}).items()}
+            print(json.dumps({
+                "event": "server_wake",
+                "request_id": event["requestContext"].get("requestId", "")[:128],
+                "forwarded_for": headers.get("x-forwarded-for", "")[-256:],
+                "peer_ip": http.get("sourceIp", "")[:64],
+                "user_agent": headers.get("user-agent", http.get("userAgent", ""))[:256],
+            }))
         except ClientError as err:  # e.g. still finishing a stop
             print(f"start_instances failed: {err}")
             state = "stopping"

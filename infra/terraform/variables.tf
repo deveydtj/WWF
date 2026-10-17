@@ -46,6 +46,18 @@ variable "private_rooms_redis_secret_arn" {
   default     = ""
 }
 
+variable "enable_local_redis" {
+  description = "Run a small TLS Redis container on the existing API server, configured in place through Systems Manager."
+  type        = bool
+  default     = false
+}
+
+variable "local_redis_image" {
+  description = "Redis image for the same-server private-room store."
+  type        = string
+  default     = "redis:7.4-alpine"
+}
+
 variable "operator_secret_arn" {
   description = "Secrets Manager or SSM ARN containing the operator bearer token for maintenance endpoints."
   type        = string

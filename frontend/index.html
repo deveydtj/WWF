@@ -6,8 +6,11 @@
   <meta name="color-scheme" content="light dark">
   <script>
     // Paint the browser canvas before external stylesheets can block parsing.
-    let dark = false;
-    try { dark = localStorage.getItem('darkMode') === 'true'; } catch { /* Default to light. */ }
+    let dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    try {
+      const saved = localStorage.getItem('darkMode');
+      if (saved !== null) dark = saved === 'true';
+    } catch { /* Use the device preference when storage is blocked. */ }
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     document.documentElement.style.backgroundColor = dark ? '#2c303a' : '#e0e5ec';
   </script>
@@ -48,7 +51,6 @@
     </div>
     <nav aria-label="Main navigation">
       <button id="howToggle" class="play-secondary" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="howTo">How to Play <span aria-hidden="true">?</span></button>
-      <a href="https://github.com/deveydtj/WWF" id="githubLink">GitHub <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
   <main>

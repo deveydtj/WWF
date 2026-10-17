@@ -1,5 +1,5 @@
 import { ViewportService } from './static/js/layout/viewportService.js';
-import { applyDarkMode as applyTheme } from './static/js/themeManager.js';
+import { applyDarkMode as applyTheme, prefersDarkMode } from './static/js/themeManager.js';
 import { ensureAgeEligibility, getAgeStatus } from './static/js/ageEligibility.js';
 import { startActivityPings } from './static/js/activityPing.js';
 
@@ -226,7 +226,7 @@ function updateDarkToggleIcon() {
 }
 
 function applyDarkMode() {
-  const enabled = localStorage.getItem('darkMode') === 'true';
+  const enabled = prefersDarkMode();
   if (document.body) {
     applyTheme(enabled);
   }

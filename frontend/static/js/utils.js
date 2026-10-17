@@ -1,5 +1,5 @@
 import { getCurrentLayoutState, refreshLayoutState } from './layoutManager.js';
-import { applyDarkMode } from './themeManager.js';
+import { applyDarkMode, prefersDarkMode } from './themeManager.js';
 import { OVERLAYS, closeOverlay, openOverlay } from './overlayState.js';
 import {
   isPhoneLayout,
@@ -85,12 +85,12 @@ export function announce(text) {
 }
 
 /**
- * Sync the UI with the stored dark mode preference.
+ * Sync the UI with the saved choice or device preference.
  *
  * @param {HTMLElement} toggle - The dark mode toggle button.
  */
 export function applyDarkModePreference(toggle, animate = false) {
-  const prefersDark = localStorage.getItem('darkMode') === 'true';
+  const prefersDark = prefersDarkMode();
   applyDarkMode(prefersDark, { animate });
   toggle.textContent = prefersDark ? '☀️ Light Mode' : '🌙 Dark Mode';
   toggle.title = prefersDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';

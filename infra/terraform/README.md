@@ -41,6 +41,16 @@ about $16/month plus public IPv4 charges.
    `/wwf/wake-disabled=true`, so `/wake` refuses to start it again. Run
    `scripts/emergency_cost_control.sh --resume` to allow wake-ups again.
 
+Actual `/wake` starts write one bounded `server_wake` JSON record to the
+existing `/aws/lambda/wwf-origin-control` log group, retained for seven days.
+The record contains the request ID, forwarded IP chain, connecting peer IP and
+browser User-Agent. It excludes cookies, credentials, query strings and bodies.
+The forwarded chain and User-Agent help diagnose the source; they do not prove
+a person's identity. Full CloudFront access logging remains disabled.
+This small volume is expected to fit the account's shared CloudWatch free
+allowance; it is not an unconditional zero-cost guarantee if that allowance is
+exceeded. See [AWS CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/).
+
 Approximate cost (us-east-1): stopped, about $0.64/month for the 8 GB disk,
 $0.50 for the Route53 zone, and cents for S3/CloudFront/Lambda. While running,
 about $0.0084/hour for the server plus $0.005/hour for its public IPv4, or
@@ -57,14 +67,20 @@ server-fund card. Turn it on with `enable_donations = true`; setup steps are in
 
 ## Usage
 
-Publication is blocked by `privacy-publication.tf` until `privacy_operator`
+With `enforce_privacy_publication_gate = true` (the default), publication is
+blocked by `privacy-publication.tf` until `privacy_operator`
 contains the verified legal name, mailing address, phone, privacy email and
 HTTPS website URL, and `privacy_notice_reviewed` is true. The live tfvars keep
-these details empty and the review flag false until the owner supplies them.
+these details incomplete and the review flag false until the owner supplies them.
 Set the flag only after the accurate public notice is complete and reviewed.
 The same gate applies to direct Terraform plans/applies and `ci-plan.sh`;
 it does not check or award COPPA certification. See
 [the readiness review](../../docs/COPPA_READINESS.md) for remaining work.
+
+The owner has temporarily deferred this gate in the live tfvars with
+`enforce_privacy_publication_gate = false`. The operator details remain
+incomplete and `privacy_notice_reviewed` remains false. Re-enable the gate
+when that work is complete.
 
 The API also requires `session_secret_arn`, pointing to a random signing key
 of at least 32 characters. An SSM SecureString parameter is free; Secrets
@@ -104,9 +120,35 @@ scripts/emergency_cost_control.sh --audit   # read-only list of anything still b
 ```
 
 Lobby state is written to `/opt/wwf/data` on the server disk, which survives
-stop/start. Changing the server's `user_data` (anything in
-`user_data.sh.tftpl` or the values passed to it) replaces the server on the
-next apply; that is intentional so its setup always matches this repo.
+stop/start. Terraform ignores AMI refreshes and the temporary lack of a public IP
+while stopped, and blocks
+instance destruction. The root disk is retained if the instance is terminated
+outside Terraform. Retained unattached disks still incur storage charges and
+must be migrated or explicitly removed when no longer needed.
+Changing `user_data` can require replacement; Terraform will reject that plan
+until an operator arranges a data migration and deliberately removes the
+`prevent_destroy` guard. Prefer an in-place SSM update for configuration changes.
+
+## Private-room storage
+
+The live configuration sets `enable_local_redis = true` and stores the Redis
+URL and operator token in separate SSM SecureString parameters referenced by
+`private_rooms_redis_secret_arn` and `operator_secret_arn`. Terraform uses an
+SSM association to install Redis on the existing API server without replacing
+its disk. Redis starts before the API after a server stop/start.
+
+Redis uses authenticated TLS on a Docker network with no published port. The
+API pins its private certificate and verifies the `wwf-redis` hostname. The
+64 MiB data limit uses `noeviction`; the container is capped at 192 MiB. An
+append-only log is synced on every write to `/opt/wwf/redis` on the encrypted
+server disk. No additional database instance is created.
+
+This is a small-deployment configuration. The disk survives stopping the server
+and is retained on termination. A replacement must explicitly reattach or migrate
+the data; a new instance does not automatically inherit it. Restoring an old backup must
+discard private-room authorization state so revoked memberships cannot return.
+See [PRIVATE_ROOMS.md](../../docs/PRIVATE_ROOMS.md) for limits, secret URL format,
+recovery behavior and deployed verification.
 
 If your word list or definitions cache are stored outside the image, override
 `WORD_LIST_PATH` and `DEFN_CACHE_PATH` in `/usr/local/bin/wwf-prepare` (written

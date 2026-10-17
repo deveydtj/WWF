@@ -4,7 +4,11 @@ This guide outlines the steps to deploy the WordSquad infrastructure and API usi
 
 ## Prerequisites
 
-**Publication is currently blocked.** The owner has deferred the legal operator
+**The live deployment temporarily defers the privacy publication gate** with
+`enforce_privacy_publication_gate = false`, at the owner's request. This does
+not mark the privacy notice as reviewed. The gate is enabled by default.
+
+When the gate is enabled, publication requires the legal operator
 name, mailing address, phone number, privacy email, and live HTTPS website URL.
 Fill in `privacy_operator` in `infra/live/variables.tfvars`, complete an accurate
 public privacy notice, and set `privacy_notice_reviewed = true` only after that
@@ -231,3 +235,10 @@ Refer to `infra/terraform/README.md` for details on the Terraform modules.
 ### Private rooms and streamer mode
 
 See [PRIVATE_ROOMS.md](PRIVATE_ROOMS.md) for the access model, required shared Redis and operator secrets, limits, proxy configuration, and launch verification. Production private rooms fail closed without Redis and an HTTPS `PUBLIC_ORIGIN`. Terraform accepts secret ARNs (SSM or Secrets Manager) via `private_rooms_redis_secret_arn` and `operator_secret_arn` and grants the server read access to them. Maintenance clients now need a dedicated bearer token. The CloudFront-only security group, the origin secret header in nginx and the trusted proxy-hop setting are deployed together.
+
+The live configuration enables `enable_local_redis`. Its SSM association installs
+authenticated TLS Redis on the existing server, with 64 MiB for data, a 192 MiB
+container limit, no eviction, and an append-only log synced on every write to
+the encrypted root disk. Redis has no public port and restarts with the server.
+This avoids an additional database instance. Server termination or replacement
+requires a migration plan; stop/start preserves the data.

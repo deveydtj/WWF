@@ -13,10 +13,14 @@ runtime/
 # Generated assets
 backend/static/assets/
 backend/static/*.html
+backend/static/LICENSE.txt
 
 # Terraform state
 .terraform/
 .terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.*
+*.tfplan
 
 # Node.js (root level)
 node_modules/

@@ -1,5 +1,12 @@
-# Publication is blocked until the deferred operator details and notice are
-# ready. This checks release prerequisites; it does not certify COPPA compliance.
+# Publication prerequisites are enforced by default. The owner can explicitly
+# defer this release gate; it does not certify COPPA compliance.
+variable "enforce_privacy_publication_gate" {
+  description = "Enforce operator details and privacy notice review before publication. Disable only when the owner explicitly defers this work."
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "privacy_operator" {
   description = "Verified operator details for the public privacy notice; complete before publication."
   type = object({
@@ -27,6 +34,8 @@ variable "privacy_notice_reviewed" {
 }
 
 resource "terraform_data" "privacy_publication_gate" {
+  count = var.enforce_privacy_publication_gate ? 1 : 0
+
   lifecycle {
     precondition {
       condition = alltrue([

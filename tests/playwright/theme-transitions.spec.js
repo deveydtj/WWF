@@ -7,7 +7,7 @@ const surfaces = {
   game: ['body', '#optionsMenu', '#board .tile', '#keyboard button', '#historyBox'],
 };
 
-async function open(page, deterministicLobby, screen) {
+async function open(page, deterministicLobby, screen, dark = false) {
   if (screen === 'game') {
     await deterministicLobby.openActive();
     await page.locator('#optionsToggle').click();
@@ -22,11 +22,29 @@ async function open(page, deterministicLobby, screen) {
     return route.fulfill({ contentType, body: fs.readFileSync(path.resolve(__dirname, '../../frontend', filename)) });
   });
   await page.goto('http://wordsquad.test/');
-  await expect(page.locator('#darkToggle')).toHaveAttribute('aria-label', 'Switch to dark mode');
+  await expect(page.locator('#darkToggle')).toHaveAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
   return '#darkToggle';
 }
 
 for (const screen of ['landing', 'game']) {
+  for (const colorScheme of ['dark', 'light']) {
+    test(`${screen} uses device ${colorScheme} until a manual choice is saved`, async ({ page, deterministicLobby }) => {
+      const dark = colorScheme === 'dark';
+      await page.emulateMedia({ colorScheme });
+      const toggle = await open(page, deterministicLobby, screen, dark);
+      expect(await page.locator('body').evaluate(body => body.classList.contains('dark-mode'))).toBe(dark);
+      expect(await page.evaluate(() => localStorage.getItem('darkMode'))).toBeNull();
+      if (screen === 'game') {
+        await expect(page.locator(toggle)).toHaveText(dark ? '☀️ Light Mode' : '🌙 Dark Mode');
+      }
+      await page.locator(toggle).click();
+      expect(await page.evaluate(() => localStorage.getItem('darkMode'))).toBe(String(!dark));
+      await page.reload();
+      await expect(page.locator(screen === 'game' ? '#appContainer' : '#darkToggle')).toBeVisible();
+      expect(await page.locator('body').evaluate(body => body.classList.contains('dark-mode'))).toBe(!dark);
+    });
+  }
+
   for (const width of [390, 800, 1440]) {
     test(`${screen} theme fades both ways and reverses smoothly at ${width}px`, async ({ page, deterministicLobby }) => {
       await page.setViewportSize({ width, height: 900 });
