@@ -38,7 +38,8 @@ verify_assets_in_bucket() {
 
 # Fetch live pages through CloudFront and confirm each asset they reference
 # loads. Pages that need a running game server are skipped while it sleeps,
-# so this never wakes it up.
+# so this never wakes it up. Pass "require-api" after restarting a running API:
+# a healthy server that the public site cannot reach must fail the deployment.
 verify_live_assets() {
   local site="$1" tmp page status missing=0 checked=0 asset
   tmp=$(mktemp -d)
@@ -46,8 +47,12 @@ verify_live_assets() {
   local pages="/"
   if [ "$status" = "200" ]; then
     pages="/ /age-check /join /game"
+  elif [ "${2:-}" = "require-api" ]; then
+    echo "Deploy FAILED: public health check returned HTTP $status after the server became healthy." >&2
+    rm -rf "$tmp"
+    return 1
   else
-    echo "Game server is asleep (health $status); checking the home page only."
+    echo "Game API unavailable (health $status); checking the home page only."
   fi
   for page in $pages; do
     # /game redirects to the age check without an eligible session; skip it then.

@@ -213,6 +213,21 @@ def test_restart_command_checks_health_and_the_pushed_image(deploy):
     assert params["executionTimeout"] == ["600"]
 
 
+def test_api_deploy_fails_when_healthy_server_is_unreachable_through_the_site(deploy):
+    (deploy.root / "statuses").write_text("Success")
+    result, _ = deploy("deploy_api.sh", "1.dkr.ecr.us-east-1.amazonaws.com/wwf-api:latest",
+                       FAKE_INSTANCES="i-123", FAKE_HEALTH="503")
+    assert result.returncode != 0
+    assert "public health check returned HTTP 503" in result.stderr
+    assert "Done." not in result.stdout
+
+
+def test_frontend_deploy_can_verify_assets_while_the_server_sleeps(deploy):
+    result, _ = deploy("deploy_frontend.sh", FAKE_HEALTH="503")
+    assert result.returncode == 0, result.stderr
+    assert "checking the home page only" in result.stdout
+
+
 @pytest.mark.parametrize("instances,ok", [("", True), ("i-123", False)])
 def test_api_deploy_before_the_bucket_exists(deploy, instances, ok):
     """First-time setup pushes the image before terraform creates the bucket."""

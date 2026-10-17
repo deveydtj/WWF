@@ -52,6 +52,12 @@ sleep/wake works and what it costs.
 The first visitor after a nap waits about a minute while the server boots.
 The landing page starts the wake-up as soon as it loads.
 
+API origin connections use CloudFront Origin Shield in `us-east-1` to avoid
+the regional DNS failure observed during the October 17 rollout. API caching
+remains disabled. Origin Shield adds a usage-based request charge; see
+[AWS pricing](https://aws.amazon.com/cloudfront/pricing/). It adds no always-on
+server and does not change idle shutdown or the monthly budget cap.
+
 - [Terraform](https://www.terraform.io/downloads.html) 1.4 or newer
 - AWS account with permissions to create S3, CloudFront, EC2, IAM, Lambda,
   Route53 records, Budgets and SSM parameters

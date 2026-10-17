@@ -159,6 +159,6 @@ for INSTANCE_ID in $INSTANCE_IDS; do
 done
 
 if [ -n "$DOMAIN" ]; then
-  verify_live_assets "https://$DOMAIN"
+  verify_live_assets "https://$DOMAIN" require-api
 fi
 echo "Done."

@@ -242,6 +242,14 @@ resource "aws_cloudfront_distribution" "cdn" {
     connection_attempts = 1 # fail fast to the "starting up" page while stopped
     connection_timeout  = 3
 
+    # Route origin connections through the server's region. Direct connections
+    # from some POPs returned OriginDnsError after wake while this region worked.
+    # API responses still have zero TTL and retain their session isolation.
+    origin_shield {
+      enabled              = true
+      origin_shield_region = var.aws_region
+    }
+
     custom_origin_config {
       http_port                = 80
       https_port               = 443

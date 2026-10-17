@@ -64,3 +64,35 @@ The state response returns a stored hint for a caller-supplied emoji without che
 - Release verification also restored the missing local `/activity` handler and made invalid game assets exit with Gunicorn's fatal worker-boot code, preventing endless worker restarts.
 
 Subsequent local verification: **428 backend tests passed, five skipped; 36 Chromium/mobile Safari browser checks passed.** The container's invalid-word-list test now passes. CSS lint, the production frontend build, shell syntax, Terraform formatting/validation, and whitespace checks passed. The reviewed Terraform plan contains no server, disk, database, resource creation, or destruction changes.
+
+## Production follow-up: regional wake failure
+
+### 5. P1 — Some CloudFront regions cannot resolve the awake server
+
+The published site repeatedly displayed its startup page even though the API
+and Redis were healthy. Minimal CloudFront diagnostics identified
+`OriginDnsError` from `ORD56-P6`; the same public health request through
+`IAD61-P3` returned `200`. All four authoritative Route53 servers returned the
+current EC2 address. Invalidations and refreshing the origin ID did not resolve
+the failure. The evidence identifies a regional CloudFront DNS failure; it does
+not establish why that resolver retained the failure.
+
+**Resolution:** Route API origin connections through Origin Shield in the
+server's `us-east-1` region. The previously failing region then returned healthy
+JSON, accepted age submissions and allowed game creation. API caching remains
+disabled, and the existing TLS, origin authentication and session forwarding
+remain in place. Origin Shield adds a usage-based request charge, with no new
+always-on server; see [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html).
+
+The release check had incorrectly treated a public `503` as a sleeping server
+after confirming a successful restart. API deployment now requires public
+health before reporting success. Regression coverage reproduces that false
+success; frontend-only publishing can still verify assets while the API sleeps.
+
+Follow-up verification: **430 backend tests passed, five skipped.** Production
+age submission, game creation and board loading passed in Chromium and mobile
+Safari, and all 14 asset references from live pages loaded successfully.
+An actual EC2 stop/start cycle also passed: mobile Safari saw the startup page,
+recovered automatically in 24 seconds, submitted age and entered a private game.
+The server retained its original instance and disk. Terraform reported no
+differences between the deployed infrastructure and the updated configuration.
